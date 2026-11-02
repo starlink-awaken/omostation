@@ -1126,6 +1126,8 @@ surfaces:
 - id: bin-gac-harness-compliance-check-py
   tool: bin/gac/harness-compliance-check.py
   workflow: harness-ci.yml
+  also_in:
+  - gac-gate.yml
   gate: true
   triggers:
   - pull_request
@@ -1134,6 +1136,8 @@ surfaces:
 - id: bin-gac-harness-constraint-enforcer-py
   tool: bin/gac/harness-constraint-enforcer.py
   workflow: harness-ci.yml
+  also_in:
+  - gac-gate.yml
   gate: true
   triggers:
   - pull_request
@@ -1142,6 +1146,8 @@ surfaces:
 - id: bin-gac-harness-mof-bridge-py
   tool: bin/gac/harness-mof-bridge.py
   workflow: harness-ci.yml
+  also_in:
+  - gac-gate.yml
   gate: true
   triggers:
   - pull_request
@@ -1150,6 +1156,8 @@ surfaces:
 - id: bin-gac-harness-omo-bridge-py
   tool: bin/gac/harness-omo-bridge.py
   workflow: harness-ci.yml
+  also_in:
+  - gac-gate.yml
   gate: true
   triggers:
   - pull_request
@@ -1246,6 +1254,18 @@ surfaces:
   triggers: []
   status: active
 workflow_triggers:
+- workflow: hook-regression.yml
+  # 2026-11-02 补登记（此前未登记 ⇒ check-ci-surfaces.py 报 trigger-drift）。
+  triggers:
+  - per_pr
+  - push
+  path_filtered: true
+  paths:
+  - .github/workflows/hook-regression.yml
+  - .githooks/pre-rebase
+  - .githooks/pre-merge-commit
+  - .githooks/post-merge
+  - tests/unit/gac/test_pre_rebase_hook.py
 - workflow: aetherforge-ci.yml
   triggers:
   - per_pr
