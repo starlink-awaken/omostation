@@ -46142,6 +46142,67 @@ bets:
         evidence:
           note: 当前只完成 Phase 0 发现与 Phase 1 阻断/提案登记，未宣称节点已接入。
     overall_state: planned
+- id: BET-Y2Q4-T10-280
+  title: 全景收集器账本路径接入 profile 缝
+  goal: 把 bin/panorama/panorama-collect.py 的 event ledger 路径从 import 时冻结的检出根常量，收敛到 bin/lib/repo_root.py
+    的 event_ledger_path() 调用时刻解析，并消除三处默认参数二次冻结。
+  status: pending
+  window: Y2Q4
+  track: T10-GOVERNANCE
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  write_surfaces:
+  - bin/panorama/panorama-collect.py
+  - tests/unit/test_panorama_event_ledger_seam.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-02-panorama-event-ledger-seam.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-280.md
+  - docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+  - tests/unit/test_writeplane_root_pin.py
+  - docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
+  non_goals:
+  - 不迁移任何 ledger 数据，不改动 launchd plist、crontab 或 ~/.local/state/omostation 内容。
+  - 不新增 env 名，不改 PANORAMA_ROOT 语义，不改动其余 state_root() 判别点。
+  - 不声明任何 profile，不把回滚以外的机器级配置写进本轮。
+  done_when:
+  - EVENT_LEDGER 模块级常量与三处默认参数冻结点在同一次扫描中读数为 0，event_ledger_path 在该文件命中。
+  - 声明 OMOSTATION_STATE_ROOT 后账本路径正落在该 state 根下且不以内联检出为前缀；OMO_EVENT_LEDGER_DB 仍为最高优先级。
+  - 变异对照（解析退回模块常量）使正向落点用例当场红；未运行的检查如实记录。
+  - pin 尺按 shrink_only 收口：该站点从 BASELINE_WRITESPANE_PAIRS 删除，spec §1 表与三个门禁读数由同一次扫描重签。
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_panorama_event_ledger_seam.py -q -p no:randomly
+  - cmd: python3 -m pytest tests/unit/test_writeplane_root_pin.py -q -p no:randomly
+    note: 同一判据在 origin/main 与本轮检出上分别复算，门禁三读数应为 154/144/95 对 153/143/95
+    expect: exit 0，且包含声明 state 根的正向落点用例与变异对照
+  - cmd: git grep -nE "EVENT_LEDGER[[:space:]]*=" -- bin/panorama/panorama-collect.py
+    expect: 改后零命中；改前基线读数为 1（同一判据两侧分别记录）
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若收敛需要改动生产 profile 声明、迁移状态或绕开门禁，则停止实现并保留可续跑证据。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-02-panorama-event-ledger-seam.md
+    spec_version: 1.0.0
+    content_digest: sha256:e3711ac6c8d4916d4e8299471e5917b576d6a88d3fa175556f733c6936e62068
+    decision_ref: decision://accepted/BET-Y2Q4-T10-280
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -46280,7 +46341,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 576
+  total_bets: 577
   windows:
   - Y1Q1
   - Y1Q2
