@@ -46143,10 +46143,11 @@ bets:
           note: 当前只完成 Phase 0 发现与 Phase 1 阻断/提案登记，未宣称节点已接入。
     overall_state: planned
 - id: BET-Y2Q4-T10-280
+  done_at: 2026-11-02T07:51:00Z
   title: 全景收集器账本路径接入 profile 缝
   goal: 把 bin/panorama/panorama-collect.py 的 event ledger 路径从 import 时冻结的检出根常量，收敛到 bin/lib/repo_root.py
     的 event_ledger_path() 调用时刻解析，并消除三处默认参数二次冻结。
-  status: pending
+  status: done
   window: Y2Q4
   track: T10-GOVERNANCE
   priority: P1
@@ -46192,17 +46193,41 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          merged_reachable_commit:
+            ref: git://origin/main@9f84b7487384d6164423dc70ceeef865bc7bb9e2
+          rollback:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          tests:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          live_canary:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-280.md
+            sha256: sha256:99c0887fcef620d3dbf16feaec1b2b74e7ba0c090c9d53701b3fbd89672e2523
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: 治理/根缝类任务，value_indicator_policy 声明为 false，由 PR #5014 squash 9f84b7487 闭环。
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
