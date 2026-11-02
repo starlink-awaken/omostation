@@ -162,8 +162,9 @@ _INLINE_DIR = re.compile(
 def derive_state_write_dirs(src_root: Path) -> dict[str, set[str]]:
     """从源码字面量导出 `.omo/state/<dir>/` 的目录段。
 
-    五种写法都要认：`/` 链、整串（`ROOT / ".omo/state/x/y.json"`）、`Path("…")` 直接构造、
-    文档串与任意内联串（`_INLINE_DIR`）、f-string 的字面部分。
+    六种写法都要认：`/` 链、整串（`ROOT / ".omo/state/x/y.json"`）、`Path("…")` 直接构造、
+    文档串与任意内联串（`_INLINE_DIR`）、f-string 的字面部分、以及
+    **helper 调用**（`_state_dir("x")` —— helper 函数体是 `<根> / ".omo" / "state" / <参数>`）。
     """
     found: dict[str, set[str]] = {}
 
@@ -176,6 +177,34 @@ def derive_state_write_dirs(src_root: Path) -> dict[str, set[str]]:
         except (SyntaxError, UnicodeDecodeError):
             continue
         rel = str(path.relative_to(src_root.parent.parent.parent))
+
+        # 先认出「状态面子目录」helper：函数体是 `<根> / ".omo" / "state" / <参数>`，
+        # 参数是目录段。实测 `pipeline_supervisor._state_dir(name)` 返回
+        # `state_root() / ".omo" / "state" / name`，调用处写 `_state_dir("im-triage")`。
+        # 只认字面量形状的调用（参数是 Constant 串），变量传参仍是漏项 —— 与
+        # 「新写法认不出」同一类洞，别在这里假装全覆盖。
+        dir_helpers: set[str] = set()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef) or not node.args.args:
+                continue
+            body = node.body[-1]
+            if not (isinstance(body, ast.Return) and isinstance(body.value, ast.BinOp)):
+                continue
+            # `_chain_segments` 只收字符串段，末尾的参数名 (Name) 会被丢掉 ——
+            # 所以这里直接走 `/` 链取最右操作数，再看它是不是本函数的参数。
+            tail = body.value
+            while isinstance(tail, ast.BinOp) and isinstance(tail.op, ast.Div):
+                tail = tail.right
+            tail_name = tail.id if isinstance(tail, ast.Name) else None
+            segs = _chain_segments(body.value)
+            if len(segs) >= 2 and segs[-2:] == [".omo", "state"] and tail_name in {
+                a.arg for a in node.args.args
+            }:
+                dir_helpers.add(node.name)
+        if not dir_helpers:
+            # helper 在别的模块时，跨文件认不出 —— 与上面同一条漏项边界。
+            pass
+
         for node in ast.walk(tree):
             if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
                 for directory in _state_dirs_in(_chain_segments(node)):
@@ -183,6 +212,17 @@ def derive_state_write_dirs(src_root: Path) -> dict[str, set[str]]:
             elif isinstance(node, ast.Constant) and isinstance(node.value, str):
                 for directory in _INLINE_DIR.findall(node.value):
                     note(directory, rel)
+            elif (
+                dir_helpers
+                and isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id in dir_helpers
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+                and _DIRNAME.fullmatch(node.args[0].value)
+            ):
+                note(node.args[0].value, rel)
     return found
 
 
