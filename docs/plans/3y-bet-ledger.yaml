@@ -46028,7 +46028,63 @@ bets:
           note: 状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。
     overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-278
-  title: BET-Y2Q4-T10-278 compute-i9-01 Integration —— 受治理 CPU 执行节点接入
+  title: 同机双根决策与入口文档对齐
+  goal: 依据当前完整文件名的已接受决策，修正 AGENTS.md 与 ARCHITECTURE.md 的陈旧入口描述，保留逐进程实测及未覆盖边界。
+  status: pending
+  window: Y2Q4
+  track: T10-DOCS
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  write_surfaces:
+  - AGENTS.md
+  - ARCHITECTURE.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-31-fleet-ssot-entry-alignment.md
+  - docs/operations/workflow-waiver-2026-10-31-fleet-ssot-registration.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-278.md
+  - docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+  non_goals:
+  - 不修改生产配置、服务、数据库或网络，不执行迁移或清理。
+  - 不把历史验收等同于当前所有节点的运行健康或唯一 writer。
+  - 不提交、推送、合并或发布。
+  done_when:
+  - 入口文件按完整文件名引用已接受的双根决策，删除不再成立的旧状态。
+  - 账本定位按进程环境解析并区分快照与活动状态，不凭目录名断言权威。
+  - 变更通过适用文档及 lane 检查，未通过或未运行的检查如实记录。
+  verify:
+  - cmd: python3 bin/change-lane-check.py --file AGENTS.md --file ARCHITECTURE.md --json
+    expect: exit 0，两个文件均为 docs lane
+  - cmd: git diff --check
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若正常 scope 认领不可用或变更需要修改生产状态、扩大写面或绕开门禁，则停止实现并保留可续跑证据。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-31-fleet-ssot-entry-alignment.md
+    spec_version: 1.0.0
+    content_digest: sha256:c168829ca9b9f5afc00cd611cdbe483d009056ce32bd78aa224fd779211482c1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-278
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-T10-279
+  title: BET-Y2Q4-T10-279 compute-i9-01 Integration —— 受治理 CPU 执行节点接入
   goal: 将 compute-i9-01 以单一 OMO 控制面纳入受治理 Code/Test/Batch 执行体系；先完成只读发现与提案，再在明确授权后完成隔离
     Worker 接入和八项验证，不建立第二套任务控制面。
   status: active
@@ -46070,8 +46126,8 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-10-29-compute-i9-01-integration.md
     spec_version: 1.0.0
-    content_digest: sha256:8df2b55c5df6be9c3d9462b7017b354527a50755aa9d0cccf9bba6b9af63e400
-    decision_ref: decision://accepted/BET-Y2Q4-T10-278
+    content_digest: sha256:5a732d34b4efdb4881a1581e6777e2d583501f8331101b20a0cb7abceca0a655
+    decision_ref: decision://accepted/BET-Y2Q4-T10-279
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -46224,7 +46280,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 575
+  total_bets: 576
   windows:
   - Y1Q1
   - Y1Q2

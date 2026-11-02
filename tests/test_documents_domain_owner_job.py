@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
@@ -100,7 +101,13 @@ def _run(
     owner: Path,
     *extra: str,
     job_id: str = "creative-manifest-check",
+    ledger: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    # ⚠⚠⚥ §5.165：**账本落点必须显式点名** —— ⚠ 真账本是 **append-only**
+    #   ⇒ ⇒ ⚠ 往里面塞测试行 = **编造事实** ⇒ ⇒ ⚠ 且**删不掉**
+    #   ⇒ ⇒ ⚠ 这条 env 是仓内声明过的**测试隔离面**（⚠ `OMO_EVENT_LEDGER_DB`）
+    env = dict(os.environ)
+    env["OMO_EVENT_LEDGER_DB"] = str(ledger or (state.parent / "ledger.sqlite3"))
     return subprocess.run(
         [
             sys.executable,
@@ -123,7 +130,30 @@ def _run(
         capture_output=True,
         text=True,
         check=False,
+        env=env,
     )
+
+
+def _global_ledger() -> Path:
+    """⚠ **真账本**（⚠ 生产那份 ⇒ ⇒ 测试绝不许往里写）。"""
+    return Path.home() / ".local" / "opt" / "omostation" / "runtime" / "omo" / "event-ledger.sqlite3"
+
+
+def _ledger_rows(db_path: Path) -> list[dict]:
+    if not db_path.is_file():
+        return []
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    try:
+        return [
+            dict(row)
+            for row in conn.execute(
+                "SELECT sequence, event_type, producer, payload_json "
+                "FROM event_log ORDER BY sequence"
+            )
+        ]
+    finally:
+        conn.close()
 
 
 def _owner(tmp_path: Path, exit_code: int = 0) -> Path:
@@ -255,3 +285,46 @@ def test_owner_job_preserves_nonzero_owner_result_and_receipt(tmp_path: Path) ->
     assert payload["exit_code"] == 7
     assert json.loads(Path(payload["evidence_path"]).read_text(encoding="utf-8"))["exit_code"] == 7
     assert _tree_digest(documents) == before
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Runtime isolation is macOS-only")
+def test_the_change_lands_in_the_designated_ledger_and_not_in_the_real_one(tmp_path: Path) -> None:
+    """⚠ **留痕必须落在【被点名的那本账】上** —— ⚠ 真账本一个字节都不许动。
+
+    ⚠⚠⚥ **这条是 §5.165 的自踩回归**：⚠ 作业若自己解析账本落点 ⇒ ⇒ ⚠ 它解析到的
+    就是真账本 ⇒ ⇒ ⚠ **跑一次测试就在真账本里编一条事实**（⚠ append-only ⇒ ⇒ 删不掉）。
+    """
+    documents, registry, project, state = _fixture(tmp_path)
+    owner = _owner(tmp_path)
+    ledger = tmp_path / "designated-ledger.sqlite3"
+    real_before = len(_ledger_rows(_global_ledger()))
+
+    result = _run(documents, registry, project, state, owner, ledger=ledger)
+
+    assert result.returncode == 0, result.stderr
+    rows = _ledger_rows(ledger)
+    assert len(rows) == 1, rows
+    assert rows[0]["event_type"] == "Documents.DomainChange.v1"
+    assert rows[0]["producer"] == "omo-documents-domain-owner-job"
+    payload = json.loads(rows[0]["payload_json"])
+    assert payload["domain_id"] == "creative"
+    assert payload["status"] == "succeeded"
+    # ⚠ **真账本一个字节都没动**
+    assert len(_ledger_rows(_global_ledger())) == real_before
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="Runtime isolation is macOS-only")
+def test_a_failing_job_is_still_recorded_in_the_designated_ledger(tmp_path: Path) -> None:
+    """⚠ **「跑砸了」本身也是一次可追查的事件**（⚠ 失败也要留痕）。"""
+    documents, registry, project, state = _fixture(tmp_path)
+    owner = _owner(tmp_path, exit_code=7)
+    ledger = tmp_path / "designated-ledger.sqlite3"
+
+    result = _run(documents, registry, project, state, owner, ledger=ledger)
+
+    assert result.returncode == 7
+    rows = _ledger_rows(ledger)
+    assert len(rows) == 1, rows
+    payload = json.loads(rows[0]["payload_json"])
+    assert payload["status"] == "failed"
+    assert payload["exit_code"] == 7

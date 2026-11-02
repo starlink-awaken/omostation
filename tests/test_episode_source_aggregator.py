@@ -131,6 +131,13 @@ def _add_merge_commit(repo: Path, subject: str, date: str | None = None) -> str:
     global _merge_counter
     _merge_counter += 1
     branch_name = f"tmp-branch-{_merge_counter}"
+    # 主干名由仓库当前 HEAD 派生，不写字面 "main"：初始分支名取决于 host 的
+    # init.defaultBranch（macOS Xcode 系统 gitconfig 给 main，其它机器可能 master），
+    # 写死 main 的用例在 master 默认值的机器上必红，且 CI 看不见这个文件。
+    trunk = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo,
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()
     subprocess.run(["git", "checkout", "-qb", branch_name], cwd=repo,
                    check=True, capture_output=True)
     tmp_file = repo / f"tmp-{_merge_counter}.txt"
@@ -139,7 +146,7 @@ def _add_merge_commit(repo: Path, subject: str, date: str | None = None) -> str:
                    capture_output=True)
     subprocess.run(["git", "commit", "-qm", "tmp change"], cwd=repo,
                    check=True, capture_output=True)
-    subprocess.run(["git", "checkout", "main"], cwd=repo, check=True,
+    subprocess.run(["git", "checkout", trunk], cwd=repo, check=True,
                    capture_output=True)
     if date is None:
         from datetime import datetime, timedelta, UTC
@@ -156,6 +163,27 @@ def _add_merge_commit(repo: Path, subject: str, date: str | None = None) -> str:
     sha = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"], cwd=repo,
                          check=True, capture_output=True, text=True).stdout.strip()
     return sha
+
+
+def test_add_merge_commit_follows_a_non_main_initial_branch(tmp_path):
+    """反证：初始分支改名为 master 后夹具仍必须闭合。
+
+    复刻的是 host 面（`init.defaultBranch=master` 的机器），不是被测代码。
+    把主干名写回字面 "main" ⇒ 本用例当场红（`pathspec 'main' did not match`），
+    所以它钉的是装置对 host 无依赖，而不是一条按构造就绿的断言。
+    """
+    repo = _init_git_repo(tmp_path)
+    subprocess.run(["git", "branch", "-m", "master"], cwd=repo, check=True,
+                   capture_output=True)
+
+    sha = _add_merge_commit(repo, "Merge pull request #9 from org/x")
+
+    assert sha
+    head = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo,
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()
+    assert head == "master"
 
 
 class TestGitSource:

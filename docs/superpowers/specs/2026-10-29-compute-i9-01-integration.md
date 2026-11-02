@@ -2,7 +2,7 @@
 title: "compute-i9-01 Integration"
 status: accepted
 version: 1.0.0
-decision_ref: decision://accepted/BET-Y2Q4-T10-278
+decision_ref: decision://accepted/BET-Y2Q4-T10-279
 accepted_by: user
 accepted_at: 2026-10-29
 ---

@@ -303,6 +303,41 @@ lane ⇒ 合规，合并判却得到 `{docs, submodule_pointer}` 的假违规（
 **实测**（真实 push，非模拟）：混 lane 的 push 被拦（rc=1，报出违规 commit 与各 lane 文件）；
 单 lane 的 push 通过（rc=0）。
 
+### merge commit 豁免（2026-10-31 补）
+
+**规则与仓库策略直接冲突**：lane 尺要求「每 commit 单 lane」，而 merge commit 天然含
+**两侧**的内容 ⇒ 必然混 lane（实测 40 个 merge commit 里 29 个混，73%）。这是合并动作的
+**结构性事实**，不是提交形态缺陷。而本仓的合流路径**只剩 merge 一条**：
+`pre-rebase` hook 明确拒绝 rebase onto main（「应走 merge/PR 合流」），main 自身又全
+squash 合并 ⇒ 一视同仁地拦 merge commit，等于把唯一合规的合流路径堵死。
+
+**处置**：merge 状态下判据**照常计算并报告**，但降级为 **advisory 不阻断**
+（`bin/change-lane-check.py` 的 staged 路径）。范围判据（`--range` / PUSH_RANGE）
+**不适用**该豁免 —— 它用 `--no-merges`，merge commit 根本不在范围内 ⇒ 范围里的混 lane
+都不是 merge 造成的；若那里也按 MERGE_HEAD 豁免，等于给「push 时恰好有未完成 merge」
+开了后门（MERGE_HEAD 在 merge 完成前一直存在）。
+
+**MERGE_HEAD 的定位必须精确**（实测踩过两个坑）：
+
+1. `git rev-parse --git-path MERGE_HEAD` 返回**相对路径**（`.git/MERGE_HEAD`），且该
+   相对路径是相对**调用 git 时所在 cwd** 的 —— 换 cwd 结果就变（从子目录调用得到
+   `../.git/MERGE_HEAD`），拼到别的基准上会指向错的仓库 ⇒ 判据静默失效。
+2. `git rev-parse --git-dir` 在 linked worktree 下返回**主仓**的 `.git`，而 worktree 的
+   MERGE_HEAD 在 `<main>/.git/worktrees/<name>/MERGE_HEAD` ⇒ 找不到。
+
+⇒ 唯一无歧义的定位是 `git rev-parse --absolute-git-dir`（普通仓 ⇒ `<repo>/.git`；
+worktree ⇒ `<main>/.git/worktrees/<name>`，MERGE_HEAD 正是 per-worktree 文件）。
+且该查询必须与判据读的 index **同仓**（staged 路径走 `git diff --cached`，cwd=WORKSPACE）
+⇒ 「正在创建的 commit」就是 WORKSPACE 仓的 commit，merge 状态按同一个仓判定。
+
+**实测**（真实 git merge 现场，非模拟）：冲突 merge 解决后提交，两侧内容并入暂存区
+⇒ 无豁免时 rc=1（`FAIL mixed lanes=code,other`），有豁免时 rc=0 且仍打出 `FAIL` 报告
+与 NOTE。**另注**：clean merge（`git merge --no-ff` 无冲突）根本不触发 pre-commit hook
+⇒ 豁免只影响**冲突解决后提交**这一条路径。
+
+**合同测试**：`tests/unit/gac/test_change_lane_merge_exemption.py`（5 例，钉住 merge
+状态检测、worktree 私有目录定位、报告但不阻断、以及范围判据**不**被豁免）。
+
 ## Verification
 
 - [x] S0: make gac-local-gate PASS, F-9 规则加, F-10 数字刷
