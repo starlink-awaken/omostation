@@ -25,6 +25,7 @@ memory `reference_ci_latency_and_localization.md` §10.4 / §10.5 / §10.6。
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 import threading
 from pathlib import Path
@@ -69,10 +70,29 @@ CENSUS_SERIAL = CENSUS_WRITE_WORKSPACE | CENSUS_NETWORK | CENSUS_EXCLUSIVE
 # 2026-10-31: 87 -> 88 (ADR-0122 §46 lane 欠账台账自洽 gate 加入, #4990)。
 # 该 gate 的命令是 `lane-debt-ledger.py --check` —— 只读台账 YAML, 不写工作区 /
 # .omo/state / 子模块指针, 不走网络, 不占独占本机资源 ⇒ 属 A 类, 可并行。
-CENSUS_TOTAL_GATES = 88
+#
+# 2026-10-31: 88 -> 94 (分类账改按**全集**核对)。
+# gate 清单有两套来源 (submodule 内的 sgf-policy.yaml / 脚本内置 DEFAULT_POLICY
+# fallback), 两者内容不同 ⇒ 两环境的清单分别是 88 / 84 个, 并集 94。
+# 账只覆盖其中一套 ⇒ 换台机器 (子模块 init 与否) 判据结论就变 ⇒ 漏登记的
+# 写类 gate 会在某台机器上静默继承「默认并行」。故普查口径改为全集。
+CENSUS_TOTAL_GATES = 94
 
 # ── ② 全量分类账：普查中的 A 类（纯读/verification）逐一复审为「可并行」─────────
 # 维护约定：新增 gate 必须显式加入本账（或 SERIAL_ONLY），否则本文件失败。
+#
+# 末尾 6 个（bdsk-shadow-sandbox / debt-integrity-check / error-knowledge-check /
+# submodule-ancestry-gate / sweep-index-check / test-coverage-check）**只存在于
+# DEFAULT_POLICY fallback** —— 子模块缺席时才会被加载，故必须一并登记（否则它们
+# 在缺子模块的检出里未分类 ⇒ 静默继承「默认并行」）。逐个查过脚本体：均只读，
+# 不写工作区/.omo/state/子模块指针，不走网络，不占独占本机资源 ⇒ A 类，可并行：
+#   bdsk-shadow-sandbox     只跑 `git diff HEAD` 扫描文本
+#   debt-integrity-check    只读债务登记 YAML + 查文件是否存在
+#   error-knowledge-check   `error-knowledge.py check` 只校验坑库一致性
+#   submodule-ancestry-gate `check-submodule-rewind.py --range ... --no-write-debt`
+#                           （--no-write-debt 显式禁写；无 --range 的主路径本就不写盘）
+#   sweep-index-check       `sweep_index.py --check` 只比对不落盘（写需 --write）
+#   test-coverage-check     只扫项目目录有无测试
 PARALLEL_REVIEWED = frozenset(
     """
     script-registry-validate gac-drift write-owner-audit test-mcp-kos check-cockpit-ui-dist
@@ -95,6 +115,8 @@ PARALLEL_REVIEWED = frozenset(
     omo-runtime-final-tree doc-governance check-conflict-markers check-swarm-collision
     bin-quota-diff task-field-governance test-collection
     lane-debt-ledger
+    bdsk-shadow-sandbox debt-integrity-check error-knowledge-check
+    submodule-ancestry-gate sweep-index-check test-coverage-check
     """.split()
 )
 
@@ -115,6 +137,105 @@ def _load_module():
 
 def _gate_ids(module) -> set[str]:
     return {gate["id"] for gate in module.GATES_LIST}
+
+
+# ── 门禁全集 (两套 policy 来源的并集) ───────────────────────────────────────
+#
+# `gac-local-gate.py` 的 gate 清单随「ecos 子模块是否在场」而变：
+#   · 子模块在场  → 读 submodule 里的 `sgf-policy.yaml` (77 个 gate)
+#   · 子模块缺席  → 退回脚本内置 `DEFAULT_POLICY` (72 个 gate)
+# 两套来源**内容不同**（各有对方没有的 gate），实测两环境的清单分别是 88 / 84 个。
+#
+# 所以分类账必须覆盖的是**全集**（94 个），而不是「当前环境恰好加载的那一套」——
+# 否则在缺子模块的检出里，那 6 个只存在于 fallback 的 gate 会因未登记而恒红，
+# 而它们在有子模块的环境里同样会被执行 ⇒ 漏登记 = 写类 gate 静默继承「默认并行」。
+#
+# SGF policy 在子模块缺席时仍可从 **git 对象**读到（主仓用 gitlink 锁定了
+# `projects/ecos` 的 commit），故全集在任何环境下都可算，无需依赖检出形态。
+
+
+def _git_output(args: list[str], cwd: Path) -> str:
+    result = subprocess.run(
+        ["git", *args], cwd=cwd, capture_output=True, text=True, check=False
+    )
+    return result.stdout if result.returncode == 0 else ""
+
+
+def _sgf_policy_ids(module) -> tuple[set[str], bool]:
+    """SGF policy（ecos 子模块内）声明的 gate id 集合 + 是否读到。
+
+    优先读工作树里的文件；子模块缺席时从 **git 对象**读主仓 gitlink 锁定的那一版
+    （`git ls-tree HEAD projects/ecos` → 该 commit 的 blob）。
+
+    两者都拿不到（既无子模块工作树、又无子模块 git 对象）时返回 `(空集, False)`
+    —— 此时**无法判定**「账里的 gate 是否已从 SGF policy 中消失」，故「陈旧项」
+    方向不可判；只保留「每个可见 gate 都必须已分类」这一硬方向（见 `_gate_universe`）。
+    """
+    policy_path = Path(module.SGF_POLICY_YAML)
+    if policy_path.is_file():
+        import yaml
+
+        data = yaml.safe_load(policy_path.read_text(encoding="utf-8")) or {}
+        return {gate["id"] for gate in data.get("gates", [])}, True
+
+    # 子模块不在场：从 git 对象读锁定版
+    workspace = Path(module.WORKSPACE).resolve()
+    try:
+        rel = policy_path.resolve().relative_to(workspace)
+    except ValueError:
+        return set(), False
+    parts = rel.parts
+    if len(parts) < 3:
+        return set(), False
+    sub_path = "/".join(parts[:2])  # projects/ecos
+    inner_path = "/".join(parts[2:])  # src/.../sgf-policy.yaml
+
+    ls_tree = _git_output(["ls-tree", "HEAD", sub_path], workspace).split()
+    if len(ls_tree) < 3:
+        return set(), False
+    pinned_sha = ls_tree[2]
+
+    common = _git_output(["rev-parse", "--git-common-dir"], workspace).strip()
+    if not common:
+        return set(), False
+    common_dir = Path(common)
+    if not common_dir.is_absolute():
+        common_dir = workspace / common_dir
+    submodule_git_dir = common_dir.resolve() / "modules" / sub_path
+    if not submodule_git_dir.is_dir():
+        return set(), False
+
+    blob = _git_output(
+        [
+            f"--git-dir={submodule_git_dir}",
+            "cat-file",
+            "blob",
+            f"{pinned_sha}:{inner_path}",
+        ],
+        workspace,
+    )
+    if not blob:
+        return set(), False
+    import yaml
+
+    data = yaml.safe_load(blob) or {}
+    return {gate["id"] for gate in data.get("gates", [])}, True
+
+
+def _gate_universe(module) -> tuple[set[str], bool]:
+    """本仓在任何检出形态下可能出现的 gate id 全集 + 全集是否完整。
+
+    = 当前环境加载的清单 ∪ DEFAULT fallback 清单 ∪ SGF policy 清单。
+
+    三者取并集 ⇒ 与「子模块是否在场」无关，判据在任何检出形态下口径一致。
+
+    第二个返回值表示全集是否**完整**（SGF policy 是否读到）：
+      · 完整 ⇒ 「账里的 gate 是否已不存在」可判（陈旧项方向硬判）
+      · 不完整 ⇒ 该方向不可判，跳过（但不放过「可见 gate 未分类」这一硬方向）
+    """
+    default_ids = {gate["id"] for gate in module.DEFAULT_POLICY["gates"]}
+    sgf_ids, sgf_readable = _sgf_policy_ids(module)
+    return _gate_ids(module) | default_ids | sgf_ids, sgf_readable
 
 
 def _write_flags(command: list[str]) -> set[str]:
@@ -160,9 +281,12 @@ def test_blacklist_has_no_typos_or_ghost_entries() -> None:
 
 def test_every_gate_is_explicitly_classified() -> None:
     module = _load_module()
-    gate_ids = _gate_ids(module)
+    # 用**全集**而非「当前环境加载的那一套」：清单随子模块是否在场而变
+    # （88 / 84），按全集核对 ⇒ 判据在任何检出形态下口径一致。
+    gate_ids, universe_complete = _gate_universe(module)
     classified = set(module.SERIAL_ONLY) | set(PARALLEL_REVIEWED)
 
+    # 硬方向（任何环境下都判）：每个**可见** gate 都必须已分类。
     unclassified = sorted(gate_ids - classified)
     if unclassified:
         pytest.fail(
@@ -172,13 +296,36 @@ def test_every_gate_is_explicitly_classified() -> None:
             "  · 确认无副作用 ⇒ 加入本文件 PARALLEL_REVIEWED"
         )
 
-    stale = sorted(classified - gate_ids)
-    assert not stale, f"分类账含已不存在的 gate（须同步删除）: {stale}"
+    # 陈旧方向（账里含已不存在的 gate）：需全集完整才能判 ——
+    # SGF policy 读不到时，无法判定某 gate 是否已从 policy 中消失。
+    if universe_complete:
+        stale = sorted(classified - gate_ids)
+        assert not stale, f"分类账含已不存在的 gate（须同步删除）: {stale}"
 
     assert module.SERIAL_ONLY.isdisjoint(PARALLEL_REVIEWED)
-    # 正控制：两本账并集非空且规模与普查一致（87 = 14 串行 + 73 并行）
-    assert len(gate_ids) == CENSUS_TOTAL_GATES
+    # 正控制：两本账并集非空且规模与普查一致（全集 = 14 串行 + 80 并行）
     assert len(PARALLEL_REVIEWED) == CENSUS_TOTAL_GATES - len(CENSUS_SERIAL)
+
+
+def test_census_size_matches_the_gate_universe() -> None:
+    """普查总数必须等于门禁全集的规模。
+
+    这是「账的规模」与「实际门禁数量」之间唯一的锚：
+      · 全集变大（policy 新增 gate）⇒ 这里红 ⇒ 逼人登记
+      · 全集变小（policy 删除 gate）⇒ 这里红 ⇒ 逼人从账里删
+    两者方向都覆盖，故与 `test_every_gate_is_explicitly_classified` 的
+    「陈旧项」判定互为冗余（覆盖 ⊆ 已分类 + 规模相等 ⇒ 两集合相等）。
+
+    全集不完整时（SGF policy 读不到）无法比规模 ⇒ 跳过该方向。
+    """
+    module = _load_module()
+    gate_ids, universe_complete = _gate_universe(module)
+    if not universe_complete:
+        pytest.skip("SGF policy 读不到（无子模块工作树且无子模块 git 对象）⇒ 全集不完整，规模不可比")
+    assert len(gate_ids) == CENSUS_TOTAL_GATES, (
+        f"普查总数 {CENSUS_TOTAL_GATES} 与门禁全集规模 {len(gate_ids)} 不符 —— "
+        "gate 清单变了（policy 增删）⇒ 同步更新分类账与本常量"
+    )
 
 
 # ── ③ 命令层防线 ───────────────────────────────────────────────────────
