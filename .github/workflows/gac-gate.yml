@@ -210,9 +210,11 @@ jobs:
       - name: immutable checkout postcondition
         if: always()
         run: |
-          git diff --exit-code
-          git diff --cached --exit-code
-          test -z "$(git status --porcelain)"
+          # 与 precondition 同一口径，见那里的说明：只报 gitlink 变化，
+          # 不报「检出自身造成的子模块内容脏」。
+          git diff --ignore-submodules=dirty --exit-code
+          git diff --cached --ignore-submodules=dirty --exit-code
+          test -z "$(git status --porcelain --ignore-submodules=dirty)"
       - name: worktree guard (数量上限门禁)
         # P74: 防 worktree 堆积 — 超 MAX_WORKTREES 即 fail, 触发人工清理
         run: bash bin/gac/gac-worktree-guard.sh --check
