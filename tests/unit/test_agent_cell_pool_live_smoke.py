@@ -5,6 +5,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
+# `--state-file` 必须落在 CellStateManager 的规范相对布局上
+# (state_root()/.omo/state/agent-cell/cell_states.json) —— state 根由 env 注入,
+# 所以用例不能随便给个 tmp 路径。
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "bin/ssot/agent-cell-pool-live-smoke.py"
 
@@ -25,7 +28,7 @@ def _receipt_digest(receipt: dict) -> str:
 
 def test_live_smoke_persists_real_cell_lifecycle_and_hash_chained_receipt(tmp_path) -> None:
     module = _module()
-    state_file = tmp_path / "agent-cell" / "cell_states.json"
+    state_file = tmp_path / ".omo" / "state" / "agent-cell" / "cell_states.json"
     report = module.run_smoke(state_file)
 
     assert report["ok"] is True
@@ -43,7 +46,7 @@ def test_live_smoke_persists_real_cell_lifecycle_and_hash_chained_receipt(tmp_pa
     assert state["handoff_log"][0]["schema"] == "handoff/v1"
     assert state["handoff_log"][1]["schema"] == "handoff/v1"
 
-    receipt_file = tmp_path / "agent-cell" / "live-smoke-receipts.jsonl"
+    receipt_file = state_file.parent / "live-smoke-receipts.jsonl"
     rows = [json.loads(line) for line in receipt_file.read_text(encoding="utf-8").splitlines()]
     assert len(rows) == 1
     assert rows[0]["schema"] == "agent-cell-pool-live-smoke/v1"
@@ -55,11 +58,11 @@ def test_live_smoke_persists_real_cell_lifecycle_and_hash_chained_receipt(tmp_pa
 
 def test_second_smoke_chains_to_previous_durable_receipt(tmp_path) -> None:
     module = _module()
-    state_file = tmp_path / "cell_states.json"
+    state_file = tmp_path / ".omo" / "state" / "agent-cell" / "cell_states.json"
     first = module.run_smoke(state_file)
     second = module.run_smoke(state_file)
 
-    receipt_file = tmp_path / "live-smoke-receipts.jsonl"
+    receipt_file = state_file.parent / "live-smoke-receipts.jsonl"
     rows = [json.loads(line) for line in receipt_file.read_text(encoding="utf-8").splitlines()]
     assert first["cell_id"] != second["cell_id"]
     assert len(rows) == 2
@@ -82,7 +85,7 @@ def test_receipt_loader_rejects_non_object_lines(tmp_path) -> None:
 
 def test_verify_mode_recomputes_durable_receipt_and_state_binding(tmp_path) -> None:
     module = _module()
-    state_file = tmp_path / "cell_states.json"
+    state_file = tmp_path / ".omo" / "state" / "agent-cell" / "cell_states.json"
     module.run_smoke(state_file)
     report = module.verify_smoke(state_file)
     assert report["schema"] == "agent-cell-pool-live-smoke-verification/v1"
@@ -98,7 +101,7 @@ def test_verify_mode_recomputes_durable_receipt_and_state_binding(tmp_path) -> N
 
 def test_verify_mode_fails_closed_on_tampered_state_binding(tmp_path) -> None:
     module = _module()
-    state_file = tmp_path / "cell_states.json"
+    state_file = tmp_path / ".omo" / "state" / "agent-cell" / "cell_states.json"
     module.run_smoke(state_file)
     states = json.loads(state_file.read_text(encoding="utf-8"))
     next(iter(states.values()))["context"]["verdict"] = "reject"
@@ -133,9 +136,9 @@ def test_cleanup_expired_states_removes_only_expired_smoke_states(tmp_path) -> N
 
 def test_verify_skips_expired_state_binding_but_keeps_full_receipt_chain(tmp_path) -> None:
     module = _module()
-    state_file = tmp_path / "cell_states.json"
+    state_file = tmp_path / ".omo" / "state" / "agent-cell" / "cell_states.json"
     module.run_smoke(state_file)
-    receipt_file = tmp_path / "live-smoke-receipts.jsonl"
+    receipt_file = state_file.parent / "live-smoke-receipts.jsonl"
     rows = [json.loads(line) for line in receipt_file.read_text(encoding="utf-8").splitlines()]
     rows[0]["finished_at"] = (datetime.now(UTC) - timedelta(hours=25)).isoformat()
     rows[0]["receipt_digest"] = module._receipt_digest(rows[0])

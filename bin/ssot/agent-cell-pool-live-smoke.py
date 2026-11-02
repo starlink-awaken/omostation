@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import json
 import sys
 import uuid
@@ -21,6 +22,22 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_STATE_FILE = ROOT / ".omo/state/agent-cell/cell_states.json"
 SCHEMA = "agent-cell-pool-live-smoke/v1"
+STATE_ROOT_ENV = "OMOSTATION_STATE_ROOT"
+# CellStateManager 的规范相对布局 (omo/resident/cell_state.py: STATE_DIR_RELPATH / STATE_FILENAME)
+STATE_FILE_RELPATH = Path(".omo") / "state" / "agent-cell" / "cell_states.json"
+
+
+def _state_root_for(state_file: Path) -> Path:
+    """由 `--state-file` 反推 state 根。
+
+    `CellStateManager.state_dir()` 现在按 `state_root() / .omo/state/agent-cell` 定位，
+    而 `state_root()` 的唯一入口是 env —— 所以要让 `--state-file` 真的生效，
+    只能要求它落在规范的相对布局上，再把根注入 env。
+    """
+    resolved = state_file.resolve()
+    if not resolved.match(str(STATE_FILE_RELPATH)):
+        raise SystemExit(f"--state-file 必须以 {STATE_FILE_RELPATH} 结尾 (实际: {resolved})")
+    return resolved.parents[len(STATE_FILE_RELPATH.parents) - 1]
 VERIFICATION_SCHEMA = "agent-cell-pool-live-smoke-verification/v1"
 STATE_RETENTION_HOURS = 24
 
@@ -134,93 +151,101 @@ def run_smoke(state_file: Path) -> dict[str, Any]:
 
     state_file = state_file.resolve()
     state_file.parent.mkdir(parents=True, exist_ok=True)
-    # CellStateManager reads module constants; bind them to the explicit smoke
-    # target so tests and operators can isolate the runtime without modifying OMO.
-    cell_state.STATE_DIR = state_file.parent
-    cell_state.STATE_FILE = state_file
+    # CellStateManager 自 2026-10 起改为**调用时刻**解析 state_root()，模块级
+    # STATE_DIR / STATE_FILE 不再被读 —— 原先那两行绑定是**静默失效的缝**：
+    # `--state-file` 仍被接受，状态却写到 state_root() 下面（本机真实状态面）。
+    # 这里改为把 state 根注入 env（state_root() 的唯一入口），并在结束时还原。
+    state_root_dir = _state_root_for(state_file)
+    previous_state_root = os.environ.get(STATE_ROOT_ENV)
+    os.environ[STATE_ROOT_ENV] = str(state_root_dir)
+    try:
+        now = datetime.now(UTC)
+        stamp = now.strftime("%Y%m%dT%H%M%SZ")
+        token = uuid.uuid4().hex[:8]
+        episode_id = f"episode-agent-cell-live-smoke-{stamp}-{token}"
+        cell_id = f"cell-live-smoke-{stamp}-{token}"
+        started_at = now.isoformat()
 
-    now = datetime.now(UTC)
-    stamp = now.strftime("%Y%m%dT%H%M%SZ")
-    token = uuid.uuid4().hex[:8]
-    episode_id = f"episode-agent-cell-live-smoke-{stamp}-{token}"
-    cell_id = f"cell-live-smoke-{stamp}-{token}"
-    started_at = now.isoformat()
+        intent = {
+            "schema": "agent-cell-smoke-intent/v1",
+            "scenario": "pool_lifecycle",
+            "external_side_effects": "none",
+        }
+        plan = {"schema": "agent-cell-smoke-plan/v1", "steps": ["verify_scheduler"]}
+        result = {"schema": "agent-cell-smoke-result/v1", "status": "ok"}
 
-    intent = {
-        "schema": "agent-cell-smoke-intent/v1",
-        "scenario": "pool_lifecycle",
-        "external_side_effects": "none",
-    }
-    plan = {"schema": "agent-cell-smoke-plan/v1", "steps": ["verify_scheduler"]}
-    result = {"schema": "agent-cell-smoke-result/v1", "status": "ok"}
+        retention = _cleanup_expired_states(state_file, now=now)
 
-    retention = _cleanup_expired_states(state_file, now=now)
+        pool = CellPool(max_cells=2, min_cells=1, auto_scale=False, enable_persistence=True)
+        dispatch = pool.dispatch_episode(episode_id, intent)
+        if dispatch.get("state") != "planning" or dispatch.get("current_role") != "planner":
+            raise RuntimeError(f"unexpected dispatch state: {dispatch}")
+        assigned_cell_id = pool.episode_assignments.get(episode_id)
+        if assigned_cell_id is None:
+            raise RuntimeError("CellPool did not persist an episode assignment")
+        cell = pool.cells[assigned_cell_id]
 
-    pool = CellPool(max_cells=2, min_cells=1, auto_scale=False, enable_persistence=True)
-    dispatch = pool.dispatch_episode(episode_id, intent)
-    if dispatch.get("state") != "planning" or dispatch.get("current_role") != "planner":
-        raise RuntimeError(f"unexpected dispatch state: {dispatch}")
-    assigned_cell_id = pool.episode_assignments.get(episode_id)
-    if assigned_cell_id is None:
-        raise RuntimeError("CellPool did not persist an episode assignment")
-    cell = pool.cells[assigned_cell_id]
+        executor_handoff = cell.handoff(
+            "planner",
+            "executor",
+            {"schema": "agent-cell-smoke-artifacts/v1", "kind": "plan", "plan": plan, "plan_sha256": _sha256(plan)},
+        )
+        verifier_handoff = cell.handoff(
+            "executor",
+            "verifier",
+            {"schema": "agent-cell-smoke-artifacts/v1", "kind": "result", "result": result, "result_sha256": _sha256(result)},
+        )
+        completed = pool.complete_episode(episode_id, "accept")
+        persisted = pool.state_manager.load_state(assigned_cell_id)
+        if persisted is None:
+            raise RuntimeError("CellPool completed without durable state")
+        if persisted.get("state") != "idle" or persisted.get("context", {}).get("verdict") != "accept":
+            raise RuntimeError(f"unexpected persisted lifecycle state: {persisted.get('state')}")
+        if len(persisted.get("handoff_log") or []) != 2:
+            raise RuntimeError("CellPool persisted an incomplete handoff chain")
 
-    executor_handoff = cell.handoff(
-        "planner",
-        "executor",
-        {"schema": "agent-cell-smoke-artifacts/v1", "kind": "plan", "plan": plan, "plan_sha256": _sha256(plan)},
-    )
-    verifier_handoff = cell.handoff(
-        "executor",
-        "verifier",
-        {"schema": "agent-cell-smoke-artifacts/v1", "kind": "result", "result": result, "result_sha256": _sha256(result)},
-    )
-    completed = pool.complete_episode(episode_id, "accept")
-    persisted = pool.state_manager.load_state(assigned_cell_id)
-    if persisted is None:
-        raise RuntimeError("CellPool completed without durable state")
-    if persisted.get("state") != "idle" or persisted.get("context", {}).get("verdict") != "accept":
-        raise RuntimeError(f"unexpected persisted lifecycle state: {persisted.get('state')}")
-    if len(persisted.get("handoff_log") or []) != 2:
-        raise RuntimeError("CellPool persisted an incomplete handoff chain")
-
-    finished_at = datetime.now(UTC).isoformat()
-    receipt = {
-        "schema": SCHEMA,
-        "smoke_id": f"smoke-{stamp}-{token}",
-        "started_at": started_at,
-        "finished_at": finished_at,
-        "control_plane": "OMO",
-        "episode_id": episode_id,
-        "cell_id": assigned_cell_id,
-        "dispatch_strategy": dispatch.get("strategy"),
-        "final_pool_status": pool.get_pool_status(),
-        "lifecycle": {
-            "dispatch_state": dispatch.get("state"),
-            "executor_handoff": executor_handoff.get("schema"),
-            "verifier_handoff": verifier_handoff.get("schema"),
-            "verdict": completed.get("verdict"),
-            "final_state": persisted.get("state"),
-            "handoff_count": len(persisted.get("handoff_log") or []),
-        },
-        "persisted_state_sha256": _sha256(persisted),
-        "external_side_effects": "none",
-        "value_claim": "NOT_PROVEN",
-    }
-    stored_receipt = _append_receipt(state_file.parent / "live-smoke-receipts.jsonl", receipt)
-    return {
-        "schema": SCHEMA,
-        "ok": True,
-        "episode_id": episode_id,
-        "cell_id": assigned_cell_id,
-        "state_file": str(state_file),
-        "receipt_file": str(state_file.parent / "live-smoke-receipts.jsonl"),
-        "receipt_digest": stored_receipt["receipt_digest"],
-        "pool_status": pool.get_pool_status(),
-        "retention": retention,
-        "external_side_effects": "none",
-        "value_claim": "NOT_PROVEN",
-    }
+        finished_at = datetime.now(UTC).isoformat()
+        receipt = {
+            "schema": SCHEMA,
+            "smoke_id": f"smoke-{stamp}-{token}",
+            "started_at": started_at,
+            "finished_at": finished_at,
+            "control_plane": "OMO",
+            "episode_id": episode_id,
+            "cell_id": assigned_cell_id,
+            "dispatch_strategy": dispatch.get("strategy"),
+            "final_pool_status": pool.get_pool_status(),
+            "lifecycle": {
+                "dispatch_state": dispatch.get("state"),
+                "executor_handoff": executor_handoff.get("schema"),
+                "verifier_handoff": verifier_handoff.get("schema"),
+                "verdict": completed.get("verdict"),
+                "final_state": persisted.get("state"),
+                "handoff_count": len(persisted.get("handoff_log") or []),
+            },
+            "persisted_state_sha256": _sha256(persisted),
+            "external_side_effects": "none",
+            "value_claim": "NOT_PROVEN",
+        }
+        stored_receipt = _append_receipt(state_file.parent / "live-smoke-receipts.jsonl", receipt)
+        return {
+            "schema": SCHEMA,
+            "ok": True,
+            "episode_id": episode_id,
+            "cell_id": assigned_cell_id,
+            "state_file": str(state_file),
+            "receipt_file": str(state_file.parent / "live-smoke-receipts.jsonl"),
+            "receipt_digest": stored_receipt["receipt_digest"],
+            "pool_status": pool.get_pool_status(),
+            "retention": retention,
+            "external_side_effects": "none",
+            "value_claim": "NOT_PROVEN",
+        }
+    finally:
+        if previous_state_root is None:
+            os.environ.pop(STATE_ROOT_ENV, None)
+        else:
+            os.environ[STATE_ROOT_ENV] = previous_state_root
 
 
 def verify_smoke(state_file: Path) -> dict[str, Any]:
