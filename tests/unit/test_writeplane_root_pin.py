@@ -32,17 +32,19 @@ SKIP_SEGMENTS = {"_archive", "_vendored", "__pycache__", ".venv"}
 # spec §1 的读数表 —— 与本文件扫描出的分类逐桶相等（同一判据、同一次扫描产出）。
 # 2026-10-29 T10-278 读侧收敛把 resident-orchestrator 的 4 处检出根常量改成 state_root()
 # 调用时刻解析，`.omo/_delivery` 桶按实测 82→78 重签（spec §1 表由 docs lane 同步）。
+# 2026-11-02 T10-279 还掉 panorama-collect 的 event-ledger 站点（改挂 event_ledger_path()）：
+# `runtime` 桶 51→50，门禁三读数 154/144/95 → 153/143/95（该文件另有 3 处仍钉检出根，故文件数不变）。
 SPEC_MARKER_READINGS = {
     # 2026-10-31 ADR-0122 历史欠账处置: 新增 .omo/_truth/registry/lane-debt-ledger.yaml
     # => `.omo/_truth` 桶 161 -> 162 (该桶是排除面, 不影响门禁管辖的 154/144/95)。
     ".omo/_truth": 162,
     ".omo/state": 103,
     ".omo/_delivery": 78,
-    "runtime": 51,
+    "runtime": 50,
     ".omo/_knowledge": 62,
 }
-SPEC_GATED_SITES = 154
-SPEC_GATED_PAIRS = 144
+SPEC_GATED_SITES = 153
+SPEC_GATED_PAIRS = 143
 SPEC_GATED_FILES = 95
 
 # 2026-10-13 由 BET-Y2Q4-T10-250 的扫描生成的登记面（(文件, 拼出的相对路径) 去重）。
@@ -164,7 +166,6 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/panorama/panorama-collect.py', 'runtime/cron/remote-hygiene.log'),
         ('bin/panorama/panorama-collect.py', 'runtime/dashboard'),
         ('bin/panorama/panorama-collect.py', 'runtime/dashboard/data.json'),
-        ('bin/panorama/panorama-collect.py', 'runtime/omo/event-ledger.sqlite3'),
         ('bin/panorama/panorama-serve.py', 'runtime/dashboard'),
         ('bin/panorama/sunset_redirector.py', 'runtime/dashboard/data.json'),
         ('bin/plan/bet-ledger.py', 'runtime/omo/human-attestation-allowed-signers'),
