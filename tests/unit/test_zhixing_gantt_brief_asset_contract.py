@@ -14,9 +14,15 @@ def load(name, file):
     return module
 
 
-def test_host_sync_registers_brief_without_dropping_existing_fifteen():
+def test_host_sync_registers_brief_without_dropping_existing_entries():
+    """纳管清单**只增不减**：条数是漂移钉，少了就是有条目被摘掉。
+
+    16 → 26 三次增长都是真实纳管 (2026-09-26 推理引擎 / 2026-10-21 reference_cell
+    verifier helper / 2026-10-23 release_identity)，不是回归；但条数钉死的作用正是
+    让每一次增删都**必须**经过这里，而不是静默发生。
+    """
     tool = load("gantt_brief_sync", ROOT/"bin/gac/zhixing-host-sync.py")
-    assert len(tool.HOST_FILES) == 16
+    assert len(tool.HOST_FILES) == 26
     assert dict(tool.HOST_FILES)["collectors/agent_brief.py"] == "agent_brief_collector.py.asset"
     assert {"strategy_projection.py", "refresh.py", "orchestrator.py", "live_server.py", "collectors/portfolio.py"} <= set(dict(tool.HOST_FILES))
     assert all((ASSETS/repo).is_file() for _, repo in tool.HOST_FILES)
