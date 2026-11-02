@@ -27,13 +27,37 @@ MODULE_PATH = Path(__file__).parents[2] / "bin" / "mof" / "gen-service-configs.p
 REPO_ROOT = Path(__file__).parents[2]
 REGISTRY_PATH = REPO_ROOT / ".omo" / "_truth" / "registry" / "services.yaml"
 
-RESIDENT_ENABLED = {
+# 声明 `runtime_root: install` 的全部服务。2026-10-23 的 B4b Batch 4 (#4940) 把
+# 常驻族之外的 21 条也切到安装位，名单从 6 条长到 27 条 —— 这条集合是**漂移钉**：
+# 增删一条都必须经过这里，而不是静默发生。
+INSTALL_ROOT_SERVICES = {
+    "com.agora.daemon",
+    "com.l4.bet-claim-gc",
+    "com.l4.governance.watch",
+    "com.l4.mail.daemon",
     "com.l4.resident.decision",
+    "com.l4.resident.event-ingest",
     "com.l4.resident.execute",
-    "com.l4.resident.signals",
     "com.l4.resident.inbox",
     "com.l4.resident.promote",
-    "com.l4.resident.event-ingest",
+    "com.l4.resident.signals",
+    "com.omlxc.watchdog",
+    "com.omostation.agent-brief-materialize",
+    "com.omostation.agent-tick-daemon",
+    "com.omostation.autoloop-daily",
+    "com.omostation.deadline-tracker",
+    "com.omostation.evolution-agent",
+    "com.omostation.expiry-radar",
+    "com.omostation.mbp-night-patrol",
+    "com.omostation.morning-brief",
+    "com.omostation.panorama-compact-observation",
+    "com.omostation.problem-detector",
+    "com.omostation.signal-poller",
+    "com.omostation.spine-daily-ingress",
+    "com.omostation.sunset-redirector",
+    "com.omostation.tailscale-heartbeat",
+    "com.omostation.zhixing-host-drift",
+    "com.omostation.zhixing-projection-republisher",
 }
 
 
@@ -103,8 +127,8 @@ def test_undeclaring_registry_entries_still_resolve_to_checkout_root(env):
     services = env.module.load_services(REGISTRY_PATH)
     assert services, "注册表解析出 0 条 —— 尺没命中，不得当作通过"
     declaring = [s for s in services if "runtime_root" in s]
-    assert len(declaring) == 6, f"声明运行根的条目应为 6，实为 {len(declaring)}"
-    assert {s["label"] for s in declaring} == RESIDENT_ENABLED
+    assert len(declaring) == 27, f"声明运行根的条目应为 27，实为 {len(declaring)}"
+    assert {s["label"] for s in declaring} == INSTALL_ROOT_SERVICES
     assert {s["runtime_root"] for s in declaring} == {"install"}
     for svc in services:
         if "runtime_root" not in svc:

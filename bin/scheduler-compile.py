@@ -199,11 +199,26 @@ def _normalize_interpreter(cmd: str) -> str:
     return "".join(out)
 
 
-def check_drift():
+def _expand_workspace(cmd: str) -> str:
+    """把 registry 里的 `$HOME/Workspace` 写法展开成绝对路径, 使声明与安装态可比。
+
+    抽取成函数是为了让**测试缝**能复用同一个展开 (见 `check_drift` 的
+    `installed_lines`) —— 两侧各写一份替换, 迟早会只改一侧。
+    """
+    return cmd.replace('"$HOME/Workspace"', "/Users/xiamingxing/Workspace").replace(
+        "$HOME/Workspace", "/Users/xiamingxing/Workspace"
+    )
+
+
+def check_drift(installed_lines: list[str] | None = None) -> dict:
     """校验登记源 vs crontab 安装态一致性.
 
     只比较 status=active 且 planes 含 crontab 的条目; status=proposed 是尚未
     正式启用的治理巡检 backlog, 不该被算成 drift (v2, TASK-B3229A65)。
+
+    `installed_lines`: 安装态注入缝 (测试用)。`None` = 读本机 `crontab -l`。
+    不注入时行为逐字节不变; 注入时**不碰本机 crontab**, 于是 `ok` 只由
+    「登记 ↔ 编译产物」决定, 不随本机 cron 状态漂移。
     """
     registered = _load_jobs()
     reg_set = set()
@@ -213,15 +228,13 @@ def check_drift():
         if "crontab" not in j.get("planes", []):
             continue
         sched, cmd = j.get("schedule", ""), j.get("command", "")
-        cmd = cmd.replace('"$HOME/Workspace"', "/Users/xiamingxing/Workspace").replace(
-            "$HOME/Workspace", "/Users/xiamingxing/Workspace"
-        )
-        reg_set.add(f"{sched} {_normalize_interpreter(cmd)}"[:120])
-    try:
-        r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
-        installed_lines = r.stdout.splitlines() if r.returncode == 0 else []
-    except Exception:
-        installed_lines = []
+        reg_set.add(f"{sched} {_normalize_interpreter(_expand_workspace(cmd))}"[:120])
+    if installed_lines is None:
+        try:
+            r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
+            installed_lines = r.stdout.splitlines() if r.returncode == 0 else []
+        except Exception:
+            installed_lines = []
     inst_set = set()
     for line in installed_lines:
         s = line.strip()

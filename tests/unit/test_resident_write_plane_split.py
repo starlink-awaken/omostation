@@ -13,18 +13,23 @@ BET:  BET-Y2Q4-T10-233   spec: `docs/superpowers/specs/2026-06-06-omo-resident-w
   `projects/omo/src/omo/omo_paths.event_ledger_path()` 在每个 env 配置下**逐字节相等** ——
   这条只能靠**执行**验，扫源码扫不出「两个都对但拼法不同」。
 
-⚠️ 现状 (三次移动: T10-233 初判 → T10-247 → 2026-10-29 bin/ 读侧收敛): T10-233 基线上 bin/ 侧**没有
-任何读者**解析到 state 根 (类别只有 CHECKOUT / CALLER / DERIVED)，因此「读写同根」在不动 `bin/` 的
-前提下**结构上不可能达成**；台账 circuit_breaker 明确「需要改 bin/ 读者 → 停下登记而不是扩大 PR」，
-所以当时这里是登记，不是豁免的省略。T10-247 把 projection-full-refresh 的 ledger 第②支落到 state 根，
-2026-10-29 把 `.omo/_delivery/resident-orchestrator/**` 一族两个文件里的四处访问器 (`_pid_file` /
-`_log_file` / `_wm_path` / `_daemon_watermarks`) 改为调用时刻解析 —— 于是
-「零读者」这句**按事实不再成立**，读侧改为钉 `REVIEWED_STATE_READERS` 评审集 (含每个在册文件的
-STATE 行数)。
-**本族已读写同根**；其余族 (workflow-mesh events、observability、retros/resident、event-ingest 等)
-仍是**已登记的 split 现状**，`log-rotate.py` 按设计留在检出根并由
+⚠️ 现状 (四次移动: T10-233 初判 → T10-247 → 2026-10-29 bin/ 读侧收敛 → 2026-11-02 声明补全):
+T10-233 基线上 bin/ 侧**没有任何读者**解析到 state 根 (类别只有 CHECKOUT / CALLER / DERIVED)，
+因此「读写同根」在不动 `bin/` 的前提下**结构上不可能达成**；台账 circuit_breaker 明确
+「需要改 bin/ 读者 → 停下登记而不是扩大 PR」，所以当时这里是登记，不是豁免的省略。
+T10-247 把 projection-full-refresh 的 ledger 第②支落到 state 根，2026-10-29 把
+`.omo/_delivery/resident-orchestrator/**` 一族两个文件里的四处访问器改为调用时刻解析 —— 于是
+「零读者」这句**按事实不再成立**，读侧改为钉 `REVIEWED_STATE_READERS` 评审集。
+**本族已读写同根**；其余族仍是**已登记的 split 现状**，`log-rotate.py` 按设计留在检出根并由
 `tests/unit/test_resident_plane_readers_state_root.py::test_log_rotate_stays_registered` 钉住 ——
 它清的是祖先目录，漏改的后果不是读不到而是旧文件永不清理。
+
+2026-11-02: omo 写面自 2026-10-10 (T10-239) 起从 18 族长到 42 族 (resident 状态面 + `_knowledge`
+jsonl 面)，而本文件的登记表一直停在 18 —— 这就是 BET-Y2Q4-T10-277 §4 记的「声明 18 / 实扫 42
+的口径缺口」，挂了 3 周无人看见 (根 `governance-check.yml` 是逐文件白名单，不含 `tests/unit/**`)。
+本轮把写侧族表、读侧 split 表、CALLER/DERIVED 证据表**全部按实测补齐**，并顺手补上检测器的
+两个分类盲区 (`X = code_root()` 与模块级别名链) —— 不补的话，活面里可判的站点会被误报成
+「未知根」。
 
 开发期读的是 `projects/omo` (分支 gitlink 的检出)；未 bump-pointer 时那份还没有写面机制，
 `test_omo_checkout_carries_the_write_plane_mechanism` 会当场红并指名原因。用
@@ -55,6 +60,12 @@ OMO_PATHS_PY = OMO_SRC / "omo_paths.py"
 
 RESOLVERS = frozenset({"write_path", "state_root", "event_ledger_path", "state_file_read"})
 _STATE_MARKERS = ("state_root", "runtime_state_root", "state_file_read", "projection_read", "event_ledger_path")
+# 检出锚点标记 —— 与 CALLER_EVIDENCE 的 `checkout: True` 判据**同一份**。
+# 2026-11-02: `_classify` 原先只认 `__file__`/`parents[` 两个字面量, 于是
+# `WORKSPACE = code_root()` 被判 DERIVED —— 而 `code_root()` 就是
+# `Path(__file__).resolve().parents[2]` (repo_root.py:87-89)。同一份标记两处用两个口径,
+# 是「判据与被检对象不同源」的形状, 所以这里收成一份。
+CHECKOUT_MARKERS = ("__file__", "parents[", "code_root")
 _COORDINATION = ".omo/_delivery/agent-workflows"
 
 
@@ -97,7 +108,7 @@ def _classify(value: ast.AST) -> str:
     d = ast.dump(value)
     if any(k in d for k in _STATE_MARKERS):
         return "STATE"
-    if "parents[" in d or "__file__" in d:
+    if any(k in d for k in CHECKOUT_MARKERS):
         return "CHECKOUT"
     if "environ" in d or "getenv" in d:
         return "EXTERNAL"
@@ -112,7 +123,15 @@ def _parse(path: Path) -> ast.AST | None:
 
 
 def _module_classes(path: Path, cache: dict[Path, dict[str, str]]) -> dict[str, str]:
-    """模块级 `NAME = <expr>` 的根类别，含一跳 sibling import (`from _shared import ROOT`)。"""
+    """模块级 `NAME = <expr>` 的根类别。
+
+    含两条解析链: ① 同模块 `A = B` 别名 (B 的类别就是 A 的); ② 一跳 sibling import
+    (`from _shared import ROOT`)。
+
+    2026-11-02: ①是补的 —— `SCRIPT_DIR = Path(__file__).parent` +
+    `WORKSPACE_ROOT = SCRIPT_DIR.parent.parent` 原先被判 DERIVED, 而它显然是检出根。
+    别名链不展开时, 「未知根混进活面」的判据会把**可判的**站点误报成不可判。
+    """
     if path in cache:
         return cache[path]
     cache[path] = {}
@@ -121,16 +140,43 @@ def _module_classes(path: Path, cache: dict[Path, dict[str, str]]) -> dict[str, 
         return cache[path]
     cls: dict[str, str] = {}
     imported: dict[str, str] = {}
+    values: dict[str, ast.AST] = {}
     for node in tree.body:
         if isinstance(node, ast.Assign):
             for t in node.targets:
                 if isinstance(t, ast.Name) and node.value is not None:
-                    cls[t.id] = _classify(node.value)
+                    values[t.id] = node.value
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
-            cls[node.target.id] = _classify(node.value)
+            values[node.target.id] = node.value
         elif isinstance(node, ast.ImportFrom) and node.module:
             for a in node.names:
                 imported[a.asname or a.name] = node.module
+
+    def _root_name(node: ast.AST) -> str | None:
+        """表达式最底层那个名字 —— `SCRIPT_DIR.parent.parent` 的根是 `SCRIPT_DIR`。"""
+        while True:
+            if isinstance(node, ast.Name):
+                return node.id
+            if isinstance(node, (ast.Attribute, ast.Call)):
+                node = node.func if isinstance(node, ast.Call) else node.value
+                continue
+            return None
+
+    def resolve(name: str, seen: frozenset[str]) -> str:
+        if name in cls:
+            return cls[name]
+        if name in seen:
+            return "DERIVED"
+        node = values.get(name)
+        if node is None:
+            return "DERIVED"
+        cls[name] = _classify(node)
+        if cls[name] == "DERIVED" and (root := _root_name(node)) is not None:
+            cls[name] = resolve(root, seen | {name})
+        return cls[name]
+
+    for name in values:
+        resolve(name, frozenset())
     cache[path] = cls
     for name, mod in imported.items():
         if name in cls:
@@ -396,14 +442,38 @@ STATE_FAMILIES = frozenset(
         ".omo/_delivery/resident-orchestrator/daemon.pid",
         ".omo/_delivery/resident-orchestrator/receipts.jsonl",
         ".omo/_delivery/resident-orchestrator/watermarks/*",
+        ".omo/_knowledge",
+        ".omo/_knowledge/bos-metrics.jsonl",
         ".omo/_knowledge/decision-proposals",
         ".omo/_knowledge/evolution-proposals",
+        ".omo/_knowledge/omo-alerts.jsonl",
+        ".omo/_knowledge/omo-events.jsonl",
+        ".omo/_knowledge/omo-sync.jsonl",
+        ".omo/_knowledge/omo-trail.jsonl",
         ".omo/_knowledge/retros/resident",
         ".omo/_knowledge/sediment",
         ".omo/_knowledge/sediment-archive",
         ".omo/_knowledge/workflow-mesh/events.jsonl",
+        ".omo/_truth/task-center/dispatches",
+        ".omo/state/*",
+        ".omo/state/agent-cell-memory",
+        ".omo/state/agent-cell-replay",
+        ".omo/state/compute/dynamic_nodes.json",
+        ".omo/state/compute/inference_metrics.json",
+        ".omo/state/daemon/chat_session.json",
+        ".omo/state/daemon/media",
+        ".omo/state/daemon/resident.pid",
+        ".omo/state/daemon/service_state.json",
+        ".omo/state/memory/candidates",
+        ".omo/state/memory/distilled_crystallization.json",
+        ".omo/state/pipeline-supervisor-state.json",
+        ".omo/state/refinement-snapshots",
+        ".omo/state/refinements",
         ".omo/state/resident-heartbeat.jsonl",
         ".omo/state/resident-monitor.jsonl",
+        ".omo/state/rule-vitality.jsonl",
+        "runtime/cron",
+        "runtime/cron/resident-daemon.log",
         "runtime/omo/event-ledger.sqlite3",
     }
 )
@@ -414,20 +484,41 @@ OPAQUE_WRITERS = frozenset({"@OPAQUE:default_db_path"})
 
 # resident/** 里**留在检出根**的写点。前四类不在本轮 22 个 write_surfaces 内 (台账
 # circuit_breaker: 扩大面 → 停下登记)；execute.py 是判据-4 的协调面，永久留在检出。
+# 2026-11-02: resident 侧状态面收敛 (cell_state / chat_engine / service_ctl 等) 使
+# bare_inline 从 5 条 (4 个在册 + execute.py) 长到 16 条 —— 本表同步补全，否则「留在检出根」的写点会
+# 静默多出而判据仍绿。
 DEFERRED_RESIDENT_WRITERS = frozenset(
     {
+        "resident/chat_engine.py",
         "resident/connectors_poll.py",
+        "resident/escalate.py",
+        "resident/inference_gateway.py",
+        "resident/interact.py",
+        "resident/memory_distiller.py",
+        "resident/morning_briefing.py",
+        "resident/night_patrol.py",
+        "resident/notification.py",
+        "resident/patrol.py",
+        "resident/refine_rollback.py",
+        "resident/screen_probe.py",
         "resident/sema_crystallizer.py",
+        "resident/service_ctl.py",
+        "resident/service_runner.py",
         "resident/swarm_custodian.py",
         "resident/task_queue.py",
     }
 )
 COORDINATION_PLANE_WRITERS = frozenset({"resident/execute.py"})
 
-# 9 个族 / 30 对 (T10-233 基线为 12 族 / 33 对；resident-orchestrator 的 daemon.log / daemon.pid /
-# watermarks 三行随 2026-10-29 读者改道移出，判据是集合相等，所以改道后**必须**同步删表)。
+# 读侧 split 钉成集合相等。`SPLIT_ANCESTOR` 是同表的**严格祖先**那半。
 # 类别 = 该 bin 文件里锚点的根: CHECKOUT=检出常量, CALLER=函数参数
-# (由 CALLER_EVIDENCE 单独钉住), DERIVED=扫不出模块级定义 (只出现在归档/死码里)。
+# (由 CALLER_EVIDENCE 单独钉住), DERIVED=扫不出模块级定义 (归档面是死码; 活面出现时
+# 由 test_derived_class_readers_are_archived_or_reviewed 逐条在册)。
+#
+# 2026-11-02: 补全 2026-10-10 起累积的口径缺口 —— omo 写面从 18 族长到 42 族
+# (resident 状态面 + `_knowledge` jsonl 面)，本表与 CALLER_EVIDENCE 同步补齐。
+# `.omo/_knowledge` 是**容器族** (11 个更具体的族是它的后代)，它的读者集就是那些
+# 以 `_knowledge` 目录本身为根的读者 —— 逐条在册，不做「容器豁免」。
 SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
     ".omo/_delivery/alert-forwarder/watermark.json": {
         ("bin/ssot/alert-forwarder.py", "CHECKOUT"),
@@ -442,6 +533,103 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
         ("bin/ssot/alert-forwarder.py", "CHECKOUT"),
         ("bin/ssot/observability-events.py", "CHECKOUT"),
     },
+    ".omo/_knowledge": {
+        ("bin/_archive/2026-08-25-dfsq-quota/subtraction-quota-enforcer.py", "CHECKOUT"),
+        ("bin/_archive/2026-09-21-bin-quota-offset/real-scenario-runner.py", "DERIVED"),
+        ("bin/_archive/alert-history.py", "CALLER"),
+        ("bin/_archive/approve-proposal.py", "DERIVED"),
+        ("bin/_archive/calibration-runner-v1.py", "CHECKOUT"),
+        ("bin/_archive/cross-submodule-events.py", "CALLER"),
+        ("bin/_archive/emergency-override.py", "CHECKOUT"),
+        ("bin/_archive/graphify-local-extract.py", "CALLER"),
+        ("bin/_archive/management-categorize.py", "CALLER"),
+        ("bin/_archive/management-migrate.py", "CALLER"),
+        ("bin/_archive/migrated_low_value/alert-history.py", "CALLER"),
+        ("bin/_archive/migrated_low_value/cross-submodule-events.py", "CALLER"),
+        ("bin/_archive/migrated_low_value/graphify-local-extract.py", "CALLER"),
+        ("bin/_archive/migrated_low_value/state-stale-consume.py", "CHECKOUT"),
+        ("bin/_archive/migrated_low_value/status-distribution.py", "CALLER"),
+        ("bin/_archive/migrations/management-migrate.py", "CALLER"),
+        ("bin/_archive/quota-clearance-2026-08-24/test_zones_check.py", "CHECKOUT"),
+        ("bin/_archive/state-stale-consume.py", "CHECKOUT"),
+        ("bin/_archive/status-distribution.py", "CALLER"),
+        ("bin/_archive/swarm-manager.py", "CHECKOUT"),
+        ("bin/adr/next-adr-id.py", "CHECKOUT"),
+        ("bin/bc-os/north_star_meter_v2.py", "CALLER"),
+        ("bin/bc-os/north_star_meter_v3.py", "CHECKOUT"),
+        ("bin/bc-os/north_star_meter_v4.py", "CHECKOUT"),
+        ("bin/bc-os/proposal-triage.py", "CHECKOUT"),
+        ("bin/compass_radar.py", "CALLER"),
+        ("bin/delivery/physical_recovery.py", "CHECKOUT"),
+        ("bin/gac/adr-link-validator.py", "CHECKOUT"),
+        ("bin/gac/anti-corrosion-detector.py", "CHECKOUT"),
+        ("bin/gac/check-gateway-status-doc.py", "CHECKOUT"),
+        ("bin/gac/check-resident-bos.py", "CHECKOUT"),
+        ("bin/gac/check-work-landed.py", "CHECKOUT"),
+        ("bin/gac/convergence-pulse.py", "CHECKOUT"),
+        ("bin/gac/drift-sweep.py", "CHECKOUT"),
+        ("bin/gac/error-knowledge.py", "CHECKOUT"),
+        ("bin/gac/event-loop-lint.py", "CHECKOUT"),
+        ("bin/gac/evidence-smoke.py", "CHECKOUT"),
+        ("bin/gac/fix-frontmatter.py", "CALLER"),
+        ("bin/gac/gac-validate.py", "CHECKOUT"),
+        ("bin/gac/governance-convergence-lint.py", "CHECKOUT"),
+        ("bin/gac/governance-readiness.py", "CALLER"),
+        ("bin/gac/kos-seed-import.py", "CHECKOUT"),
+        ("bin/gac/m1-closeout-report.py", "CALLER"),
+        ("bin/gac/omostation-bootloader.py", "CHECKOUT"),
+        ("bin/gac/p0-event-listener.py", "CALLER"),
+        ("bin/gac/p78-diagnostic-prescan.py", "CHECKOUT"),
+        ("bin/gac/retro-reference-engine.py", "CHECKOUT"),
+        ("bin/gac/swarm_discipline.py", "CALLER"),
+        ("bin/gac/value-evolution-connector.py", "DERIVED"),
+        ("bin/kb/knowledge-graph.py", "CALLER"),
+        ("bin/kb/staleness-check.py", "CALLER"),
+        ("bin/meta/compass_radar.py", "CALLER"),
+        ("bin/mof/generate-brief.py", "CHECKOUT"),
+        ("bin/mof/m4-health-score.py", "CHECKOUT"),
+        ("bin/panorama/panel-collect.py", "CHECKOUT"),
+        ("bin/panorama/panorama-collect.py", "CHECKOUT"),
+        ("bin/plan/bet-closeout-auto.py", "CHECKOUT"),
+        ("bin/plan/bet-ledger.py", "CHECKOUT"),
+        ("bin/plan/chain-bind-audit.py", "CHECKOUT"),
+        ("bin/reports/quarterly-report.py", "CHECKOUT"),
+        ("bin/ssot/adr-number-check.py", "CALLER"),
+        ("bin/ssot/dashboard.py", "CHECKOUT"),
+        ("bin/ssot/decision-agent.py", "CHECKOUT"),
+        ("bin/ssot/doc-lifecycle.py", "CHECKOUT"),
+        ("bin/ssot/event-ingest-adapter.py", "CHECKOUT"),
+        ("bin/ssot/evolution-agent.py", "CHECKOUT"),
+        ("bin/ssot/gen-external-channels-inventory.py", "CHECKOUT"),
+        ("bin/ssot/gen-knowledge-index.py", "CHECKOUT"),
+        ("bin/ssot/governance-scanner.py", "CHECKOUT"),
+        ("bin/ssot/journey-runner.py", "CHECKOUT"),
+        ("bin/ssot/journey-state-store.py", "CALLER"),
+        ("bin/ssot/knowledge-sediment.py", "CHECKOUT"),
+        ("bin/ssot/mail_daemon.py", "CHECKOUT"),
+        ("bin/ssot/management-categorize.py", "CALLER"),
+        ("bin/ssot/management-cross-ref-check.py", "CALLER"),
+        ("bin/ssot/mesh-consumer.py", "CHECKOUT"),
+        ("bin/ssot/mos-dual-stack-consistency.py", "CHECKOUT"),
+        ("bin/ssot/project_health_check.py", "CALLER"),
+        ("bin/ssot/proposal-to-adr.py", "CHECKOUT"),
+        ("bin/ssot/resident-orchestrator-daemon.py", "CHECKOUT"),
+        ("bin/ssot/rule-adapt.py", "CHECKOUT"),
+        ("bin/ssot/scene-batch-execute.py", "CHECKOUT"),
+        ("bin/ssot/scene-card-lifecycle.py", "CALLER"),
+        ("bin/ssot/scene-evolution-loop.py", "CHECKOUT"),
+        ("bin/ssot/scene-feedback-collector.py", "CALLER"),
+        ("bin/ssot/scene-graph.py", "CHECKOUT"),
+        ("bin/ssot/scene-history.py", "CHECKOUT"),
+        ("bin/ssot/scene-outcome-recorder.py", "CHECKOUT"),
+        ("bin/ssot/scene-reflection.py", "CALLER"),
+        ("bin/ssot/sema-distill.py", "CHECKOUT"),
+        ("bin/ssot/sync-bos-registry.py", "CHECKOUT"),
+        ("bin/ssot/system-health-check.py", "CHECKOUT"),
+        ("bin/ssot/vision-audit.py", "CHECKOUT"),
+        ("bin/sweep/scan.py", "CHECKOUT"),
+        ("bin/sweep/sweep_index.py", "CHECKOUT"),
+    },
     ".omo/_knowledge/decision-proposals": {
         ("bin/_archive/2026-09-21-bin-quota-offset/real-scenario-runner.py", "DERIVED"),
         ("bin/panorama/panorama-collect.py", "CHECKOUT"),
@@ -455,6 +643,19 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
         ("bin/ssot/evolution-agent.py", "CHECKOUT"),
         ("bin/ssot/proposal-to-adr.py", "CHECKOUT"),
         ("bin/ssot/scene-evolution-loop.py", "CHECKOUT"),
+    },
+    ".omo/_knowledge/omo-events.jsonl": {
+        ("bin/_archive/alert-history.py", "CALLER"),
+        ("bin/_archive/cross-submodule-events.py", "CALLER"),
+        ("bin/_archive/migrated_low_value/alert-history.py", "CALLER"),
+        ("bin/_archive/migrated_low_value/cross-submodule-events.py", "CALLER"),
+        ("bin/_archive/migrated_low_value/state-stale-consume.py", "CHECKOUT"),
+        ("bin/_archive/state-stale-consume.py", "CHECKOUT"),
+        ("bin/compass_radar.py", "CALLER"),
+        ("bin/gac/event-loop-lint.py", "CHECKOUT"),
+        ("bin/gac/evidence-smoke.py", "CHECKOUT"),
+        ("bin/gac/p0-event-listener.py", "CALLER"),
+        ("bin/meta/compass_radar.py", "CALLER"),
     },
     ".omo/_knowledge/retros/resident": {
         ("bin/bc-os/north_star_meter_v2.py", "CALLER"),
@@ -473,29 +674,57 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
         ("bin/ssot/resident-orchestrator-daemon.py", "CHECKOUT"),
         ("bin/ssot/system-health-check.py", "CHECKOUT"),
     },
-    "runtime/omo/event-ledger.sqlite3": {
+    ".omo/_truth/task-center/dispatches": {
+        ("bin/gac/check-test-host-hygiene.py", "CHECKOUT"),
+    },
+    ".omo/state/*": {
+        ("bin/mof/m2-ssot-inventory.py", "CHECKOUT"),
+    },
+    ".omo/state/pipeline-supervisor-state.json": {
+        ("bin/gac/convergence-pulse.py", "CHECKOUT"),
+    },
+    ".omo/state/rule-vitality.jsonl": {
+        ("bin/gac/rule-vitality-tracker.py", "CHECKOUT"),
+    },
+    "runtime/cron": {
+        ("bin/_archive/migrated_low_value/omo-doctor-cron.py", "CHECKOUT"),
+        ("bin/_archive/omo-doctor-cron.py", "CHECKOUT"),
         ("bin/panorama/panorama-collect.py", "CHECKOUT"),
+    },
+    "runtime/omo/event-ledger.sqlite3": {
         ("bin/panorama/projection-full-refresh.py", "CALLER"),
     },
 }
 
-# 9 个族 / 17 对 (与 T10-233 基线同数：check-resident-status **仍是**检出根读者 —— 它是 sgf-policy 登记
-# 的 gate 脚本，落 governance_code lane，与本 code lane 腿不能同批交付，见
-# `tests/unit/test_resident_plane_readers_state_root.py::test_check_resident_status_still_registered_checkout`)。
+# 读点是族的**严格祖先目录** (log-rotate 清日志、p78 诊断预扫等)。
 # log-rotate 是**目录级**清理者，它按祖先路径删日志 —— 写者改道而它没跟上
 # 时，后果不是读不到而是**旧文件永不清理**，所以这一类比 exact 更必须钉住。
 SPLIT_ANCESTOR: dict[str, set[tuple[str, str]]] = {
-    ".omo/_delivery/event-ingest/watermark.json": {("bin/ssot/log-rotate.py", "CHECKOUT")},
-    ".omo/_delivery/perception-inbox/watermark.json": {("bin/ssot/log-rotate.py", "CHECKOUT")},
-    ".omo/_delivery/personal-signals/watermark.json": {("bin/ssot/log-rotate.py", "CHECKOUT")},
-    ".omo/_delivery/resident-orchestrator/daemon.log": {("bin/ssot/log-rotate.py", "CHECKOUT")},
-    ".omo/_delivery/resident-orchestrator/daemon.pid": {("bin/ssot/log-rotate.py", "CHECKOUT")},
-    ".omo/_delivery/resident-orchestrator/receipts.jsonl": {("bin/ssot/log-rotate.py", "CHECKOUT")},
+    ".omo/_delivery/event-ingest/watermark.json": {
+        ("bin/ssot/log-rotate.py", "CHECKOUT"),
+    },
+    ".omo/_delivery/perception-inbox/watermark.json": {
+        ("bin/ssot/log-rotate.py", "CHECKOUT"),
+    },
+    ".omo/_delivery/personal-signals/watermark.json": {
+        ("bin/ssot/log-rotate.py", "CHECKOUT"),
+    },
+    ".omo/_delivery/resident-orchestrator/daemon.log": {
+        ("bin/ssot/log-rotate.py", "CHECKOUT"),
+    },
+    ".omo/_delivery/resident-orchestrator/daemon.pid": {
+        ("bin/ssot/log-rotate.py", "CHECKOUT"),
+    },
+    ".omo/_delivery/resident-orchestrator/receipts.jsonl": {
+        ("bin/ssot/log-rotate.py", "CHECKOUT"),
+    },
     ".omo/_delivery/resident-orchestrator/watermarks/*": {
+        ("bin/gac/check-resident-status.py", "CALLER"),
         ("bin/gac/check-resident-status.py", "CHECKOUT"),
         ("bin/ssot/log-rotate.py", "CHECKOUT"),
     },
     ".omo/_knowledge/retros/resident": {
+        ("bin/gac/check-work-landed.py", "CHECKOUT"),
         ("bin/gac/fix-frontmatter.py", "CALLER"),
         ("bin/gac/p78-diagnostic-prescan.py", "CHECKOUT"),
         ("bin/gac/retro-reference-engine.py", "CHECKOUT"),
@@ -505,7 +734,9 @@ SPLIT_ANCESTOR: dict[str, set[tuple[str, str]]] = {
         ("bin/plan/chain-bind-audit.py", "CHECKOUT"),
         ("bin/reports/quarterly-report.py", "CHECKOUT"),
     },
-    ".omo/_knowledge/workflow-mesh/events.jsonl": {("bin/ssot/scene-card-lifecycle.py", "CALLER")},
+    ".omo/_knowledge/workflow-mesh/events.jsonl": {
+        ("bin/ssot/scene-card-lifecycle.py", "CALLER"),
+    },
 }
 
 # CALLER 类锚点 = 函数参数，静态类别未知。逐个把「谁传进来的、那位的根是什么」钉成
@@ -547,8 +778,147 @@ CALLER_EVIDENCE: dict[tuple[str, str], dict[str, object]] = {
         ],
         "checkout_resolver": "canonical_root",
     },
+    # 2026-11-02: `.omo/_knowledge` 一族带来的 25 个新 CALLER 锚点。
+    ("bin/_archive/alert-history.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/cross-submodule-events.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/graphify-local-extract.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/management-categorize.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/management-migrate.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/migrated_low_value/alert-history.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/migrated_low_value/cross-submodule-events.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/migrated_low_value/graphify-local-extract.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/migrated_low_value/status-distribution.py", "root"): {
+        "exprs": ["root = Path(sys.argv[1] if len(sys.argv) > 1 else \".\").resolve()"],
+        "checkout": False,
+    },
+    ("bin/_archive/migrations/management-migrate.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/_archive/status-distribution.py", "root"): {
+        "exprs": ["root = Path(sys.argv[1] if len(sys.argv) > 1 else \".\").resolve()"],
+        "checkout": False,
+    },
+    ("bin/gac/check-resident-status.py", "base_root"): {
+        "exprs": ["base_root = Path(root) if root else Path(REPO)"],
+        "checkout": False,
+    },
+    ("bin/gac/governance-readiness.py", "root"): {
+        "exprs": ["root = Path(sys.argv[1] if len(sys.argv) > 1 else \".\").resolve()"],
+        "checkout": False,
+    },
+    ("bin/gac/m1-closeout-report.py", "base"): {
+        "exprs": ["for base in (live, code_root):"],
+        "checkout": False,
+    },
+    ("bin/gac/p0-event-listener.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/gac/swarm_discipline.py", "root"): {
+        "exprs": ["root = Path(__file__).resolve().parents[2]"],
+        "checkout": True,
+    },
+    ("bin/kb/knowledge-graph.py", "root"): {
+        "exprs": ["build_graph(WORKSPACE)"],
+        "checkout_via": "WORKSPACE",
+    },
+    ("bin/kb/staleness-check.py", "root"): {
+        "exprs": [
+            "scan_targets(WORKSPACE)",
+            "check_file(WORKSPACE, f)",
+        ],
+        "checkout_via": "WORKSPACE",
+    },
+    ("bin/ssot/adr-number-check.py", "root"): {
+        "exprs": ["root = Path(__file__).resolve().parents[2]"],
+        "checkout": True,
+    },
+    ("bin/ssot/journey-state-store.py", "root"): {
+        "exprs": ["parser.add_argument(\"--root\", type=Path, default=Path(__file__).resolve().parents[2])"],
+        "checkout": True,
+    },
+    ("bin/ssot/management-categorize.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/ssot/management-cross-ref-check.py", "root"): {
+        "exprs": [
+            "parser.add_argument(\"root\", nargs=\"?\", default=\".\", help=\"workspace root\")",
+            "root = Path(args.root).resolve()",
+        ],
+        "checkout": False,
+    },
+    ("bin/ssot/project_health_check.py", "root"): {
+        "exprs": ["root = Path(__file__).resolve().parents[2] / args.project"],
+        "checkout": True,
+    },
+    ("bin/ssot/scene-feedback-collector.py", "root"): {
+        "exprs": ["parser.add_argument(\"--root\", type=Path, default=Path(__file__).resolve().parents[2])"],
+        "checkout": True,
+    },
+    ("bin/ssot/scene-reflection.py", "root"): {
+        "exprs": ["parser.add_argument(\"--root\", type=Path, default=Path(__file__).resolve().parents[2])"],
+        "checkout": True,
+    },
 }
-CHECKOUT_MARKERS = ("__file__", "parents[", "code_root")
 
 # 在册 STATE 读者评审集 —— 键**只有 rel**，不钉行号：`_state_readers` 返回 (rel, line) 对，
 # 行号随该读者自身后续改动漂移 (T10-247 实测 line=58)，钉行号会让判据在无关改动当天假红。
@@ -894,23 +1264,54 @@ def test_checkout_resolver_evidence_mode_is_not_a_rubber_stamp():
     assert any(marker in source for marker in CHECKOUT_MARKERS), source
 
 
-def test_derived_class_readers_are_archived_only():
-    """DERIVED = 扫不出模块级根定义。它只允许出现在归档面，否则「未知根」会混进活面。"""
-    for table in (SPLIT_EXACT, SPLIT_ANCESTOR):
+# DERIVED = 检测器扫不出模块级根定义。归档面那批是死码，不需要理由；**活面**出现时
+# 必须逐条在册并写明为何静态不可判 —— 否则「未知根不得混进活面」会退化成一句空话，
+# 而真正的回归（新增一个说不清根在哪的读者）反而没人看得见。
+DERIVED_EVIDENCE: dict[str, str] = {
+    "bin/gac/value-evolution-connector.py": (
+        "REPO = _detect_repo(): 沿 Path(__file__).resolve().parents 上溯找 "
+        "docs/project-registry.yaml，找不到回退 Path.cwd() —— 同一表达式有两个可能的根，"
+        "静态不可判（它读的 .omo/_knowledge/facts/personal-preferences.jsonl 还带 "
+        "OMO_PREFERENCES_LOG 环境覆盖）"
+    ),
+}
+
+
+def test_derived_class_readers_are_archived_or_reviewed(measured):
+    """DERIVED = 扫不出模块级根定义。归档面的那批是死码；**活面**出现时必须逐条在册。
+
+    判据读**实测**表 (不是 `SPLIT_*` 字面量) —— 读字面量的话检测器退化了本用例也照样绿，
+    那正是 AGENTS.md §7③ 的「按构造就绿」。双向钉：实测的活面 DERIVED 读者集合 == `DERIVED_EVIDENCE` 的键 —— 少了是有人
+    把在册项「顺手删掉」, 多了是新增了一个说不清根在哪的读者, 两种都当场红。
+    """
+    _fams, _rows, exact, ancestor = measured
+    live = set()
+    for table in (exact, ancestor):
         for pairs in table.values():
             for rel, klass in pairs:
-                if klass == "DERIVED":
-                    assert rel.startswith("bin/_archive/"), rel
+                if klass == "DERIVED" and not rel.startswith("bin/_archive/"):
+                    live.add(rel)
+    assert live == set(DERIVED_EVIDENCE), live ^ set(DERIVED_EVIDENCE)
+    for rel, why in DERIVED_EVIDENCE.items():
+        assert (ROOT / rel).is_file(), rel
+        assert why, rel
 
 
 def test_ledger_family_has_a_single_root_contract_in_bin():
-    """台账族的两个 bin 读者必须同一口径，否则「谁读到哪份 ledger」取决于调用者。"""
+    """台账族的 bin 读者必须同一口径，否则「谁读到哪份 ledger」取决于调用者。
+
+    静态可见的 split 读者**恰为** projection-full-refresh (T10-247 起它的 ledger 第②支
+    落 state 根)。#5014 把 `panorama-collect.py` 的 ledger 解析也改到**调用时刻**
+    (`event_ledger_path()`) —— resolver 无实参, 检测器的路径表达式判据看不见它, 于是它
+    既不进本表也不该进：它已经与写者同根。所以这里**两条都钉** —— 只钉前者的话,
+    把那一行删掉、让采集器退回检出根, 本表照样绿。
+    """
     _fams, _rows, exact, _an = ledger_measured()
     readers = {rel for rel, _k in exact.get("runtime/omo/event-ledger.sqlite3", set())}
-    assert readers == {
-        "bin/panorama/panorama-collect.py",
-        "bin/panorama/projection-full-refresh.py",
-    }
+    assert readers == {"bin/panorama/projection-full-refresh.py"}, readers
+    source = (ROOT / "bin/panorama/panorama-collect.py").read_text(encoding="utf-8", errors="ignore")
+    assert "event_ledger_path()" in source, "采集器不再调用时刻解析 ledger 根"
+    assert "runtime/omo/event-ledger" not in source, "采集器退回了检出根字面量"
 
 
 def ledger_measured():

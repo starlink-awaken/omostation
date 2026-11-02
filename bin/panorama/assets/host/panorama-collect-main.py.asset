@@ -69,7 +69,7 @@ principal_id_from_env = _pid_module.principal_id_from_env
 _LIB_DIR = _host_support_dir("lib")
 if _LIB_DIR not in sys.path:
     sys.path.insert(0, _LIB_DIR)
-from repo_root import canonical_root, state_file_read, state_root  # noqa: E402
+from repo_root import canonical_root, event_ledger_path, state_file_read, state_root  # noqa: E402
 
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
@@ -108,12 +108,6 @@ PROJECTION_LOCK_NAME = ".projection-publisher.lock"
 CLAIMS_AUTHORITY_ROOT = (
     Path.home() / "agents/_shared/runtime/omo-claims-authority-r0"
 )
-EVENT_LEDGER = Path(
-    os.environ.get(
-        "OMO_EVENT_LEDGER_DB",
-        str(ROOT / "runtime/omo/event-ledger.sqlite3"),
-    )
-).expanduser()
 _PROCESS_STARTED_NS = time.time_ns()
 CLAIMS_REQUEST_PACKAGE = (
     Path.home() / ".local/share/zhixing-dashboard/claims-activation-request.json"
@@ -367,23 +361,23 @@ def _event_ledger_logical_digest(event_ledger: Path) -> str:
 def collect_projection_source_binding(
     *,
     claims_root: Path = CLAIMS_AUTHORITY_ROOT,
-    event_ledger: Path = EVENT_LEDGER,
+    event_ledger: Path | None = None,
 ) -> dict:
     binding = _claims_revision_binding(Path(claims_root))
     binding["source_hashes"]["event_ledger_sha256"] = _event_ledger_logical_digest(
-        Path(event_ledger)
+        Path(event_ledger) if event_ledger is not None else event_ledger_path()
     )
     return binding
 
 
 def collect_personal_value_truth(
     *,
-    event_ledger: Path = EVENT_LEDGER,
+    event_ledger: Path | None = None,
     environ=None,
 ) -> dict:
     """Measure personal value and bind it to one stable logical Ledger digest."""
     env = os.environ if environ is None else environ
-    ledger = Path(event_ledger)
+    ledger = Path(event_ledger) if event_ledger is not None else event_ledger_path()
     before = _event_ledger_logical_digest(ledger)
     import importlib.util
 
@@ -669,7 +663,7 @@ def publish_projection_revision(
     *,
     state_root: Path = PROJECTION_STATE_ROOT,
     claims_root: Path = CLAIMS_AUTHORITY_ROOT,
-    event_ledger: Path = EVENT_LEDGER,
+    event_ledger: Path | None = None,
     code_root: Path = CODE_ROOT,
     now: datetime | None = None,
 ) -> dict:
@@ -679,6 +673,8 @@ def publish_projection_revision(
     never opened here.  A failed build or pointer swap leaves the last-good
     pointer intact; revision directories remain available for rollback.
     """
+    if event_ledger is None:
+        event_ledger = event_ledger_path()
     root = Path(state_root).expanduser().resolve()
     if Path(state_root).expanduser().is_symlink():
         raise RuntimeError("projection_state_root_symlink")
@@ -3917,9 +3913,7 @@ def _collect_panels(payload: dict) -> dict:
         "journey_executions": payload.get("journey_executions") or {},
     }
     try:
-        panel_context["personal_value_truth"] = collect_personal_value_truth(
-            event_ledger=EVENT_LEDGER
-        )
+        panel_context["personal_value_truth"] = collect_personal_value_truth()
     except Exception:
         panel_context["personal_value_truth"] = {
             "available": False,
@@ -5080,7 +5074,6 @@ def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | Non
             "value_proof": value_proof_flag,
             "value_proof_readiness": value_readiness,
         },
-        "objective_coverage": payload.get("objective_coverage") if isinstance(payload.get("objective_coverage"), dict) else {"schema": "panorama-objective-coverage/v1", "available": False},
         "health": {
             "gates_total": len(gate_rows),
             "gates_pass": sum(g["verdict"] == "PASS" for g in gate_rows),

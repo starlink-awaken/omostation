@@ -92,6 +92,28 @@ def _under_gitlink(rel: str) -> bool:
     return any(rel == p or rel.startswith(p + "/") for p in _gitlink_paths())
 
 
+def _canonical_rel(rel: str) -> str:
+    """把 `.subtrees/<name>/...` 归一到对应的 gitlink 路径。
+
+    `.subtrees/**` 是 `gac-worktree.sh claim` 建立的子模块 worktree —— 与
+    `projects/<sub>` 是**同一棵树**的副本（gitignore 的，不是检出内容）。不归一化的
+    话，同一处算数错会被数两遍，而且因为不在 `.gitmodules` 声明的路径下而被错分进
+    `bugs`（2026-11-02 实测：`.subtrees/omo/tests/unit/test_workflow_cli_bet_gate.py`，
+    而它正是名单里 `projects/omo/tests/unit/test_workflow_cli_bet_gate.py` 的副本 ——
+    任何跑过 claim 的开发者都会看到这条假红）。
+    """
+    if not rel.startswith(".subtrees/"):
+        return rel
+    name, sep, tail = rel[len(".subtrees/"):].partition("/")
+    if not sep:
+        return rel
+    # sorted(): _gitlink_paths() 是 set，两个 gitlink 尾段同名时结果必须确定
+    for p in sorted(_gitlink_paths()):
+        if p == name or p.endswith("/" + name):
+            return f"{p}/{tail}"
+    return rel
+
+
 def _resolves(base: Path, sub: str, parts: list[str]) -> bool:
     """点号全路径逐项解析，**容忍 PEP-420 命名空间包**（目录在即算可达）。
 
@@ -158,9 +180,10 @@ def test_syspath_arith_is_correct_at_every_site():
         if _classify(p, idx, sub, names) != "arith-bug":
             continue
         rel = p.relative_to(ROOT).as_posix()
+        key = _canonical_rel(rel)
         line = f"{rel}: parents[{idx}]/{sub!r} 引不到 {names[0]}"
-        (owned if _under_gitlink(rel) else bugs).append(
-            (rel, idx, sub, names, line))
+        (owned if _under_gitlink(key) else bugs).append(
+            (key, idx, sub, names, line))
     assert [b[4] for b in bugs] == [], "\n".join(b[4] for b in bugs)
     # gitlink 侧的算数错**必须逐条对上名单**：多一条 = 新缺陷要指认归属，
     # 少一条 = 上游已修、名单该删。两种情况都不许静默通过。
@@ -168,6 +191,25 @@ def test_syspath_arith_is_correct_at_every_site():
     assert measured == GITLINK_OWNED_ARITH_BUGS, (
         f"新增未裁定的依赖缺陷: {sorted(measured - GITLINK_OWNED_ARITH_BUGS)}; "
         f"已消失的陈旧豁免: {sorted(GITLINK_OWNED_ARITH_BUGS - measured)}")
+
+
+def test_subtree_worktree_sites_are_attributed_to_their_gitlink():
+    """`.subtrees/<name>` 是子模块 worktree 的副本，必须归到对应 gitlink 路径。
+
+    不归一化时，任何跑过 `gac-worktree.sh claim` 的检出都会把副本里的算数错错分进
+    `bugs`（假红），而同一个缺陷在 `projects/<sub>` 下已被名单裁定。
+    """
+    gitlinks = _gitlink_paths()
+    assert gitlinks, ".gitmodules 读不到，这条判据会按构造绿"
+    sub = sorted(gitlinks)[0]
+    name = sub.rsplit("/", 1)[-1]
+    aliased = _canonical_rel(f".subtrees/{name}/tests/unit/x.py")
+    assert aliased == f"{sub}/tests/unit/x.py", aliased
+    assert _under_gitlink(aliased)
+    # 反面：非 `.subtrees` 路径不受影响；`.subtrees` 下对不上任何 gitlink 的名字也不受影响
+    assert _canonical_rel("bin/gac/x.py") == "bin/gac/x.py"
+    assert _canonical_rel(".subtrees/unknown-sub/x.py") == ".subtrees/unknown-sub/x.py"
+    assert not _under_gitlink(_canonical_rel("bin/gac/x.py"))
 
 
 def test_dependency_allowlist_cannot_exempt_root_plane():

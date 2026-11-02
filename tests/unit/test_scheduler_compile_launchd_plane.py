@@ -166,8 +166,17 @@ def test_explicit_label_field_overrides_synthesis() -> None:
 
 
 def test_shadow_segment_never_blocks_the_gate() -> None:
-    """shadow 阶段 launchd 段不得影响 crontab 的 ok 判定 (ADR-0457 三段式)。"""
-    res = sc.check_drift()
+    """shadow 阶段 launchd 段不得影响 crontab 的 ok 判定 (ADR-0457 三段式)。
+
+    安装态由 `compile_crontab(_load_jobs())` 注入 —— 原实现直接跑 `crontab -l`,
+    于是本用例的 `ok` 取决于**本机 crontab 是否与登记同步** (2026-11-02 实测
+    `drift_count=17`), 那是 host 状态而不是被测逻辑 (AGENTS.md §7「hermetic 测试
+    泄漏 host 状态」)。注入后 `ok` 只由「登记 ↔ 编译产物」决定, launchd 段是否
+    block 成为唯一变量; 展开用生产侧的 `_expand_workspace`, 不在测试里另写一份。
+    """
+    installed = [sc._expand_workspace(line) for line in sc.compile_crontab(sc._load_jobs())]
+    assert installed, "编译产物为空 —— 尺没命中，不得当作通过"
+    res = sc.check_drift(installed_lines=installed)
     assert res["ok"] is True, f"crontab 口径应保持通过: {res}"
     ld = res["launchd"]
     assert ld["mode"] == "shadow"

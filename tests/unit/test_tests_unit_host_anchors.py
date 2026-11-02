@@ -12,14 +12,24 @@ TESTS_UNIT = Path(__file__).resolve().parent
 # 写成拼接后本文件仍留在被扫集合内 —— 谁在这里加字面量，当场自曝。
 HOST_LITERAL = "/Users/" + "xiamingxing"
 
-# spec §1 表：这 3 处命中是合法前提，不是待收敛的锚点
+# spec §1 表：这些命中是合法前提，不是待收敛的锚点
 # - test_service_interpreter_stability.py:11  模块 docstring 叙述一次 uv 构建伪影，不参与断言
 # - test_spine_diff_adaptation.py:35,42        脱敏用例要求输入含真实用户名形状路径，才能证 REDACTED 生效
+# - test_lib_wrapper_root_self_resolution.py:21,47,56,68
+#   BET-Y2Q4-T10-275 的「改前基线」：47/56/68 是 origin/main 上三份 wrapper 的**逐字节内容**
+#   (PRE_FIX_WRAPPERS)，21 是把自推根变量归一回字面量的期望值。这四处不是被检对象的锚点，
+#   而是**基线夹具**；删掉它们会让 C-3「命令语义逐行等值」无从对拍。
+# - test_scheduler_collector_registry_root.py:6  模块 docstring 叙述「硬编码成 <根>」这个缺陷本身。
 LEGITIMATE_HITS = frozenset(
     {
         ("test_service_interpreter_stability.py", 11),
         ("test_spine_diff_adaptation.py", 35),
         ("test_spine_diff_adaptation.py", 42),
+        ("test_lib_wrapper_root_self_resolution.py", 21),
+        ("test_lib_wrapper_root_self_resolution.py", 47),
+        ("test_lib_wrapper_root_self_resolution.py", 56),
+        ("test_lib_wrapper_root_self_resolution.py", 68),
+        ("test_scheduler_collector_registry_root.py", 6),
     }
 )
 
@@ -60,6 +70,17 @@ def test_legitimate_sites_still_present_and_in_the_right_shape():
     assert f'assert "{HOST_LITERAL}/" not in cleaned' in spine
     stability = (TESTS_UNIT / "test_service_interpreter_stability.py").read_text(encoding="utf-8")
     assert f"{HOST_LITERAL}/.cache/uv/builds-v0/" in stability
+    # 2026-11-02 补登的 5 处同样反向钉住：它们是本文件的**基线夹具**，
+    # 被「顺手清理」掉会让 C-3 的命令语义对拍失去参照物。
+    wrapper = (TESTS_UNIT / "test_lib_wrapper_root_self_resolution.py").read_text(encoding="utf-8")
+    assert f'CHECKOUT_LITERAL = "{HOST_LITERAL}/Workspace"' in wrapper
+    assert f"cd {HOST_LITERAL}/Workspace/projects/agora" in wrapper
+    assert f"--project {HOST_LITERAL}/Workspace/projects/agora" in wrapper
+    assert f"python {HOST_LITERAL}/Workspace/bin/plan/bet-ledger.py claim-gc" in wrapper
+    registry_root = (TESTS_UNIT / "test_scheduler_collector_registry_root.py").read_text(
+        encoding="utf-8"
+    )
+    assert f"硬编码成 `{HOST_LITERAL}/Workspace`" in registry_root
 
 
 def test_mirror_tests_derive_expectations_instead_of_writing_them():
