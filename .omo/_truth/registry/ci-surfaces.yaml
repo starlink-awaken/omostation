@@ -343,7 +343,7 @@ surfaces:
   - per_pr
   - push
   status: active
-  note: CR-CI-RUNNER-COST — macOS(10x)/Windows(2x) GitHub-hosted runner 守门；public 仓免费、private 仓按量，未登记即阻塞 (2026-10-27)
+  note: CR-CI-RUNNER-COST — macOS(10x)/Windows(2x) GitHub-hosted runner 守门；public 仓免费、private 仓按量。三条判据，未登记即阻塞，已登记但无 workflow 级 concurrency 组同样阻塞（付费腿可无限堆叠），已登记且有 concurrency 才转 warn 留痕 (2026-11-02 补 concurrency 判据)
 - id: bin-gac-check-severity-registry-py
   tool: bin/gac/check-severity-registry.py
   workflow: (none)

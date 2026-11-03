@@ -20,7 +20,20 @@ runner 免费且无分钟上限（含 macOS）；private 仓按量计费、单�
 GitHub-hosted runner 用法与**显式允许清单**对拍：
 
 * 未登记 → `error`（阻塞）
-* 已登记 → `warn`（留痕，理由必须写进清单）
+* 已登记但**没有 workflow 级 `concurrency` 组** → `error`（阻塞）
+* 已登记且有 `concurrency` 组 → `warn`（留痕，理由必须写进清单）
+
+## 为什么第二条也是 error（2026-11-02 补）
+
+付费 OS 腿的单价是 Linux 的 10x（macOS）/ 2x（Windows）。**没有 concurrency 组
+时它可以无限堆叠**：一次 push、一次 review 触发、一次定时触发各起一份，同一份
+代码在 10x 单价上并发跑 N 遍。GitHub 的 `concurrency` 把同一 group 的并发压到 1，
+这正是「限制」该长的样子 —— 它不依赖仓的可见性，public 仓上省的是排队时间与
+flake 面，private 仓上省的是真金白银。
+
+`cancel-in-progress` 取 `true` 还是 `false` 由各仓自定（true = 新 run 顶掉旧的，
+必需检查总会跑到 head；false = 丢弃排队的那个）。本检查只看**组存在**，不替各仓
+决定策略 —— 那是分支保护语义，不是成本语义。
 
 self-hosted runner 免费，不纳入本检查。
 
@@ -134,6 +147,14 @@ def _is_self_hosted(labels: set[str]) -> bool:
     return any("self-hosted" in lbl for lbl in labels)
 
 
+def _has_workflow_concurrency(doc: dict) -> bool:
+    """workflow 顶层是否声明了 `concurrency`（字符串简写或 {group, cancel-in-progress} 都算）。
+
+    只看**顶层**：job 级没有 concurrency 这个概念，而 `on:` 里的是触发器不是并发组。
+    """
+    return bool(doc.get("concurrency"))
+
+
 def _paid_os(labels: set[str]) -> set[str]:
     return {lbl for lbl in labels if any(lbl.startswith(p) or f"-{p}" in lbl for p in PAID_OS)}
 
@@ -185,6 +206,16 @@ def scan(repo: Path) -> dict:
             if not paid:
                 continue
             key = (rel, str(job_id))
+            if not _has_workflow_concurrency(doc):
+                findings.append({
+                    "severity": "error",
+                    "workflow": rel,
+                    "job": str(job_id),
+                    "os": sorted(paid),
+                    "reason": "付费 OS 腿没有 workflow 级 concurrency 组 —— 10x/2x 单价的腿"
+                              "可以无限堆叠（一次 push / 一次 review / 一次定时触发各起一份）。"
+                              "加 concurrency.group 把同 group 并发压到 1",
+                })
             if key in ALLOWED:
                 findings.append({
                     "severity": "warn",
@@ -257,6 +288,40 @@ def self_test() -> int:
         ("broken-yaml", "jobs:\n  a:\n   runs-on: macos-latest\n  bad: [\n", None),
     ]
 
+    # concurrency 判据的自证：合成样本必须能被**分别**判成「有组」与「无组」。
+    # 没有这一对，"加了 concurrency 就放行"可能只是检测器没命中（AGENTS.md §7②）。
+    conc_cases = [
+        # (name, workflow yaml, expect_errors, expect_warnings)
+        ("paid-with-concurrency", (
+            "concurrency:\n  group: ${{ github.workflow }}-${{ github.ref }}\n"
+            "  cancel-in-progress: true\n"
+            "jobs:\n  a:\n    runs-on: macos-latest\n    steps: []\n"
+        ), 1, 0),
+        ("paid-with-concurrency-shorthand", (
+            "concurrency: ${{ github.workflow }}-${{ github.ref }}\n"
+            "jobs:\n  a:\n    runs-on: macos-latest\n    steps: []\n"
+        ), 1, 0),
+        ("paid-without-concurrency", (
+            "jobs:\n  a:\n    runs-on: macos-latest\n    steps: []\n"
+        ), 2, 0),
+        ("linux-without-concurrency", (
+            "jobs:\n  a:\n    runs-on: ubuntu-latest\n    steps: []\n"
+        ), 0, 0),
+    ]
+    for name, text, want_err, want_warn in conc_cases:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            wf_dir = root / ".github" / "workflows"
+            wf_dir.mkdir(parents=True)
+            (wf_dir / f"{name}.yml").write_text(text, encoding="utf-8")
+            report = scan(root)
+            ok = report["errors"] == want_err and report["warnings"] == want_warn
+            print(f"  [{'ok' if ok else 'FAIL'}] {name}: "
+                  f"expect err={want_err} warn={want_warn} "
+                  f"got err={report['errors']} warn={report['warnings']}")
+            if not ok:
+                failures.append(name)
+
     failures = []
     for name, text, expect in cases:
         with tempfile.TemporaryDirectory() as td:
@@ -303,7 +368,14 @@ def self_test() -> int:
             "jobs:\n  t:\n    runs-on: macos-latest\n    steps: []\n", encoding="utf-8"
         )
         got2 = scan(root)["findings"]
-        ok2 = len(got2) == 1 and got2[0]["workflow"].startswith("projects/a/")
+        # 未登记 + 无 concurrency 各报一条（见上面的 concurrency 判据），
+        # 两条都必须指向被声明的子模块路径 —— 只看条数会让「指错路径」溜过去。
+        ok2 = (
+            len(got2) == 2
+            and all(f["workflow"].startswith("projects/a/") for f in got2)
+            and {f["reason"].split(" —— ")[0] for f in got2}
+            == {"付费 OS 腿没有 workflow 级 concurrency 组", "未登记的付费 OS runner"}
+        )
         print(f"  [{'ok' if ok2 else 'FAIL'}] declared-submodule-scanned: {got2}")
         if not ok2:
             failures.append("declared-submodule-scanned")
