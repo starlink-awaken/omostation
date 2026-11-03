@@ -148,4 +148,26 @@ while IFS= read -r branch; do
 done < <(git branch --format='%(refname:short)')
 echo "   ✅ 已清理 $agent_stale 个过期 agent 分支"
 
+# 5. claim 文件 GC —— 分支清干净了, 占用记录也得跟上, 否则 d2_branch_occupancy 会被
+#    陈旧记录占位。两个 GC 都早已实现 (swarm-discipline-cli.py claim-gc / bet-ledger.py
+#    claim-gc), 但**在此之前没有任何调度入口** —— 工具写好不等于会跑, 实测
+#    branch-claims 因此攒到 24 条 (14-19 天)。挂进本脚本 (每日 04:30, make worktree-prune)。
+echo "── 5. 清理过期 claim 文件 ──"
+if [ -f "bin/gac/swarm-discipline-cli.py" ]; then
+  # branch/agent/adr 三类占用记录; 7 天 TTL, 有 open PR 的分支跳过 (sd.claim_gc 内部判)
+  if [ "$DRY_RUN" = true ]; then
+    python3 bin/gac/swarm-discipline-cli.py claim-gc --dry-run
+  else
+    python3 bin/gac/swarm-discipline-cli.py claim-gc
+  fi
+fi
+if [ -f "bin/plan/bet-ledger.py" ]; then
+  # bet 认领广播 (T10-139): expire 视为放弃, 只删文件不动 ledger status
+  if [ "$DRY_RUN" = true ]; then
+    python3 bin/plan/bet-ledger.py claim-gc --dry-run
+  else
+    python3 bin/plan/bet-ledger.py claim-gc
+  fi
+fi
+
 echo "=== Branch Prune 完成: 合并=$merged, 过期=$stale, agent过期=$agent_stale ==="
