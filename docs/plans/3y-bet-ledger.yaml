@@ -46226,14 +46226,15 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: 治理/根缝类任务，value_indicator_policy 声明为 false，由 PR #5014 squash 9f84b7487 闭环。
+          note: "治理/根缝类任务，value_indicator_policy 声明为 false，由 PR #5014 squash 9f84b7487 闭环。"
     overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-281
+  done_at: 2026-11-02T09:07:00Z
   title: B4b 验收尺的 repo_root 缝可达性修复
   goal: scripts/tools/launchd-workspace-reality-check.py 的缝算成 parents[1]/"lib" = scripts/lib（实测检出与安装位两侧均不存在），故每次运行都走
     except ImportError 字面量兜底 —— canonical/code 钉死某台机器检出、install 兜底永不返回 None。改为 parents[2]/"bin"/"lib"
     并删除静默兜底，使这把 B4b 量具能观察 profile 目标态。
-  status: in_progress
+  status: done
   window: Y2Q4
   track: T10-GOVERNANCE
   priority: P1
@@ -46282,17 +46283,41 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: planned
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          merged_reachable_commit:
+            ref: git://origin/main@58dc596e774d3d132a1809a2f2202290d8c30b34
+          rollback:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          tests:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
       operational:
-        status: NOT_STARTED
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          live_canary:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-281.md
+            sha256: sha256:8b108015cded3853af66430f3b21b70ace33fa8d53bd16c661e69c3cadbf5021
       value:
-        status: NOT_STARTED
-        evidence: {}
+        status: NOT_PROVEN
+        evidence:
+          note: "B4b 量具可达性修复，value_indicator_policy 声明为 false，由工程腿 PR #5017 squash 58dc596e7 闭环。"
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
