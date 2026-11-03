@@ -42,4 +42,11 @@ jobs:
       - name: Validate Protocol Registry Hygiene
         run: python3 -m pytest projects/runtime/tests/test_protocol_registry_hygiene.py
       - name: List protocols
-        run: python3 -m pip install -e projects/runtime/ && python3 -m runtime protocol list
+        run: |
+          # --no-deps: runtime 的依赖里有指向兄弟子模块的 path 源 (aetherforge / omo /
+          # agora / bus-foundation), 而本 job 只 init 了 projects/runtime ⇒ pip 解析不到,
+          # 整步失败 (2026-11-03 实测: 每一次 runtime gitlink bump 都会踩)。
+          # 改为只装 runtime 本体 + 其外部依赖 (path 源那几个由 runtime 自己的 uv 环境解析)。
+          python3 -m pip install --no-deps -e projects/runtime/
+          python3 -m pip install apscheduler croniter fastapi fastmcp httpx pydantic pyjwt requests uvicorn pyyaml
+          python3 -m runtime protocol list
