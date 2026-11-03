@@ -1628,6 +1628,14 @@ workflow_triggers:
   triggers:
   - scheduled
   path_filtered: false
+- workflow: repo-visibility-guard.yml
+  triggers:
+  - manual
+  - scheduled
+  path_filtered: false
+  note: CR-CI-RUNNER-COST 的前提守护 —— 每周核对全仓组 visibility，非 public 即失败
+    （Actions 分钟从免费变计费，macOS 10x）。把 check-runner-cost.py docstring 里那句
+    「全部是 public 仓」从断言变成核对 (2026-11-03)
 - workflow: reusable-setup.yml
   triggers:
   - callable
