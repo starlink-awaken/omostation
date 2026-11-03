@@ -46027,6 +46027,297 @@ bets:
         evidence:
           note: 状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-278
+  title: 同机双根决策与入口文档对齐
+  goal: 依据当前完整文件名的已接受决策，修正 AGENTS.md 与 ARCHITECTURE.md 的陈旧入口描述，保留逐进程实测及未覆盖边界。
+  status: pending
+  window: Y2Q4
+  track: T10-DOCS
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-doc-change
+  write_surfaces:
+  - AGENTS.md
+  - ARCHITECTURE.md
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-31-fleet-ssot-entry-alignment.md
+  - docs/operations/workflow-waiver-2026-10-31-fleet-ssot-registration.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-278.md
+  - docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+  non_goals:
+  - 不修改生产配置、服务、数据库或网络，不执行迁移或清理。
+  - 不把历史验收等同于当前所有节点的运行健康或唯一 writer。
+  - 不提交、推送、合并或发布。
+  done_when:
+  - 入口文件按完整文件名引用已接受的双根决策，删除不再成立的旧状态。
+  - 账本定位按进程环境解析并区分快照与活动状态，不凭目录名断言权威。
+  - 变更通过适用文档及 lane 检查，未通过或未运行的检查如实记录。
+  verify:
+  - cmd: python3 bin/change-lane-check.py --file AGENTS.md --file ARCHITECTURE.md --json
+    expect: exit 0，两个文件均为 docs lane
+  - cmd: git diff --check
+    expect: exit 0
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若正常 scope 认领不可用或变更需要修改生产状态、扩大写面或绕开门禁，则停止实现并保留可续跑证据。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-31-fleet-ssot-entry-alignment.md
+    spec_version: 1.0.0
+    content_digest: sha256:c168829ca9b9f5afc00cd611cdbe483d009056ce32bd78aa224fd779211482c1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-278
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+- id: BET-Y2Q4-T10-279
+  title: BET-Y2Q4-T10-279 compute-i9-01 Integration —— 受治理 CPU 执行节点接入
+  goal: 将 compute-i9-01 以单一 OMO 控制面纳入受治理 Code/Test/Batch 执行体系；先完成只读发现与提案，再在明确授权后完成隔离
+    Worker 接入和八项验证，不建立第二套任务控制面。
+  status: active
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 5 days
+  risk_level: L3
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-10-29-compute-i9-01-integration.md
+  - reports/COMPUTE-I9-01-INTEGRATION-DISCOVERY-20261029.md
+  - reports/COMPUTE-I9-01-PHASE0-PHASE1-20261029.md
+  - tasks/PROGRESS.md
+  non_goals:
+  - 不重装 Ubuntu、不格式化磁盘、不改 BIOS、不改防火墙、不部署远端服务，除非另有明确授权。
+  - 不建立第二 Dispatcher/Broker/持久任务数据库，不让 Multica/Orca 产生权威 Task。
+  - 不自动 merge、push main、删除数据或跨家庭/单位网络传输敏感数据。
+  - 不把现有 rootful services/lb-worker SQLite 实现直接宣称为本 BET 的最终集成实现。
+  done_when:
+  - Phase 0 硬件、OS、网络、所有权、授权与现有控制面事实矩阵完成，所有未知项单独列为阻断或待核。
+  - Phase 1 Ubuntu/rootless/Tailscale/工作目录/监控/身份/资源/恢复提案完成，并得到人类部署授权记录。
+  - Phase 2 复用 OMO TaskEnvelope、Claim、Lease、Runtime Adapter 与 Harness，Worker admission、隔离边界、资源预算和回收路径均有实现与测试。
+  - Phase 3 八项验证均有独立回执，含失败恢复/回滚；Golden Slice 有人工验收，不以 Agent 自报成功替代。
+  - 同一仓库写入并发始终 <= 1，首批总运行 Worker <= 2，未授权宿主机/外部访问被拒绝。
+  verify:
+  - cmd: python3 scripts/project_check.py
+    expect: 项目检查通过；仅证明本仓文档/计划/脚本约束，不证明远端节点已部署。
+  - cmd: python3 -B -m unittest discover -s tests -p "test_*.py"
+    expect: 现有合同测试通过；新增接入测试必须在授权后纳入同一套发现规则。
+  - cmd: bash -n scripts/*.sh
+    expect: 所有受影响 shell 脚本语法通过；部署脚本未授权前不得执行。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-10-29-compute-i9-01-integration.md
+    spec_version: 1.0.0
+    content_digest: sha256:4edbc03864f086bdef88250691ad9e2725e2d1b5562753befbba1d4d69ff9255
+    decision_ref: decision://accepted/BET-Y2Q4-T10-279
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_STARTED
+        evidence: {}
+      value:
+        status: NOT_STARTED
+        evidence:
+          note: 当前只完成 Phase 0 发现与 Phase 1 阻断/提案登记，未宣称节点已接入。
+    overall_state: planned
+- id: BET-Y2Q4-T10-280
+  done_at: 2026-11-02T07:51:00Z
+  title: 全景收集器账本路径接入 profile 缝
+  goal: 把 bin/panorama/panorama-collect.py 的 event ledger 路径从 import 时冻结的检出根常量，收敛到 bin/lib/repo_root.py
+    的 event_ledger_path() 调用时刻解析，并消除三处默认参数二次冻结。
+  status: done
+  window: Y2Q4
+  track: T10-GOVERNANCE
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  write_surfaces:
+  - bin/panorama/panorama-collect.py
+  - tests/unit/test_panorama_event_ledger_seam.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-02-panorama-event-ledger-seam.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-280.md
+  - docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+  - tests/unit/test_writeplane_root_pin.py
+  - docs/superpowers/specs/2026-10-13-writeplane-root-pin-gate.md
+  non_goals:
+  - 不迁移任何 ledger 数据，不改动 launchd plist、crontab 或 ~/.local/state/omostation 内容。
+  - 不新增 env 名，不改 PANORAMA_ROOT 语义，不改动其余 state_root() 判别点。
+  - 不声明任何 profile，不把回滚以外的机器级配置写进本轮。
+  done_when:
+  - EVENT_LEDGER 模块级常量与三处默认参数冻结点在同一次扫描中读数为 0，event_ledger_path 在该文件命中。
+  - 声明 OMOSTATION_STATE_ROOT 后账本路径正落在该 state 根下且不以内联检出为前缀；OMO_EVENT_LEDGER_DB 仍为最高优先级。
+  - 变异对照（解析退回模块常量）使正向落点用例当场红；未运行的检查如实记录。
+  - pin 尺按 shrink_only 收口：该站点从 BASELINE_WRITESPANE_PAIRS 删除，spec §1 表与三个门禁读数由同一次扫描重签。
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_panorama_event_ledger_seam.py -q -p no:randomly
+  - cmd: python3 -m pytest tests/unit/test_writeplane_root_pin.py -q -p no:randomly
+    note: 同一判据在 origin/main 与本轮检出上分别复算，门禁三读数应为 154/144/95 对 153/143/95
+    expect: exit 0，且包含声明 state 根的正向落点用例与变异对照
+  - cmd: git grep -nE "EVENT_LEDGER[[:space:]]*=" -- bin/panorama/panorama-collect.py
+    expect: 改后零命中；改前基线读数为 1（同一判据两侧分别记录）
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若收敛需要改动生产 profile 声明、迁移状态或绕开门禁，则停止实现并保留可续跑证据。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-02-panorama-event-ledger-seam.md
+    spec_version: 1.0.0
+    content_digest: sha256:e3711ac6c8d4916d4e8299471e5917b576d6a88d3fa175556f733c6936e62068
+    decision_ref: decision://accepted/BET-Y2Q4-T10-280
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          merged_reachable_commit:
+            ref: git://origin/main@9f84b7487384d6164423dc70ceeef865bc7bb9e2
+          rollback:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          tests:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          live_canary:
+            ref: receipt://docs/reports/2026-11-02-panorama-event-ledger-seam-closeout.md
+            sha256: sha256:446987104be984803fc1a17833fc4608f99652db5a42763424aed7efcef16a87
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-280.md
+            sha256: sha256:99c0887fcef620d3dbf16feaec1b2b74e7ba0c090c9d53701b3fbd89672e2523
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: "治理/根缝类任务，value_indicator_policy 声明为 false，由 PR #5014 squash 9f84b7487 闭环。"
+    overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-281
+  done_at: 2026-11-02T09:07:00Z
+  title: B4b 验收尺的 repo_root 缝可达性修复
+  goal: scripts/tools/launchd-workspace-reality-check.py 的缝算成 parents[1]/"lib" = scripts/lib（实测检出与安装位两侧均不存在），故每次运行都走
+    except ImportError 字面量兜底 —— canonical/code 钉死某台机器检出、install 兜底永不返回 None。改为 parents[2]/"bin"/"lib"
+    并删除静默兜底，使这把 B4b 量具能观察 profile 目标态。
+  status: done
+  window: Y2Q4
+  track: T10-GOVERNANCE
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  write_surfaces:
+  - scripts/tools/launchd-workspace-reality-check.py
+  - tests/unit/test_b4b_ruler_seam_reachability.py
+  - docs/superpowers/specs/2026-11-02-b4b-ruler-seam-reachability.md
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-281.md
+  - docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+  non_goals:
+  - 不改 scripts/tools/spine-daily-ingress.py 的写落点 —— 修它会移动 spine 数据面，需与 6 处读者（含 cockpit/omlxc
+    两子模块）同批迁移，另案。
+  - 不扩 tests/unit/test_writeplane_root_pin.py 的枚举面到 scripts/** —— 属「尺尺」改造，按 resolver
+    归类单独设计，另案。
+  - 不动 profile_base 的 Path.home() 派生（机器级 profile 基址，不属检出根语义）。
+  - 不改任何 plist、crontab、机器级配置或状态数据。
+  done_when:
+  - 三个 resolver 的 __module__ 均为 repo_root（正向落点断言），且尺源码内无机检出字面路径。
+  - 合成违规自证：把缝改回 parents[1] 后守卫当场 SystemExit「缝不可达」（摘掉守卫则该用例红）。
+  - install_root() 返回 None 时尺显式失败，不得用字面量补假 pin。
+  - 新旧读数逐字段对比写进 receipt —— 实测 9 字段 0 差异，即「值对在巧合不在构造」的证据。
+  verify:
+  - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_b4b_ruler_seam_reachability.py -q -p no:randomly -o
+      addopts=""
+    expect: 4 passed；含合成违规与安装位缺席两条反证
+    note: tests/unit 不在 CI 白名单，本地跑是唯一证据
+  - cmd: python3 scripts/tools/launchd-workspace-reality-check.py --json
+    expect: 9 字段与修复前逐项相等；resolver 来源由局部兜底变为 repo_root
+    note: 读数相等不等于修复无价值 —— 差异在构造上（能否观察 profile 声明）
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若修复需要伪造 install pin、放宽尺的判据，或触及 spine 数据面的写落点迁移，则停止实现并保留可续跑证据。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-02-b4b-ruler-seam-reachability.md
+    spec_version: 1.0.0
+    content_digest: sha256:36c1b617f060c60e9e56fe86c492d5b0b39ef891c3763b088b55bdd7862aaac1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-281
+  value_indicator_policy: false
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          merged_reachable_commit:
+            ref: git://origin/main@58dc596e774d3d132a1809a2f2202290d8c30b34
+          rollback:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          tests:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+      operational:
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          live_canary:
+            ref: receipt://docs/reports/2026-11-02-b4b-ruler-seam-reachability-closeout.md
+            sha256: sha256:b4b47b91f3f891bf712c72e78c95cf57533c93d92d42ee7f4e5677cb723842aa
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-281.md
+            sha256: sha256:8b108015cded3853af66430f3b21b70ace33fa8d53bd16c661e69c3cadbf5021
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: "B4b 量具可达性修复，value_indicator_policy 声明为 false，由工程腿 PR #5017 squash 58dc596e7 闭环。"
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -46165,7 +46456,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 574
+  total_bets: 578
   windows:
   - Y1Q1
   - Y1Q2

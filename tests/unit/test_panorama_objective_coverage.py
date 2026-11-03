@@ -147,6 +147,23 @@ def _write_event_ledger(path: Path) -> None:
     connection.close()
 
 
+def _bind_dashboard_root(tmp_path: Path, monkeypatch) -> Path:
+    """给 `publish_projection_revision` 注入 dashboard 代码根。
+
+    该函数经 `resolve_projection_dashboard_code_root()` 取根，而它要求
+    `<root>/current` 是指向 `<root>/releases/<40 位 OID>` 的符号链接 (#4742)；
+    不注入则 `os.environ` 里没有 `ZHIXING_DASHBOARD_CODE_ROOT` ⇒ RuntimeError。
+    原用例只 monkeypatch 了 `collect_projection_dashboard_identity`，没有注入根，
+    于是 #4742 之后这两条用例一直红（CI 不跑 tests/unit，结构性失明）。
+    """
+    root = tmp_path / "dashboard"
+    oid = "a" * 40
+    (root / "releases" / oid).mkdir(parents=True)
+    (root / "current").symlink_to(Path("releases") / oid)
+    monkeypatch.setenv("ZHIXING_DASHBOARD_CODE_ROOT", str(root))
+    return root
+
+
 def _projection_payload() -> dict:
     return {
         "generated_at": "2026-09-24T03:30:00Z",
@@ -166,12 +183,20 @@ def _projection_payload() -> dict:
 
 
 def test_projection_event_ledger_honors_runtime_binding(tmp_path, monkeypatch) -> None:
+    """ledger 根必须在**调用时刻**解析，而不是 import 时冻结。
+
+    原用例断言 `module.EVENT_LEDGER == ledger` —— 那钉的是一个模块级常量，而常量在
+    import 时求值，profile 晚声明就被冻结在旧根上（AGENTS.md §7「写路径要在调用时刻
+    解析」）。#5014 删掉了那个常量，改为 `event_ledger_path()` 逐次解析；本用例随之
+    改钉调用时刻的答案，并反向断言常量没有复辟。
+    """
     ledger = tmp_path / "canonical-runtime" / "event-ledger.sqlite3"
     monkeypatch.setenv("OMO_EVENT_LEDGER_DB", str(ledger))
 
     module = _module()
 
-    assert module.EVENT_LEDGER == ledger
+    assert not hasattr(module, "EVENT_LEDGER"), "模块级 ledger 常量复辟 = 根被冻结在 import 时"
+    assert module.event_ledger_path() == ledger
 
 
 def test_projection_source_binding_uses_immutable_claims_and_logical_event_chain(tmp_path) -> None:
@@ -422,6 +447,7 @@ def test_publish_projection_revision_is_reader_compatible_and_leaves_legacy_snap
     tmp_path, monkeypatch
 ) -> None:
     module = _module()
+    _bind_dashboard_root(tmp_path, monkeypatch)
     state_root = tmp_path / "state"
     state_root.mkdir()
     legacy = state_root / "current.json"
@@ -546,6 +572,7 @@ def test_publish_projection_revision_keeps_previous_pointer_on_swap_failure(
     tmp_path, monkeypatch
 ) -> None:
     module = _module()
+    _bind_dashboard_root(tmp_path, monkeypatch)
     state_root = tmp_path / "state"
     state_root.mkdir()
     pointer_path = state_root / "current-revision.json"

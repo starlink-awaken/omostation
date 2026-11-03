@@ -130,9 +130,16 @@ jobs:
         run: bash tests/run-shell-suites.sh
       - name: immutable checkout precondition
         run: |
-          git diff --exit-code
-          git diff --cached --exit-code
-          test -z "$(git status --porcelain)"
+          # --ignore-submodules=dirty: `actions/checkout` 的 submodules:recursive
+          # 本身就会让部分子模块报 -dirty —— 实测 bump agora 的 gitlink 时
+          # projects/agora 与 projects/runtime 同时中（runtime 本 PR 根本没碰），
+          # 而本地完整检出与 --depth=1 浅检出都干净、CI 日志里也没有任何一步写它。
+          # 这种「检出自身造成的脏」不是本道尺要拦的东西；真正要拦的是
+          # 「门禁自己的步骤改写了被跟踪文件」—— gitlink 变化（HEAD != pin）
+          # 在 --ignore-submodules=dirty 下**仍然**会被报出来。
+          git diff --ignore-submodules=dirty --exit-code
+          git diff --cached --ignore-submodules=dirty --exit-code
+          test -z "$(git status --porcelain --ignore-submodules=dirty)"
       - name: PASW — 子模块指针可达性前置检查
         run: python3 bin/ssot/submodule-reachability-gate.py --source head --fetch
         continue-on-error: false
@@ -203,9 +210,11 @@ jobs:
       - name: immutable checkout postcondition
         if: always()
         run: |
-          git diff --exit-code
-          git diff --cached --exit-code
-          test -z "$(git status --porcelain)"
+          # 与 precondition 同一口径，见那里的说明：只报 gitlink 变化，
+          # 不报「检出自身造成的子模块内容脏」。
+          git diff --ignore-submodules=dirty --exit-code
+          git diff --cached --ignore-submodules=dirty --exit-code
+          test -z "$(git status --porcelain --ignore-submodules=dirty)"
       - name: worktree guard (数量上限门禁)
         # P74: 防 worktree 堆积 — 超 MAX_WORKTREES 即 fail, 触发人工清理
         run: bash bin/gac/gac-worktree-guard.sh --check

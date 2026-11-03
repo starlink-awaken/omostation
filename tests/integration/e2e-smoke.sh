@@ -30,6 +30,16 @@ done
 green() { echo "  ✅ $1"; PASS=$((PASS+1)); }
 red()   { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 
+cleanup_e2e() {
+  for sub in projects/cockpit projects/agora projects/runtime; do
+    if [ -d "$ROOT/$sub" ]; then
+      git -C "$ROOT/$sub" checkout -q -- . 2>/dev/null || true
+      git -C "$ROOT/$sub" clean -fdq 2>/dev/null || true
+    fi
+  done
+}
+trap cleanup_e2e EXIT
+
 echo "╔═══════════════════════════════════════════╗"
 echo "║  e2e Smoke — 全链路端到冒烟               ║"
 echo "╚═══════════════════════════════════════════╝"
@@ -81,13 +91,13 @@ else
   red "cockpit --help 失败"
 fi
 
-if AGORA_CLI=$(cd "$ROOT/projects/agora" && uv run agora --help 2>&1) && assert_help agora "$AGORA_CLI"; then
+if AGORA_CLI=$(cd "$ROOT/projects/agora" && uv run --frozen agora --help 2>&1) && assert_help agora "$AGORA_CLI"; then
   green "agora --help 输出 (含自身标识)"
 else
   red "agora --help 失败"
 fi
 
-if RUNTIME_CLI=$(cd "$ROOT/projects/runtime" && uv run runtime --help 2>&1) && assert_help runtime "$RUNTIME_CLI"; then
+if RUNTIME_CLI=$(cd "$ROOT/projects/runtime" && uv run --frozen runtime --help 2>&1) && assert_help runtime "$RUNTIME_CLI"; then
   green "runtime --help 输出 (含自身标识)"
 else
   red "runtime --help 失败"

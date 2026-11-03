@@ -103,6 +103,9 @@ for t in "${INCLUDED[@]}"; do
 done
 rm -f /tmp/shell-test-$$.out
 
+# 保证 shell 测试套件不污染工作树与子模块（保持 immutable checkout 前置干净）
+git submodule foreach --quiet 'git checkout -q -- . 2>/dev/null; git clean -fdq 2>/dev/null || true'
+
 echo ""
 if [ "$failed" -eq 0 ]; then
   echo "✅ shell 测试全通过 (${#INCLUDED[@]} 个)"

@@ -92,9 +92,11 @@ def test_clean_tree_is_checked_before_and_after_blocking_path() -> None:
     post = _step("immutable checkout postcondition")["run"]
 
     for command in (
-        "git diff --exit-code",
-        "git diff --cached --exit-code",
-        'test -z "$(git status --porcelain)"',
+        # --ignore-submodules=dirty: 检出自身造成的子模块内容脏不算违规，
+        # 但 gitlink 变化（HEAD != pin）仍会被报（见 gac-gate.yml 里的说明）。
+        "git diff --ignore-submodules=dirty --exit-code",
+        "git diff --cached --ignore-submodules=dirty --exit-code",
+        'test -z "$(git status --porcelain --ignore-submodules=dirty)"',
     ):
         assert command in pre
         assert command in post

@@ -16,25 +16,22 @@ import plistlib
 import sys
 from pathlib import Path
 
-_LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
+_LIB_DIR = Path(__file__).resolve().parents[2] / "bin" / "lib"
+if not _LIB_DIR.is_dir():
+    raise SystemExit(f"repo_root 缝不可达: {_LIB_DIR} —— 尺不得静默兜底")
 if str(_LIB_DIR) not in sys.path:
     sys.path.insert(0, str(_LIB_DIR))
-try:
-    from repo_root import canonical_root, code_root, install_root
-except ImportError:
-    def canonical_root():
-        return Path("/Users/xiamingxing/Workspace")
-    def code_root():
-        return Path("/Users/xiamingxing/Workspace")
-    def install_root():
-        return Path.home() / ".local" / "opt" / "omostation"
+from repo_root import canonical_root, code_root, install_root  # noqa: E402
 
 
 def scan_launchd_workspace_targets(launchd_dir: Path | None = None) -> dict:
     target_dir = launchd_dir or (Path.home() / "Library" / "LaunchAgents")
     canon_ws_path = str(canonical_root())
     code_ws_path = str(code_root())
-    inst_path = str(install_root())
+    _inst = install_root()
+    if _inst is None:
+        raise SystemExit("运行时安装位未落位 (install_root() -> None) —— 尺拒绝静默退回检出根")
+    inst_path = str(_inst)
     profile_base = str(Path.home() / ".local" / "state" / "omostation")
 
     plists = sorted(glob.glob(str(target_dir / "*.plist")))

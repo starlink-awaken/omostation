@@ -46,13 +46,18 @@ def test_incomplete_or_conflicting_cohort_does_not_fall_back_to_other_bets():
 
 
 def test_actual_build_assembles_current_cohort_before_brief(tmp_path, monkeypatch):
+    # `PROJECTION_STATE_ROOT` 是模块级常量（import 时求值），所以 env 必须在
+    # `_module()` **之前**设，且变量名是 STATE_ROOT —— 原先设的是
+    # `ZHIXING_DASHBOARD_CODE_ROOT`（dashboard **代码**根，本用例根本不用），
+    # 于是 build_payload 读的是本机真实 current.json，断言随 host 状态漂移
+    # （AGENTS.md §7「hermetic 测试泄漏 host 状态」）。
+    monkeypatch.setenv("ZHIXING_DASHBOARD_STATE_ROOT", str(tmp_path))
     module = helpers._module(); p = cohort()
     current = {"portfolio": p, "source_states": {"portfolio": {"status": "PARTIAL", "observed_at": STAMP},
         "agent_brief": {"status": "OK", "observed_at": "previous"}},
         "gantt": {key: p[key] for key in ("sha", "ledger_sha256", "observed_at")},
         "strategic": {"trace": {"nodes": [], "edges": []}}, "generation_id": "cohort-fixed"}
     (tmp_path/"current.json").write_text(json.dumps(current))
-    monkeypatch.setenv("ZHIXING_DASHBOARD_CODE_ROOT", str(tmp_path))
     # Keep native build and Brief derivation real; only external IO is replaced.
     names = {n.func.id for n in ast.walk(ast.parse(inspect.getsource(module.build_payload)))
              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)

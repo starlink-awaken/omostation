@@ -147,32 +147,33 @@ warning_exceptions:
   generated: 2026-07-31
   policy: no-new-warnings
   entries:
+  # 2026-11-02 逐桶实测（bin/ssot/doc-governance-check.py --json --no-new-warnings --scope tracked，
+  # files_scanned=4738，读数取自该 JSON 的 warning_baseline.observed / .budgets 两栏）：
+  #   missing_frontmatter:omo-knowledge        18 / 120    missing_frontmatter:docs-discoverable   2 / 175
+  #   invalid_metadata:omo-knowledge           14 /  75    invalid_metadata:docs-discoverable      2 /  24
+  #   invalid_metadata:accepted-specifications  1 /   2    stale_review:omo-truth-docs             2 /   4
+  #   missing_frontmatter:omo-truth-docs        0 /  15    missing_frontmatter:omo-standards       0 /  15
+  #   invalid_metadata:omo-standards            0 /   4
+  # 据此删掉命中为 0 的三条（legacy-omo-truth-frontmatter / legacy-omo-standards-frontmatter /
+  # legacy-omo-standards-enums）：它们已经不压制任何现存告警，但会在窗口内继续压制未来新增的
+  # 无 frontmatter 文档，删掉是 shrink_only 方向上的收紧，不是放宽。其余条目 max_findings 与
+  # expires 一字未动（窗口 2027-01-31 由 #4995 定下）。
+  # ⚠️ 下面这条 stale-omo-truth-docs-review 是**下一个日历炸点**（2026-11-30，命中 2/4），且
+  # bin/gac/check-expiry-radar.py 只看 surfaces[].review_days 与 X2 规则，**不看 warning_exceptions
+  # 的 expires** —— 2026-10-31 那一次集体过期就是零预警跨零点的（8 条同日到点，gac-gate /
+  # interface-check / doc-freshness 三条腿同红）。续期时先跑上面那条命令取读数，别照抄旧数。
     - id: legacy-omo-knowledge-frontmatter
       rule: missing_frontmatter
       surface: omo-knowledge
       max_findings: 120  # 2026-08-18 116→120: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=117)
-      expires: 2026-10-31
+      expires: 2027-01-31
       owner: governance-team
       reason: Legacy knowledge documents are being migrated to the frontmatter contract. Budget raised to 90 (2026-08-09) to accommodate new BET retro stub files created as part of D5 retro-due gate work (ADR-0404).
-    - id: legacy-omo-truth-frontmatter
-      rule: missing_frontmatter
-      surface: omo-truth-docs
-      max_findings: 15  # 2026-09-21 2→15: CI 环境波动零余量项提升至安全水位
-      expires: 2026-10-31
-      owner: governance-team
-      reason: Existing truth documentation needs metadata migration without rewriting SSOT history.
-    - id: legacy-omo-standards-frontmatter
-      rule: missing_frontmatter
-      surface: omo-standards
-      max_findings: 15  # 2026-09-21 10→15: 低余量项提升至安全水位
-      expires: 2026-10-31
-      owner: governance-team
-      reason: Existing standards are being migrated in controlled batches (并发 agent 批量新增 legacy 标准, 2 太紧).
     - id: legacy-docs-frontmatter
       rule: missing_frontmatter
       surface: docs-discoverable
       max_findings: 175  # 2026-08-18 170→175: Y1Q4-T6-01 dedup-ledger + bus_adapter 归档新增推高计数 (actual=171)
-      expires: 2026-10-31
+      expires: 2027-01-31
       owner: governance-team
       reason: "Existing discoverable docs need frontmatter migration and index review. 2026-08-17 三调 127→135: 并发 agent 批量新增 legacy 标准累积超支 (132 轮)."
     - id: legacy-omo-knowledge-enums
@@ -180,28 +181,21 @@ warning_exceptions:
       surface: omo-knowledge
       max_findings: 75  # 2026-09-27 70→75: auto-bump (governance 增量)
       # auto-bumped to 75 on 2026-09-27
-      expires: 2026-10-31
+      expires: 2027-01-31
       owner: governance-team
       reason: Historical lifecycle values require explicit mapping to the current enum.
-    - id: legacy-omo-standards-enums
-      rule: invalid_metadata
-      surface: omo-standards
-      max_findings: 4
-      expires: 2026-10-31
-      owner: governance-team
-      reason: Existing standard lifecycle values require controlled normalization.
     - id: legacy-docs-enums
       rule: invalid_metadata
       surface: docs-discoverable
       max_findings: 24  # 2026-08-26 16→24: T1-12 收口修复后 CI 实测 17, 并发窗口抖动留余量; T1-12 closeout 修复 value-evidence 残损 frontmatter 后暴露存量 enum 违例 (actual=16)
-      expires: 2026-10-31
+      expires: 2027-01-31
       owner: governance-team
       reason: Existing document status/lifecycle values require explicit migration decisions.
     - id: accepted-specs-invalid-metadata
       rule: invalid_metadata
       surface: accepted-specifications
       max_findings: 2
-      expires: 2026-10-31
+      expires: 2027-01-31
       owner: governance-team
       reason: Newly created specs may have last-reviewed set to creation date which CI flags as future-dated.
     - id: stale-omo-truth-docs-review

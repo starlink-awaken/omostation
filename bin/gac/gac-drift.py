@@ -140,6 +140,10 @@ def check_ssot_drift(rule: dict) -> list[str]:
     # 搜 field + 数字 (YAML key 冒号 only; 排除 Python = 赋值 / 字典 ["] / 属性 . — 多是代码示例假阳性).
     # (?<![\[\.]) lookbehind 排除字典/属性访问; : 只 YAML key (排除 = Python 赋值).
     pattern = re.compile(rf"(?<![\[\.]){re.escape(field)}\s*:\s*\d")
+    # 反引号代码跨度 (inline code span) 内的匹配一律不算 —— 那是「展示格式/快照内容」,
+    # 不是把当前值复制进正文。实测 docs/superpowers/specs/2026-10-07-brief-null-shape-consumer.md
+    # 为说明测试夹具写了 `health_score: 46`(钉在 #4671 的历史快照), 被本尺误报三次。
+    code_span = re.compile(r"`[^`\n]*`")
 
     for glob_pattern in forbid:
         for fpath in WORKSPACE.glob(glob_pattern):
@@ -149,6 +153,9 @@ def check_ssot_drift(rule: dict) -> list[str]:
                 content = fpath.read_text(encoding="utf-8")
             except OSError:
                 continue
+            # 反引号代码跨度整体挖掉, 剩下的才是正文 —— 挖完再匹配, 位置不回算
+            # (本函数只上报文件相对路径, 不需要列号).
+            content = code_span.sub("", content)
             for match in pattern.finditer(content):
                 # 排除指针引用 (上下文含 _ref/见/see/指向/SSOT/system.yaml; +80 覆盖同行 SSOT 注释)
                 start = max(0, match.start() - 40)

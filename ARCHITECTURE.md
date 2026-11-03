@@ -17,11 +17,11 @@ status: active
 
 | Fact Type | Authoritative Source |
 |-----------|----------------------|
-| Code root (checkout, read plane) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `code_root()` · contract [`ADR-0456`](.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md) |
+| Code root (checkout, read plane) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `code_root()` · contract [`0456-dev-runtime-profile-root.md`](.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md) |
 | State root (write plane, `$OMOSTATION_STATE_ROOT`) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `state_root()` / `event_ledger_path()` |
-| Runtime code install root (`$OMOSTATION_INSTALL_ROOT`) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `install_root()` — an independent clone at `~/.local/opt/omostation`, locatable but not yet the running root (cutover is ADR-0456 B4b) · `make runtime-install-root` |
-| Profile ledger stores (`~/.local/state/omostation/{prod,dev}`) | **Non-authoritative** — a verified online snapshot of the production ledger plus the dev profile's own empty store, written by `omo ledger snapshot` (ADR-0456 B4b batch 1); each is accompanied by a `<db>.provenance.json` carrying `authoritative: false` · `make runtime-state-snapshot` |
-| Runtime state, health, active tasks | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
+| Runtime code install root (`$OMOSTATION_INSTALL_ROOT`) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `install_root()` — locate the independent runtime clone; the accepted [dev/runtime root decision](.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md) records the historical cutover. Verify each service’s effective code and dependencies separately · `make runtime-install-root` |
+| Profile ledger stores (`~/.local/state/omostation/{prod,dev}`) | Resolve the active ledger with `event_ledger_path()` in the relevant process environment; distinguish the active store from explicitly non-authoritative snapshots by their provenance and the [dev/runtime root decision](.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md). A directory name alone does not establish authority. |
+| Runtime state, health, active tasks | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `state_file_read()` for `.omo/state/system.yaml` · [runtime projection registry](.omo/_truth/registry/runtime-projections.yaml); generated files may be absent until materialized |
 | Current goals | [`.omo/goals/current.yaml`](.omo/goals/current.yaml) |
 | Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | BOS services | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
