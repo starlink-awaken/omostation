@@ -1,13 +1,8 @@
 ---
-schema: md/v1
-status: active
-lifecycle: history
-owner: governance-team
-last-reviewed: 2026-09-25
 type: ssot
-last_updated: 2026-09-24
+owner: governance-team
+last_updated: 2026-11-03
 ---
-
 
 # INDEX-KNOWLEDGE.md — 知识资产统一索引
 
@@ -18,7 +13,7 @@ last_updated: 2026-09-24
 > - validation: ADR 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-09-24T02:19:18.407301+00:00
+> - generated_at: 2026-11-03T08:50:24.989058+00:00
 
 ---
 
@@ -155,7 +150,7 @@ last_updated: 2026-09-24
 | workflow-solidification-closeout | 2026-07-03-p74-workflow-solidification-closeout.md |
 | comprehensive-audit | 2026-07-02-system-comprehensive-audit.md |
 
-> 共 215 份审计报告，完整清单见 `.omo/_knowledge/audits/`
+> 共 216 份审计报告，完整清单见 `.omo/_knowledge/audits/`
 
 ---
 

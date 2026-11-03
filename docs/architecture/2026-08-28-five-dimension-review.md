@@ -1,9 +1,9 @@
 ---
 schema: md/v1
 status: active
-lifecycle: spec
+lifecycle: history
 owner: engineering-agent
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-03
 type: doc
 title: 三动脉方案·五维深度审议 — 长期运营/运维/治理/防腐/进化 × 愿景 (2026-08-28)
 ---
