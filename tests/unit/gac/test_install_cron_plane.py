@@ -63,13 +63,17 @@ def test_foreign_lines_are_left_alone() -> None:
 
     这条是安装器的**安全性**核心: 用户自己装的 clash-*/fleet-*/bwg-* 等
     外部工具不能被本仓登记面覆盖掉。
+
+    路径从 home 派生而非写字面量 —— tests/unit 的 host 字面量尺
+    (test_tests_unit_host_anchors.py) 只允许声明过的合法位置有命中。
     """
     module = _load()
     managed = {module._key(line) for line in module._compiled_lines()}
+    home = Path.home()
     foreign = [
-        "*/20 * * * * python3 /Users/xiamingxing/.local/bin/clash-speed active >>x.log 2>&1",
-        "0 6 * * * cd /Users/xiamingxing/Project/work-agent && python3 scripts/x.py",
-        "30 7 * * * /opt/homebrew/bin/python3 /Users/x/.local/bin/bwg-usage.sh >>y.log",
+        f"*/20 * * * * python3 {home}/.local/bin/clash-speed active >>x.log 2>&1",
+        f"0 6 * * * cd {home}/Project/work-agent && python3 scripts/x.py",
+        f"30 7 * * * /opt/homebrew/bin/python3 {home}/.local/bin/bwg-usage.sh >>y.log",
     ]
     for line in foreign:
         assert not module._is_managed(line, managed), (
@@ -149,7 +153,7 @@ def test_install_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
     cron 反复重载, 且无法用「装完再比一次」验证是否真的对齐。
     """
     module = _load()
-    foreign = "*/20 * * * * python3 /Users/x/.local/bin/clash-speed active >>x.log 2>&1"
+    foreign = f"*/20 * * * * python3 {Path.home()}/.local/bin/clash-speed active >>x.log 2>&1"
     state = _fake_crontab(monkeypatch, module, [foreign])
 
     monkeypatch.setattr(sys, "argv", ["install-cron-plane.py", "--install"])
@@ -170,7 +174,7 @@ def test_install_preserves_foreign_lines(monkeypatch: pytest.MonkeyPatch) -> Non
     变异对照: 把「保留外部行」这段逻辑摘掉 ⇒ 本用例变红。
     """
     module = _load()
-    foreign = "*/20 * * * * python3 /Users/x/.local/bin/clash-speed active >>x.log 2>&1"
+    foreign = f"*/20 * * * * python3 {Path.home()}/.local/bin/clash-speed active >>x.log 2>&1"
     state = _fake_crontab(monkeypatch, module, [foreign])
 
     monkeypatch.setattr(sys, "argv", ["install-cron-plane.py", "--install"])
@@ -230,7 +234,7 @@ def test_remove_keeps_foreign_lines(monkeypatch: pytest.MonkeyPatch) -> None:
     与 install 同一套归属判定 ⇒ 装/卸对称。
     """
     module = _load()
-    foreign = "*/20 * * * * python3 /Users/x/.local/bin/clash-speed active >>x.log 2>&1"
+    foreign = f"*/20 * * * * python3 {Path.home()}/.local/bin/clash-speed active >>x.log 2>&1"
     state = _fake_crontab(monkeypatch, module, module._compiled_lines() + [foreign])
 
     monkeypatch.setattr(sys, "argv", ["install-cron-plane.py", "--remove"])
