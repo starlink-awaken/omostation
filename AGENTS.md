@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-10-29
-last-reviewed: 2026-10-29
+last_updated: 2026-11-03
+last-reviewed: 2026-11-03
 lifecycle: entry
 status: active
 ---
@@ -230,7 +230,7 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   `unknown revision`），另一些 claim 又是深的（本次 worktree 766）——**深浅取决于 claim 路径，不能靠记忆假设**。
   后果：`git -C projects/omo merge-base --is-ancestor <child> origin/main` 这类 gitlink 可达性判据
   在 1-commit 检出里**没有意义**，跑出 false 是测量装置没历史，不是回归。而 CI 的
-  `governance-verify` 在 `governance-check.yml:177-178` 用 `fetch-depth: 0` + `submodules: recursive`
+  `governance-verify` 在 `governance-check.yml:260-261` 用 `fetch-depth: 0` + `submodules: recursive`
   取完整历史，于是会出现"本地 false / CI 绿"的分歧 —— 别把它读成 CI 假绿。
   **判据**：可达性/祖先类检查只在 canonical 工作区或 `claim --full`（`GAC_FULL_SUBMODULE_INIT=1`）
   的 worktree 里做；动手前先测 `git -C <path> rev-parse --is-shallow-repository`。
@@ -253,6 +253,14 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 ---
 
 ## 7. Common Pitfalls（2026-09-12 实证）
+
+> **怎么读这一节**：50+ 条，**按时间追加、不重排** —— 所以跨处引用一律按**条首短语**定位（历史上出现过「§7③」「§7「六类静默失效形状」」这类名字），**不要按序号**。主题簇（新增条目时顺手对号入座）：
+> - **判据/检测器自身的可靠性**（最大的一簇）：扫源码的门禁必须自证 · 六类静默失效形状 · 判据报警先 print 原始行 · 解析失败退回空 · 抽样探测的覆盖面上限 · 按构造就绿 · glob 字符类陷阱 · YAML 能 parse ≠ 结构正确 · 写路径要在调用时刻解析 · 检测器的分类规则要与标记清单同源。
+> - **测试与 host 状态**：hermetic 测试泄漏 host 状态（含第三/第四面）· 用例断言 host 运行态 · 判据不被任何 CI 路径跑 = 不存在。
+> - **根与 profile**：根目录是参数 · 根有四类落点 · 运行时安装位 · XDG 状态根 · 两个根的写面收敛 · 声明 profile 后跑真实 sync · 模块级常量 import 时冻结。
+> - **git / 子模块 / worktree**：并发 agent 分支隔离 · worktree 子模块与 remote 完整性 · 未初始化子模块 `git -C` 向上解析 · submodule-pointer 空转 · 扫描面 worktree 副本归一。
+> - **交付与合并**：merge 脚本主区撞脏树 · mergeStateStatus · PR 工作流相关各条。
+> - **工具链 / 环境**：Bash 工具跑的是 zsh · Chrome GUI 自动化路线 · gbrain 只能用 `bun run test` · 生成物 CI 口径 ≠ 本地。
 
 - **Bash 工具跑的是 zsh：多值列表禁止 `VAR="a b c"; for x in $VAR`（2026-10-02 固化，同日复发两次）**：zsh 对**参数展开不做 word splitting**（只有**命令替换**会）⇒ 该循环**只迭代 1 次**、`$x` 是**整串**。危险形态是「静默少迭代 + 输出看着正常」（`basename "$x"` 恰好返回整串的**最后一段**，于是单条输出看着像一条正常记录 —— 曾据此误判「worktree 被删」）；**在「批量删除前的逐项安全检查」里最致命** —— 四列全有值、格式完全正常，却在描述一个**不存在的路径** ⇒ 会得出「都干净、可删」并真去删（**安全检查的塌缩 = 安全网本身失效**，不是少查一项）。**三种正确写法**：① 字面量列表 `for d in a b c; do …; done`（首选，零心智负担）② 命令替换 `for d in $(printf '%s\n' a b c); do …; done` ③ 数组 `arr=(a b c); for d in $arr; do …; done`。**并且**：任何「批量操作前逐项校验」的脚本，收尾**必打 `echo "expect=$N got=$n"`** —— 这是当下唯一能发现塌缩的手段。⚠️ 该条只发生在 Agent 临时写的一次性 Bash 命令里（不进仓、不过 hook）⇒ **无法 harness 化**，只能靠本条协议。同源变体（同一 zsh 根因）：`${PIPESTATUS[0]}` 在 zsh **恒为空串**（zsh 用 `$pipestatus`，小写、1-based）⇒ **取退出码不要经过管道**；`date +%s%3N` 在 macOS/BSD date 无 `%N` ⇒ 毫秒计时改用 Python。
 - **frontmatter UTC 时区**：`last-reviewed` 必须用 UTC 当天或更早，否则 gac-gate FAIL（PITFALL-004）
@@ -387,20 +395,20 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 - **「已提交的 legacy 兜底」不是这份仓库的性质（2026-10-02, BET-Y2Q4-T10-221 实测）**：`.omo/_truth/registry/runtime-projections.yaml` 声明的 **17 条投影路径里只有 1 条在 `origin/main` 上被跟踪**，而那条是 `.omo/_truth/registry/memory-os.yaml`（权限面，不是生成态）；其余 8 条 canonical + 8 条 legacy 生成态**全部既未跟踪又被 gitignore** —— 包括测试断言要兜回去的 `.omo/state/health.yaml`（`.gitignore:415`）和被忽略的 canonical 面（`.gitignore:281`）。`bin/lib/repo_root.py:182` 的 `projection_read()` 只返回**路径**、不判存在性（`bin/lib/repo_root.py:199` 有则读 canonical，`:201` 否则给 legacy），所以**兜底只在「这个检出曾经跑过写者」时才存在**：fresh clone 与 CI 干净检出两面皆无。后果与纪律三条：① 别把「读者有兜底」当仓库保证，需要旧值就显式跑一次生成或取快照；② **测兜底必须先物化** —— `tests/unit/test_projection_reader_resolution.py::test_projection_read_prefers_canonical_then_legacy_and_reports_absent` （`:52` 起）之所以绿，是它的 fixture 自己 `write_text` 出 legacy 文件（`:61`）；而 `tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path`（`:174`）断言「退回仓内已提交的 legacy」在 T10-221 基线上按构造不可满足（实测 1 failed / 1 passed，判据见该 BET）—— T10-222 让该用例转绿的方式正是**由 fixture 自己物化 legacy**，所以今天的绿是构造出来的绿，不是仓库保证，**别把它的红读成写面回归，也别顺手把用例改窄**；③ **`.omo/state/system.yaml` 已摘库（2026-10-07, BET-Y2Q4-T10-235）**：`.gitignore:297` 正向忽略它，原先那条 `!.omo/state/system.yaml` 反选（基线 `:295`）被证死 —— 相邻的 `.gitignore:293` 只忽略 `system.yaml.bak-*`，**没有任何规则忽略 `system.yaml` 本体**，所以那条反选从来没有可撤销的对象。#4606 那句「检出里它仍被跟踪是显式反选的结果，不是疏漏」到此失效，别再照它推论「跟踪 = 有意保留」。后果与纪律：④ 「干净检出里没有这份文件」自此是**常态而不是回归**，需要它就显式跑一次创建者 `bin/gac/materialize-system-state.py`（从已提交真源 `.omo/goals` + `.omo/tasks` 派生，键集由 `write-owners.yaml` 钉住）；现值仍经 `bin/lib/repo_root.py:204` 的 `state_file_read()` 取（且它只在 `OMOSTATION_STATE_ROOT` 已声明时才探 state 根：`bin/lib/repo_root.py:217`），**判据**：`git ls-files .omo/state/system.yaml` 为空 + `git check-ignore -v` 命中 `:297`；用 `git diff` 判它「没变」已经不成立，改用 sha 逐字节对拍。
 - **写路径要在调用时刻解析；缝的另一半是「不许写半份镜像」（2026-10-02, #4606 固化；2026-10-05 T10-231 补另一半）**：模块级常量在 **import 时**求值，profile 晚声明就被冻结在旧根上，且**没有任何测试会红**（与 `bin/compass_radar.py:482` 不传 `env=` 那条沉默契约同族）。四个 system.yaml 写者因此一律走缝（一律是同名函数 `_system_yaml()`，行号只作辅助）：`bin/compass_radar.py:1138`、`bin/gac/harness-omo-bridge.py:39`、`bin/gac/self-evolution-loop.py:35`、`bin/gac/evidence-smoke.py:217` —— 新写者把路径写成模块级常量就是这个错误形状。第二半更容易被忽略：`bin/gac/harness-omo-bridge.py:193` 在 state 根那份**不存在时跳过**而不是凭空建 —— 写出一份只含自己那几个键的镜像，会让 `state_file_read()` 的读者读到「新但缺字段」的状态。**判据**：整文件偏向 state 根的正确性依赖这条不变式，加写者时先问「缺副本时我写不写」，再问「写到哪」。T10-231 补的另两面：① **判别式是「是否依赖 profile 根」，不是「读还是写」** —— 同一形状在 `code_root()` 上是契约、在 `state_root()` / `event_ledger_path()` 上是缺陷，所以扫描必须按 resolver 归类，按 `DEFAULT_LEDGER` 这类变量名枚举只会攒出一份追不上代码的名单；② **把常量改成函数会打断测试侧的 setattr 缝** —— `monkeypatch.setattr(module, "SYSTEM_YAML", …)` 与 `module.OUTPUT_DIR == …` 这类断言当场 `AttributeError`，改一个定义点要顺着 `git grep -w <旧名>` 把 bin/ 内的残留引用（会静默 `NameError`，实测 `omo-state-write-guard.py` 里漏了一处 `SYSTEM_YAML.read_text`）和 tests/ 里的缝一起改，判据：对每个改过的模块跑一遍「模块级赋值名 vs 模块内 Load 名」差集（`UTC`/`POC_SERVICES` 这类 try 块与函数内 import 会假报，须与 `origin/main` 逐条对拍）。
 - **扫源码的门禁必须自证，且允许清单要钉成集合相等（2026-10-02, #4606 实证；2026-10-05/06 T10-231 补 ④⑤⑥⑦；2026-10-07 T10-235 补 ⑧⑨）**：① `/`-链要**按源码顺序递归展平**（`tests/unit/test_system_yaml_write_plane.py` 的 `_path_segments`，`:252`），用栈弹出序拼接会漏掉同一种字面量的别的写法；② 任何这类检测器都要拿**合成违规样本自证**（`projects/omo/tests/test_omo_system_yaml_state_root.py:99`），否则「绿」可能只是**检测器压根没命中** —— 空绿的代价是一条判据在写者没改完时就变绿；③ 残留豁免是显式集合且被测试钉死（`tests/unit/test_system_yaml_write_plane.py:240` 清单本体、`test_checkout_pinned_system_yaml_sites_are_the_reviewed_list`（`:322`，断言在 `:324`）断言实测集合与之相等、`test_allowlist_reasons_point_at_real_files`（`:327`）断言每条理由指向真实文件），**判据**：加豁免前先跑那两条断言，别在检测器里加临时 `if` 跳过。④ **匹配 resolver 而不是变量名，且 resolver 名单不得手写** —— 由 `bin/lib/repo_root.py` 的**行为**导出：对每个零参公开 callable 在哨兵 env（`OMOSTATION_STATE_ROOT` / `OMO_EVENT_LEDGER_DB` 各指一个假路径）下探测返回值是否变化，变的才是 profile 根。手写名单有两处静默逃逸：`repo_root.__all__` **不含**脚本里实际写的别名（`from repo_root import state_root as runtime_state_root` ⇒ 按 `state_root` 匹配当场漏 4 处，且漏的是最像缺陷的那批），改名 `DEFAULT_LEDGER → X` 也直接绕过名字判据。反向还要断言 `code_root()` / `canonical_root()` **不被**命中 —— 过宽的 detector 靠「把 17 处读根全塞进豁免清单」也能通过 ①。⑤ **「改后为 0」必须与「改前为 N」由同一次扫描产出并断言**（T10-231 的 N=14：13 处直接调用 + 1 处传递依赖）；只断言 0，则「少认一种形状 + 多认一处合法」也能凑出绿。⑥ **管道式判据的每一段匹配词都要能在被检对象实际文本上命中一次**，且 `| grep -c` 之后**不许**接 `|| true` —— T10-203 的 verify-3 是 `grep -rEn "^(DEFAULT_(EVENT_)?LEDGER|LEDGER|DEFAULT_DB) *=" bin/ | grep -c "event-ledger"`：第一段产出的行含**下划线** `event_ledger_path`、第二段过滤的是**连字符** `event-ledger` ⇒ 计数恒 0、`|| true` 再吃掉退出码，判据在它自己交付的那一刻起结构性失效，活了 9 天并被 retro 当真值抄了一遍。⑦ **同一判据换装置读数不同 ⇒ 判据要写明用哪个二进制**（2026-10-06, T10-231 实测）：`DEFAULT_(EVENT_)?LEDGER\s*=` 用 `/usr/bin/grep -rE`（BSD grep, "GNU compatible" 2.6.0）扫未修复树是 **6** 命中，用 `git grep -E` 扫**同一棵树**是 **0** —— git 的 ERE 引擎不认 `\s`，这条判据在 `git grep` 下**恒绿**。这是「判据与被检对象不同源」的第三个面（⑥ 是拼写不同源，这里换的是**正则引擎**）。纪律：反基线读数必须在判据指定的那把尺上复算（`git archive origin/main bin | tar -x` 造一棵对照树再跑），判据文本里写清用哪个二进制；要让判据对引擎不敏感就一律用 `[[:space:]]` 替 `\s`。⑧ **「实测集合 ⊋ 允许清单」时先怀疑检测器的匹配规则，而不是给多出来的项造豁免**（2026-10-07, T10-235 实测）：本轮 §6 消费面清单列了 9 处仍钉检出根的读者，检测器只报 6 处 ⇒ 差额的 3 处是两种**字面量形状**漏认 —— `OMO_DIR / "state" / "system.yaml"`（尾段不含 `.omo`）和 `ROOT / var`（尾段是变量名，非常量）。旧实现要求尾巴以 `".omo/state/system.yaml"` 结尾且尾段全为字符串常量，于是**结构性看不见**这两形，而它报出的「清单相等」是**同一个 bug 的自证**（检测器少认 ⇒ 实测集合少 ⇒ 恰好等于按旧读数写下的清单）。修法是尾匹配放宽到 `state/system.yaml` + 允许变量段，并给一个 `Path(".omo") / …` 相对量豁免；**判据**：`test_checkout_pinned_detector_fires_on_both_pinned_shapes` 与 `test_checkout_pinned_detector_does_not_fire_on_seam_or_relative_constant` 一对正反面（AGENTS.md §7③「按构造就绿」的同族：能同时通过「检测器命中」与「集合相等」两条断言的，可能只是检测器没命中）。⑨ **「解析失败退回空」的读法，让「文件坏了」与「内容为空」同形，于是登记面能整块消失而不报错**（2026-10-07, T10-235 实测）：`bin/gac/check-ci-surfaces.py::_load_yaml` 捕获 YAML 异常后返回 `{}`。本轮往 `.omo/_truth/registry/ci-surfaces.yaml` 加一条登记时，`note:` 写成**裸多行标量**且行内含 `:` + 空格（`创建者前置步: 在 …`、`(gate: false)`）⇒ `ScannerError: mapping values are not allowed here`，而检查器看不见异常 ⇒ 读数 **`surfaces: 0, registered_tools: 0`** 并当场造假出 **129 条 `unregistered-check` error** —— 与「我真漏登记了 129 个检查」的输出一字不差，按那份输出逐个补登记会白跑一天。**判据**：登记面改动后先看**计数非零**再看 error 数（本轮修好后稳定读数 `ok true / errors 0 / surfaces 148 / registered 148 / wired 144`），并把这条量钉成用例（`tests/unit/test_system_yaml_consumer_inputs.py::test_registry_yaml_parses` 对 ci-surfaces 与 governance-checks 各解析一次；同文件的登记用例先断言 surfaces 非空再断言只有一条命中）。**纪律**：① 这类 registry 的 `note` 一律避免行内 `:` + 空格（用「——」或分号），② 任何读 registry 的门禁不得把「坏了」折叠成「空」，要么让异常上抛，要么把解析失败本身计成 error，③ 本条列的计数标题（如「④⑤⑥⑦」）与条目数**每次加项都要同步**，否则陈旧计数会把「还有几类没写」读成「清单已完整」。
-- **三个治理门禁的真实语义，都会以「判据自否证」的方式咬人（2026-10-02, T10-219 / T10-220 实测）**：① `bin/ssot/script-registry.py` 的 `validate()` 把 id 收进 **set**（`bin/ssot/script-registry.py:119` + `:124`）⇒ 重复 id **静默折叠**，且 `missing = git ls-tree HEAD 的 bin 全部脚本 − registered`（`:133` + `:147`）⇒ 「把一个 id 改指到活副本」会让旧脚本从 registered 消失、当场 `Missing registrations: 1`，所以登记面只能加不能挪；它也不校验 schema。② `bin/gac/omo-state-write-guard.py` 的归属检查是 `present` 与 `declared` **双向**比对（`check_field_ownership()` 定义 `:169`，两类违规 `:191` undeclared-key / `:200` ghost-declaration，计数 `:237`）⇒ **只声明已经存在的键**，声明一个当前不写的键会当场造幽灵、把上一轮的绿判据变红。③ `R-GOV-2` 结构上只能 WARN：`bin/gac/governance-convergence-lint.py:159` 的 `check_score_convergence()` 在 `:161` 初始化 `errors`、`:176` 原样返回，中间只 append warnings ⇒ 把「自己复制自己的分当真值」这类同义反复删掉**不需要先登记 known-debt**。另附一条可见性边界：`.github/workflows/governance-check.yml:118` 起是**显式 pytest 文件白名单**（到 `:127`），**不含 `tests/unit/**`** ⇒ 那批用例本地跑得到、CI 永远看不见，「CI 绿」不构成它们的证据。
+- **三个治理门禁的真实语义，都会以「判据自否证」的方式咬人（2026-10-02, T10-219 / T10-220 实测）**：① `bin/ssot/script-registry.py` 的 `validate()` 把 id 收进 **set**（`bin/ssot/script-registry.py:119` + `:124`）⇒ 重复 id **静默折叠**，且 `missing = git ls-tree HEAD 的 bin 全部脚本 − registered`（`:133` + `:147`）⇒ 「把一个 id 改指到活副本」会让旧脚本从 registered 消失、当场 `Missing registrations: 1`，所以登记面只能加不能挪；它也不校验 schema。② `bin/gac/omo-state-write-guard.py` 的归属检查是 `present` 与 `declared` **双向**比对（`check_field_ownership()` 定义 `:169`，两类违规 `:191` undeclared-key / `:200` ghost-declaration，计数 `:237`）⇒ **只声明已经存在的键**，声明一个当前不写的键会当场造幽灵、把上一轮的绿判据变红。③ `R-GOV-2` 结构上只能 WARN：`bin/gac/governance-convergence-lint.py:159` 的 `check_score_convergence()` 在 `:161` 初始化 `errors`、`:176` 原样返回，中间只 append warnings ⇒ 把「自己复制自己的分当真值」这类同义反复删掉**不需要先登记 known-debt**。另附一条可见性边界：`.github/workflows/governance-check.yml` 的 pytest 是**逐文件显式白名单**（ADR-0379 E-2，不转 glob；`:120` 起是理由注释块，`:276` 起逐件点名）。**注意这条曾经写成「不含 `tests/unit/**`」，2026-11-03 复核已过期** —— 现有 5 件在册（`test_b1_ledger_call_time` / `test_delivery_anchor_contract` / `test_hitl_ledger_read_anchor` / `test_system_yaml_consumer_inputs` / `test_system_yaml_materializer`），**其余 `tests/unit/**` 仍不在白名单里** ⇒ 那批用例本地跑得到、CI 永远看不见，「CI 绿」不构成它们的证据。
 - **BET 闭环交付机制三条读数（2026-10-02, T10-220 两轮 PR 实证）**：① `python3 bin/plan/bet-ledger.py complete <BET>` 要求 `engineering.merged_reachable_commit` **在本地对象库里可达**（`bin/plan/bet-ledger.py:1682`）⇒ squash-merge 之后**先 `git fetch origin main`** 再 complete，否则它会连带报 `OVERALL_STATE_MISMATCH: derived='blocked'`，看着像 evidence 写错、其实是没取对象。② `WORK_PACKET_SOURCE_DRIFT`（`bin/plan/bet-ledger.py:2336`）与 packet 校验**只 gate `claim`**，`status` / `done_at` / `completion_evidence` 不在投影里，retro 与 receipt 路径实测可未 claim 提交；`refresh-packet`（`bin/agent-workflow.py:1031` → `:814` → `:738`，字节比对失败报 `:772`）要求检出的 ledger/spec **已等于 `origin/main`**，所以**新建 BET 的首轮用不上它** —— 顺序纪律仍是「台账定稿 → `start` → claim 完 → 才改非投影字段」。③ GitHub 对 squash-merge **自动删除 head 分支**；往同名分支再 push 会把**整条旧 stack** 复活成 PR 内容 ⇒ 二次交付必须从当前 `origin/main` 起新分支 + `cherry-pick` 那一个 commit，并用 `git diff --name-status origin/main..HEAD` 查有没有 `D` 行（PITFALL-COO-005 同族）。④ `claim` 还有一道前置：必须先产 affected-graph receipt（缺失时 `projects/omo/src/omo/workflow/lifecycle.py:1313` 直接拒），而 receipt 的**输出父目录不允许含 symlink**（`bin/gac/affected-graph.py:121`，同文件 `:125` 再查 resolve 一致）—— 协调面 `.omo/_delivery/agent-workflows/` 本身就是 symlink 桥，所以它**不能落在那里**，只能落真实目录且路径须 workspace-relative（如 `runtime/affected/`，用完即删、不进 commit）。
 - **六类会让判定静默失效的形状（2026-10-04, BET-Y2Q4-T10-225 固化；准入沿用 T10-221）**：以下每条都满足「当场让安全网或验收判据失效」且「有不依赖本机状态的指认方式」，措辞含 证据→判据→纪律。
   - **① YAML 重复键是静默的 last-wins，不是报错**：`yaml.safe_load` 对重复键**不抛异常**，构造 mapping 时保留最后一个。实证 `.omo/cron/registry.yaml` 两条 panorama 记录各带**两个** `reality` 键（`declared_only`+`pending`、`installed`+`pending`），文件同时印着「已装机」与「待装」，而**所有读者只看到 `pending`**；全文件 dup-aware 扫描恰好 2 处、其余 68 条干净（PR #4623 → `d8ab0aa58`）。**纪律**：这类文件**只改其中一行无效，另一行仍会赢** —— 删被遮蔽的键、留唯一真值。**判据**：`safe_load` 结构上看不见重复，所以任何查这类违规的检测器必须自带 dup-aware `MappingNode` constructor，并按 #4606 的纪律**自证** —— 标准形状是 `tests/unit/test_cron_registry_reality_invariants.py` 的 `test_duplicate_key_detector_is_not_a_no_op`（向真实文本注入重复行、断言点名它）+ `test_safe_load_alone_would_have_missed_that_violation`（断言 `safe_load` 折叠成一条、看不见违规）。
   - **② 时钟炸弹 = fixture 写绝对时间戳 × 断言用相对窗口**：`tests/unit/test_projection_reader_resolution.py` 三处 fixture 硬写 `generated_at: 2026-…`，而判据是「新鲜度 ≤ N 分钟」，于是用例**跑得越晚越红** —— 2026-10-02 起必红，与代码零关系，且形状与真回归**无法用眼景区分**（T10-222 / PR #4617 把这类从 3 处降到 0 处）。**纪律**：fixture 时间一律**相对 now 派生**（`_fresh_ts()`，该文件 `:21`）。**指认命令**：`grep -rn "write_text.*generated_at:[ ]20" tests/unit --include="*.py"` 必须 CLEAN。
   - **③ 「按构造就绿」—— 断言的前提由 fixture 自己写出**：`tests/unit/test_projection_reader_resolution.py` 的 `test_projection_read_prefers_canonical_then_legacy_and_reports_absent`（`:52` 起，`:61` 处 `legacy.write_text("legacy")`）之所以绿，是它自己写出了 legacy 侧文件；对面的 `tests/unit/test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path`（`:174`）断言「退回仓内已提交的 legacy」则**按构造不可满足**（17 条投影只 1 条被跟踪，见「已提交的 legacy 兜底」条）。**纪律**：这类断言必须配**变异对照或合成违规自证**，否则「绿」只是装置没命中 —— T10-222 verify-3 把 `legacy.write_text(` 换成 `pass` 后单跑该用例得 `MUTATION_EXIT 1`，才证明断言真依赖该前提。**同一条错误的另一端**：用例/检查器里**被检对象的根不得由 `__file__` 反推**，要走 `bin/lib/repo_root.py` 显式 resolver（写侧版本见「写路径要在调用时刻解析」）。
   - **④ GitHub「no checks reported」的第一因是 CONFLICTING，不是 `on.paths` 过滤**：`gh pr checks` 零输出时先跑 `gh pr view --json mergeable,mergeStateStatus` —— PR #4623 实测是 `CONFLICTING` / `DIRTY`，**冲突未解的 PR 根本不排队**。**判据搞混双向有代价**：把「冲突未解」读成「CI 放过我了」，或反过来把 `on.paths` 当万能解释 —— 注意 `.github/workflows/governance-check.yml` 的 `on.pull_request.paths` **不含 `tests/unit/**`**，那批文件**本地 pytest 是唯一证据**（与 §7「三个治理门禁」条里 `:118-127` 的显式白名单是同一事实的两个面），这是独立于冲突的第二件事。
-  - **⑤ Bash 工具的 shell 是 zsh + 别名，Python 子进程拿的是另一套二进制**：实测 `type` 读数 `grep → rg`、`find → fd`、`ls → eza`、`cp → cp -iv`；而 `subprocess.run(..., shell=True)` 里是 `/usr/bin/grep`、`/bin/cp`（**别名不继承**）。四个已踩形状：`grep -iE "a|b"` 报 `unknown encoding`（rg 的 `-E` 是编码、`-r` 是 replace，都不是你以为是的那个）、`find … -name` 报 fd 用法错、`ls -lat` 报 `--time` 非法值、`cp` 对已存在文件打印 `overwrite …? not overwritten` 后 **rc=1 且目标逐字节未变**（不是静默成功，但那行消息看着像提示，容易被当成跑过了）。**纪律**：脚本化文件操作一律走 Python 或绝对路径二进制；**「脚本里跑得通」不等于「一行命令里等价」**；凡改动后断言没变，先用 sha 逐字节复核，再怀疑逻辑。零匹配计数断链另见 §11「管道计数命令零匹配断链」。
+  - **⑤ Bash 工具的 shell 是 zsh + 别名，Python 子进程拿的是另一套二进制**：实测 `type` 读数 `grep → rg`、`find → fd`、`ls → eza`、`cp → cp -iv`；而 `subprocess.run(..., shell=True)` 里是 `/usr/bin/grep`、`/bin/cp`（**别名不继承**）。四个已踩形状：`grep -iE "a|b"` 报 `unknown encoding`（rg 的 `-E` 是编码、`-r` 是 replace，都不是你以为是的那个）、`find … -name` 报 fd 用法错、`ls -lat` 报 `--time` 非法值、`cp` 对已存在文件打印 `overwrite …? not overwritten` 后 **rc=1 且目标逐字节未变**（不是静默成功，但那行消息看着像提示，容易被当成跑过了）。**纪律**：脚本化文件操作一律走 Python 或绝对路径二进制；**「脚本里跑得通」不等于「一行命令里等价」**；凡改动后断言没变，先用 sha 逐字节复核，再怀疑逻辑。零匹配计数断链另见 §12「管道计数命令零匹配断链」。
   - **⑥ 行号指针会随上一轮交付漂移，固化感知前先重跑解析**：本文件此前有两条指针写在 T10-221 基线上 —— `tests/unit/test_projection_reader_resolution.py:42` 与 `tests/unit/test_repo_root_profile.py:146`；T10-222 重写这两个文件后，`:42` 变成一行 `registry = next(...)`、`:146` 变成一段 TRUTH_DIR 注释，**断言本体分别移到 `:61` 与 `:174`**，而文档逐字未变、读起来依然权威。**纪律**：**优先写符号名（测试函数名 / YAML 键名 / 函数名），行号只作辅助**；引用行号前用 `git show origin/main:<path>` 取该行内容核一遍再落笔；交付时顺手修正发现的陈旧指针（本轮修正上述两条）。
 - **「算完即弃」的派生事实 = 免费的观测点（2026-10-07, BET-Y2Q4-T10-234 实测）**：`service.py` 早已计算 `data_mode`/`live_backends` 只是没持久化 —— 给**已有计算点**挂一个 fail-soft 的 telemetry 钩子，比从零造探针便宜得多。判据：要观测某个事实时先找「它是不是已经在哪个计算点算出来了」，而不是新开一条探测路径。纪律：观测缝必须是纯 telemetry（不改 recall/branch 行为）、缺席即诚实信号（fixture-only 不写记录）。
 - **子模块无法 import 父仓 bin/lib 时，用「同 env 契约镜像」而非复制路径逻辑（2026-10-07, BET-Y2Q4-T10-234 实测）**：kairon 子模块的 observation 写根无法复用父仓 `repo_root.state_root()`（子模块 import 不到父仓 bin/lib），正确做法是**镜像同一 env 契约**（显式覆盖 → `OMOSTATION_STATE_ROOT` → workspace env → marker 上溯），两侧对同一契约、写法各自落位，后续根逻辑变动只需各改一处。判据：跨仓/子模块需要父仓能力时，复制契约而非复制路径解析代码；同根原理见「写路径要在调用时刻解析」条。
 - **门禁 flag 语义是决策不是默认：`--require-main` 曾两度差点复辟（2026-10-06, ADR-0464 修复波固化；源头 PR #4209 / commit `86b61b84e`）**：**证据** —— #4209 (2026-09-22) 从 gac-gate CI **有意移除** `--require-main`，因为跨仓 PR 模式下父仓指针合法指向**已 push 但尚未合并**到子仓 main 的 feature 分支提交，`--require-main` 会误杀（`check-submodule-pointer-drift` 同批把 `ahead` 定为非阻塞）。本修复波把它的缺失读成"漏接的参数"，重加了 flag、造了合成 proof，直到 `tests/test_gac_gate_workflow_purity.py:79-84` 这个冻结决策的 purity 测试拦住才撤回。**判据** —— 一个当前 OFF 的 gate flag 常常是故意的：`git log -S'<flag>' -- <path>` + 读移除 commit 的 message；且**当改动与已有测试矛盾时，测试是对意图的证据，先查历史再改测试**（#4517 就是把 purity 测试同步到 #4209 现状的先例）。**纪律** —— 任何"缺接线/漏 flag"修复前：① `git log -S'<flag>' --oneline -- <path>` 找移除 commit；② `grep -rn '<flag>' tests/` 看有没有断言其**缺席**的 purity 测试（存在即决策记录）；③ 区分两语义：PR admission = 任意远端 ref 祖先正确（#4209）；governed re-point/bump（`bin/ssot/submodule-pointer-transaction.sh`）= `--require-main` 正确。ADR-0464 盲区三的机制描述已于 2026-10-06 按此更正。
 - **抽样探测的覆盖面上限是它的样本集，不能当契约名单用（2026-10-10, BET-Y2Q4-T10-239 实测）**：**证据** —— 定「哪些 env 名会移动落点」时先用哨兵探针逐个注入（47 候选 × 28 个调用时刻解析器，读出 7 名），据此让两份测试各抄一份名单；dev profile 全量跑 `1 failed / 3040 passed`，红的是 `test_no_profile_means_both_roots_are_the_checkout` —— **生产代码没问题，是两份手抄名单都缺名字，且缺的正是各自没探到的那半边**。改用 AST 判据（「env 值进路径语境」：`Path(env)` / `env / "段"` / 先赋值再被这样消费）从 `src/**` 导出，名单读数是 **14 名**：探针漏掉的 7 名（`EXECUTION_LOG`、`RUNTIME_HOME`×5 站点、`AGORA_METRICS_DB`、`OMO_EXTERNAL_ROOT`、`OMO_PATH_ACL_PROFILE`、`WORKSPACE_CODE_ROOT`、`OMOSTATION_ROOT`）形状全都是 `Path(os.environ.get(...))`，它们不是「不存在」，是不在那 28 个被抽样的解析器里。**判据三条**：① 契约名单由源码判据导出且**单一来源**（本例 `omo.omo_paths.PROFILE_ENVS`），消费者只 import、再抄一份就是下一个缺陷；② 名单双向对拍（漏一名红、留死名也红）+ 尺自身反证（注入一条命中的、一条端口类的不得命中；`_vendored` 在含/不含两口径下读数必须不同）；③ 探针/抽样类工具只用来**发现形状**，不用来**定契约内容** —— 它的「没测到」与「不存在」在输出里长得一样，而据此写出的名单会全绿。同族面：§7「扫源码的门禁必须自证」条（那里防检测器空转，这里防样本当全量）。
-- **发布器门禁：投影绑定的前提是 `HEAD == origin/main`（2026-10-12, T10-241 实证）**：部署仓本地提交了但没推送 origin/main → 发布器 `panorama-collect.py:494` 的 `projection_dashboard_not_current_main` 持续失败 → 全量刷新连续失败、投影只被续期死绑旧码 → `/health` `CODE_DRIFT`、API 503。**纪律**：改部署仓代码后**必须推送 origin/main**；投影不更新先查发布器日志（`~/.local/log/projection-fullrefresh.log` 的 `failed` 事件）再查投影内容。**判据**：`git -C <deploy> rev-parse HEAD` vs `git -C <deploy> rev-parse origin/main` 不相等 = 发布器必失败。
+- **发布器门禁：投影绑定的前提是 `HEAD == origin/main`（2026-10-12, T10-241 实证）**：部署仓本地提交了但没推送 origin/main → 发布器 `panorama-collect.py:588` 的 `projection_dashboard_not_current_main` 持续失败 → 全量刷新连续失败、投影只被续期死绑旧码 → `/health` `CODE_DRIFT`、API 503。**纪律**：改部署仓代码后**必须推送 origin/main**；投影不更新先查发布器日志（`~/.local/log/projection-fullrefresh.log` 的 `failed` 事件）再查投影内容。**判据**：`git -C <deploy> rev-parse HEAD` vs `git -C <deploy> rev-parse origin/main` 不相等 = 发布器必失败。
 - **release 机制的运行态必须 gitignore，否则脏树卡发布器（2026-10-12, T10-241 实证）**：`releases/<OID>` worktree 与 `current` 指针落在部署仓根，若不 ignore，`git status --porcelain --untracked-files=all` 非空 → 发布器 `projection_dashboard_tree_dirty` 失败。**纪律**：新增「落在代码仓里的运行态目录/指针」时，先问它会不会弄脏干净树门禁；会就加进 `.gitignore`（与 `revisions/`、`current-revision.json` 同属「发布机制运行态」）。
 - **`launchctl kickstart -k` 不重读 plist（2026-10-12, T10-241 实证）**：服务重启后 argv 仍是旧入口（实测：plist 已改 `current/live_server.py`，kickstart 后 argv 仍是旧路径）。**纪律**：改 plist 后必须 `launchctl bootout gui/<uid>/<label>` + `launchctl bootstrap gui/<uid> <plist>`；复核判据是 launchd 自己的 arguments（`launchctl print`）+ 进程 cwd（`lsof -p <pid> | grep cwd`），**不是** `ps -o args=`（可能显示指针解析后的路径）。
 - **release worktree 目录必须用 40 位全名，短名导致 `current` 断裂（2026-10-12, c855c4a 部署实证）**：`git worktree add releases/<短名> <sha>` 后 `current` 指向短名但服务按 `releases/<40位OID>` 解析 → 符号链接断裂 → 服务 crash-loop（launchd `runs=N` 反复重启，日志只有启动行）。**纪律**：release 目录名 = 完整 40 位 commit OID；判据：`readlink current` 的指向必须能 `ls` 到 `live_server.py`。
@@ -506,6 +514,14 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 - **main 可能是「绿但已过期」（2026-10-29 omlxc pip-audit 实证）**：安全告警（CVE）晚于 main 上次 CI 运行时，main 显示绿但**任何重跑 CI 的 PR 都会红** —— 这不是 PR 的问题，是 main 自己欠债。纪律：PR CI 红在安全扫描步时，先查 main 上次成功运行的时间 vs 告警发布日期；修 main（如 bump 依赖）而不是让 PR 背锅。
 - **子仓 PR 合并后根 gitlink 立即漂移（2026-10-29 实证）**：在子仓（如 omlxc）合并 PR 后，根仓 `projects/<sub>` 的 gitlink 立刻落后于子仓 main —— 若不当轮 bump，次日 `submodule-freshness-gatekeeper` 的 schedule run 就会报漂移。纪律：处理子仓 open PR 的最后一环是**同轮 bump 根 gitlink**（`git -C projects/<sub> checkout origin/main && git add projects/<sub>`），并跑 `submodule-reachability-gate.py --source worktree --fetch` 验证。
 - **gbrain 的测试只能用 `bun run test`（分片并行），裸 `bun test` 会造出上百个假失败（2026-10-29 实测）**：本仓用例**不隔离跨文件全局态** —— `globalThis.fetch` 的 mock、gateway 配置、embed transport 单例都是模块级全局，`bun test` 把全部文件跑在**同一个进程**里就会互相污染。实测同一棵检出：单进程全量 **195 个失败**，而`bash scripts/run-unit-parallel.sh --shards 4`（N 个进程、hash 分片）与 CI 的`scripts/test-shard.sh N 4` 全绿；把任一「失败」文件单独跑也全绿（实测 `test/ai/` 26 个文件 286/286）。**污染是负载相关的** —— 同一份代码两次单进程全量跑出 29 与 195 两种读数，所以**别拿单进程读数当回归信号**。**纪律**：① 验证 gbrain 改动一律走分片 runner；② `*.serial.test.ts` 必须落在分片后的串行段；③ 文档里写 `bun test` 的地方（本文件 §8 与 `projects/knowledge/gbrain/CLAUDE.md`）都已改成 `bun run test` —— 新写文档时别再退回裸 `bun test`。
+- **写面迁移后，旧常量的赋值点是「静默失效的缝」—— 赋值点还在、读者没了（2026-11-03 实测）**：`CellStateManager` 自 2026-10 起改为**调用时刻**解析 `state_root()`，模块级 `STATE_DIR`/`STATE_FILE` 不再被读；而 `bin/ssot/agent-cell-pool-live-smoke.py` 的 `run_smoke` 仍在绑它们 ⇒ `--state-file` 照收，状态却写到 `state_root()` 下面（本机真实状态面），其中两条用例会往那里**真写**。**判据**：写面迁移后 `git grep` 旧常量的**赋值点** —— 赋值点还在、读者没了就是死缝（「没有任何测试会红」正是它的特征）。**纪律**：要么删掉绑定，要么把根注入 env（`state_root()` 的唯一入口）并 `try/finally` 还原；CLI 侧同时给「路径不在规范相对布局上」一个**明确报错**，而不是静默错位。
+- **模块级常量在 import 时冻结 —— env 必须在 import 之前设，且变量名要对着「被读的那个」核一遍（2026-11-03 实测）**：`test_panorama_gantt_brief_source_consistency` 先 `helpers._module()` 再 `monkeypatch.setenv(...)`，且设的是 `ZHIXING_DASHBOARD_CODE_ROOT`（dashboard **代码**根），而 `build_payload` 读的是 `PROJECTION_STATE_ROOT`（`ZHIXING_DASHBOARD_STATE_ROOT`，投影**状态**根）⇒ 断言随本机真实 `current.json` 漂移。**判据**：用例里出现 `monkeypatch.setenv` 在被测模块 import **之后**，先怀疑常量已冻结；两个名字只差一个词（CODE/STATE）时尤其要回去读常量定义。**纪律**：env 全部前置到 import 之前；`grep -n "<常量> = " <被测模块>` 确认变量名再设。
+- **用例断言 host 运行态 = 结构性失明，CI 绿与开发者机器绑定（2026-11-03 实测，三条）**：`test_scheduler_compile_launchd_plane` 直接跑 `crontab -l`（实测 `drift_count=17`，`ok` 取决于本机 cron 是否与登记同步）；`test_panorama_gantt_brief_source_consistency` 读本机真实 `current.json`；`test_panorama_objective_coverage` 依赖 `ZHIXING_DASHBOARD_CODE_ROOT` 恰好有值。**判据**：用例里出现 ① `subprocess` 调本机 CLI（`crontab -l`/`launchctl`/`docker`）② 读 `$HOME` 下运行态 ③ 依赖某个 env 恰好有值 —— 三者任一即非 hermetic。**纪律**：改成注入缝（`check_drift(installed_lines=...)`，`None` = 原行为逐字节不变），别让用例的「绿」依赖某台机器的状态。
+- **判据不被任何 CI 路径跑 = 不存在（2026-11-03 实测）**：`tests/unit/**` 曾一次挂 **22 条预存红三周**无人看见，其中包括 retro 明确登记的「声明 18 / 实扫 42 口径缺口」—— 根因是本文件上面那条：白名单**逐文件点名**，那批文件绝大多数不在其中。**判据**：新增/修复判据后问一句「它在哪条 CI 路径上被跑」；答不出来就是结构性失明，本地绿不构成证据。**纪律**：修 `tests/unit/**` 的红时同步考虑把该文件按 ADR-0379 E-2 点名进白名单（需 hermetic + 当前 main 全绿 + 写理由），否则修完还会再红；反向也成立 —— **别把「CI 绿」当判据存在的证据**，先确认它在白名单里。
+- **检测器的分类规则要与它自己的标记清单同源（2026-11-03 实测）**：`test_resident_write_plane_split.py` 的 `_classify` 只认 `__file__`/`parents[`，而同一文件里的 `CHECKOUT_MARKERS` 早已声明 `code_root` 是检出锚点 ⇒ `WORKSPACE = code_root()`（`repo_root.py:87-89` 就是 `Path(__file__).resolve().parents[2]`）被判 DERIVED，活面里 5 个站点误报成「未知根」；模块级别名链（`SCRIPT_DIR = Path(__file__).parent` → `WORKSPACE_ROOT = SCRIPT_DIR.parent.parent`）同样被判 DERIVED。**判据**：同一份语义在两处用两个口径时先收成一份；检测器报出的「未知/不可判」数量异常时，先怀疑**分类规则漏认形状** —— 同 §7「扫源码的门禁必须自证」⑧：先怀疑检测器的匹配规则，而不是给多出来的项造豁免。
+- **扫描面里的 worktree 副本要归一到 gitlink 路径，否则同一处缺陷被数两遍且分桶错（2026-11-03 实测）**：`.subtrees/**` 是 `gac-worktree.sh claim` 建的子模块 worktree，与 `projects/<sub>` 是同一棵树的副本（gitignore 的，非检出内容）。`test_bin_syspath_resolution.py` 扫全仓时，`.subtrees/omo/tests/unit/test_workflow_cli_bet_gate.py` 与名单里的 `projects/omo/tests/unit/test_workflow_cli_bet_gate.py` 是同一处算术错，却因不在 `.gitmodules` 声明路径下被错分进 `bugs` ⇒ **任何跑过 claim 的开发者都会看到这条假红**。**判据**：扫描面若含 gitignore 的 worktree 副本，先归一路径再分桶。**纪律**：归一是**分桶键**的事，不是收窄扫描面（面收窄了同一处缺陷还是会被数到，只是换了桶）。
+- **工具写好但不可达 = 等于没有；脚本的「不适用形态」要显式报，不能静默空转（2026-11-03 实测）**：① `bin/gac/swarm_discipline.py` 的 `claim_gc()` 写好了（7 天 TTL、跳过有 open PR 的分支），但**既没暴露成 CLI 也没进任何 cron** ⇒ `.omo/_delivery/branch-claims/` 攒到 24 条（14–19 天）。② `bin/ssot/submodule-pointer-transaction.sh` 在「子仓 commit 已在 origin/main 上」时**静默什么都不做**（增量模式按「子仓本地有未推送 commit」找差集 ⇒ `stage_paths` 为空），别把「脚本没报错」读成「脚本做了事」。**判据**：新增清理/巡检逻辑后问「谁在什么频率下调它」；新增脚本后问「它在什么输入形态下会空转」。**纪律**：要么接线，要么别写；空转路径要打印「本形态不适用」并给出该走哪条路。
+- **付费 OS 腿必须有 workflow 级 `concurrency` 组；仓可见性是成本判据的前提，要核对不要断言（2026-11-03 固化）**：① `CR-CI-RUNNER-COST` 补第三条判据 —— 已登记但无 `concurrency` → `error`（macOS 单价 10x，没组可以无限堆叠：一次 push / 一次 review / 一次定时触发各起一份）。只看**顶层** `concurrency`（job 级无此概念）；`cancel-in-progress` 取值不替各仓决定，但**要看该 workflow 是不是 required check**：是 → `true`（保证检查总会跑到 head SHA），不是 → 可 `false`（不中断在跑的构建）。实测 l4-kernel 加组后 `test (macos-latest)` 仍通过。② `check-runner-cost.py` docstring 里「本仓组全部是 public 仓」此前是**断言**，无物守；新增 `repo-visibility-guard.yml` 每周核对 17 个仓的 visibility，非 public 即失败，API 失败**重试 3 次**并 fail-closed（一次网络抖动不该等于关掉这道闸）。
 
 ---
 
@@ -523,7 +539,7 @@ If a test cannot run, report why and what risk remains.
 
 ---
 
-## 8. Closeout Checklist
+## 9. Closeout Checklist
 
 1. Review `git diff --stat`.
 2. Run the verification appropriate for the change.
@@ -534,7 +550,7 @@ If a test cannot run, report why and what risk remains.
 
 ---
 
-## 9. Architecture Standards (Agent 必读)
+## 10. Architecture Standards (Agent 必读)
 
 **场景卡生命周期** (5 级): `draft → shadow → assisted → supervised → routine`
 
@@ -557,7 +573,7 @@ If a test cannot run, report why and what risk remains.
 
 ---
 
-## 10. Harness 集成 (Phase 8)
+## 11. Harness 集成 (Phase 8)
 
 - **Cockpit CLI**: `cockpit harness <command>` (12 子命令)
 - **8 阶段 DAG**: `admission → spec → grill → dispatch → execute → verify → audit → accept`
@@ -571,7 +587,7 @@ cockpit harness compliance|full|status
 
 ---
 
-## 11. Key Patterns & References
+## 12. Key Patterns & References
 
 - **Historical patterns**: `.omo/_knowledge/patterns/` (P75, P91, P43, P71, P72, P78, etc.)
 - **分支等价性判据**: 只用 **内容 diff** (`git diff origin/main...<branch>`)
@@ -590,18 +606,18 @@ cockpit harness compliance|full|status
 - **验收条款先实证通道行为（2026-09-27 实证）**：done_when 写"doc 指向 X"前先跑一次真实通道——ingest 的 canonical_path 是 `kos::default::<文件名>` 不保目录、gh pr list 分页会静默触顶。想象中的通道行为写进验收 = 埋假红/假绿。
 - **并发 agent 的 submodule update 周期会清空 worktree 内手动布置的检出（2026-10-14, BET-Y2Q4-T10-252 实证）**：post-checkout 守卫 `guard-submodules --fix` 对 pin 不一致的子模块执行 `submodule update --init --no-fetch`，该命令把「已存在但 gitdir 布局非标准」的检出当无效目录**先删后建**；网络受限时重克隆必失败留空目录，而并发 agent 的 claim/release 周期在每次 worktree add/checkout 都触发守卫 → 手动布置的检出被周期性清空（ptr-bump/ptr-bump2 两轮交付实证：`.git` 条目被删、空目录残留、remote-hygiene 报 origin 指向本地路径）。**判据**：worktree 内子模块检出目录被反复清空、且 `git submodule status` 对该路径报 `+` 或 fatal，先怀疑并发守卫而非自己的布置错。**纪律**：① 守卫只对**无 `.git` 条目**的路径执行破坏性 update --init，已存在且可解析的检出改非破坏性 `checkout <pin>`（本地有对象）或跳过 advisory（缺对象），任何情况不删除既有 `.git` 条目（INV-1/2/3/4，`tests/unit/test_gac_guard_submodules.py`）；② 门禁脚本按 `__file__` 解析仓库根，子模块解析走主工作区检出（稳定），gitlink 读 worktree index —— 交付不依赖 worktree 内物理检出；③ 滞留 gitdir 的 origin URL 要改回远端，否则 pre-push remote-hygiene 报「origin 指向本地路径」。
 
-## 12. 归档/收敛项目说明
+## 13. 归档/收敛项目说明
 
 - agora-dashboard 独立入口已收敛 (能力并入 cockpit/agora)
 - (归档) hermes-console 与 dashboard_server 作为子应用挂载 (L3 入口能力收敛到 cockpit/agora)
 
 ---
 
-## 13. 自动化设计纪律（2026-10-25 固化）
+## 14. 自动化设计纪律（2026-10-25 固化）
 
 > 来源：2026-10-24 对外部平台评估的结论——**只借纪律，不引产品**。以下三条在本仓规模内可执行；文末四项判定为过度设计，不进本仓。
 
-### 13.1 纪律一：自动化拆成四类步骤，审批是阻塞步
+### 14.1 纪律一：自动化拆成四类步骤，审批是阻塞步
 
 每条自动化（workflow、定时任务、Agent 编排）都必须能标出下表四类步骤；确实不存在的类别要显式写「无」，不允许隐含。
 
@@ -614,7 +630,7 @@ cockpit harness compliance|full|status
 
 **反模式**：把审批做成「执行完再通知」或「PR 事后 review」——那是事后审计，不是审批步。
 
-### 13.2 纪律二：一次运行落一条结构化记录
+### 14.2 纪律二：一次运行落一条结构化记录
 
 每次自动化运行产出一条记录，字段固定六个，缺值写 `null`，不省略键：
 
@@ -630,13 +646,13 @@ cockpit harness compliance|full|status
 **最小实现口径**：单条 JSON 落盘 + 一个查询命令即可（按日期分片，落在既有 state 面下），**不引入审计系统、不做导出**。合规签核类字段依赖机构内控，本仓不设。
 **反模式**：留痕散在 git 历史、服务日志、投影产物与对话里，回溯每次都要人拼——那叫留痕，不叫可回放。
 
-### 13.3 纪律三：领域实体与判准抽成独立文档，作为跨 Agent 共享语义层
+### 14.3 纪律三：领域实体与判准抽成独立文档，作为跨 Agent 共享语义层
 
 - 领域实体（项目、厂商、指标口径）与判准抽成**独立文档**，多个 skill / workflow 引用同一份，**不写进各自的 prompt**。
 - 首期只覆盖工作侧三类：**项目**、**厂商**、**指标口径**；不扩到个人域与知识演化域。
 - 已有唯一 SSOT 的（如 `docs/project-registry.yaml`、`.omo/_truth/registry/**`）直接引用，不建平行副本；确需新建前先查是否已有等价 registry。
 
-### 13.4 明确不做（四项）
+### 14.4 明确不做（四项）
 
 | 不做 | 理由 |
 |------|------|

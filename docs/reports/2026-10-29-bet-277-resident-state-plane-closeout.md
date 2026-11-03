@@ -91,7 +91,7 @@ TOTAL  pre(a8709b9 src/omo) = 5   post(be1a900 src/omo) = 0
 | `git -C projects/omo status --porcelain --untracked-files=all .omo/state` | 空（修前修后同读数） |
 | 尺反基线/改后同扫 | pre=5 / post=0 |
 
-## 6. 一次运行一条记录（AGENTS.md §13.2）
+## 6. 一次运行一条记录（AGENTS.md §14.2）
 
 | 字段 | 值 |
 |------|-----|
