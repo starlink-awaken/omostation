@@ -1,0 +1,107 @@
+name: Repo Visibility Guard
+
+# CR-CI-RUNNER-COST 的**前提**守护：仓的可见性。
+#
+# 根仓 check-runner-cost.py 的判据不依赖可见性（public 省排队/flake，private 省账单），
+# 但它 docstring 里那句「本仓组当前全部是 public 仓」是一条**断言**，没有任何东西守它。
+# 一旦哪个仓被改成 private，macOS 腿立刻从免费变成 10x 单价，而没有任何门禁会红。
+#
+# 本工作流把那条断言变成**每周核对**：枚举 .gitmodules 声明的全部子仓 + 根仓，
+# 逐个读 visibility，非 public 即失败。
+#
+# 只读公开元数据，不需要跨仓 token（gh api repos/{o}/{r} 对 public 仓匿名可读）。
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8 * * 1'  # 每周一 08:17 UTC（避开整点拥塞）
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visibility:
+    runs-on: ubuntu-latest  # CR-CI-RUNNER-COST: 纯 API 查询，macOS 10x 无收益
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 枚举仓组并核对可见性
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import re
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          def slug(url: str) -> str | None:
+              m = re.search(r"github\.com[:/](.+?)(?:\.git)?$", url.strip())
+              return m.group(1) if m else None
+
+          slugs: set[str] = set()
+          gm = Path(".gitmodules")
+          if gm.is_file():
+              # [submodule "<path>"]\n  path = ...\n  url = ...  —— 逐个 block 取 url，
+              # 不需要子模块检出（本工作流 checkout 不带 submodules）。
+              for block in re.finditer(
+                  r'^\[submodule "[^"]+"\]\s*$(.*?)(?=^\[submodule |\Z)',
+                  gm.read_text(encoding="utf-8"),
+                  re.M | re.S,
+              ):
+                  u = re.search(r"^\s*url\s*=\s*(\S+)", block.group(1), re.M)
+                  if u and (s := slug(u.group(1))):
+                      slugs.add(s)
+
+          root = subprocess.run(
+              ["git", "remote", "get-url", "origin"], capture_output=True, text=True
+          ).stdout
+          if s := slug(root):
+              slugs.add(s)
+
+          repos = sorted(slugs)
+          if not repos:
+              print("枚举到 0 个仓 —— 尺没命中，不得当作通过", file=sys.stderr)
+              sys.exit(1)
+
+          def visibility(slug: str) -> tuple[str, str]:
+              """(visibility, note)。**重试 3 次**：本机网络抖动会把一次 API 失败
+              伪装成「不可判定」，而「不可判定」在这里必须与「不是 public」同形 ——
+              否则一次抖动就等于关掉这道闸。"""
+              last = ""
+              for attempt in range(3):
+                  p = subprocess.run(
+                      ["gh", "api", f"repos/{slug}", "--jq", ".visibility"],
+                      capture_output=True,
+                      text=True,
+                  )
+                  if p.returncode == 0 and p.stdout.strip():
+                      return p.stdout.strip(), ""
+                  last = p.stderr.strip()[:90] or f"rc={p.returncode}"
+                  if attempt < 2:
+                      subprocess.run(["sleep", "10"])
+              return "unknown", last
+
+          print(f"枚举到 {len(repos)} 个仓：")
+          bad: list[tuple[str, str, str]] = []
+          for s in repos:
+              vis, note = visibility(s)
+              print(f"  {s:44} {vis}" + (f"  ({note})" if note else ""))
+              if vis != "public":
+                  bad.append((s, vis, note))
+
+          if bad:
+              print()
+              print("以下仓不是 public（或不可判定）—— 若是前者，GitHub Actions 分钟将开始"
+                    "计费（macOS 10x / Windows 2x / Linux 1x）；若是后者，本闸按 fail-closed"
+                    "处理，请重跑确认：")
+              for s, vis, note in bad:
+                  print(f"  - {s}: {vis}" + (f" ({note})" if note else ""))
+              sys.exit(1)
+
+          print()
+          print("全部 public —— Actions 分钟免费（含 macOS）。")
+          PY
