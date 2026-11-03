@@ -36,7 +36,9 @@ jobs:
       - name: Install dependencies
         run: pip install yamllint pyyaml pytest
       - name: Validate YAML syntax
-        run: yamllint projects/runtime/protocols/
+        # -c 读本仓的配置: protocols/*.yaml 是数据文件 (单行最长 237), 默认 80 列会造出
+        # 35 条 line-length error, 让每一次 runtime gitlink bump 都卡这里 (2026-11-03 实测)。
+        run: yamllint -c projects/runtime/.yamllint.yml projects/runtime/protocols/
       - name: Validate Protocol Registry Hygiene
         run: python3 -m pytest projects/runtime/tests/test_protocol_registry_hygiene.py
       - name: List protocols
