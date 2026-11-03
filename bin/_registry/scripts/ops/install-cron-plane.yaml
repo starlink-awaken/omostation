@@ -1,0 +1,21 @@
+schema: script-registry/v1
+id: bin/ops/install-cron-plane.py
+name: Install Cron Plane
+category: ops
+owner: governance-team
+description: "从调度登记源安装 crontab 平面 (registry.yaml 是 SSOT, ADR-A / ADR-0119 / ADR-0121)。scheduler-compile.py --generate crontab 只产出内容, 从不写入本机 crontab ⇒ 登记面与安装面各走各的, 两机实测: mini 装 43 条 (编译产物全覆盖), mbp 只装 5 条 (drift 41) ⇒ mbp 上 38 条登记面声明的巡检从未在本机跑过。本脚本补上这一步: 编译 → 合并 → 写入, 幂等。安装语义与 install-maturity-cron.sh / install-resident-cron.sh 一致: 保留本机 crontab 里不属于登记面的行 (用户自装的外部工具, 在 registry 的 known_orphans 里登记但不由本脚本管理), 替换登记面里内容不同的旧行。--install / --remove / --status / --dry-run。"
+inputs: []
+outputs:
+  - type: exit_code
+dependencies:
+  - bin/scheduler-compile.py
+triggers:
+  - type: manual
+related:
+  - bin/scheduler-compile.py
+  - .omo/cron/registry.yaml
+  - bin/ssot/install-maturity-cron.sh
+  - bin/ssot/install-resident-cron.sh
+  - bin/gac/ops-cron-install.py
+maturity: draft
+last_reviewed: "2026-11-03"

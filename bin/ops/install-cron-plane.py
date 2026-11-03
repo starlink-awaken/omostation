@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""从调度登记源安装 crontab 平面 (registry.yaml 是 SSOT, ADR-A / ADR-0119 / ADR-0121)。
+
+**为什么需要这个脚本**: `scheduler-compile.py --generate crontab` 只产出**内容**, 没有把
+内容**装到**本机 crontab 的动作 ⇒ 登记面与安装面各走各的。两机实测 (2026-11-03):
+  · mini 装 43 条 (编译产物全覆盖)
+  · mbp  只装 5 条 ⇒ `scheduler-compile.py --check` 报 drift 41
+本脚本补上这一步: 编译 → 合并 → 写入, 幂等。
+
+**安装语义 (与 install-maturity-cron.sh / install-resident-cron.sh 一致)**:
+  · 保留本机 crontab 里**不属于本仓登记面**的行 (用户自装的外部工具,
+    如 clash-*/fleet-*/bwg-*) —— 它们在 registry 的 known_orphans 里登记,
+    但**不由本脚本管理**。
+  · 替换掉「登记面里声明、但本机内容不同」的行 ⇒ 装完与登记逐字一致。
+  · 幂等: 重复执行结果不变。
+
+**为什么 mbp 需要它**: mbp 的 crontab 长期只装了 5 条, 其余 38 条登记面声明的
+作业从未落到本机 ⇒ 那些巡检在 mbp 上根本没跑。历史归因写的是「mbp 的 crontab 写入在
+系统层失败 (需 sudo)」, 但 2026-09-28 已更正为「crontab 现已可写」
+(registry.yaml 的 zhixing-host-drift 条目 + 惰性注释探针实测), 且
+/usr/bin/crontab 是 setuid root ⇒ 普通用户本就能写 /var/at/tabs。
+
+用法:
+    python3 bin/ops/install-cron-plane.py --install    # 安装/校准 (默认)
+    python3 bin/ops/install-cron-plane.py --remove     # 移除本仓登记面 (留外部工具)
+    python3 bin/ops/install-cron-plane.py --status     # 只看现状
+    python3 bin/ops/install-cron-plane.py --dry-run    # 打印将写入的内容, 不写
+"""
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+WORKSPACE = Path(__file__).resolve().parents[2]
+REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
+
+_INTERPRETER_RE = re.compile(r"(?:\S*/)?python3(?:\.\d+)?(?=[\s]|$)")
+
+
+def _load_raw() -> dict:
+    import yaml
+
+    if not REGISTRY.exists():
+        return {}
+    docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
+    return docs[-1] if docs else {}
+
+
+def _expand_workspace(cmd: str) -> str:
+    """把 registry 里的 `$HOME/Workspace` 展开成绝对路径 (与 scheduler-compile 同口径)。
+
+    装到 crontab 的行必须是绝对路径 —— cron 的 PATH 只有 /usr/bin:/bin,
+    且 crontab 不走 shell 的变量展开 ⇒ `$HOME` 原样留在 crontab 里会指向字面量。
+    """
+    home = str(Path.home())
+    return cmd.replace('"$HOME/Workspace"', f"{home}/Workspace").replace(
+        "$HOME/Workspace", f"{home}/Workspace"
+    )
+
+
+def _normalize(cmd: str) -> str:
+    """归一化解释器写法, 使登记面与安装态可比 (与 scheduler-compile 同口径)。"""
+    return _INTERPRETER_RE.sub("python3", cmd)
+
+
+def _key(line: str) -> str:
+    """一行 crontab 的比较键 (前 120 字符, 与 scheduler-compile 同口径)。"""
+    s = line.strip()
+    if not s or s.startswith("#"):
+        return ""
+    if "harness-cron.sh" in s:
+        s = (
+            "0 */6 * * * cd {home}/Workspace && bash "
+            "projects/l4-kernel/scripts/harness-cron.sh >>".format(home=Path.home())
+        )
+    return _normalize(s)[:120]
+
+
+def _compiled_lines() -> list[str]:
+    """登记面编译出的 crontab 行。"""
+    raw = _load_raw()
+    out = []
+    for job in raw.get("jobs", []):
+        if job.get("status", "active") != "active":
+            continue
+        if "crontab" not in (job.get("planes") or []):
+            continue
+        out.append(f"{job.get('schedule', '')} {_expand_workspace(job.get('command', ''))}".strip())
+    return out
+
+
+def _current_lines() -> list[str]:
+    result = subprocess.run(["crontab", "-l"], capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        return []
+    return result.stdout.splitlines()
+
+
+def _is_managed(line: str, managed_keys: set[str]) -> bool:
+    """该行是否属于本仓登记面 (⇒ 装的时候要替换它)。
+
+    判据: 行的比较键与某条登记面条目相同 ⇒ 是登记面的行。
+    登记面**没有**的 (用户的外部工具) ⇒ 保留不动。
+    """
+    key = _key(line)
+    return bool(key) and key in managed_keys
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="从调度登记源安装 crontab 平面")
+    parser.add_argument("--install", action="store_true", help="安装/校准 (默认)")
+    parser.add_argument("--remove", action="store_true", help="移除本仓登记面的行")
+    parser.add_argument("--status", action="store_true", help="只看现状")
+    parser.add_argument("--dry-run", action="store_true", help="打印将写入的内容, 不写")
+    args = parser.parse_args()
+
+    compiled = _compiled_lines()
+    managed_keys = {_key(line) for line in compiled}
+    current = _current_lines()
+    current_keys = {_key(line) for line in current}
+
+    if args.status:
+        present = [line for line in current if _key(line) in managed_keys]
+        missing = [line for line in compiled if _key(line) not in current_keys]
+        print(
+            f"登记面 crontab 条目: {len(compiled)}  "
+            f"本机已装: {len(present)}  缺失: {len(missing)}"
+        )
+        for line in missing:
+            print(f"  [MISSING] {line[:150]}")
+        return 0 if not missing else 1
+
+    if args.remove:
+        kept = [line for line in current if not _is_managed(line, managed_keys)]
+        new = "\n".join(kept).rstrip() + "\n"
+        if args.dry_run:
+            print(new)
+            return 0
+        subprocess.run(["crontab", "-"], input=new, text=True, check=True)
+        print("已移除本仓登记面的 crontab 行 (外部工具行保留)")
+        return 0
+
+    # --install (默认): 保留非登记面的行, 去掉登记面里内容不同的旧行, 再追加登记面的行。
+    kept = [line for line in current if not _is_managed(line, managed_keys)]
+    new_lines = kept + compiled
+    new = "\n".join(new_lines).rstrip() + "\n"
+    if args.dry_run:
+        print(new)
+        return 0
+    subprocess.run(["crontab", "-"], input=new, text=True, check=True)
+    print(
+        f"已安装 {len(compiled)} 条登记面 crontab 条目 "
+        f"(保留 {len(kept)} 行非登记面条目)"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
