@@ -293,6 +293,41 @@ jobs:
         # 变异对照 (本轮实测, 每次只改一处后逐字节复原): Path.cwd() → 2 failed;
         # code_root → canonical_root → 5 failed; sys.path 深度写错 (静默 bind 宿主 repo_root) → 5 failed。
         run: python3 -m pytest tests/unit/test_hitl_ledger_read_anchor.py -q
+      - name: ADR-0456 write-plane state-root contract gate (omo 写面 vs bin/ 读面)
+        # 钉 omo 写面 42 个 state 族 vs bin/ 读面的 split 集合相等 (含容器族 .omo/_knowledge
+        # 的 95 条读者), 外加 resident 留在检出根的写点清单与 CALLER/DERIVED 证据表。
+        # 2026-11-03 前这条判据只有本地证据 —— tests/unit/** 绝大多数不在白名单里, 于是
+        # 「声明 18 / 实扫 42 的口径缺口」在 BET-Y2Q4-T10-277 §4 挂了 3 周、红了三周无人看见。
+        # 实测 24 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由 venv 供给时同样 24 pass。
+        run: python3 -m pytest tests/unit/test_resident_write_plane_split.py -q
+      - name: per-service runtime_root selector contract gate
+        # 钉 services.yaml 里 runtime_root: install 的 27 条名单与未声明条目的缺省落点
+        # (BET-Y2Q4-T10-265)。注册表增删一条都必须经过这里, 而不是静默发生。
+        # 实测 9 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由 venv 供给时同样 9 pass。
+        run: python3 -m pytest tests/unit/test_gen_service_runtime_root.py -q
+      - name: tests/unit host-literal confinement gate
+        # 钉「本机用户目录绝对路径只准留在声明过的合法位置」—— 新增 host 字面量、把脱敏
+        # 用例的输入前提顺手清理掉、镜像用例退回写字面量, 三种漂移都当场红。
+        # 本文件自己就在被扫集合里 (HOST_LITERAL 写成拼接), 谁在这里加字面量谁自曝。
+        # 实测 5 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由 venv 供给时同样 5 pass。
+        run: python3 -m pytest tests/unit/test_tests_unit_host_anchors.py -q
+      - name: projection revision reader-contract gate
+        # 钉 publish_projection_revision 的发布/读取契约: 读者兼容、legacy 快照不动、
+        # 指针交换失败保留旧指针、payload 与 ledger 绑定。2026-11-03 修的三条红全是
+        # 「用例读本机运行态」(homepage 根缺失 / dashboard 代码根缺失), 改为注入后 hermetic。
+        # 实测 19 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由 venv 供给时同样 19 pass。
+        run: python3 -m pytest tests/unit/test_panorama_objective_coverage.py -q
+      - name: managed host asset allowlist gate
+        # 钉 zhixing-host-sync 的 HOST_FILES 纳管清单只增不减 (16 → 26 三次增长都是真实纳管),
+        # 且每个条目的 asset 都真实存在。清单条数是漂移钉: 增删必须经过这里。
+        # 实测 2 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由 venv 供给时同样 2 pass。
+        run: python3 -m pytest tests/unit/test_zhixing_gantt_brief_asset_contract.py -q
+      - name: agent-cell live smoke receipt-chain gate
+        # 钉 live smoke 的真实 CellPool 生命周期 + hash 链收据契约。2026-11-03 它的 5 条红
+        # 暴露的是真生产缺陷: CellStateManager 改调用时刻解析后, --state-file 是静默失效的缝,
+        # 状态写到本机真实状态面。修法 (env 注入 + try/finally 还原) 由本件在 CI 侧钉住。
+        # 实测 7 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由 venv 供给时同样 7 pass。
+        run: python3 -m pytest tests/unit/test_agent_cell_pool_live_smoke.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
