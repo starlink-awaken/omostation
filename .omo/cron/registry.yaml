@@ -101,12 +101,20 @@ jobs:
   # 2026-10-27 首轮物理销毁 (两机各 79 张) 已完成; 本条让保留期从「一次性事件」
   # 变成「持续机制」—— 未来任何归档条目落位后, 7 天到期由本作业自动销毁, 不再依赖人工记得跑。
   #
-  # 平面选 launchd 而非 crontab, 理由有二 (前者是架构性的, 后者是客观故障):
-  #   1. 架构性: registry.yaml 是调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面
-  #      是遗留面, 不应再新增条目 —— 同款结论见 zhixing-host-drift-hourly-active 条目。
-  #   2. 客观故障: mbp 的 crontab 写入在系统层失败 (原样回写返回 Interrupted system call,
-  #      惰性注释探针同样失败; /var/at/tabs 最后修改 2026-10-24, 早于本次接线) ⇒ 该机
-  #      crontab 平面客观不可用。launchd 路径两机均正常。
+  # 平面选 launchd 而非 crontab, 理由是**架构性**的:
+  #   registry.yaml 是调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面是遗留面,
+  #   不应再新增条目 —— 同款结论见 zhixing-host-drift-hourly-active 条目。
+  #
+  #   **更正 (2026-11-03)**: 本条初版还写了第二个理由「mbp 的 crontab 写入在系统层失败
+  #   (原样回写返回 Interrupted system call) ⇒ 该机 crontab 平面客观不可用」——
+  #   该理由**不成立**, 已删除。实测 (2026-11-03, mbp):
+  #     · /usr/bin/crontab 是 setuid root (-rwsr-xr-x) ⇒ 普通用户本就能写
+  #       /var/at/tabs (root:wheel 700), 不需要 sudo
+  #     · 惰性注释探针实测 16->17 行真生效 (不只看回写 rc=0)
+  #     · 装 registry 编译产物 rc=0, 且装后作业真跑 (todo-sync.log 落盘)
+  #   mbp 当时的真实问题是**装得不全** (登记面声明 48 条, 本机只装 5 条,
+  #   drift 41), 已由 bin/ops/install-cron-plane.py 补装闭合 (drift 41 -> 0)。
+  #   launchd 承载的结论不变, 但**理由只剩架构性这一条**。
   # 槽位 02:07 —— 两机该槽空闲, 且不与任何 */5 类作业重叠。
   - name: test-archive-purge-7d-daily
     label: com.omostation.test-archive-purge-7d
