@@ -125,7 +125,36 @@ python3 "$ROOT/bin/change-lane-check.py" --staged
 python3 "$ROOT/bin/ssot/ssot-guardian.py"
 
 if git diff --cached --quiet; then
-  echo "no root submodule pointer changes to commit"
+  # 「没有差集」与「有差集但本脚本不处理」必须分开说 —— 后者才是调用者真正卡住的形态。
+  stale=0
+  stale_list=""
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    # 未 init 的子模块: git -C 会向上解析到父仓 (AGENTS.md §7), 必须先验 toplevel。
+    # 两个坑: ① $path 相对仓根而 --show-toplevel 返回绝对路径; ② macOS 上 /var 是
+    # /private/var 的符号链接, --show-toplevel 给**物理路径**, 与 $ROOT 的字面路径不等
+    # (实测: 直接 `= "$ROOT/$path"` 恒假 ⇒ 所有子模块被静默跳过)。故两侧都取物理路径。
+    abs="$ROOT/$path"
+    toplevel="$(git -C "$abs" rev-parse --show-toplevel 2>/dev/null || true)"
+    physical="$(cd "$abs" 2>/dev/null && pwd -P || true)"
+    [ -n "$toplevel" ] && [ "$toplevel" = "$physical" ] || continue
+    pin="$(git ls-tree HEAD "$path" | awk '{print $3}')"
+    head="$(git -C "$abs" rev-parse -q --verify origin/main 2>/dev/null || true)"
+    if [ -n "$pin" ] && [ -n "$head" ] && [ "$pin" != "$head" ]; then
+      stale=$((stale + 1))
+      stale_list="${stale_list}  - ${path}: pin=${pin:0:9} origin/main=${head:0:9}"$'\n'
+    fi
+  done < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+  echo "no root submodule pointer changes to commit（本脚本未 stage 任何 gitlink）"
+  if [ "$stale" -gt 0 ]; then
+    echo "⚠️  但检测到 ${stale} 个子模块的 gitlink 落后于各自 origin/main —— 本脚本的增量模式"
+    echo "    只处理「子仓本地有未推送 commit」这一形态（按它找差集），这种要走手动 bump："
+    printf '%s' "$stale_list"
+    echo "      git update-index --cacheinfo 160000,<origin/main 的 sha>,<path>"
+    echo "      git commit -m 'chore(gitlink): bump <path> …'"
+    echo "    （先 git -C <path> fetch origin main 让本地 origin/main 指向该 sha，"
+    echo "      submodule-guard 的 fast-forward 判定才有「对齐 origin/main」分支放行）"
+  fi
   exit 0
 fi
 
