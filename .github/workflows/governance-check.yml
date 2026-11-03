@@ -328,6 +328,42 @@ jobs:
         # 状态写到本机真实状态面。修法 (env 注入 + try/finally 还原) 由本件在 CI 侧钉住。
         # 实测 7 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由 venv 供给时同样 7 pass。
         run: python3 -m pytest tests/unit/test_agent_cell_pool_live_smoke.py -q
+      - name: cron registry reality invariants gate
+        # 钉 .omo/cron/registry.yaml 的 reality 键唯一真值 (YAML 重复键是静默 last-wins,
+        # safe_load 结构上看不见)。2026-11-03 前只有本地证据。实测 9 pass。
+        run: python3 -m pytest tests/unit/test_cron_registry_reality_invariants.py -q
+      - name: gate health roots contract gate
+        # 钉门禁健康检查的根集合 —— 读根被换掉时门禁会静默指向别的树。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_gate_health_roots.py -q
+      - name: gate timeout budget gate
+        # 钉各门禁的超时预算不被悄悄放大 (超时是挂起兜底, 放大等于关掉它)。实测 8 pass。
+        run: python3 -m pytest tests/unit/test_gate_timeout_budget.py -q
+      - name: LLM helper gateway confinement gate
+        # 钉 LLM 调用只能经 gateway —— 旁路调用会绕过额度/审计。实测 12 pass。
+        run: python3 -m pytest tests/unit/test_llm_helper_gateway.py -q
+      - name: omo state-plane ignore invariants gate
+        # 钉 omo 状态面的忽略名单 (哪些目录不进状态面), 新增忽略必须经过这里。实测 6 pass。
+        run: python3 -m pytest tests/unit/test_omo_state_plane_ignore_invariants.py -q
+      - name: panorama gate defer contract gate
+        # 钉 panorama 门禁的 defer 语义 (延后不等于跳过)。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_panorama_gate_defer.py -q
+      - name: panorama gate projection contract gate
+        # 钉门禁投影的产出契约 (投影与真源一致、不被局部写坏)。实测 54 pass。
+        run: python3 -m pytest tests/unit/test_panorama_gate_projection.py -q
+      - name: panorama role registry gate
+        # 钉 panorama 角色注册表的角色集合, 增删必须经过这里。实测 3 pass。
+        run: python3 -m pytest tests/unit/test_panorama_role_registry.py -q
+      - name: resident plane readers state-root gate
+        # 钉 resident 读侧根 == 写侧根 (ADR-0456 读侧收敛的评审集, 含 log-rotate 例外)。
+        # 实测 5 pass。
+        run: python3 -m pytest tests/unit/test_resident_plane_readers_state_root.py -q
+      - name: scheduler collector registry root gate
+        # 钉 scheduler 采集器读的 registry 根 (cwd 依赖会让同一命令在两处读不同真源)。
+        # 实测 5 pass。
+        run: python3 -m pytest tests/unit/test_scheduler_collector_registry_root.py -q
+      - name: zhixing external root contract gate
+        # 钉 zhixing 外部根契约 (外部根必须显式声明, 不得回落本机路径)。实测 28 pass。
+        run: python3 -m pytest tests/unit/test_zhixing_external_root_contract.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
