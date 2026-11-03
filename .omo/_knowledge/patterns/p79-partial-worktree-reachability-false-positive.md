@@ -92,7 +92,7 @@ GitHub CI `gac-gate` (full checkout + `submodules: recursive`) 跑 reachability 
 
 - [ADR-0151](../decisions/0151-submodule-hygiene-gate.md) submodule hygiene gate (3 类检查, 不含 partial 降级)
 - [ADR-0220](../decisions/0220-swarm-coordination-discipline-m1-gate.md) escape hatch allowlist
-- [ADR-0355](../decisions/0355-*.md) PASW ISOLATED 子模块集
+- [ADR-0355](../decisions/0355-workflow-evaluation-manifest-materialization.md) PASW ISOLATED 子模块集
 - [P73](./p73-truth-driven-engineering-pattern.md) 凭事实不凭记忆 (F4 复发)
 - [P74](./p74-workflow-solidification-pattern.md) workflow 沉默治理
 - `bin/ssot/submodule-reachability-gate.py` (gate 实现)
