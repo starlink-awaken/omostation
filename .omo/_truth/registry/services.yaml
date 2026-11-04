@@ -6283,8 +6283,9 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.resident-web.plist
-  content_digest: sha256:3e8eb76a1046634e7ff9b5fc3795ada0f6d7813b76ccb219f438762e2d20a66a
+  content_digest: sha256:b5aa390d85fb5c655b2e52c840663da0e2c3c5a3517456c7d8ad025b09006a30
   scheduler: launchd
+  runtime_root: install
   trigger: keepalive
   label: com.omostation.resident-web
   program:
@@ -6292,8 +6293,8 @@ services:
     entrypoint: -B
     args:
     - -c
-    - import sys; sys.path.insert(0, '/Users/xiamingxing/Workspace/projects/omo/src'); from omo.resident.cli
-      import main; main(['web', '--port', '43195', '--host', '0.0.0.0'])
+    - import sys; sys.path.insert(0, '/Users/xiamingxing/.local/opt/omostation/projects/omo/src');
+      from omo.resident.cli import main; main(['web', '--port', '43195', '--host', '0.0.0.0'])
   run_at_load: true
   resilience:
     keepalive: always
@@ -6305,8 +6306,15 @@ services:
     stderr: /Users/xiamingxing/.local/log/resident-web.log
   notes: 'BET-Y2Q4-T10-253 observe-only 登记: 本检出内按 label 全仓 grep 找不到写 com.omostation.resident-web 的代码路径,
     安装者未归属 (不编造来源), 本仓注册表不生成 (generate: false). plist 含 WorkingDirectory 而 gen_launchd_plist 从不输出该键 —— 改
-    generate: true 会立即产生 E1 漂移, 所以必须保持 observe-only. 端口 43195 只在此记录, 本轮不写 ports 键以免新增耦合面. 登记时 (2026-10-19)
-    launchctl state active.'
+    generate: true 会立即产生 E1 漂移, 所以必须保持 observe-only. 登记时 (2026-10-19) launchctl state active.'
+  provenance: 'BET-Y2Q4-T10-283 (2026-11-04) 订正三处与实盘不符的记录: ① program.args 的 sys.path 根 —— 实盘 plist 早在
+    2026-10-28 已改道运行时安装位 (同目录留有 com.omostation.resident-web.plist.bak-20261028T1745 为该次改动的证据),
+    本条此前仍记检出根; WorkingDirectory 实盘为 ~/.local/opt/omostation, 故声明 runtime_root: install (既有 schema 键,
+    仅 launchd 条目适用; 未挂 require_kernel_root_match / require_state_root_partitioned —— 缺省即只观测)。② content_digest ——
+    实盘 plist 文件 sha256 为 b5aa390d…, 此前记 3e8eb76a… 已陈旧。⚠️ 诚实边界: 本条 content_digest 在全仓**没有读者**
+    (该键的读者只有 bet-ledger.py / ledger-safe-insert.py / sync-bet-digests.py 的 spec 绑定面), 且 gen-service-configs.py:211
+    对 generate: false 跳过生成校验 —— 订它是让记录为真, 不构成任何门禁被修复。③ 端口 43195 已写入 protocols/port-registry.yaml
+    的 /ports (T10-253 那句「本轮不写 ports 键」是单轮推迟, 使 ADR-0456 B2 的「未注册端口 0」按构造读不到 0)。'
   depends_on: []
 - id: omostation.mbp-night-patrol
   enabled: true

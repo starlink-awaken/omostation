@@ -46386,6 +46386,74 @@ bets:
         status: NOT_STARTED
         evidence: {}
     overall_state: not_started
+- id: BET-Y2Q4-T10-283
+  title: B2 收口 —— 注册 43195 进端口表，并订正 resident-web 的根与摘要
+  goal: '`protocols/port-registry.yaml` 结构解析出的声明集（/ports 57 个数字键）不含 43195，而实盘有本仓自有服务在
+    `*:43195`（非 loopback）监听 —— omo.resident.cli web，端口默认值硬编码在 interact.py:1060/:1550。plan:139
+    的 B2 验收原文是「未注册端口 0」，故该行按构造读不到 0。附带同一条 observe-only 记录的根与摘要已错：实盘 plist 于 2026-10-28
+    改道安装位，services.yaml:6295 仍记检出根、:6286 digest 与实盘文件 sha256 不符，且该键在全仓无任何读者（content_digest
+    只被 bet-ledger/ledger-safe-insert/sync-bet-digests 消费）、gen-service-configs.py:211
+    对 generate:false 跳过校验 —— 记录会一直错着而无声。'
+  status: in_progress
+  window: Y2Q4
+  track: T10-GOVERNANCE
+  priority: P1
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-04-b2-port-43195-registration-and-resident-web-record.md
+    spec_version: 1.0.0
+    content_digest: sha256:363b5317127b5f4c0264fa348e764ed1027265c9511c95c47072192db546fbd1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-283
+  write_surfaces:
+  - docs/superpowers/specs/2026-11-04-b2-port-43195-registration-and-resident-web-record.md
+  - protocols/port-registry.yaml
+  - .omo/_truth/registry/services.yaml
+  - tests/unit/test_b2_port_43195_registered.py
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-283.md
+  non_goals:
+  - 不改 plist、crontab、launchctl 状态或任何机器级配置 —— 实盘 plist 已正确，本轮只让记录追上它。
+  - 不把 resident-web 的 --host 0.0.0.0 收成 loopback（暴露面变更属运行时效应，需单独授权）。
+  - 不改 projects/omo/src/omo/resident/interact.py 的端口默认值，也不引入端口分配算法。
+  - 不动 content_digest 的消费侧 —— 要让它真正被校验需先立「记录 vs 实盘」比较器，属尺尺改造，另案。
+  - 不清理 services.yaml 其他服务的检出根字面量（:5957、:6272 等属 B4b 批次面，逐批授权）。
+  done_when:
+  - 结构解析后 /ports 簇计数由 57 变 58 且声明集含 43195 —— 判据用计数表达，不用「文件里出现 43195 字串」（注释或标量值同样命中）。
+  - 反证 —— 把该键名改成非数字或移入注释时，第 1 条断言必须红。
+  - 未注册端口复算：本仓自有服务未注册监听数 1 → 0，且第三方站点数在同一次扫描里不因本次改动变化。
+  - services.yaml 的 resident-web 根与 content_digest 与实盘 plist 逐字一致，digest 由实盘文件重新计算得到、不手填。
+  - 不声称修复任何门禁 —— 所有断言由新增用例与本地命令产出。
+  verify:
+  - cmd: uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_b2_port_43195_registered.py -q -p no:randomly -o addopts=""
+    expect: 全部 passed；含键名非数字反证与计数增量两条
+    note: tests/unit 不在 CI 白名单，本地跑是唯一证据
+  - cmd: python3 -c "import yaml,re;d=yaml.safe_load(open('protocols/port-registry.yaml'));print(len([k
+      for k in d['ports']]))"
+    expect: 58（改前 57），且 43195 在其中
+    note: '必须用结构解析；正则 port[s]?: 对该文件命中 0，用它测会得假零'
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若注册 43195 需改动任何在监听的服务配置才自洽（与 /conflicts_resolved 既有条目冲突，或 dev 段 15000–15099
+    策略禁止该值进 /ports），则停止实现、停在 in_progress，把冲突原文登记进 retro，不用注释式命中或放宽解析口径凑数。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_STARTED
+        evidence: {}
+      value:
+        status: NOT_STARTED
+        evidence: {}
+    overall_state: not_started
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -46524,7 +46592,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 579
+  total_bets: 580
   windows:
   - Y1Q1
   - Y1Q2
