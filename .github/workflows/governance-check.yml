@@ -364,6 +364,50 @@ jobs:
       - name: zhixing external root contract gate
         # 钉 zhixing 外部根契约 (外部根必须显式声明, 不得回落本机路径)。实测 28 pass。
         run: python3 -m pytest tests/unit/test_zhixing_external_root_contract.py -q
+      - name: LLM gateway-only confinement gate
+        # 钉 LLM 调用只能走 gateway (旁路会绕过额度/审计)。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_check_llm_gateway_only.py -q
+      - name: clone indeterminate-state gate
+        # 钉「clone 结果不可判定时必须 fail-closed」, 不许把不可判读成通过。实测 9 pass。
+        run: python3 -m pytest tests/unit/test_clone_indeterminate_gate.py -q
+      - name: clone root budget gate
+        # 钉 clone 的根预算 (浅克隆边界不可越界)。实测 11 pass。
+        run: python3 -m pytest tests/unit/test_clone_root_budget.py -q
+      - name: lib wrapper root self-resolution gate
+        # 钉 lib/ wrapper 的仓根由脚本自身位置自推 (BET-Y2Q4-T10-275) —— 反基线是
+        # origin/main 上三份 wrapper 的逐字节内容, 命令语义逐行等值。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_lib_wrapper_root_self_resolution.py -q
+      - name: policy radar internal plane gate
+        # 钉 policy radar 的内部面读数口径。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_policy_radar_internal.py -q
+      - name: policy radar state-root axis gate
+        # 钉 policy radar 的 state 根轴 (读侧根 == 写侧根)。实测 10 pass。
+        run: python3 -m pytest tests/unit/test_policy_radar_state_root.py -q
+      - name: projection fullrefresh ledger-root gate
+        # 钉投影全量刷新的 ledger 根解析 (调用时刻, 不冻结在 import)。实测 14 pass。
+        run: python3 -m pytest tests/unit/test_projection_fullrefresh_ledger_root.py -q
+      - name: reality-check kernel root pin gate
+        # 钉 reality-check 的内核根 pin (不得静默换根)。实测 18 pass。
+        run: python3 -m pytest tests/unit/test_reality_check_kernel_root_pin.py -q
+      - name: reality-check state-root axis gate
+        # 钉 reality-check 的 state 根轴。实测 17 pass。
+        run: python3 -m pytest tests/unit/test_reality_check_state_root_axis.py -q
+      - name: repo_root import-root assertion gate
+        # 钉 repo_root 各 resolver 的 import 根断言 (谁读检出、谁读 state)。实测 24 pass。
+        run: python3 -m pytest tests/unit/test_repo_root_import_root_assertion.py -q
+      - name: launchd plists XML-safety gate
+        # 钉仓内 launchd plist 的 XML 安全性 (非法 XML 会让 launchd 拒载)。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_launchd_plists_xml_safe.py -q
+      - name: service interpreter stability gate
+        # 钉服务解释器选型的稳定性 (换解释器会改依赖面)。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_service_interpreter_stability.py -q
+      - name: log-rotate state exclusion gate
+        # 钉 log-rotate 不得轮转状态面 (状态文件被轮转=状态丢失)。实测 8 pass。
+        run: python3 -m pytest tests/unit/test_log_rotate_state_exclusion.py -q
+      - name: repo_root profile contract gate
+        # 钉 repo_root 的 profile 契约 (code/state 双根、env 名、投影回退) —— 886 pass,
+        # 1.4s。需要 projects/omo 检出 (governance-verify 是 recursive, 满足)。
+        run: python3 -m pytest tests/unit/test_repo_root_profile.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
