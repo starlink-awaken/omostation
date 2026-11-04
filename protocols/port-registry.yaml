@@ -402,6 +402,15 @@ ports:
     note: tool X-ext · 预留 HTTP 升级 (stdio 当前)
     status: reserved
     transport: stdio
+  43195:
+    name: resident-web
+    note: 'omo.resident.cli web 的端口默认值 (projects/omo/src/omo/resident/interact.py:1060 与 :1550
+      —— 源码有字面默认、不读环境变量，故不挂 /env_vars 条目); 实盘由 com.omostation.resident-web.plist
+      以 --port 43195 显式传入，实测绑定面是全部接口而非 loopback。ADR-0456 B2 收口 (BET-Y2Q4-T10-283) ——
+      本仓自有服务中此前唯一未注册的监听端口。'
+    owner: omo
+    status: active
+    transport: http
 types:
   7422: env-only
   7456: env-only
