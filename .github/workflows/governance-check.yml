@@ -591,6 +591,30 @@ jobs:
         # 存在的目录 ⇒ 需要子模块在场 (本 job 是 submodules: recursive, 满足)。
         # 实测 10 pass; 依赖面收紧到只有 pyyaml/pydantic/pytest/pytest-timeout/rich 时同样 10 pass。
         run: python3 -m pytest tests/unit/test_phase8_unified_ecosystem.py -q
+      - name: diff debt marker gate
+        # 钉 diff 债务口径（TODO/FIXME 等 marker 的扫描与 base 比对）。用例自己在
+        # tmp_path 建一次性 git 仓并配 local 身份, 被检脚本是 stdlib-only, 不读 host。
+        # 实测 6 pass。
+        run: python3 -m pytest tests/unit/test_diff_debt.py -q
+      - name: diff growth gate
+        # 钉 diff 增长口径。同上: 自建 git 仓 + stdlib-only 脚本。实测 6 pass。
+        run: python3 -m pytest tests/unit/test_diff_growth.py -q
+      - name: diff lifecycle gate
+        # 钉 diff 生命周期口径。同上: 自建 git 仓 + stdlib-only 脚本。实测 9 pass。
+        run: python3 -m pytest tests/unit/test_diff_lifecycle.py -q
+      - name: stale branches gate
+        # 钉失修分支口径 (protected branches 名单是入参, 不解析仓内 ref)。同上:
+        # 自建 git 仓 + stdlib-only 脚本。实测 6 pass。
+        run: python3 -m pytest tests/unit/test_stale_branches.py -q
+      - name: guard-submodules non-destructive alignment gate
+        # 钉 guard-submodules --fix 的非破坏性 (INV-1..4): 从生产脚本抽取
+        # guard_submodules() 本体执行, 不复制逻辑。ISC-3 需从本地路径克隆, 故本轮
+        # 同时修了它依赖 host gitconfig 的缺陷 (GIT_ALLOW_PROTOCOL=file)。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_gac_guard_submodules.py -q
+      - name: submodule reachability undecidable-state gate
+        # 钉「不可判定的 gitlink 不得静默放行」的反橡皮章契约 (契约 2 是关键断言)。
+        # 本轮同时修了它只在 seed 仓配 git 身份、clone 侧缺失的缺陷。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_submodule_reachability_undecidable.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
