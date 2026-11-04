@@ -461,6 +461,99 @@ jobs:
         # 钉 claims authority 状态的观察者契约 (字段白名单 + 不授予权限 + 非法状态
         # fail-closed)。实测 2 pass。
         run: python3 -m pytest tests/unit/test_claims_authority_status.py -q
+      - name: agent-cell scheduler gate
+        # 钉 agent-cell 调度器的分配口径。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_agent_cell_scheduler.py -q
+      - name: agent-cell semantic scheduler gate
+        # 钉 agent-cell 语义调度器的口径。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_agent_cell_semantic_scheduler.py -q
+      - name: claims watchdog gate
+        # 钉 claims 看门狗 (claims 卡住要报出来)。实测 17 pass。
+        run: python3 -m pytest tests/unit/test_claims_watchdog.py -q
+      - name: dashboard panel assets gate
+        # 钉驾驶舱面板 asset 的同步 (镜像与源逐字节一致)。实测 16 pass。
+        run: python3 -m pytest tests/unit/test_dashboard_panel_assets.py -q
+      - name: deadline tracker ledger gate
+        # 钉期限追踪器读的是 ledger。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_deadline_tracker_ledger.py -q
+      - name: live server payload freshness gate
+        # 钉 live server 的 payload 新鲜度。实测 22 pass。
+        run: python3 -m pytest tests/unit/test_live_server_payload_freshness.py -q
+      - name: live server value readiness gate
+        # 钉 live server 的 value readiness。实测 3 pass。
+        run: python3 -m pytest tests/unit/test_live_server_value_readiness.py -q
+      - name: mail daemon no-unread gate
+        # 钉邮件守护不产生未读残留。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_mail_daemon_no_unread.py -q
+      - name: MOS dual-stack consistency gate
+        # 钉 MOS 双栈一致性。实测 9 pass。
+        run: python3 -m pytest tests/unit/test_mos_dual_stack_consistency.py -q
+      - name: panel collect gate
+        # 钉面板采集的字段口径。实测 26 pass。
+        run: python3 -m pytest tests/unit/test_panel_collect.py -q
+      - name: panorama A6 window gate
+        # 钉 A6 时间窗口径。实测 8 pass。
+        run: python3 -m pytest tests/unit/test_panorama_a6_window.py -q
+      - name: panorama A9 bounded-fail gate
+        # 钉 A9 有界失败 (失败必须收敛, 不蔓延)。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_panorama_a9_bounded_fail.py -q
+      - name: panorama A9 deferred gate
+        # 钉 A9 延后语义。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_panorama_a9_deferred.py -q
+      - name: panorama A9 race gate
+        # 钉 A9 竞态口径。实测 1 pass。
+        run: python3 -m pytest tests/unit/test_panorama_a9_race.py -q
+      - name: panorama agent brief gate
+        # 钉 agent brief 的字段契约。实测 24 pass。
+        run: python3 -m pytest tests/unit/test_panorama_agent_brief.py -q
+      - name: panorama agent cell gate
+        # 钉 agent cell 的投影口径。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_panorama_agent_cell.py -q
+      - name: panorama CI health gate
+        # 钉 panorama 的 CI 健康读数。实测 3 pass。
+        run: python3 -m pytest tests/unit/test_panorama_ci_health.py -q
+      - name: panorama collector mirror gate
+        # 钉采集器镜像与源逐字节一致。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_panorama_collector_mirror.py -q
+      - name: panorama debt projection gate
+        # 钉债务投影口径。实测 1 pass。
+        run: python3 -m pytest tests/unit/test_panorama_debt_projection.py -q
+      - name: panorama launchd health gate
+        # 钉 launchd 健康读数。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_panorama_launchd_health.py -q
+      - name: panorama pending authorizations gate
+        # 钉待授权清单口径。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_panorama_pending_authorizations.py -q
+      - name: panorama reference cell gate
+        # 钉 reference cell 的投影口径。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_panorama_reference_cell.py -q
+      - name: panorama refresh guard gate
+        # 钉刷新守卫 (不被陈旧数据糊弄)。实测 12 pass。
+        run: python3 -m pytest tests/unit/test_panorama_refresh_guard.py -q
+      - name: panorama source health gate
+        # 钉源健康读数。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_panorama_source_health.py -q
+      - name: panorama task projection gate
+        # 钉任务投影口径。实测 27 pass。
+        run: python3 -m pytest tests/unit/test_panorama_task_projection.py -q
+      - name: panorama value metrics gate
+        # 钉价值指标口径。实测 3 pass。
+        run: python3 -m pytest tests/unit/test_panorama_value_metrics.py -q
+      - name: remote ref observation gate
+        # 钉远端 ref 观测口径。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_remote_ref_observation.py -q
+      - name: signal folder source gate
+        # 钉信号目录源。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_signal_folder_source.py -q
+      - name: signal poller gate
+        # 钉信号轮询器的字段契约。实测 6 pass。
+        run: python3 -m pytest tests/unit/test_signal_poller.py -q
+      - name: spine diff adaptation gate
+        # 钉 spine diff 的适配口径 (脱敏必须生效)。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_spine_diff_adaptation.py -q
+      - name: zhixing GET method safety gate
+        # 钉 zhixing GET 的方法安全 (只读方法不得带副作用)。实测 26 pass。
+        run: python3 -m pytest tests/unit/test_zhixing_get_method_safety.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
