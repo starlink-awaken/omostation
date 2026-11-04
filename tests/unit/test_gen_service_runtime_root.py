@@ -52,6 +52,7 @@ INSTALL_ROOT_SERVICES = {
     "com.omostation.morning-brief",
     "com.omostation.panorama-compact-observation",
     "com.omostation.problem-detector",
+    "com.omostation.resident-web",
     "com.omostation.signal-poller",
     "com.omostation.spine-daily-ingress",
     "com.omostation.sunset-redirector",
@@ -127,7 +128,11 @@ def test_undeclaring_registry_entries_still_resolve_to_checkout_root(env):
     services = env.module.load_services(REGISTRY_PATH)
     assert services, "注册表解析出 0 条 —— 尺没命中，不得当作通过"
     declaring = [s for s in services if "runtime_root" in s]
-    assert len(declaring) == 27, f"声明运行根的条目应为 27，实为 {len(declaring)}"
+    # 条数取自封闭集本身：集合相等只钉「是谁」，这条钉「有几行」——
+    # 注册表里同 label 的重复行会被 set 合并，悄悄溜过前者。
+    assert len(declaring) == len(INSTALL_ROOT_SERVICES), (
+        f"声明运行根的条目应为 {len(INSTALL_ROOT_SERVICES)}，实为 {len(declaring)} —— 存在重复 label 行"
+    )
     assert {s["label"] for s in declaring} == INSTALL_ROOT_SERVICES
     assert {s["runtime_root"] for s in declaring} == {"install"}
     for svc in services:
