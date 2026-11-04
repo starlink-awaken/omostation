@@ -267,7 +267,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
       - name: Install Python gate deps
-        run: pip install pyyaml pydantic pytest pytest-timeout
+        # rich 是白名单里 test_phase8_unified_ecosystem 的真实依赖 —— 它 runpy 加载
+        # bin/cockpit, 后者 import cockpit.cli, 而 cockpit 的 pyproject 声明 rich>=13.0。
+        # bin/cockpit 本有「缺 rich 就 re-exec 到 projects/cockpit/.venv」的自愈, 但那个
+        # venv 是 gitignore 的本机产物, CI 干净检出里不存在 ⇒ 自愈不触发, 必须显式装。
+        run: pip install pyyaml pydantic pytest pytest-timeout rich
       - name: BET spec binding lint contract tests
         run: python3 -m pytest tests/test_spec_binding_lint.py -q
       - name: ADR-0456 B1 call-time write-plane gate
@@ -575,6 +579,18 @@ jobs:
       - name: reference-cell DL verify gate
         # 钉 reference-cell 的 DL 校验口径。实测 2 pass。
         run: python3 -m pytest tests/unit/test_reference_cell_dl_verify.py -q
+      - name: agent-cell semantic smoke receipt-chain gate
+        # 钉 agent-cell 语义 smoke 的收据链口径 (role capsule / mesh queue / 二次运行链式收据)。
+        # STATE_DIR 被 monkeypatch 到 tmp_path, 不读 host 状态; HOME=<空> + env -u OMOSTATION_*
+        # 下 4 pass。此前不在白名单 ⇒ 这条链的判据 CI 永远看不见。
+        run: python3 -m pytest tests/unit/test_agent_cell_semantic_smoke.py -q
+      - name: Phase 8 ecosystem root-resolver and retired-entry firewall gate
+        # 钉 Phase 8 统一生态的 root resolver (sys.path 注入) 与退役入口的 refusal firewall。
+        # 两个真实依赖: ① runpy 加载 bin/cockpit ⇒ 需要 rich (见上「Install Python gate deps」);
+        # ② 断言 projects/{omo,ecos,agora}/src 已进 sys.path, 而 setup_workspace_paths() 只注入
+        # 存在的目录 ⇒ 需要子模块在场 (本 job 是 submodules: recursive, 满足)。
+        # 实测 10 pass; 依赖面收紧到只有 pyyaml/pydantic/pytest/pytest-timeout/rich 时同样 10 pass。
+        run: python3 -m pytest tests/unit/test_phase8_unified_ecosystem.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
