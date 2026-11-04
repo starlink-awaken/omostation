@@ -26,16 +26,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-_LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
+_LIB_DIR = Path(__file__).resolve().parents[2] / "bin" / "lib"
+if not _LIB_DIR.is_dir():
+    raise SystemExit(f"repo_root 缝不可达: {_LIB_DIR} —— 写者不得静默兜底检出根")
 if str(_LIB_DIR) not in sys.path:
     sys.path.insert(0, str(_LIB_DIR))
-try:
-    from repo_root import code_root, state_root
-except ImportError:
-    def code_root() -> Path:
-        return Path("/Users/xiamingxing/Workspace")
-    def state_root() -> Path:
-        return Path("/Users/xiamingxing/Workspace")
+from repo_root import code_root, state_root  # noqa: E402
 
 
 def _get_buffer_paths() -> tuple[Path, Path]:
@@ -141,6 +137,7 @@ def record_signature(
         spine_diff_file, lora_replay_file = _get_buffer_paths()
         
         # 1. 写入 spine-diff-buffer.jsonl
+        spine_diff_file.parent.mkdir(parents=True, exist_ok=True)
         with open(spine_diff_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
