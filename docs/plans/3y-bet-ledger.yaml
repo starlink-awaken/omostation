@@ -46499,7 +46499,8 @@ bets:
     并推翻 T10-206 已署名的分区决定； 加 exempt_labels 则被 classify_label 的前缀优先短路（:409）读不到，且触发 E4
     遮蔽断言（:746）—— 两者都是 T10-253/T10-258 circuit_breaker 明文的停止面。路径一律 ~ 相对，不新增 /Users/xiamingxing
     host 锚。全程不碰本机 launchd。'
-  status: in_progress
+  status: done
+  done_at: 2026-11-04
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -46515,15 +46516,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-04-services-e2-observe-only-backfill-6-closeout.md
+            sha256: sha256:8e69a83cdad45d4dd62a3be37897af919336189a998cdf1757414340a1631ec3
+          merged_reachable_commit:
+            ref: git://origin/main@a52f7481b08cbb7663cd99ed6a836ee74fc0b59b
+          rollback:
+            ref: receipt://docs/reports/2026-11-04-services-e2-observe-only-backfill-6-closeout.md
+            sha256: sha256:8e69a83cdad45d4dd62a3be37897af919336189a998cdf1757414340a1631ec3
+          tests:
+            ref: receipt://docs/reports/2026-11-04-services-e2-observe-only-backfill-6-closeout.md
+            sha256: sha256:8e69a83cdad45d4dd62a3be37897af919336189a998cdf1757414340a1631ec3
       operational:
-        status: NOT_STARTED
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-04-services-e2-observe-only-backfill-6-closeout.md
+            sha256: sha256:8e69a83cdad45d4dd62a3be37897af919336189a998cdf1757414340a1631ec3
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-04-services-e2-observe-only-backfill-6-closeout.md
+            sha256: sha256:8e69a83cdad45d4dd62a3be37897af919336189a998cdf1757414340a1631ec3
+          live_canary:
+            ref: receipt://docs/reports/2026-11-04-services-e2-observe-only-backfill-6-closeout.md
+            sha256: sha256:8e69a83cdad45d4dd62a3be37897af919336189a998cdf1757414340a1631ec3
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-284.md
+            sha256: sha256:a4519847931ccd323276f0126c899f7e50915be12211ef085050fe83f39389b2
       value:
-        status: NOT_STARTED
-        evidence: {}
-    overall_state: not_started
+        status: NOT_PROVEN
+        evidence:
+          note: "登记既有现实、使 B4b 的验收尺重新可用，无新增可度量价值；value_indicator_policy 显式声明 false，与同族 T10-246/T10-253/T10-258/T10-283 同判，由工程腿 PR #5042 squash a52f7481b 闭环。"
+    overall_state: delivery_accepted
   write_surfaces:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-11-04-services-e2-observe-only-backfill-6.md
