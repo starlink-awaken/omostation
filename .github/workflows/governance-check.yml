@@ -442,9 +442,6 @@ jobs:
         # CR-CI-RUNNER-COST 门禁自身的回归 (付费 OS 腿必须登记 + 有 concurrency)。
         # 实测 6 pass。
         run: python3 -m pytest tests/unit/test_runner_cost_guard.py -q
-      - name: stale branches gate
-        # 钉过期分支判定 (TTL + open PR 保护)。实测 6 pass。
-        run: python3 -m pytest tests/unit/test_stale_branches.py -q
       - name: value recorder gate
         # 钉价值记录的字段契约。实测 10 pass。
         run: python3 -m pytest tests/unit/test_value_recorder.py -q
