@@ -46533,7 +46533,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-04-services-e2-observe-only-backfill-6.md
     spec_version: 1.0.0
-    content_digest: sha256:dfee69ee9ed3b1101f12d5d2edd73e83c74441d03d8aefc1a323ad985247fdfe
+    content_digest: sha256:7a5b1d4d4c1f901b03a97c0ec3b18f69e06711b74b58d66abc27bef6e0a34c35
     decision_ref: decision://accepted/BET-Y2Q4-T10-284
   non_goals:
   - 不改 launchd_namespace.workspace_prefixes / exempt_labels / --reality-check 任一判据本体（principal

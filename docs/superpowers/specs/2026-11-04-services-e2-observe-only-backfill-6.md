@@ -74,7 +74,7 @@ E2 的构成（`bin/mof/gen-service-configs.py:731`）：
 
 路径 3 同时避开了任务 #150 的形状：那一条是 `generate: true` 而本机无 plist ⇒ 比较器恒
 drift。本条相反，plist 真实在跑且 `generate: false`，声明只表达「注册表知道它在跑」，
-不夺取 plist 的写权。注册表内此类 observe-only 条目现有 35 条，含 `com.lmstudio.server`、
+不夺取 plist 的写权。注册表内此类 observe-only 条目在本条之前实测 57 条（`generate: false` 计数，随登记增长，勿当固定基线），含 `com.lmstudio.server`、
 `com.aetherforge.gateway` 等同族个人/跨主算力服务，`ports:` 也不要求登记进
 `protocols/port-registry.yaml`（`1234` 先例）。
 
