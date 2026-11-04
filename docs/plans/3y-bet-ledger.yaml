@@ -46394,7 +46394,8 @@ bets:
     改道安装位，services.yaml:6295 仍记检出根、:6286 digest 与实盘文件 sha256 不符，且该键在全仓无任何读者（content_digest
     只被 bet-ledger/ledger-safe-insert/sync-bet-digests 消费）、gen-service-configs.py:211
     对 generate:false 跳过校验 —— 记录会一直错着而无声。'
-  status: in_progress
+  status: done
+  done_at: 2026-11-04
   window: Y2Q4
   track: T10-GOVERNANCE
   priority: P1
@@ -46447,15 +46448,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-04-b2-port-43195-closeout.md
+            sha256: sha256:972bcc370d9a282344f8382c4c98fe8aad1cb59da8c5492fdf05da49d79a7b7f
+          merged_reachable_commit:
+            ref: git://origin/main@1ae3f93261a86677082a9835045adeee6bbfd56c
+          rollback:
+            ref: receipt://docs/reports/2026-11-04-b2-port-43195-closeout.md
+            sha256: sha256:972bcc370d9a282344f8382c4c98fe8aad1cb59da8c5492fdf05da49d79a7b7f
+          tests:
+            ref: receipt://docs/reports/2026-11-04-b2-port-43195-closeout.md
+            sha256: sha256:972bcc370d9a282344f8382c4c98fe8aad1cb59da8c5492fdf05da49d79a7b7f
       operational:
-        status: NOT_STARTED
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-04-b2-port-43195-closeout.md
+            sha256: sha256:972bcc370d9a282344f8382c4c98fe8aad1cb59da8c5492fdf05da49d79a7b7f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-04-b2-port-43195-closeout.md
+            sha256: sha256:972bcc370d9a282344f8382c4c98fe8aad1cb59da8c5492fdf05da49d79a7b7f
+          live_canary:
+            ref: receipt://docs/reports/2026-11-04-b2-port-43195-closeout.md
+            sha256: sha256:972bcc370d9a282344f8382c4c98fe8aad1cb59da8c5492fdf05da49d79a7b7f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-283.md
+            sha256: sha256:a52b564fa3e0b122c0e0ce1dee4c78155d82a013eb92743b614c5524e380d5cc
       value:
-        status: NOT_STARTED
-        evidence: {}
-    overall_state: not_started
+        status: NOT_PROVEN
+        evidence:
+          note: "端口登记 + 注册记录订正，无价值指示物；value_indicator_policy 显式声明 false，与同族 T10-280/T10-281 同判，由工程腿 PR #5033 squash 1ae3f9326 闭环。"
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
