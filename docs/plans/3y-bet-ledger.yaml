@@ -46538,9 +46538,9 @@ bets:
   non_goals:
   - 不改 launchd_namespace.workspace_prefixes / exempt_labels / --reality-check 任一判据本体（principal
     署名面，T10-253/T10-258 中止判据沿用）
-  - 不把本条声明成 generate: true，也不替它生成或覆写 plist —— 写权留在 principal
-  - 不收口 E4 的 22 条未分区（任务
-  - 不推进 B4b 批次 2 的机器侧改道（任务
+  - "不把本条声明成 generate: true，也不替它生成或覆写 plist —— 写权留在 principal"
+  - "不收口 E4 的 22 条未分区（任务 #147：署名裁定面，非取证缺口）"
+  - "不推进 B4b 批次 2 的机器侧改道（任务 #91：需 principal 授权）"
   - 不宣称 ADR-0456 B1/B3/B4/B5 或整个 plan 完成
   done_when:
   - 同检出 --reality-check 读数 e2_undeclared == 0 且 owned_declared == owned_installed ==
