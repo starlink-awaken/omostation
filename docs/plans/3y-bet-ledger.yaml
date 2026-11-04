@@ -38092,7 +38092,8 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: 本单为只读观测 shadow 阶段，value indicator policy 声明为 false，待 warning/fail 阶段测算漂移捕获率。
+          note: 本单为只读观测 shadow 阶段，value indicator policy 声明为 false，待 warning/fail
+            阶段测算漂移捕获率。
   done_when:
   - check_drift() 含 launchd 分支，双向差集（登记有安装无 / 安装有登记无）可复算
   - --generate launchd 不再静默无操作，rc=0 时必有非空 JSON
@@ -38200,7 +38201,8 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: 本单为只读观测 shadow 阶段，value indicator policy 声明为 false，待 warning/fail 阶段测算未分类捕获率。
+          note: 本单为只读观测 shadow 阶段，value indicator policy 声明为 false，待 warning/fail
+            阶段测算未分类捕获率。
 - id: BET-Y2Q4-T10-212
   title: ADR-0129 Phase 2 — 投影面停止 legacy 双写并把三件生成态摘出 git（ADR-0456 B5）
   goal: '开发动作直接打击在跑的系统，根因之一是 ADR-0129 Phase 1 把每个投影写成 canonical + legacy 两份（projects/omo/src/omo/omo_ingress_state.py:234-298
@@ -42273,7 +42275,8 @@ bets:
   verify:
   - cmd: projects/omlxc/bin/omlx -h
     expect: omlxc — 本地/集群 MLX 统一管理 CLI
-  - cmd: python3 -c "import yaml; d = yaml.safe_load(open('protocols/vault-paths.yaml')); assert d['paths']['sharedmodel_root'] == '/Volumes/SHAREDMODEL'"
+  - cmd: python3 -c "import yaml; d = yaml.safe_load(open('protocols/vault-paths.yaml'));
+      assert d['paths']['sharedmodel_root'] == '/Volumes/SHAREDMODEL'"
     expect: exit 0
   - cmd: test -f .omo/_knowledge/retros/BET-Y2Q4-T10-242.md
     expect: exit 0
@@ -42336,7 +42339,8 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: 存储收敛与集群分层拓扑归元，value indicator policy 声明为 false，由 commit 01528b1d6、ADR-0467 与 retro 闭环。
+          note: 存储收敛与集群分层拓扑归元，value indicator policy 声明为 false，由 commit 01528b1d6、ADR-0467
+            与 retro 闭环。
     overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-243
   title: 4.1T 掉线盘兜底与恢复体系 — 热层数据分层保护 + T3 重建剧本 + 掉线感知链
@@ -45823,16 +45827,16 @@ bets:
 - id: BET-Y2Q4-T10-276
   title: BET-Y2Q4-T10-276 ADR-0456 B5 摘库残面 —— .omo/state 的 4 个运行时目录既未跟踪也未忽略（daemon/healer/memory/notification）
   goal: plan B5 的 verify 判据是「一次 dev 运行后 git status --short .omo/state 为空」。2026-10-28T03:45Z
-    在 canonical 检出实测 `git status --porcelain --untracked-files=all .omo/state` 读出 4
-    个目录 / 15 个文件（daemon/resident.pid、daemon/service_state.json、healer/approvals.jsonl
+    在 canonical 检出实测 `git status --porcelain --untracked-files=all .omo/state` 读出
+    4 个目录 / 15 个文件（daemon/resident.pid、daemon/service_state.json、healer/approvals.jsonl
     与 10 个 heal-*.json、memory/distilled_crystallization.json、notification/history.jsonl），既未被跟踪也未被忽略。同一文件的
     `.gitignore` 已为同类 9 个 state 目录立有规则（:46 history/、:136 agent-cell/、:138 value-baselines/、:296
     policy-radar/、:297 agent-beliefs/、:298 agent-cards/、:299 swarm/、:347 observability-adapters/、:368
     attestations/），所以这 4 个是漏项而不是另一种设计； `git ls-files .omo/state` 只有 1 份被跟踪（collab-dualtrack.yaml，:306
     显式反选保留）。代价可测：交付期 hook 与 `git add -A` 可把运行时心跳整块扫进 commit，而 merge/release 的脏树守卫与发布器的
     tree_dirty 判据把它们当在制工作。写者侧本轮实测**不是**缺陷： healer.py:160、service_runner.py:55-56、memory_distiller.py:68/221-222/234、notification.py:199/210/218/221
-    的读用点一律过 `omo.resident.write_path()`，声明 OMOSTATION_STATE_ROOT 后 STATE_ROOT 实测随 env
-    移动；canonical 机器未声明 profile ⇒ state_root == code_root ⇒ 写进检出按契约成立。需要收尾的是「检出里看见了它」。
+    的读用点一律过 `omo.resident.write_path()`，声明 OMOSTATION_STATE_ROOT 后 STATE_ROOT 实测随
+    env 移动；canonical 机器未声明 profile ⇒ state_root == code_root ⇒ 写进检出按契约成立。需要收尾的是「检出里看见了它」。
   status: done
   done_at: 2026-10-28
   window: Y2Q4
@@ -45853,7 +45857,8 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q4-T10-276.md
   - docs/reports/2026-10-28-bet-276-omo-state-ignore-closeout.md
   non_goals:
-  - 不改 omo.resident 任何写者代码与模块级常量（T10-233 spec §2 写明修在读用点、常量钉根是设计，89 处 monkeypatch 测试缝依赖它）
+  - 不改 omo.resident 任何写者代码与模块级常量（T10-233 spec §2 写明修在读用点、常量钉根是设计，89 处 monkeypatch
+    测试缝依赖它）
   - 不删除机器上这 15 个运行时文件，也不 git rm 任何已跟踪文件（运行数据不是本轮清理对象）
   - 不收紧既有 ignore / re-include 行语义（:294 *.jsonl、:295 *.json、:304 system.yaml、:306-309
     反选）—— 本轮只加不改
@@ -45878,14 +45883,14 @@ bets:
   - cmd: git ls-files .omo/state
     expect: 仍为 1（collab-dualtrack.yaml），且 git check-ignore 对它不命中
   - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=<空目录>
-      uv run --no-project --with pytest --with pytest-timeout --with pyyaml python -m
-      pytest tests/unit/test_omo_state_plane_ignore_invariants.py -q -p no:randomly
+      uv run --no-project --with pytest --with pytest-timeout --with pyyaml python
+      -m pytest tests/unit/test_omo_state_plane_ignore_invariants.py -q -p no:randomly
     expect: 全部 passed；变异对照按改法分别记读数（摘掉派生扫描 → 自证那条红；把规则写成只匹配本轮那 4 个名字的手抄清单 → 派生集合那条红）
   - cmd: python3 bin/plan/bet-ledger.py lint
     expect: T10-276 无 ERROR
-  circuit_breaker: 若守卫用例只能靠手抄目录名清单才绿（不从 omo 源码派生），即「按构造就绿」→ 停止，spec §3 已列为断路条件。若要让 .omo/state
-    干净必须删运行时文件或改既有 re-include 语义 → 停止，属署名裁定。若发现某个写点确实在缝外（不经 write_path 直接落检出）→ 停止并另立
-    BET，不在本轮夹带改者代码。
+  circuit_breaker: 若守卫用例只能靠手抄目录名清单才绿（不从 omo 源码派生），即「按构造就绿」→ 停止，spec §3 已列为断路条件。若要让
+    .omo/state 干净必须删运行时文件或改既有 re-include 语义 → 停止，属署名裁定。若发现某个写点确实在缝外（不经 write_path
+    直接落检出）→ 停止并另立 BET，不在本轮夹带改者代码。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
@@ -45929,10 +45934,11 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-276
   value_indicator_policy: false
 - id: BET-Y2Q4-T10-277
-  title: BET-Y2Q4-T10-277 ADR-0456 B1 剩余阻塞项 —— omo.resident 8 处写者锚点错位，代码子模块内部长出第二棵 .omo/state
-  goal: plan 决策 2 要求所有 STATE_*/RUNTIME_* 写路径改挂 state_root，B1 verify 要求 dev profile 运行只写
-    dev state root。2026-10-28T07:12Z 实测（检测器 base origin/main=bd9e9e62a、源码 base projects/omo=980b9cb）声明
-    OMOSTATION_STATE_ROOT 后，resident/{cell_state,cell_governance,cell_memory_network,memory_pipeline,replay}.py
+  title: BET-Y2Q4-T10-277 ADR-0456 B1 剩余阻塞项 —— omo.resident 8 处写者锚点错位，代码子模块内部长出第二棵
+    .omo/state
+  goal: plan 决策 2 要求所有 STATE_*/RUNTIME_* 写路径改挂 state_root，B1 verify 要求 dev profile
+    运行只写 dev state root。2026-10-28T07:12Z 实测（检测器 base origin/main=bd9e9e62a、源码 base
+    projects/omo=980b9cb）声明 OMOSTATION_STATE_ROOT 后，resident/{cell_state,cell_governance,cell_memory_network,memory_pipeline,replay}.py
     的 ROOT = Path(__file__).resolve().parents[3] 解析到 projects/omo 而非工作区（同包 resident/__init__.py:18
     用的是 parents[5]，错位两级）；resident/refine_rollback.py:52,155 是 Path(".omo/state/refinements")
     相对 CWD 且 __init__ 即 mkdir，sema_crystallizer DEFAULT_RULES_REL 同为相对量；pipeline_supervisor.py:30
@@ -45966,23 +45972,26 @@ bets:
   - 不改 .gitignore 覆盖面（已结项的 BET-Y2Q4-T10-276 范围），也不宣布 ADR-0456 B1/B2/B3/B4/B4b/B5 或整个
     plan 完成
   - 不给 runtime-projections.yaml / write-owners.yaml 加目录型条目 —— 2026-10-28 实测否证：前者 10
-    条投影全是文件级 canonical/legacy 对，后者的消费者 bin/ssot/write-owner-audit.py::audit_staged 只对暂存区做
-    fnmatch，被忽略目录内容按构造永不进暂存区
+    条投影全是文件级 canonical/legacy 对，后者的消费者 bin/ssot/write-owner-audit.py::audit_staged
+    只对暂存区做 fnmatch，被忽略目录内容按构造永不进暂存区
   - 不 --no-verify、不 admin merge、不 rebase/merge/pull 吸收上游、不 prune-locks
   done_when:
   - 8 处写者的锚点在声明 OMOSTATION_STATE_ROOT=<tmp> 后全部落在 <tmp> 下（正向落点断言，V1）；未声明 profile 时与历史路径逐字节一致（C5）
-  - 从与检出无关的 cwd 实例化 RefinementStore/SnapshotManager 与 sema_crystallizer 默认路径，产物不落 cwd（V2，当前实测会落）
+  - 从与检出无关的 cwd 实例化 RefinementStore/SnapshotManager 与 sema_crystallizer 默认路径，产物不落
+    cwd（V2，当前实测会落）
   - 修后一次运行里 git -C projects/omo status --porcelain --untracked-files=all .omo/state
     不新增行（V3）
   - projects/omo/tests/unit/resident/test_resident_writer_anchor.py 含变异对照：改窄任一侧落点断言当场红，绿不得来自检测器没命中（V4）
   verify:
   - cmd: env -u OMOSTATION_ROOT -u HOME uv run --no-project --with pytest --with pyyaml
-      python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py -q -p no:randomly
+      python -m pytest projects/omo/tests/unit/resident/test_resident_writer_anchor.py
+      -q -p no:randomly
     expect: 全绿；且 OMOSTATION_STATE_ROOT 指向临时根时落点断言点名 <tmp> 下八条路径
   - cmd: git -C projects/omo status --porcelain --untracked-files=all .omo/state
     expect: 改前 15 行 ?? / 修后一次运行不新增行（两个读数由同一条命令产出并记进 receipt）
   - cmd: python3 -c "import os,sys;sys.path.insert(0,'projects/omo/src');from omo.resident
-      import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(), write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
+      import cell_state,memory_pipeline,replay,write_path;print(cell_state.CellStateManager().state_dir(),
+      write_path(memory_pipeline.MEMORY_DIR), write_path(replay.REPLAY_DIR))"
     expect: 声明 profile 后三行路径均以 $OMOSTATION_STATE_ROOT 开头；未声明时以检出根开头且不含 projects/omo
   value_indicator_policy: false
   accepted_specifications:
@@ -46025,7 +46034,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: 状态面收官登记，value indicator policy 声明为 false，由 PR #4956 及 omo #224/#225 闭环。
+          note: 状态面收官登记，value indicator policy 声明为 false，由 PR
     overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-278
   title: 同机双根决策与入口文档对齐
@@ -46057,7 +46066,8 @@ bets:
   - 账本定位按进程环境解析并区分快照与活动状态，不凭目录名断言权威。
   - 变更通过适用文档及 lane 检查，未通过或未运行的检查如实记录。
   verify:
-  - cmd: python3 bin/change-lane-check.py --file AGENTS.md --file ARCHITECTURE.md --json
+  - cmd: python3 bin/change-lane-check.py --file AGENTS.md --file ARCHITECTURE.md
+      --json
     expect: exit 0，两个文件均为 docs lane
   - cmd: git diff --check
     expect: exit 0
@@ -46143,10 +46153,10 @@ bets:
           note: 当前只完成 Phase 0 发现与 Phase 1 阻断/提案登记，未宣称节点已接入。
     overall_state: planned
 - id: BET-Y2Q4-T10-280
-  done_at: 2026-11-02T07:51:00Z
+  done_at: 2026-11-02 07:51:00+00:00
   title: 全景收集器账本路径接入 profile 缝
-  goal: 把 bin/panorama/panorama-collect.py 的 event ledger 路径从 import 时冻结的检出根常量，收敛到 bin/lib/repo_root.py
-    的 event_ledger_path() 调用时刻解析，并消除三处默认参数二次冻结。
+  goal: 把 bin/panorama/panorama-collect.py 的 event ledger 路径从 import 时冻结的检出根常量，收敛到
+    bin/lib/repo_root.py 的 event_ledger_path() 调用时刻解析，并消除三处默认参数二次冻结。
   status: done
   window: Y2Q4
   track: T10-GOVERNANCE
@@ -46226,10 +46236,11 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: "治理/根缝类任务，value_indicator_policy 声明为 false，由 PR #5014 squash 9f84b7487 闭环。"
+          note: '治理/根缝类任务，value_indicator_policy 声明为 false，由 PR #5014 squash 9f84b7487
+            闭环。'
     overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-281
-  done_at: 2026-11-02T09:07:00Z
+  done_at: 2026-11-02 09:07:00+00:00
   title: B4b 验收尺的 repo_root 缝可达性修复
   goal: scripts/tools/launchd-workspace-reality-check.py 的缝算成 parents[1]/"lib" = scripts/lib（实测检出与安装位两侧均不存在），故每次运行都走
     except ImportError 字面量兜底 —— canonical/code 钉死某台机器检出、install 兜底永不返回 None。改为 parents[2]/"bin"/"lib"
@@ -46316,8 +46327,75 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: "B4b 量具可达性修复，value_indicator_policy 声明为 false，由工程腿 PR #5017 squash 58dc596e7 闭环。"
+          note: 'B4b 量具可达性修复，value_indicator_policy 声明为 false，由工程腿 PR #5017 squash
+            58dc596e7 闭环。'
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-285
+  title: agora daemon HTTP /health 端点 + 7433 端口注册 + 健康扫描接线 (SIRI-51)
+  goal: Multica SIRI-51 报「agora-gateway 只有 UDP 42024、无 HTTP /health」。实测前提已过时：独立 gateway
+    进程 2026-09-08 官方废弃 (agora d128c5f P2-5, SSE 进程经 AGORA_GATEWAY_OWNER=1 接管 gateway
+    职责)，全仓无 UDP 42024 (真实 swarm UDP=7455)。本机唯一常驻 agora 服务面是 com.agora.daemon (A2A
+    bus, FastAPI)，且因安装根 (~/.local/opt/omostation) 缺 7c8269f types.py 遮蔽修复 (PR 125)
+    而 crash-loop。本 bet：给 daemon 加 GET /health (status/uptime_s/udp_port)， 默认端口自 7432
+    (与 ecos-event-listener 注册冲突) 迁至 7433 并注册进 port-registry， matrix.yaml 加 health_url
+    条目使 cron-service 健康扫描走真 HTTP 探活，安装根同步到含修复的提交。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 hours
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  write_surfaces:
+  - projects/agora
+  - protocols/port-registry.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-285.md
+  non_goals:
+  - 不复活独立 agora-gateway 进程 (P2-5 已定架构，SSE owner 模式不变)。
+  - 不新增/修改任何 UDP 逻辑 —— swarm UDP 7455 面不动，/health 只读配置回报。
+  - 不 bump 主仓 submodule 指针；agora 变更走子仓独立 PR，人工审批后合并。
+  - 不动 cron-service/MatrixScheduler 代码 —— 健康扫描经既有 health_url 机制消费，零代码改动。
+  done_when:
+  - curl http://127.0.0.1:7433/health 返回 200 + {"status":"ok","uptime_s":N,"udp_port":7455}。
+  - matrix-consistency-lint 对新条目无 ERROR (R1 launchd_label 存在 / R5 com.agora.daemon
+    在 launchctl)；R2/R4 经 worktree 内 port-registry 注册消除。
+  - 健康扫描 (cron-service 60s tick 或手动 scan_once) 后 system_health.yaml 中 agora-daemon
+    为 healthy 且带 health_check。
+  - daemon 不再 crash-loop (安装根同步含 7c8269f agent_types.py 修复的提交)。
+  - agora 子仓 pytest 新增 /health 用例通过，ruff 无新违规。
+  verify:
+  - cmd: uv run pytest tests/unit/test_daemon_health.py -q (agora 子仓)
+    expect: passed；/health 返回 200 且三键齐全、uptime_s 单调、udp_port 随 env 可覆盖
+  - cmd: curl -fsS http://127.0.0.1:7433/health
+    expect: 200 + status=ok JSON
+  - cmd: python3 bin/ssot/matrix-consistency-lint.py
+    expect: agora-daemon 条目 0 ERROR
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若实现需要占用他人已注册端口、违背 P2-5、或绕过 human_gate 人工 PR 审批， 则停止实现并保留可续跑证据。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-04-agora-daemon-health-siri51.md
+    spec_version: 1.0.0
+    content_digest: sha256:47181002adecf3557024a5805bfd4eb18cf1f4932ea07f247197e7398b6740e3
+    decision_ref: decision://accepted/BET-Y2Q4-T10-285
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
