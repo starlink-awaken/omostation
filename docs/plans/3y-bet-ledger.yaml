@@ -46409,6 +46409,7 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:7cc1a7d4e480975969345367306b3c02201ac99b6a78c1641a99d728649dd6e5
     decision_ref: decision://accepted/BET-Y2Q4-T10-283
+  value_indicator_policy: false
   write_surfaces:
   - docs/superpowers/specs/2026-11-04-b2-port-43195-registration-and-resident-web-record.md
   - protocols/port-registry.yaml
@@ -46416,6 +46417,7 @@ bets:
   - tests/unit/test_b2_port_43195_registered.py
   - docs/plans/3y-bet-ledger.yaml
   - .omo/_knowledge/retros/BET-Y2Q4-T10-283.md
+  - docs/reports/2026-11-04-b2-port-43195-closeout.md
   non_goals:
   - 不改 plist、crontab、launchctl 状态或任何机器级配置 —— 实盘 plist 已正确，本轮只让记录追上它。
   - 不把 resident-web 的 --host 0.0.0.0 收成 loopback（暴露面变更属运行时效应，需单独授权）。
