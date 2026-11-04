@@ -29,7 +29,10 @@ def run_script(*args, workspace=None):
 
 
 def setup_git(workspace):
-    subprocess.run(["git", "init", str(workspace)], check=True,
+    # 显式 -b main: 被检脚本的默认 base ref 就是 main, 而 `git init` 建在哪个分支
+    # 取决于 init.defaultBranch —— 本机全局与 Xcode 系统 gitconfig 都配了 main,
+    # CI 两边都没有 ⇒ 不写死就当场 `无法解析 ref 'main'`。
+    subprocess.run(["git", "init", "-q", "-b", "main", str(workspace)], check=True,
                    capture_output=True)
     subprocess.run(["git", "config", "user.email", "test@test.com"],
                    cwd=workspace, capture_output=True)

@@ -75,6 +75,14 @@ def _submodule(tmp_path: Path, name: str = "sub") -> tuple[Path, Path]:
 
     sub = tmp_path / name
     subprocess.run(["git", "clone", "-q", str(origin), str(sub)], check=True, capture_output=True)
+    # clone 不继承 seed 的 local config, 而契约 2 要在这个 clone 里造孤立提交 ——
+    # 不补身份就会 `unable to auto-detect email address`。开发机的全局 gitconfig
+    # 掩盖了这一点, 干净 HOME (CI) 下才暴露。
+    for cmd in (
+        ["git", "-C", str(sub), "config", "user.name", "T"],
+        ["git", "-C", str(sub), "config", "user.email", "t@example.invalid"],
+    ):
+        subprocess.run(cmd, check=True, capture_output=True)
     return sub, reachable
 
 

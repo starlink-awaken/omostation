@@ -19,6 +19,12 @@ SCRIPT = REPO_ROOT / "bin" / "gac" / "gac-worktree.sh"
 GUARD_FN = textwrap.dedent(
     """
     set -euo pipefail
+    # ISC-3 走 `git submodule update --init` 从本地路径克隆, 而 git >= 2.38.1 默认
+    # 禁止子模块用 file 传输 (protocol.file.allow)。本机全局 gitconfig 里配了
+    # `protocol.file.allow=always`, 于是这条用例在开发机上一直绿 —— 换成干净 HOME
+    # (CI 就是这样) 就当场 `fatal: transport 'file' not allowed`。这里显式放行,
+    # 判据不再依赖 host gitconfig。
+    export GIT_ALLOW_PROTOCOL=file
     WS_ROOT=__SUPER__
     guard_submodules() {
     __GUARD_BODY__
