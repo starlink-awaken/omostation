@@ -408,6 +408,61 @@ jobs:
         # 钉 repo_root 的 profile 契约 (code/state 双根、env 名、投影回退) —— 886 pass,
         # 1.4s。需要 projects/omo 检出 (governance-verify 是 recursive, 满足)。
         run: python3 -m pytest tests/unit/test_repo_root_profile.py -q
+      - name: claims shadow preflight gate
+        # 钉 claims shadow 面的预检不变式 (shadow 不等于放行)。实测 8 pass。
+        run: python3 -m pytest tests/unit/test_claims_shadow_preflight.py -q
+      - name: internal scene preflight gate
+        # 钉内部场景的预检口径。实测 13 pass。
+        run: python3 -m pytest tests/unit/test_internal_scene_preflight.py -q
+      - name: orphan files gate
+        # 钉「孤儿文件」判定 (未跟踪且无人引用) 的口径。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_orphan_files.py -q
+      - name: claims activation request gate
+        # 钉 claims 激活请求的字段契约。实测 3 pass。
+        run: python3 -m pytest tests/unit/test_panorama_claims_activation_request.py -q
+      - name: claims authority gate
+        # 钉 claims authority 的读数口径。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_panorama_claims_authority.py -q
+      - name: claims task16 preflight gate
+        # 钉 claims task16 预检。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_panorama_claims_task16.py -q
+      - name: panorama event-ledger seam gate
+        # 钉事件 ledger 缝的解析 (读侧根 == 写侧根)。实测 8 pass。
+        run: python3 -m pytest tests/unit/test_panorama_event_ledger_seam.py -q
+      - name: panorama field provenance gate
+        # 钉投影字段的出处链 (每个字段能追到真源)。实测 3 pass。
+        run: python3 -m pytest tests/unit/test_panorama_field_provenance.py -q
+      - name: projection reader resolution gate
+        # 钉投影读取器的优先级 (canonical 优先、legacy 回退、缺失要报)。实测 18 pass。
+        run: python3 -m pytest tests/unit/test_projection_reader_resolution.py -q
+      - name: reporting reads ledger gate
+        # 钉报表读的是 ledger 而不是本地快照。实测 6 pass。
+        run: python3 -m pytest tests/unit/test_reporting_reads_ledger.py -q
+      - name: CR-CI-RUNNER-COST regression gate
+        # CR-CI-RUNNER-COST 门禁自身的回归 (付费 OS 腿必须登记 + 有 concurrency)。
+        # 实测 6 pass。
+        run: python3 -m pytest tests/unit/test_runner_cost_guard.py -q
+      - name: stale branches gate
+        # 钉过期分支判定 (TTL + open PR 保护)。实测 6 pass。
+        run: python3 -m pytest tests/unit/test_stale_branches.py -q
+      - name: value recorder gate
+        # 钉价值记录的字段契约。实测 10 pass。
+        run: python3 -m pytest tests/unit/test_value_recorder.py -q
+      - name: zhixing release identity gate
+        # 钉 zhixing 发布身份 (OID 与 release 目录一致)。实测 39 pass。
+        run: python3 -m pytest tests/unit/test_zhixing_release_identity.py -q
+      - name: B4b ruler seam reachability gate
+        # 钉 B4b ruler 缝的可达性 (读根不得冻结在 import)。实测 4 pass。
+        run: python3 -m pytest tests/unit/test_b4b_ruler_seam_reachability.py -q
+      - name: clone provenance own-commits gate
+        # 钉 clone 出处 (自有 commit 的归属)。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_clone_provenance_own_commits.py -q
+      - name: diff lifecycle gate
+        # 钉 diff 生命周期的口径。实测 9 pass。
+        run: python3 -m pytest tests/unit/test_diff_lifecycle.py -q
+      - name: log-rotate copytruncate gate
+        # 钉 log-rotate 的 copytruncate 语义。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_log_rotate_copytruncate.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
