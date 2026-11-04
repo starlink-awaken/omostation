@@ -457,6 +457,10 @@ jobs:
       - name: log-rotate copytruncate gate
         # 钉 log-rotate 的 copytruncate 语义。实测 2 pass。
         run: python3 -m pytest tests/unit/test_log_rotate_copytruncate.py -q
+      - name: claims authority status gate
+        # 钉 claims authority 状态的观察者契约 (字段白名单 + 不授予权限 + 非法状态
+        # fail-closed)。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_claims_authority_status.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
