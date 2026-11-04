@@ -6498,7 +6498,7 @@ services:
     endpoint: http://localhost:18080/gateway/status
     max_stale_hours: 24
   depends_on: []
-  notes: 'BET-Y2Q4-T10-284 observe-only 登记。与前 50 条不同, 本条不是本仓供给的服务: com.user.omlx-smart-gateway
+  notes: 'BET-Y2Q4-T10-284 observe-only 登记。与注册表里绝大多数条目不同, 本条不是本仓供给的服务: com.user.omlx-smart-gateway
     是 principal 手装的个人工具 (双 Mac Studio 延迟网关, 入口 ~/.local/bin/omlx-smart-gateway.py, 不在本仓任何生成或安装链路里)。
     它落进 E2 的根因是 BET-Y2Q4-T10-206 把 com.user 加进了 workspace_prefixes —— classify_label 里前缀判定先于 exempt_labels,
     所以本条不能用豁免清单解决: 加了不可达 (仍计入 workspace 分区), 且会新增一条 E4 shadow 死数据判定。
