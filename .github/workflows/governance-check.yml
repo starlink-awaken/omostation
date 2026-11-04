@@ -554,6 +554,27 @@ jobs:
       - name: zhixing GET method safety gate
         # 钉 zhixing GET 的方法安全 (只读方法不得带副作用)。实测 26 pass。
         run: python3 -m pytest tests/unit/test_zhixing_get_method_safety.py -q
+      - name: bet-ledger JSON output gate
+        # 钉台账 JSON 输出的字段契约。实测 1 pass。
+        run: python3 -m pytest tests/unit/test_bet_ledger_json_output.py -q
+      - name: check interfaces gate
+        # 钉各 check 的接口契约。实测 16 pass。
+        run: python3 -m pytest tests/unit/test_check_interfaces.py -q
+      - name: real evalset generation gate
+        # 钉真实评测集生成的字段契约。实测 6 pass。
+        run: python3 -m pytest tests/unit/test_gen_real_evalset.py -q
+      - name: journey fallback backedge gate
+        # 钉 journey 回退的后向边 (回退不得成环)。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_journey_fallback_backedge.py -q
+      - name: mail daemon resident loop gate
+        # 钉邮件守护的 resident 循环口径。实测 5 pass。
+        run: python3 -m pytest tests/unit/test_mail_daemon_resident_loop.py -q
+      - name: gantt brief source consistency gate
+        # 钉 gantt/brief 的源一致性 (cohort 先于 brief)。实测 7 pass。
+        run: python3 -m pytest tests/unit/test_panorama_gantt_brief_source_consistency.py -q
+      - name: reference-cell DL verify gate
+        # 钉 reference-cell 的 DL 校验口径。实测 2 pass。
+        run: python3 -m pytest tests/unit/test_reference_cell_dl_verify.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
