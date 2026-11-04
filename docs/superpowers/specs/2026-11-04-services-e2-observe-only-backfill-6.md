@@ -6,6 +6,8 @@ bet_id: BET-Y2Q4-T10-284
 status: accepted
 lifecycle: contract
 last-reviewed: 2026-11-04
+owner: governance-team
+schema: md/v1
 ---
 
 # ADR-0456 B3 批次 6 — `com.user.omlx-smart-gateway` observe-only 回填
