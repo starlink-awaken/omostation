@@ -5,6 +5,7 @@ title: B2 收口 —— 注册 43195 进端口表，并订正 resident-web 的�
 bet_id: BET-Y2Q4-T10-283
 status: accepted
 lifecycle: contract
+owner: governance-agent
 last-reviewed: 2026-11-04
 ---
 

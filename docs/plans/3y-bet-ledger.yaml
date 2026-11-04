@@ -46407,7 +46407,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-04-b2-port-43195-registration-and-resident-web-record.md
     spec_version: 1.0.0
-    content_digest: sha256:363b5317127b5f4c0264fa348e764ed1027265c9511c95c47072192db546fbd1
+    content_digest: sha256:7cc1a7d4e480975969345367306b3c02201ac99b6a78c1641a99d728649dd6e5
     decision_ref: decision://accepted/BET-Y2Q4-T10-283
   write_surfaces:
   - docs/superpowers/specs/2026-11-04-b2-port-43195-registration-and-resident-web-record.md
