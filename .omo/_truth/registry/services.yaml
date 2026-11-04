@@ -6476,6 +6476,37 @@ services:
   environment:
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
 
+- id: user.omlx-smart-gateway
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.user.omlx-smart-gateway.plist
+  scheduler: launchd
+  trigger: keepalive
+  label: com.user.omlx-smart-gateway
+  program:
+    interpreter: /usr/bin/python3
+    entrypoint: ~/.local/bin/omlx-smart-gateway.py
+    args: []
+  run_at_load: true
+  ports:
+  - 18080
+  outputs:
+    stdout: ~/.local/state/omlx-gateway.log
+    stderr: ~/.local/state/omlx-gateway.err
+  liveness:
+    signal: http
+    endpoint: http://localhost:18080/gateway/status
+    max_stale_hours: 24
+  depends_on: []
+  notes: 'BET-Y2Q4-T10-284 observe-only 登记。与注册表里绝大多数条目不同, 本条不是本仓供给的服务: com.user.omlx-smart-gateway
+    是 principal 手装的个人工具 (双 Mac Studio 延迟网关, 入口 ~/.local/bin/omlx-smart-gateway.py, 不在本仓任何生成或安装链路里)。
+    它落进 E2 的根因是 BET-Y2Q4-T10-206 把 com.user 加进了 workspace_prefixes —— classify_label 里前缀判定先于 exempt_labels,
+    所以本条不能用豁免清单解决: 加了不可达 (仍计入 workspace 分区), 且会新增一条 E4 shadow 死数据判定。
+    取证 (2026-11-04 本机实测): launchctl print 可读该 job, 18080 LISTEN, GET http://localhost:18080/gateway/status 返回 200;
+    本机 plist 的 Label / ProgramArguments / KeepAlive / RunAtLoad / StandardOutPath / StandardErrorPath 与本条逐键对应,
+    plist 无 EnvironmentVariables 键。本仓不生成 (generate: false) —— 入口脚本归个人工具所有, 注册表登记现实而不主张写权;
+    改 generate: true 会让本仓取得覆盖手装 plist 的能力, 那不是本轮要的「可证」。'
+
 launchd_namespace:
   workspace_prefixes:
     - com.aetherforge
