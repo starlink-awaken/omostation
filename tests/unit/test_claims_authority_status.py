@@ -1,4 +1,5 @@
 import importlib.util
+import sys
 from pathlib import Path
 
 
@@ -7,6 +8,12 @@ SCRIPT = ROOT / "bin/gac/claims-authority-status.py"
 
 
 def _module():
+    # 被测脚本 from omo.workflow import claims_authority, 而 omo 在子仓
+    # projects/omo/src 下 —— 不显式加 sys.path 的话, 这条用例只在「本机装过 omo」的
+    # 环境里能跑 (CI 干净检出 / 未 init 子模块的 worktree 都 ModuleNotFoundError)。
+    omo_src = ROOT / "projects" / "omo" / "src"
+    if str(omo_src) not in sys.path:
+        sys.path.insert(0, str(omo_src))
     spec = importlib.util.spec_from_file_location("claims_authority_status", SCRIPT)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
