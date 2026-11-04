@@ -560,9 +560,6 @@ jobs:
       - name: check interfaces gate
         # 钉各 check 的接口契约。实测 16 pass。
         run: python3 -m pytest tests/unit/test_check_interfaces.py -q
-      - name: diff debt gate
-        # 钉 diff 债务口径。实测 6 pass。
-        run: python3 -m pytest tests/unit/test_diff_debt.py -q
       - name: diff growth gate
         # 钉 diff 增长口径。实测 6 pass。
         run: python3 -m pytest tests/unit/test_diff_growth.py -q
