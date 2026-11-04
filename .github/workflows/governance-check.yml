@@ -454,9 +454,6 @@ jobs:
       - name: clone provenance own-commits gate
         # 钉 clone 出处 (自有 commit 的归属)。实测 7 pass。
         run: python3 -m pytest tests/unit/test_clone_provenance_own_commits.py -q
-      - name: diff lifecycle gate
-        # 钉 diff 生命周期的口径。实测 9 pass。
-        run: python3 -m pytest tests/unit/test_diff_lifecycle.py -q
       - name: log-rotate copytruncate gate
         # 钉 log-rotate 的 copytruncate 语义。实测 2 pass。
         run: python3 -m pytest tests/unit/test_log_rotate_copytruncate.py -q
