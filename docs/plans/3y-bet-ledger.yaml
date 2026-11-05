@@ -46087,7 +46087,7 @@ bets:
   title: BET-Y2Q4-T10-279 compute-i9-01 Integration —— 受治理 CPU 执行节点接入
   goal: 将 compute-i9-01 以单一 OMO 控制面纳入受治理 Code/Test/Batch 执行体系；先完成只读发现与提案，再在明确授权后完成隔离
     Worker 接入和八项验证，不建立第二套任务控制面。
-  status: active
+  status: in_progress
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -46135,13 +46135,13 @@ bets:
         status: NOT_STARTED
         evidence: {}
       operational:
-        status: NOT_STARTED
+        status: NOT_PROVEN
         evidence: {}
       value:
-        status: NOT_STARTED
+        status: NOT_PROVEN
         evidence:
           note: 当前只完成 Phase 0 发现与 Phase 1 阻断/提案登记，未宣称节点已接入。
-    overall_state: planned
+    overall_state: evaluating
 - id: BET-Y2Q4-T10-280
   done_at: 2026-11-02T07:51:00Z
   title: 全景收集器账本路径接入 profile 缝
@@ -47026,6 +47026,17 @@ tracks:
     - .omo/_knowledge/retros/**
     scope: 工作区文档收敛 / 导航指针修复 / spec 注册表可发现性
     title: 文档收敛
+  T10-GOVERNANCE:
+    agent_profile_hint: governance-agent
+    default_workflow: project-code-change
+    pasw_required: false
+    primary_write_surfaces:
+    - .omo/_truth/**
+    - protocols/port-registry.yaml
+    - docs/superpowers/specs/**
+    - docs/plans/3y-bet-ledger.yaml
+    scope: 治理登记面与可验证判据 (端口/资产注册、写面根缝可达、健康探针接线)
+    title: 治理登记
   T10-TOOLING:
     agent_profile_hint: engineering-agent
     default_workflow: project-code-change
