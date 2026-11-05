@@ -1,9 +1,9 @@
 ---
 schema: md/v1
 status: active
-lifecycle: spec
+lifecycle: history
 owner: engineering-agent
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-03
 type: doc
 title: 全生态价值流深度分析 — 断链诊断与串联方案 (2026-08-28)
 ---

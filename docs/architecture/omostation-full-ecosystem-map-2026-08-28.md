@@ -1,9 +1,9 @@
 ---
 schema: md/v1
 status: active
-lifecycle: ssot
+lifecycle: history
 owner: engineering-agent
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-03
 type: doc
 title: omostation (eCOS v6) 全生态架构图解
 ---

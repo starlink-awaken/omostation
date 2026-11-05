@@ -1,12 +1,9 @@
 ---
-schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-25
-type: ephemeral
+last-reviewed: 2026-11-03
 ---
-
 
 # INDEX-PROJECTS.md — 项目索引
 
@@ -17,7 +14,7 @@ type: ephemeral
 > - validation: 与 project-registry.yaml 项目数一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-09-24T12:01:19.658595+00:00
+> - generated_at: 2026-11-03T08:50:24.960807+00:00
 
 ---
 

@@ -13,7 +13,7 @@ last-reviewed: 2026-10-02
 会遇到的门、它们的触发条件、以及**怎么恢复**——目的是让它们不再是「只能逐门试错
 才能定位的墙」。
 
-> 本文的权威提案见 [ADR-0459](../../../.omo/_knowledge/decisions/0459-clone-lifecycle-pipeline-blockers.md)
+> 本文的权威提案见 [ADR-0459](../../.omo/_knowledge/decisions/0459-clone-lifecycle-pipeline-blockers.md)
 > 问题三④ 与验收第 5 条。**放宽任何一道门都不是本文的解法**; 本文只描述
 > 门本身与恢复步骤。
 
