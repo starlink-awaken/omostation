@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-10-14T09:05:11Z
+generated_at: 2026-11-05T03:10:01Z
 status: candidate
 counts:
-  runs: 31
+  runs: 28
   failures: 0
-  total: 31
+  total: 28
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T09:05:11Z
+- generated_at: 2026-11-05T03:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 31 成功运行 + 0 失败模式 = 31 草稿
+- sediment 覆盖: 28 成功运行 + 0 失败模式 = 28 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -47,9 +47,6 @@ failure_breakdown:
 - 20260930T094353Z-governance-state-mutation-58617ec5.md
 - 20260930T135956Z-governance-state-mutation-0c0df2da.md
 - 20260930T140232Z-governance-state-mutation-6ff2a364.md
-- 20261004T143835Z-governance-state-mutation-42d7a3e1.md
-- 20261004T165850Z-governance-state-mutation-61193f8c.md
-- 20261005T125802Z-governance-state-mutation-1fc39606.md
 - 20261006T160849Z-governance-state-mutation-a95f0940.md
 - 20261010T022613Z-governance-state-mutation-5725812f.md
 
@@ -225,25 +222,6 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=254168.308
-- **20261004T143835Z-governance-state-mutation-42d7a3e1**
-  - 计划 (objective): services.yaml: omo-debt-refresh program 改用 omo venv python (原 python3 落到 Xcode 3.9 致 ImportError) + 刷新 content_digest
-  - workflow: governance-state-mutation
-  - 实际步骤: execute
-  - 结果与证据: ok=True, status=ok, evidence_count=1
-  - 指标: event_count=6, duration_s=519.368
-- **20261004T165850Z-governance-state-mutation-61193f8c**
-  - 计划 (objective): [BET-Y2Q4-T10-228] launchd 登记 E4 存量 findings 清理 — magpie 归属补登 / codewhisperer 陈旧豁免移除 / 4 个 unclassified 裁定 (Appetite: 0.5 day)
-  - workflow: governance-state-mutation
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=1
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=2491.61
-- **20261005T125802Z-governance-state-mutation-1fc39606**
-  - 计划 (objective): services.yaml launchd_namespace: 登记 com.local.funes-index/funes-push 与 com.yetone.magpie 为 external, 删陈旧豁免 com.amazon.codewhisperer.launcher (reality-check E4 转绿)
-  - workflow: governance-state-mutation
-  - 实际步骤: execute
-  - 结果与证据: ok=True, status=ok, evidence_count=1
-  - 指标: event_count=6, duration_s=43.98
 - **20261006T160849Z-governance-state-mutation-a95f0940**
   - 计划 (objective): H0 finite role and mandate authority components only; canonical OMO broker; exact Event Ledger paths; no BET allocation, no production effect; preserve T10-233 and registry owner
   - workflow: governance-state-mutation

@@ -1,0 +1,19 @@
+schema: agent-error/v1
+id: PITFALL-ENV-009
+category: environment
+severity: medium
+title: skip-worktree 幽灵标志阻塞所有 git pull
+symptom: git pull --ff-only 持续报 'Your local changes to the following files would be
+  overwritten by merge' 指向一个 status 显示干净的文件 (.omo/_control/debt-dashboard/current.yaml);
+  文本/eol 属性下磁盘 hash 与索引 blob 不一致是烟雾弹, 真凶是该文件带 skip-worktree 标志 (git ls-files -v 显示
+  S) 而上游已删除该文件
+root_cause: ''
+solution: '用 git ls-files -v | rg ''^S'' 找出带标志文件; 若上游已删除, git update-index --no-skip-worktree
+  <file> 摘标志后 pull 即随上游删除; 排查顺序: 先查标志位再查行尾/内容'
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-10-22'
+times_encountered: 1
+last_confirmed_at: '2026-10-22'
+status: active

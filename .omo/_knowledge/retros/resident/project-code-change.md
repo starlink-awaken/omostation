@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-10-14T09:05:11Z
+generated_at: 2026-11-05T03:10:01Z
 status: candidate
 counts:
-  runs: 74
+  runs: 85
   failures: 0
-  total: 74
+  total: 85
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T09:05:11Z
+- generated_at: 2026-11-05T03:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 74 成功运行 + 0 失败模式 = 74 草稿
+- sediment 覆盖: 85 成功运行 + 0 失败模式 = 85 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -78,9 +78,6 @@ failure_breakdown:
 - 20260929T105440Z-project-code-change-970e11eb.md
 - 20260929T112412Z-project-code-change-59906d82.md
 - 20261003T141319Z-project-code-change-ee0aa19d.md
-- 20261004T112741Z-project-code-change-aa14ef9f.md
-- 20261004T142358Z-project-code-change-a9eaa0f7.md
-- 20261005T130234Z-project-code-change-b338bd88.md
 - 20261006T122008Z-project-code-change-ba10c1ac.md
 - 20261006T122121Z-project-code-change-aadae7a5.md
 - 20261006T122238Z-project-code-change-5aa12618.md
@@ -95,6 +92,20 @@ failure_breakdown:
 - 20261006T123407Z-project-code-change-7ca0b817.md
 - 20261013T051123Z-project-code-change-19550a9a.md
 - 20261013T145928Z-project-code-change-92d02624.md
+- 20261017T045732Z-project-code-change-aad3b60c.md
+- 20261017T050046Z-project-code-change-425c0685.md
+- 20261017T050309Z-project-code-change-a3a4b888.md
+- 20261017T055852Z-project-code-change-4ec144ba.md
+- 20261017T060316Z-project-code-change-3f3290db.md
+- 20261017T060719Z-project-code-change-199b7617.md
+- 20261017T062101Z-project-code-change-688fb878.md
+- 20261017T062534Z-project-code-change-b440ff9d.md
+- 20261017T091946Z-project-code-change-fb93e5cd.md
+- 20261017T094052Z-project-code-change-a5dc16af.md
+- 20261017T110227Z-project-code-change-b4d64d24.md
+- 20261018T135908Z-project-code-change-429f4cf3.md
+- 20261018T224915Z-project-code-change-d00d49a1.md
+- 20261028T083803Z-project-code-change-be65e189.md
 
 ## 失败模式 (failures/)
 
@@ -474,25 +485,6 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=67636.808
-- **20261004T112741Z-project-code-change-aa14ef9f**
-  - 计划 (objective): /simplify 跟进 PR#4616: worktree-hygiene-audit 单次 merge-base + 子仓按需探测 + 修假绿测试
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=True, status=ok, evidence_count=1
-  - 指标: event_count=6, duration_s=10095.845
-- **20261004T142358Z-project-code-change-a9eaa0f7**
-  - 计划 (objective): bin/gac/kos: KOS_HOME 写死不存在的 Workspace/kos → 跟随 kairon 默认 ~/.kos + 环境变量覆盖; WORKSPACE 由脚本位置推算
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=True, status=ok, evidence_count=1
-  - 指标: event_count=6, duration_s=589.513
-- **20261005T130234Z-project-code-change-b338bd88**
-  - 计划 (objective): TASK-263EF9EC: worktree 删除闸门补子仓推送检查 (hygiene-audit --check-submodules 共享; janitor + gac-worktree.sh 接入; 顺修 janitor is-ancestor 恒假)
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=262197.235
 - **20261006T122008Z-project-code-change-ba10c1ac**
   - 计划 (objective): test objective
   - workflow: project-code-change
@@ -587,6 +579,101 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=27571.855
+- **20261017T045732Z-project-code-change-aad3b60c**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=459085.476
+- **20261017T050046Z-project-code-change-425c0685**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=458915.995
+- **20261017T050309Z-project-code-change-a3a4b888**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=458799.85
+- **20261017T055852Z-project-code-change-4ec144ba**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=455458.979
+- **20261017T060316Z-project-code-change-3f3290db**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=455198.303
+- **20261017T060719Z-project-code-change-199b7617**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=454957.62
+- **20261017T062101Z-project-code-change-688fb878**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=454137.971
+- **20261017T062534Z-project-code-change-b440ff9d**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=453867.404
+- **20261017T091946Z-project-code-change-fb93e5cd**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=443417.897
+- **20261017T094052Z-project-code-change-a5dc16af**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=442154.26
+- **20261017T110227Z-project-code-change-b4d64d24**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=437268.446
+- **20261018T135908Z-project-code-change-429f4cf3**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=338617.597
+- **20261018T224915Z-project-code-change-d00d49a1**
+  - 计划 (objective): test objective
+  - workflow: project-code-change
+  - 实际步骤: execute
+  - 结果与证据: ok=False, status=failed, evidence_count=3
+  - 失败根因: step=execute, error=None
+  - 指标: event_count=6, duration_s=306841.549
+- **20261028T083803Z-project-code-change-be65e189**
+  - 计划 (objective): [BET-Y2Q4-T10-277] BET-Y2Q4-T10-277 ADR-0456 B1 剩余阻塞项 —— omo.resident 8 处写者锚点错位，代码子模块内部长出第二棵 .omo/state (Appetite: 2 days)
+  - workflow: project-code-change
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

@@ -1,10 +1,10 @@
 {
- "checked_at": "2026-09-17T03:58:37.884584+00:00",
+ "checked_at": "2026-11-04T19:20:01.089170+00:00",
  "note": "derived from data/scene-metrics.db — DB 是唯一写入口, 勿手编",
  "row_counts": {
-  "calibration": 0,
-  "execution": 1,
-  "lifecycle": 0
+  "calibration": 49,
+  "execution": 550,
+  "lifecycle": 1
  },
  "schema": "scene-history-baseline/v1"
 }

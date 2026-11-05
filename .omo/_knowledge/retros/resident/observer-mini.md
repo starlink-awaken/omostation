@@ -1,7 +1,7 @@
 ---
 schema: resident-retro-candidate/v1
 topic: observer-mini
-generated_at: 2026-10-14T09:05:11Z
+generated_at: 2026-11-05T03:10:01Z
 status: candidate
 counts:
   runs: 34
@@ -14,7 +14,7 @@ failure_breakdown:
 ---
 # observer-mini 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T09:05:11Z
+- generated_at: 2026-11-05T03:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 34 成功运行 + 0 失败模式 = 34 草稿
 - 失败率: 0.00%
@@ -35,7 +35,6 @@ failure_breakdown:
 - 20260925T015111Z-observer-mini-d4c4de6c.md
 - 20260925T015348Z-observer-mini-8f89128e.md
 - 20260925T015718Z-observer-mini-56b1cdf4.md
-- 20260925T031746Z-observer-mini-d4a977fe.md
 - 20260926T061113Z-observer-mini-e7816027.md
 - 20260926T061556Z-observer-mini-17227890.md
 - 20260926T062740Z-observer-mini-6fe109f9.md
@@ -55,6 +54,7 @@ failure_breakdown:
 - 20261013T122125Z-observer-mini-afea0986.md
 - 20261013T125707Z-observer-mini-f7d5e079.md
 - 20261013T133946Z-observer-mini-1caebf2f.md
+- 20261028T032203Z-observer-mini-b9b12b3b.md
 
 ## 失败模式 (failures/)
 
@@ -195,6 +195,10 @@ failure_breakdown:
   - workflow: observer-mini
   - 指标: event_count=1, duration_s=0.0
 - **20261013T133946Z-observer-mini-1caebf2f**
+  - 计划 (objective): read only claim exempt
+  - workflow: observer-mini
+  - 指标: event_count=1, duration_s=0.0
+- **20261028T032203Z-observer-mini-b9b12b3b**
   - 计划 (objective): read only claim exempt
   - workflow: observer-mini
   - 指标: event_count=1, duration_s=0.0

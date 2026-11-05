@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: bet-execution
-generated_at: 2026-10-14T09:05:11Z
+generated_at: 2026-11-05T03:10:01Z
 status: candidate
 counts:
-  runs: 5
+  runs: 10
   failures: 0
-  total: 5
+  total: 10
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # bet-execution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T09:05:11Z
+- generated_at: 2026-11-05T03:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 5 成功运行 + 0 失败模式 = 5 草稿
+- sediment 覆盖: 10 成功运行 + 0 失败模式 = 10 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -26,6 +26,11 @@ failure_breakdown:
 - 20261008T103743Z-bet-execution-44db6b6a.md
 - 20261008T151600Z-bet-execution-a02668d4.md
 - 20261012T025228Z-bet-execution-d368768d.md
+- 20261014T055100Z-bet-execution-6ce679e2.md
+- 20261028T021654Z-bet-execution-c7309dc4.md
+- 20261028T021828Z-bet-execution-eccbd7fe.md
+- 20261028T031816Z-bet-execution-ef01d022.md
+- 20261028T065604Z-bet-execution-3b8358cd.md
 
 ## 失败模式 (failures/)
 
@@ -68,6 +73,32 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=1
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=9470.918
+- **20261014T055100Z-bet-execution-6ce679e2**
+  - 计划 (objective): [BET-Y2Q4-T10-252] guard-submodules 非破坏性对齐 —— 并发 submodule update 周期不得删除既有检出 (Appetite: 1 day)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=2
+  - 指标: event_count=6, duration_s=1230.805
+- **20261028T021654Z-bet-execution-c7309dc4**
+  - 计划 (objective): [BET-Y2Q4-T10-244] 贾维斯感知面 — observer 日报 + SwiftBar 常驻/待办域 + CI 信号闭环 (Appetite: 3 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=85.348
+- **20261028T021828Z-bet-execution-eccbd7fe**
+  - 计划 (objective): [BET-Y2Q4-T1-05] 口径归一 — 日历 / 台账 / 目标覆盖三读数分离并在 Agent Brief 显式并列 (Appetite: 2 days)
+  - workflow: bet-execution
+  - 实际步骤: execute
+  - 结果与证据: ok=True, status=ok, evidence_count=1
+  - 指标: event_count=6, duration_s=791.814
+- **20261028T031816Z-bet-execution-ef01d022**
+  - 计划 (objective): [BET-Y2Q4-T10-244] 贾维斯感知面 — observer 日报 + SwiftBar 常驻/待办域 + CI 信号闭环 (Appetite: 3 days)
+  - workflow: bet-execution
+  - 指标: event_count=1, duration_s=0.0
+- **20261028T065604Z-bet-execution-3b8358cd**
+  - 计划 (objective): [BET-Y2Q3-T9-01] 织星驾驶舱 P2 体验迭代、漂移可观测与真实算力副驾 (Appetite: 3 days)
+  - workflow: bet-execution
+  - 指标: event_count=1, duration_s=0.0
 
 > 上节为事件流确定性提取 (计划/实际/结果/失败/指标); 语义项见下待人工完善。
 

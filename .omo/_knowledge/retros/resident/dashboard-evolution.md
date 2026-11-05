@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: dashboard-evolution
-generated_at: 2026-10-14T09:05:11Z
+generated_at: 2026-11-03T17:10:01Z
 status: candidate
 counts:
-  runs: 4
+  runs: 3
   failures: 0
-  total: 4
+  total: 3
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,14 +14,13 @@ failure_breakdown:
 ---
 # dashboard-evolution 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T09:05:11Z
+- generated_at: 2026-11-03T17:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 4 成功运行 + 0 失败模式 = 4 草稿
+- sediment 覆盖: 3 成功运行 + 0 失败模式 = 3 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
-- 20261004T070656Z-dashboard-evolution-1942602c.md
 - 20261004T170411Z-dashboard-evolution-b40f7355.md
 - 20261004T170423Z-dashboard-evolution-7f0eded6.md
 - 20261004T170515Z-dashboard-evolution-5ed4ceb7.md
@@ -36,12 +35,6 @@ failure_breakdown:
 
 ## 确定性五问骨架 (ledger 追溯, 自动填充)
 
-- **20261004T070656Z-dashboard-evolution-1942602c**
-  - 计划 (objective): [BET-Y2Q4-T10-223] 投影租约自动续期与孤儿 revision 治理 — dashboard :43191 周期性 503 projection_stale 根治 (Appetite: 0.5 day)
-  - workflow: dashboard-evolution
-  - 实际步骤: execute
-  - 结果与证据: ok=True, status=ok, evidence_count=3
-  - 指标: event_count=6, duration_s=8092.824
 - **20261004T170411Z-dashboard-evolution-b40f7355**
   - 计划 (objective): [BET-Y2Q4-T10-226] 看门狗分级恢复（先 kickstart republisher 再重启 dashboard）+ deploy↔workspace host 资产漂移回同步 (Appetite: 0.5 day)
   - workflow: dashboard-evolution
