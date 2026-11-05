@@ -3,7 +3,9 @@
 
 契约：
 - 纯观测 (Observe-Only)，退出码恒为 0，绝不修改、卸载或重载任何 LaunchAgent。
-- 透视 39 个硬编码指向 Workspace 的 plist，按服务角色分类 (core, resident, maintenance, unmanaged)。
+- 透视所有硬编码指向 Workspace 的 plist，按服务角色分类 (core, resident, maintenance, unmanaged)。
+- 指认判据取自服务自己的目标值 (plist 解析后的全部字符串叶子)，唯独排除 EnvironmentVariables.PATH：
+  解释器搜索路径里出现某个根，不等于该服务从那个根运行。
 - 检查 EnvironmentVariables.OMOSTATION_STATE_ROOT 写根落点 (profile vs checkout vs undeclared)。
 """
 from __future__ import annotations
@@ -22,6 +24,26 @@ if not _LIB_DIR.is_dir():
 if str(_LIB_DIR) not in sys.path:
     sys.path.insert(0, str(_LIB_DIR))
 from repo_root import canonical_root, code_root, install_root  # noqa: E402
+
+
+def service_target_values(data: dict) -> list[str]:
+    """服务自己的全部目标字符串值；仅剔除 EnvironmentVariables.PATH 这一个键。"""
+    values: list[str] = []
+
+    def walk(node: object, key_path: tuple[str, ...]) -> None:
+        if isinstance(node, dict):
+            for key, child in node.items():
+                walk(child, key_path + (str(key),))
+        elif isinstance(node, list):
+            for child in node:
+                walk(child, key_path + ("*",))
+        elif isinstance(node, str):
+            if key_path == ("EnvironmentVariables", "PATH"):
+                return
+            values.append(node)
+
+    walk(data, ())
+    return values
 
 
 def scan_launchd_workspace_targets(launchd_dir: Path | None = None) -> dict:
@@ -65,9 +87,11 @@ def scan_launchd_workspace_targets(launchd_dir: Path | None = None) -> dict:
             continue
 
         label = data.get("Label") or p.stem
-        raw_text = p.read_text(encoding="utf-8", errors="replace")
-        has_ws = (canon_ws_path in raw_text) or (code_ws_path in raw_text)
-        has_inst = inst_path in raw_text
+        targets = service_target_values(data)
+        has_ws = any(
+            root in value for value in targets for root in (canon_ws_path, code_ws_path)
+        )
+        has_inst = any(inst_path in value for value in targets)
 
         # 检查写根
         env = data.get("EnvironmentVariables") or {}
