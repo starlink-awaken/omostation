@@ -827,6 +827,21 @@ assets:
     notes: "affected-graph receipt (schema affected-graph-receipt/v1): 拓扑受影响项目计算的可验证收据; bin/gac/affected-graph.py 生成, .github/workflows/cascading-test.yml 消费; 曾因误提交 git 树导致 governance surfaces 报 unregistered top-level asset, 补注册"
     status: active
     runtime: true
+  - id: OMO-RECEIPTS
+    ref: .omo/receipts/
+    plane: state_plane
+    asset_type: runtime_receipt
+    persistence_mode: operational
+    retention_mode: until_replaced
+    truth_owner: governance
+    write_via:
+      - bin/gac/affected-graph.py
+    consumed_by:
+      - cascading-test.yml
+      - agents
+    notes: "receipts 目录 (如 affected-graph-receipt.json): 一次性运行产物的落地目录; 2026-11-05 接管主工作区他人未提交改动时随 stash 进入, 补注册"
+    status: active
+    runtime: true
   - id: OMO-AFFECTED-RECEIPT-MOS-FIX
     ref: .omo/affected-mos-fix.json
     plane: state_plane
