@@ -1,12 +1,9 @@
 ---
-schema: md/v1
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-25
-type: ephemeral
+last-reviewed: 2026-11-03
 ---
-
 
 # INDEX-TOOLS.md — 治理工具统一目录
 
@@ -17,7 +14,7 @@ type: ephemeral
 > - validation: 工具数与实际扫描结果一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-09-24T12:01:19.693728+00:00
+> - generated_at: 2026-11-03T08:48:16.089312+00:00
 
 ---
 
@@ -44,9 +41,6 @@ type: ephemeral
 | `gac` | `uv run --project projects/cockpit cockpit gac --help` |
 | `daily` | `uv run --project projects/cockpit cockpit daily --help` |
 | `data` | `uv run --project projects/cockpit cockpit data --help` |
-| `memory-distill` | `uv run --project projects/cockpit cockpit memory-distill --help` |
-| `audit-ledger` | `uv run --project projects/cockpit cockpit audit-ledger --help` |
-| `fabric-mesh` | `uv run --project projects/cockpit cockpit fabric-mesh --help` |
 | `contracts` | `uv run --project projects/cockpit cockpit contracts --help` |
 | `dashboard` | `uv run --project projects/cockpit cockpit dashboard --help` |
 | `help` | `uv run --project projects/cockpit cockpit help --help` |
@@ -82,10 +76,8 @@ type: ephemeral
 | `bos-inbox` | `uv run --project projects/cockpit cockpit bos-inbox --help` |
 | `events-watch` | `uv run --project projects/cockpit cockpit events-watch --help` |
 | `quickstart-check` | `uv run --project projects/cockpit cockpit quickstart-check --help` |
-| `ssb` | `uv run --project projects/cockpit cockpit ssb --help` |
 | `mof` | `uv run --project projects/cockpit cockpit mof --help` |
 | `agora` | `uv run --project projects/cockpit cockpit agora --help` |
-| `model-driven` | `uv run --project projects/cockpit cockpit model-driven --help` |
 | `brain` | `uv run --project projects/cockpit cockpit brain --help` |
 | `gbrain` | `uv run --project projects/cockpit cockpit gbrain --help` |
 | `kairon` | `uv run --project projects/cockpit cockpit kairon --help` |
@@ -121,6 +113,9 @@ type: ephemeral
 | `compute` | `uv run --project projects/cockpit cockpit compute --help` |
 | `ask` | `uv run --project projects/cockpit cockpit ask --help` |
 | `proxy-env` | `uv run --project projects/cockpit cockpit proxy-env --help` |
+| `rag` | `uv run --project projects/cockpit cockpit rag --help` |
+| `see` | `uv run --project projects/cockpit cockpit see --help` |
+| `speak` | `uv run --project projects/cockpit cockpit speak --help` |
 | `knowledge` | `uv run --project projects/cockpit cockpit knowledge --help` |
 | `memory` | `uv run --project projects/cockpit cockpit memory --help` |
 | `kems` | `uv run --project projects/cockpit cockpit kems --help` |
@@ -131,7 +126,6 @@ type: ephemeral
 | `cartridge` | `uv run --project projects/cockpit cockpit cartridge --help` |
 | `cell` | `uv run --project projects/cockpit cockpit cell --help` |
 | `fabric` | `uv run --project projects/cockpit cockpit fabric --help` |
-| `watchdog` | `uv run --project projects/cockpit cockpit watchdog --help` |
 | `policy` | `uv run --project projects/cockpit cockpit policy --help` |
 | `ops` | `uv run --project projects/cockpit cockpit ops --help` |
 | `system` | `uv run --project projects/cockpit cockpit system --help` |
@@ -141,7 +135,7 @@ type: ephemeral
 | `completion` | `uv run --project projects/cockpit cockpit completion --help` |
 | `docs` | `uv run --project projects/cockpit cockpit docs --help` |
 
-**合计**: 109 个顶层命令
+**合计**: 106 个顶层命令
 
 关键通道：`bos` · `bos list --all` · `channels` · `kems` · `agent-onboard` · `mcp` · `agent-workflow`
 ## 工具分类目录
@@ -257,40 +251,106 @@ type: ephemeral
 
 | Skill | 用途 |
 |-------|------|
+| Browser | Browser |
+| ContentAnalysis | ContentAnalysis |
+| Investigation | Investigation |
+| Scraping | Scraping |
+| Thinking | Thinking |
 | a2a-coordination | a2a coordination |
+| agent-browser | agent browser |
 | agent-onboarding | agent onboarding |
 | agent-quickstart | agent quickstart |
 | architecture-perception | architecture perception |
+| autoresearch-agent | autoresearch agent |
+| bailian-cli | bailian cli |
+| bailian-docs-llm-wiki | bailian docs llm wiki |
+| bailian-finetune | bailian finetune |
+| bailian-gen | bailian gen |
+| bailian-managed-agent | bailian managed agent |
+| bailian-model-recommend | bailian model recommend |
+| bailian-protocol | bailian protocol |
+| bailian-sandbox | bailian sandbox |
+| bailian-train-deploy | bailian train deploy |
+| bailian-web-search | bailian web search |
 | bdsk-virtual-board | bdsk virtual board |
 | bet-closeout-chain | bet closeout chain |
 | bet-execution | bet execution |
 | bos-contract-fix | bos contract fix |
 | bos-service-discovery | bos service discovery |
+| brainstorming | brainstorming |
 | ci-red-triage | ci red triage |
 | closeout-retro | closeout retro |
+| codebase-memory | codebase memory |
 | cognitive-governance | cognitive governance |
+| dashboard-component-evolution | dashboard component evolution |
+| dashboard-governance-patrol | dashboard governance patrol |
 | delegation-guardrails | delegation guardrails |
+| dispatching-parallel-agents | dispatching parallel agents |
+| document-generation | document generation |
+| docx | docx |
 | domain-cartridge-governance | domain cartridge governance |
 | ecos-test-cycle | ecos test cycle |
+| executing-plans | executing plans |
 | external-agent-attach | external agent attach |
+| find-skills | find skills |
+| finishing-a-development-branch | finishing a development branch |
+| frontend-design | frontend design |
+| git-commit | git commit |
 | git-discipline | git discipline |
+| git-guardrails-claude-code | git guardrails claude code |
 | git-safety-check | git safety check |
 | governance-phase-orchestrator | governance phase orchestrator |
 | governance-ssot-edit | governance ssot edit |
+| grilling | grilling |
+| handoff | handoff |
 | harness-compliance | harness compliance |
+| host-check | host check |
 | kos-cold-start | kos cold start |
+| lifeos-core | lifeos core |
+| magpie-quota | magpie quota |
+| mcp-builder | mcp builder |
 | memory-recall | memory recall |
 | multica-squad-ops | multica squad ops |
 | nextgen-cognitive-mesh | nextgen cognitive mesh |
 | omlxc-compute-fabric | omlxc compute fabric |
 | omo-audit-baseline | omo audit baseline |
+| opencontext-context | opencontext context |
+| opencontext-create | opencontext create |
+| opencontext-help | opencontext help |
+| opencontext-iterate | opencontext iterate |
+| opencontext-search | opencontext search |
+| orca-cli | orca cli |
+| orca-per-workspace-env | orca per workspace env |
+| orchestration | orchestration |
+| pdf | pdf |
+| pptx | pptx |
+| proj-status | proj status |
 | project-governance | project governance |
+| receiving-code-review | receiving code review |
+| refactoring | refactoring |
+| requesting-code-review | requesting code review |
+| resolving-merge-conflicts | resolving merge conflicts |
 | round-gate-check | round gate check |
 | round-workflow | round workflow |
 | scene-shadow-activate | scene shadow activate |
+| security-review | security review |
+| setup-pre-commit | setup pre commit |
+| simplify | simplify |
+| source-command-opencontext-context | source command opencontext context |
+| source-command-opencontext-create | source command opencontext create |
+| source-command-opencontext-help | source command opencontext help |
+| source-command-opencontext-iterate | source command opencontext iterate |
+| source-command-opencontext-search | source command opencontext search |
 | spine-value-pipeline | spine value pipeline |
+| subagent-driven-development | subagent driven development |
 | swarm-escape | swarm escape |
 | system-index-distill | system index distill |
+| systematic-debugging | systematic debugging |
+| test-driven-development | test driven development |
+| using-git-worktrees | using git worktrees |
+| using-superpowers | using superpowers |
+| verification-before-completion | verification before completion |
+| web-access | web access |
 | workflow-silence-detection | workflow silence detection |
 | workflow:bet-execution | workflow:bet execution |
 | workflow:governance-state-mutation | workflow:governance state mutation |
@@ -298,6 +358,11 @@ type: ephemeral
 | workflow:project-code-change | workflow:project code change |
 | workflow:project-doc-change | workflow:project doc change |
 | worktree-ci-isolate | worktree ci isolate |
+| writing-for-agents | writing for agents |
+| writing-plans | writing plans |
+| writing-skills | writing skills |
+| xlsx | xlsx |
+| zsh-split-audit | zsh split audit |
 
 ---
 

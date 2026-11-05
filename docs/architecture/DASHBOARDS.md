@@ -64,13 +64,13 @@ type: ssot
 - 为避免旧管理命令误报或误杀 LaunchAgent，`make cockpit-dashboard-{start,stop,status}` 已改用统一 LaunchAgent 管理脚本；服务声明的重复 `notes` 键也已合并。当前运行态未被管理命令重启或停止。
 - `5173`、`8090`、`43191` 均仅 loopback；5173 是手工开发预览，8090 是受管产品入口，43191 是投影和诊断底座但其 root 页面仍可直接浏览。Cockpit 代码身份尚未绑定到干净发布树；DCP-00/01、角色授权和旧入口退役门继续开放。
 
-本次增加的现场运行证据和边界见 [2026-10-07 dashboard availability/freshness 复核](../reports/2026-10-07-dashboard-availability-and-freshness-1024UTC.md)。后续调度周期、操作系统冷启动、完整 code-identity 发布、旧入口迁移和 p95 仍待验收；DCP-00/01/11、DCP-20/21 与 M1 均未关闭。
+本次增加的现场运行证据和边界见 2026-10-07 dashboard availability/freshness 复核（报告未产出, 链接除名 2026-11-03）。后续调度周期、操作系统冷启动、完整 code-identity 发布、旧入口迁移和 p95 仍待验收；DCP-00/01/11、DCP-20/21 与 M1 均未关闭。
 
-详见 [`docs/plans/2026-10-04-dashboard-platform-convergence-execution-plan.md`](../plans/2026-10-04-dashboard-platform-convergence-execution-plan.md)、[本次运行复核](../reports/2026-10-07-dashboard-availability-and-freshness-1024UTC.md) 与 `.omo/evidence/2026-10-07-dashboard-unified-diagnostics-0313.md`。本文件描述目标职责和当前限制，不代表 DCP-01 部署门通过。
+详见 docs/plans/2026-10-04-dashboard-platform-convergence-execution-plan.md（计划文件未落地, 链接除名 2026-11-03）、本次运行复核（报告未产出, 链接除名 2026-11-03） 与 `.omo/evidence/2026-10-07-dashboard-unified-diagnostics-0313.md`。本文件描述目标职责和当前限制，不代表 DCP-01 部署门通过。
 
 ## 5. 依据
 
 - [`docs/superpowers/specs/2026-09-25-dashboard-ssot-documentation-convergence.md`](../superpowers/specs/2026-09-25-dashboard-ssot-documentation-convergence.md)（accepted，BET-Y2Q2-T10-166）
 - [`docs/PANORAMA-DASHBOARD.md`](../PANORAMA-DASHBOARD.md)
 - [`protocols/port-registry.yaml`](../../protocols/port-registry.yaml)
-- [统一平台收敛执行计划](../plans/2026-10-04-dashboard-platform-convergence-execution-plan.md)
+- 统一平台收敛执行计划（计划文件未落地, 链接除名 2026-11-03）

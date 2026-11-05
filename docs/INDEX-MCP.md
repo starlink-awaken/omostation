@@ -2,12 +2,12 @@
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-24
+last-reviewed: 2026-11-03
 ---
 
 # MCP 服务器索引
 
-> 自动生成于 1970-01-01T00:00:00Z
+> 自动生成于 2026-11-03T08:51:03Z (生成器时间戳 epoch-0 bug 手工修正, 见 last-reviewed)
 > 源: `docs/generated/capability-registry.yaml`
 
 全生态共 **27** 个 MCP 服务器, **643** 个工具。

@@ -223,7 +223,7 @@ Rules carry lifecycles (`added_at`/`review_before`/`justification` in `governanc
      (`.omo/debt/items/`), 缺 evidence → exit 1 (非静默 pass)。⚠ 判据:
      evidence_ref 应为 `path`**(文件存在)** 或 `text`**(锚定字符串)**。
    - `python3 bin/ssot/current-state-coherence.py` —— 快照与目录实验一致。
-   - `make doc-freshness` / `check-expiry-radar.py` —— `last-reviewed` 等**不得超越今日(UTC)**, 逾期 → not-proven。
+   - `make expiry-radar` —— `last-reviewed` 等**不得超越今日(UTC)**, 逾期 → not-proven。
 
 3. **从候选到门禁 (owner 决策)**
    rule-wiring-coverage 本可成为门禁, 前提是把三个注册表的 id 建立**别名映射
@@ -244,7 +244,7 @@ make gac-local-gate
 make ssot-guardian
 make scene-card-check    # scene card 变更时
 make journey-validate    # journey spec 变更时
-make adr-number-check    # ADR 变更时
+python3 bin/ssot/adr-number-check.py    # ADR 变更时
 ```
 
 Run broader tests only when the edited surface warrants them. Documentation-only changes usually need the documentation SSOT check plus a clear diff review. For the full closeout checklist (including reporting files changed and checks skipped), see [`AGENTS.md` §9](AGENTS.md#9-closeout-checklist).
@@ -260,7 +260,7 @@ Run broader tests only when the edited surface warrants them. Documentation-only
 - **P73 Truth-Driven Engineering Pattern — eCOS 多迁移/并发/声明执行鸿沟下的工程纪律** ([p73-truth-driven-engineering-pattern.md](.omo/_knowledge/patterns/p73-truth-driven-engineering-pattern.md))
   > | 陷阱 | 症状 | 本轮案例 | |------|------|---------| | **D1** 凭路径直觉判存在性 | 报"X 零实现/不存在/悬空" 其实文件已迁移或运行时写面未创建 | 连续 3 轮把 debt(空=运行时写面正常) / task(卡 ingress delivery) / GaC(3 drift 非 129) 判错 |
 
-## 🔥 近期经验教训（2026-09-12 实证，详见 AGENTS.md §7）
+## 🔥 近期经验教训（2026-09-12 实证，索引见 AGENTS.md §7，正文在 [docs/pitfalls.md](docs/pitfalls.md)）
 
 - **frontmatter UTC 时区**：`last-reviewed` 必须用 UTC 当天或更早 → 否则 gac-gate FAIL（PITFALL-004）
 - **mergeStateStatus**：值是 `CLEAN`/`BLOCKED`/`DIRTY`（非 `MERGEABLE`）

@@ -46619,6 +46619,72 @@ bets:
     ~/Library/LaunchAgents）。若发现该服务实际未在运行、或 /gateway/status 不再 200 → 停止， 把它按 enabled:
     false 归档是另一个决定，需授权。若为过门禁而需要顺带收口 E4 那 22 条 → 停止，那是署名裁定面（任务 #147）。不宣布 ADR-0456 B1/B3/B4/B5
     或整个 plan 完成。'
+- id: BET-Y2Q4-T10-285
+  title: agora daemon HTTP /health 端点 + 7433 端口注册 + 健康扫描接线 (SIRI-51)
+  goal: Multica SIRI-51 报「agora-gateway 只有 UDP 42024、无 HTTP /health」。实测前提已过时：独立 gateway
+    进程 2026-09-08 官方废弃 (agora d128c5f P2-5, SSE 进程经 AGORA_GATEWAY_OWNER=1 接管 gateway
+    职责)，全仓无 UDP 42024 (真实 swarm UDP=7455)。本机唯一常驻 agora 服务面是 com.agora.daemon (A2A
+    bus, FastAPI)，且因安装根 (~/.local/opt/omostation) 缺 7c8269f types.py 遮蔽修复 (PR 125)
+    而 crash-loop。本 bet：给 daemon 加 GET /health (status/uptime_s/udp_port)， 默认端口自 7432
+    (与 ecos-event-listener 注册冲突) 迁至 7433 并注册进 port-registry， matrix.yaml 加 health_url
+    条目使 cron-service 健康扫描走真 HTTP 探活，安装根同步到含修复的提交。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 hours
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  write_surfaces:
+  - projects/agora
+  - protocols/port-registry.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-285.md
+  non_goals:
+  - 不复活独立 agora-gateway 进程 (P2-5 已定架构，SSE owner 模式不变)。
+  - 不新增/修改任何 UDP 逻辑 —— swarm UDP 7455 面不动，/health 只读配置回报。
+  - 不 bump 主仓 submodule 指针；agora 变更走子仓独立 PR，人工审批后合并。
+  - 不动 cron-service/MatrixScheduler 代码 —— 健康扫描经既有 health_url 机制消费，零代码改动。
+  done_when:
+  - curl http://127.0.0.1:7433/health 返回 200 + {"status":"ok","uptime_s":N,"udp_port":7455}。
+  - matrix-consistency-lint 对新条目无 ERROR (R1 launchd_label 存在 / R5 com.agora.daemon
+    在 launchctl)；R2/R4 经 worktree 内 port-registry 注册消除。
+  - 健康扫描 (cron-service 60s tick 或手动 scan_once) 后 system_health.yaml 中 agora-daemon
+    为 healthy 且带 health_check。
+  - daemon 不再 crash-loop (安装根同步含 7c8269f agent_types.py 修复的提交)。
+  - agora 子仓 pytest 新增 /health 用例通过，ruff 无新违规。
+  verify:
+  - cmd: uv run pytest tests/unit/test_daemon_health.py -q (agora 子仓)
+    expect: passed；/health 返回 200 且三键齐全、uptime_s 单调、udp_port 随 env 可覆盖
+  - cmd: curl -fsS http://127.0.0.1:7433/health
+    expect: 200 + status=ok JSON
+  - cmd: python3 bin/ssot/matrix-consistency-lint.py
+    expect: agora-daemon 条目 0 ERROR
+  - cmd: make gac-local-gate
+    expect: exit 0；任何环境或预存失败单独记录
+  circuit_breaker: 若实现需要占用他人已注册端口、违背 P2-5、或绕过 human_gate 人工 PR 审批， 则停止实现并保留可续跑证据。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-04-agora-daemon-health-siri51.md
+    spec_version: 1.0.0
+    content_digest: sha256:47181002adecf3557024a5805bfd4eb18cf1f4932ea07f247197e7398b6740e3
+    decision_ref: decision://accepted/BET-Y2Q4-T10-285
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -46757,7 +46823,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 581
+  total_bets: 582
   windows:
   - Y1Q1
   - Y1Q2
