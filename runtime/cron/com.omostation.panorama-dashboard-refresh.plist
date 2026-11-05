@@ -26,6 +26,8 @@
       <string>/Users/xiamingxing/Workspace</string>
       <key>PANORAMA_CODE_ROOT</key>
       <string>/Users/xiamingxing/.local/share/zhixing-dashboard/code-main</string>
+      <key>ZHIXING_DASHBOARD_CODE_ROOT</key>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard</string>
     </dict>
     <key>WorkingDirectory</key>
     <string>/Users/xiamingxing/Workspace</string>
