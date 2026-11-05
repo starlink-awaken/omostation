@@ -15,16 +15,20 @@ scope: governance_kernel
 severity: medium
 weight: 0.15
 entropy_class: classification
-# 状态: identified —— 非 resolved. 根因是**未建立 ID 别名映射**, 这属于语义判定
+# 状态: resolved (2026-11-05) —— 见下方 resolution_evidence。
+# 原状态: identified —— 非 resolved. 根因是**未建立 ID 别名映射**, 这属于语义判定
 # (三个注册表 ID 词汇互异: governance-checks 的 CR-X4-*, L0-constraints 的 X1-C01/CS-10,
 #  bin executors 的 X2-C05/CR-OMO-SURFACE-01), 工具无法自动区分
 # 『真未接线』(如 CR-DEBT-GATE-ENUM-01) 与 『已实现但换了名字』。
 # 详见 bin/gac/check-rule-wiring-coverage.py docstring (line 23-32).
 # 转为门禁的前提 (owner 决策): 逐条建立别名映射, 然后 --strict 才可接入门禁。
 # 详见 CLAUDE.md §6.6.
-lifecycle_state: identified
-closed_at: null
-close_reason: null
+lifecycle_state: resolved
+closed_at: '2026-11-05T00:00:00Z'
+close_reason: >-
+  债务前提已过期。原报「42/86 条 CR-* 声明零引用」；alias map (73 条 alias)
+  建立后 candidates_unwired 在含子模块的检出上降到 governance-checks 0 /
+  L0-constraints 11，达到 alias map 自定的 <=15 目标。
 owner: governance-team
 affected_roots:
 - .omo/_truth/registry/governance-checks.yaml
@@ -51,12 +55,31 @@ evidence_refs:
 - "projects/omo/src/omo/omo_debt_review_queue.py:13 — GATE_ORDER 枚举 {gate,watchlist,none}, debt.yaml 用 P0/P1/P2 违约"
 mitigation_refs: []
 decision_needed: "建立 governance-checks↔L0-constraints↔bin executors↔hook-manifest 的 ID 别名映射 (owner 语义判定; 完成后本项关闭, check-rule-wiring-coverage --strict 入门禁)"
-resolution_evidence: null
+resolution_evidence: >-
+  2026-11-05 复核 —— alias map 建立后读数已降到目标线内。
+  check-rule-wiring-coverage.py --json（含子模块检出）——
+  candidates_unwired = governance-checks 0 / L0-constraints 11；
+  exemption_only_ids 两侧均 0；implemented_via_alias = 4
+  （CR-HARNESS-ENFORCE / MOF / OMO / SECTION）。
+  alias map 自身在 stats.expected_resolved_unreferenced 定的目标 <=15，已达成。
+  残留 11 条中 CR-TRIGGER-01..06 与 CR-STRATEGY-02 是 F7 adversarial audit
+  明确取下的『伪接线』（检查器 docstring 已留痕），其余为真未接线；按
+  open_decisions DEC-SH4-FALSE-POSITIVE-OWNER-CLOSEOUT 默认（<5% 忽略）
+  不再逐条建 alias。
+  另记（新发现）—— 该检查对子模块检出状态敏感：空子模块的 worktree 里
+  governance-checks 侧会虚报 2 条（x1-audit-chain / CR-X1-AGENT-AUDIT），
+  因为 X1AuditChainChecker 在 projects/ecos/src/ecos/l0/governance/checkers.py
+  第 11 行，子模块不在语料里。判读该指标必须在含子模块的检出上做。
 opened_at: '2026-09-20T00:00:00Z'
 last_reviewed_at: '2026-10-13'
 next_review_at: '2027-01-20'
 gate_level: none
 history:
+- at: "2026-11-05T00:00:00Z"
+  action: resolve
+  note: >-
+    alias map 建立后读数降到目标线内（gov-checks 0 / L0 11 <= 15），债务关闭。
+    另记子模块敏感性 —— 空子模块 worktree 里 gov-checks 侧虚报 2 条。
 - at: '2026-09-20T00:00:00Z'
   action: register
   note: >-
