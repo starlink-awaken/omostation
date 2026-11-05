@@ -64,9 +64,15 @@ code/state 双根；`omo_paths` + 9 处 `DEFAULT_LEDGER` + `OMO_PRINCIPAL_ID` �
 > 162+103+78+62+51 = **456**，所以第三次复核那句「与 §1 表逐桶相加一致」的 455 本身就少 1，
 > 并非本轮改动造成的差额 —— 该 ±1 的来源已不可考（当时 `kos` 已为 0），如实留记不代答。
 
+> 2026-11-05 第五次复核（DEBT-20260927-RUN-REGISTRY-RACE，PR #5059）：
+> `bin/ssot/auto-pruner.py` 新增 `_run_update_lock()`，其中取注册表的那条链
+> `WORKSPACE_ROOT / ".omo" / "_truth" / "registry" / "agent-workflows.yaml"` 是**新的一处
+> 钉检出根站点** ⇒ `.omo/_truth` 桶 **162 → 163**（该桶是排除面，不影响门禁管辖的
+> 153/143/95）。`SPEC_MARKER_READINGS` 已按同一次扫描重签（ISC-1 要求同源）。
+
 | marker | 站点 | 本轮判定 |
 |---|---|---|
-| `.omo/_truth/**` | 162 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
+| `.omo/_truth/**` | 163 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
 | `.omo/state/**` | 103 | **纳入** 门禁 |
 | `.omo/_delivery/**` | 78 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义 |
 | `.omo/_knowledge/**` | 62 | 排除 —— 署名文档/历史面，随检出 |

@@ -23,6 +23,7 @@ circuit-breaker:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import re
 import shutil
@@ -83,6 +84,31 @@ def prune_ephemeral(dry_run: bool) -> list[dict]:
     return actions
 
 
+def _run_update_lock(run_id: str):
+    """主仓 omo 的 ``run_update_lock`` —— 跨会话互斥 run 文件的读改写。
+
+    本脚本每天定时跑（``.omo/cron/registry.yaml`` SH-1），对 run 文件做
+    read-modify-write；而 ``.omo/_delivery/agent-workflows/`` 是**全机共享面**
+    （已符号链接化），并发会话的 start/claim/close 都在写同一批文件。
+    两边都裸写 ⇒ 后写的把先写的字段整份覆盖 —— BET-Y2Q4-T3-03 实证：run 的
+    objective 被并发清理覆写，``bet_id`` 字段消失，``complete`` 报
+    ``missing_bet_binding``（DEBT-20260927-RUN-REGISTRY-RACE）。
+
+    拿不到 omo（不在 ``sys.path`` / 注册表缺失）时返回 ``None``，调用方退化为
+    无锁 —— 保持改动前的行为，不让 pruner 因为缺 omo 而整条跑不动。
+    """
+    try:
+        from omo.workflow.core import load_registry
+        from omo.workflow.lifecycle_locks import run_update_lock
+
+        registry = load_registry(
+            WORKSPACE_ROOT / ".omo/_truth/registry/agent-workflows.yaml"
+        )
+        return run_update_lock(registry, run_id)
+    except Exception:
+        return None
+
+
 def prune_runs(dry_run: bool) -> list[dict]:
     """Close stale active runs (status: active + lock missing + age > 48h)."""
     actions: list[dict] = []
@@ -91,48 +117,57 @@ def prune_runs(dry_run: bool) -> list[dict]:
         return actions
     lock_dir = WORKSPACE_ROOT / ".omo/_delivery/agent-workflows/locks"
     for run_file in sorted(runs_dir.glob("*.yaml")):
-        text = run_file.read_text(encoding="utf-8", errors="ignore")
-        if "status: active" not in text:
-            continue
-        # check age
-        ts_match = re.search(r"^\s*updated_at:\s*['\"]?([^'\"\s]+)", text, re.MULTILINE)
-        if not ts_match:
-            ts_match = re.search(r"^\s*created_at:\s*['\"]?([^'\"\s]+)", text, re.MULTILINE)
-        if not ts_match:
-            continue
+        # 廉价预检 (无锁): 绝大多数 run 不是 active, 不必为它们抢锁
         try:
-            ts = ts_match.group(1).replace("Z", "+00:00")
-            dt = datetime.fromisoformat(ts)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
-        except ValueError:
+            if "status: active" not in run_file.read_text(encoding="utf-8", errors="ignore"):
+                continue
+        except OSError:
             continue
-        if age_hours < 48:
-            continue
-        # check lock
         run_id = run_file.stem
-        lock_present = False
-        if lock_dir.is_dir():
-            for lf in lock_dir.glob("*.lock.yaml"):
-                if run_id in lf.read_text(encoding="utf-8", errors="ignore"):
-                    lock_present = True
-                    break
-        if lock_present:
-            # lock 还在, 不强行关
-            continue
-        actions.append({
-            "class": "runs",
-            "id": f"RUN-CLOSE-{run_id}",
-            "path": str(run_file.relative_to(WORKSPACE_ROOT)),
-            "age_hours": round(age_hours, 1),
-            "applied": False,
-        })
-        if not dry_run:
-            new_text = re.sub(r"^(\s*)status:\s*active", r"\1status: closed", text, count=1, flags=re.MULTILINE)
-            new_text = re.sub(r"^(\s*)updated_at:\s*['\"]?[^'\"\s]+", lambda m: f"{m.group(1)}updated_at: '{datetime.now(timezone.utc).isoformat()}'", new_text, count=1, flags=re.MULTILINE)
-            run_file.write_text(new_text, encoding="utf-8")
-            actions[-1]["applied"] = True
+        lock = _run_update_lock(run_id)
+        with (lock if lock is not None else contextlib.nullcontext()):
+            # 锁内重读 —— 预检到写入之间别的会话可能已经改过这个文件
+            text = run_file.read_text(encoding="utf-8", errors="ignore")
+            if "status: active" not in text:
+                continue
+            # check age
+            ts_match = re.search(r"^\s*updated_at:\s*['\"]?([^'\"\s]+)", text, re.MULTILINE)
+            if not ts_match:
+                ts_match = re.search(r"^\s*created_at:\s*['\"]?([^'\"\s]+)", text, re.MULTILINE)
+            if not ts_match:
+                continue
+            try:
+                ts = ts_match.group(1).replace("Z", "+00:00")
+                dt = datetime.fromisoformat(ts)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                age_hours = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
+            except ValueError:
+                continue
+            if age_hours < 48:
+                continue
+            # check lock
+            lock_present = False
+            if lock_dir.is_dir():
+                for lf in lock_dir.glob("*.lock.yaml"):
+                    if run_id in lf.read_text(encoding="utf-8", errors="ignore"):
+                        lock_present = True
+                        break
+            if lock_present:
+                # lock 还在, 不强行关
+                continue
+            actions.append({
+                "class": "runs",
+                "id": f"RUN-CLOSE-{run_id}",
+                "path": str(run_file.relative_to(WORKSPACE_ROOT)),
+                "age_hours": round(age_hours, 1),
+                "applied": False,
+            })
+            if not dry_run:
+                new_text = re.sub(r"^(\s*)status:\s*active", r"\1status: closed", text, count=1, flags=re.MULTILINE)
+                new_text = re.sub(r"^(\s*)updated_at:\s*['\"]?[^'\"\s]+", lambda m: f"{m.group(1)}updated_at: '{datetime.now(timezone.utc).isoformat()}'", new_text, count=1, flags=re.MULTILINE)
+                run_file.write_text(new_text, encoding="utf-8")
+                actions[-1]["applied"] = True
     return actions
 
 

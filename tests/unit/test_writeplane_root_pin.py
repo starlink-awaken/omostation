@@ -37,7 +37,10 @@ SKIP_SEGMENTS = {"_archive", "_vendored", "__pycache__", ".venv"}
 SPEC_MARKER_READINGS = {
     # 2026-10-31 ADR-0122 历史欠账处置: 新增 .omo/_truth/registry/lane-debt-ledger.yaml
     # => `.omo/_truth` 桶 161 -> 162 (该桶是排除面, 不影响门禁管辖的 154/144/95)。
-    ".omo/_truth": 162,
+    # 2026-11-05 DEBT-20260927-RUN-REGISTRY-RACE (PR #5059): auto-pruner 新增
+    # `_run_update_lock()`，其取注册表的链 WORKSPACE_ROOT / ".omo" / "_truth" / ...
+    # 是新的一处钉检出根站点 => `.omo/_truth` 162 -> 163。
+    ".omo/_truth": 163,
     ".omo/state": 103,
     ".omo/_delivery": 78,
     "runtime": 50,
