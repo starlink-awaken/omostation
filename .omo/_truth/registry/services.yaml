@@ -6376,25 +6376,26 @@ services:
   enabled: true
   generate: false
   config_source: bin/ops/launchd/com.omostation.test-archive-purge-7d.plist
-  content_digest: sha256:189cc38ad622bf1c928a07b0395a016a2f5eb65cda83017d9c99b9251757d6c1
+  content_digest: sha256:b36857f0444ce996e1c1c0ae0cf851056274d56799207b87a495803a83781d10
   scheduler: launchd
   trigger: calendar
   calendar:
     Hour: 2
     Minute: 7
   run_at_load: false
+  runtime_root: install
   label: com.omostation.test-archive-purge-7d
   program:
     interpreter: /bin/bash
     entrypoint: -c
     args:
-    - cd /Users/xiamingxing/Workspace && /opt/homebrew/bin/python3.13 bin/ops/purge-test-archive-7d.py
-      --auto --retention-days 7 >> runtime/cron/purge-test-archive.log 2>&1
+    - cd /Users/xiamingxing/.local/opt/omostation && /opt/homebrew/bin/python3.13 bin/ops/purge-test-archive-7d.py --auto --retention-days 7
   environment:
     PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+    OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   outputs:
-    stdout: /Users/xiamingxing/Workspace/runtime/cron/purge-test-archive.log
-    stderr: /Users/xiamingxing/Workspace/runtime/cron/purge-test-archive.log
+    stdout: /Users/xiamingxing/.local/log/com.omostation.test-archive-purge-7d.log
+    stderr: /Users/xiamingxing/.local/log/com.omostation.test-archive-purge-7d.log
   notes: 'ADR-0466 法条 2 第三道防线的落地接线 (2026-10-28)。此前清理工具无任何调度引用
     (注册表 triggers 为空、无 launchd/cron 作业) => ADR-0466 §3 声明的「周期守护巡检」是纸面防线,
     保留期只对已发生的那一批成立, 对未来新落位的归档条目不成立。
@@ -6403,16 +6404,26 @@ services:
     两机各装一份到 ~/Library/LaunchAgents/ 并 bootstrap gui/$(id -u); 安装副本与仓内源逐字节同源
     (host sha256 与 content_digest 同一)。实测两机 kickstart 手动触发均实跑成功 (runs=1,
     last exit code=0), 日志输出 ✅ Total purged: 0 entries (当时归档已空, 符合预期)。
-    命令从检出根 ~/Workspace 运行 (非安装位): 派发归档 .omo/tasks/archived/dispatches_test_archive/
-    是主仓数据面, 安装位那份是独立 clone 的副本, 删错地方等于没删; 卡片归档
-    ~/.local/share/omostation/cards_archive/ 是机器级路径, 与根无关。
-    显式带 retention-days 7 是 fail-closed 护栏: 检出根若回退到旧版脚本 (保留期硬编码为单一批次日期,
-    已过期), 该参数会令 argparse 报错退出, 作业宁可不动也不误删。
+    显式带 retention-days 7 是 fail-closed 护栏: 作业落到的根若回退到旧版脚本 (保留期硬编码为
+    单一批次日期, 已过期), 该参数会令 argparse 报错退出, 作业宁可不动也不误删。
     平面选 launchd 而非 crontab: registry.yaml 是调度 SSOT (ADR-A / ADR-0119 / ADR-0121), crontab 平面
     是遗留面不应新增条目。**更正 (2026-11-03)**: 本条初版还写了第二个理由「mbp 的 crontab 写入在
     系统层失败 ⇒ 该机 crontab 平面客观不可用」—— 该理由不成立, 已删除: /usr/bin/crontab 是 setuid root,
     普通用户本就能写 /var/at/tabs; 惰性注释探针实测行数真增 (16->17); 装 registry 编译产物 rc=0 且
-    作业真跑。mbp 当时的真实问题是装得不全 (drift 41), 已由 bin/ops/install-cron-plane.py 补装闭合。'
+    作业真跑。mbp 当时的真实问题是装得不全 (drift 41), 已由 bin/ops/install-cron-plane.py 补装闭合。
+    **B4b 批次 3 改道 (2026-11-05, BET-Y2Q4-T10-286)**: 本条初版另写了一段选根理由「命令从检出根
+    ~/Workspace 运行 (非安装位), 因派发归档 .omo/tasks/archived/dispatches_test_archive/ 是主仓数据面,
+    安装位那份是独立 clone 副本, 删错地方等于没删」—— 该理由已被三处独立证据否证, 已删除:
+      a) ADR-0466 自己的复核段 (.omo/_knowledge/decisions/0466-system-authenticity-and-zero-mock-contract.md:76)
+         记录该目录「在 main 上从未存在 (仅见于未合并分支 chore/closeout-20261022), 故实际销毁条目为 0,
+         两机均一致」;
+      b) 2026-11-05 实测: 该目录在检出根 / 安装位 / prod state 根三个候选根下全部不存在;
+      c) 全仓唯一引用是常量定义本身 (bin/ops/purge-test-archive-7d.py:31), 无任何写者。
+    范围 2 在任何根下都是永久 no-op, 范围 1 (cards_archive) 是机器级路径与根无关, 故不构成选根依据;
+    而旧 argv 的 shell 重定向与 WorkingDirectory 本身在往检出根写日志, 检出根不是运行时根
+    (ADR-0456 决策 1)。改道后 program/outputs 全部落在安装位与 ~/.local/log/, 并声明 runtime_root: install。
+    行为无差实证: 改道前后各跑一次无参只读 status(), 两态均 cards=0 / dispatches=0 / due=0; 未跑过 --auto/--purge。
+    镜像面仍 generate: false, 三面对齐判据不变 (仓内源 == 安装副本 == content_digest), content_digest 随本次改道重算。'
   depends_on: []
 
 - id: omostation.omo-state-sync

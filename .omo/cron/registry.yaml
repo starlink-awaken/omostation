@@ -119,7 +119,7 @@ jobs:
   - name: test-archive-purge-7d-daily
     label: com.omostation.test-archive-purge-7d
     schedule: "7 2 * * *"
-    command: 'cd "$HOME/Workspace" && /opt/homebrew/bin/python3.13 bin/ops/purge-test-archive-7d.py --auto --retention-days 7 >> runtime/cron/purge-test-archive.log 2>&1'
+    command: 'cd "$HOME/.local/opt/omostation" && /opt/homebrew/bin/python3.13 bin/ops/purge-test-archive-7d.py --auto --retention-days 7'
     planes: [launchd]
     reality: installed
     status: active
@@ -132,12 +132,21 @@ jobs:
       未到期保留, 归档目录本身保留 (后续轮次的落位区)。
       plist 源: bin/ops/launchd/com.omostation.test-archive-purge-7d.plist (仓内自带,
       两机各装一份到 ~/Library/LaunchAgents/ 并 bootstrap gui/$(id -u))。
-      命令从检出根 ~/Workspace 运行 (非安装位): 派发归档 (.omo/tasks/archived/
-      dispatches_test_archive/) 是**主仓数据面**, 安装位那份是独立 clone 的副本, 删错地方
-      等于没删; 卡片归档 (~/.local/share/omostation/cards_archive/) 是机器级路径, 与根无关。
+      卡片归档 (~/.local/share/omostation/cards_archive/) 是机器级路径, 与根无关。
       显式带 retention-days 7 是 **fail-closed 护栏**: 旧版脚本 (保留期硬编码为单一批次日期,
-      已过期) 无此参数会 argparse 报错退出 ⇒ 检出根若回退到旧版, 本作业宁可不动也不误删,
+      已过期) 无此参数会 argparse 报错退出 ⇒ 作业落到的根若回退到旧版, 本作业宁可不动也不误删,
       优于「按过期日期把新归档全销毁」。
+      **选根更正 (2026-11-05, BET-Y2Q4-T10-286 / ADR-0456 B4b 批次 3)**: 本条初版写作「命令从检出根
+      ~/Workspace 运行 (非安装位), 因派发归档 (.omo/tasks/archived/dispatches_test_archive/) 是主仓
+      数据面, 安装位那份是独立 clone 副本, 删错地方等于没删」—— 该理由被三处独立证据否证, 已删除:
+      (a) ADR-0466 复核段 0466-system-authenticity-and-zero-mock-contract.md:76 记录该目录「在 main 上
+      从未存在 (仅见于未合并分支 chore/closeout-20261022), 故实际销毁条目为 0, 两机均一致」;
+      (b) 2026-11-05 实测该目录在检出根 / 安装位 / prod state 根三个候选根下全部不存在;
+      (c) 全仓唯一引用是常量定义本身 (bin/ops/purge-test-archive-7d.py:31), 无任何写者。
+      即范围 2 在任何根下都是永久 no-op, 不构成选根依据; 而旧的 shell 重定向与 WorkingDirectory
+      本身在往检出根写日志, 检出根不是运行时根 (ADR-0456 决策 1)。故 command 与日志面一并改到
+      安装位 + ~/.local/log/, 不再自带 >> 重定向 (launchd 用 StandardOut/ErrorPath 承接)。
+      平面仍只有 launchd 这一条 (planes: [launchd]), 本条不新增 crontab 条目。
 
   # SH-1 daily drift sweep (BET-Y2Q4-SH-1): drift-face-detector daily + auto-pruner
   # 仅 ephemeral + runs 两类自动修, ritual/dashboard 仍 owner 决策.
