@@ -58,6 +58,23 @@ plist 注释 `:8`、`services.yaml` notes `:6406`、`.omo/cron/registry.yaml:136
 `services.yaml:6379 content_digest` 三者当前同为 `sha256:189cc38ad622bf1c928a07b0395a016a2f5eb65cda83017d9c99b9251757d6c1`。
 本 BET 结束后三者必须重新同源（这是 notes 已经承诺的不变量）。
 
+### 0.5 尺的输入是安装副本，不是仓内源（决定了读数的可见时机）
+
+`gen-service-configs.py:729` 扫的是 `~/Library/LaunchAgents/` 下**已安装** plist 的 blob；`state_root_pins()`
+读的也是安装副本的 `EnvironmentVariables`。所以本 BET 合入、机器尚未重装的那段时间里，真实读数必然是**倒退形状**：
+
+| 读数 | 重装前（实测） | 重装后（合成 launchd 根仿真） |
+|---|---|---|
+| `workspace_scoped` | 2（`ai.hermes.gateway` + 本 label） | **1**（只剩 `ai.hermes.gateway`） |
+| `e7_undeclared` | 1（registry 已声明 `runtime_root: install`，安装副本里却还没有 `OMOSTATION_STATE_ROOT`） | **0** |
+| `e7_profile` | 28 | 29 |
+| `e6_non_ok` / `e6_blocking` | 5 / 0 | **6 / 0**（本 label `state=undetermined`，见 AC-03b） |
+| `e1_drift` / `e2_undeclared` / `e3_malformed` / `e3_lint_debt` | 0 | 0 |
+
+仿真做法：把 `~/Library/LaunchAgents` 下 87 份已安装 plist 复制到临时目录，仅用仓内改道后的源覆盖本 label 那一份，然后**直接调** `reality_check(registry, <临时目录>, workspace_root=…)` —— `launchd_dir` 是第二形参（`gen-service-configs.py:710`），无需改码或 monkeypatch；命令行 `--reality-check` 走 `_launchd_dir()`（`:896`），只能读真实机器，所以后一列无法用 CLI 复现。其余 86 条保持真实内容。
+**AC-03 / AC-03b 的判据以后一列为准**；前一列不是回归，是「声明已改、写面未改」的中间态，也正是 E1/E7 结构性失明
+（`runtime_root` 覆盖 entrypoint 与 outputs，env 面单列）在这批里的表现。
+
 ## 1. 改动面
 
 | 文件 | 改什么 |
@@ -72,6 +89,7 @@ plist 注释 `:8`、`services.yaml` notes `:6406`、`.omo/cron/registry.yaml:136
 - **AC-01** 仓内镜像 plist 被 `plistlib` 解析通过，且 `ProgramArguments[2]` / `WorkingDirectory` / `StandardOutPath` 三处均不含 `/Users/xiamingxing/Workspace` 字面量。判据：一条 grep 计数为 0 的可执行检查，不看措辞。
 - **AC-02** 三方同源重新成立：`shasum -a 256` 仓内镜像 == 已安装副本 == `services.yaml` 记录的 `content_digest`。
 - **AC-03** 尺读数移动且只朝预期方向：`--reality-check --json` 的 `workspace_scoped_labels` 改后为 `['ai.hermes.gateway']`（长度 2 → 1），`e1_drift / e2_undeclared / e3_malformed` 保持 0，`e7_checkout` 保持 0。
+- **AC-03b（代价登记，不是回归）** 同一次读数里 `e6_non_ok` 5 → 6，新增的那条是本 label，`e6_kernel_root.state=undetermined`、`script=null`。归因：已立案缺陷 **#173** —— E6 从 `ProgramArguments` 里找脚本路径，认不出 `/bin/bash -c` 的内联载荷，与本 BET 改道无关（改道前后同形；E6 输入是安装副本，故这条只在机器重装后可见）。判据取 `e6_blocking=0` 不变：本条不阻断验收，但不得从读数里隐去。
 - **AC-04** 反证自证：把 argv 的 `cd` 目标临时改回检出根，AC-01 的计数必须变非 0；否则那条检查没有判别力（本仓「按构造就绿」族）。
 - **AC-05** 机器侧真跑：`launchctl print` 该 label 的 `state` 可读，且以无参数（只读 `status()`）路径不产生任何删除；不跑 `--auto`，因为保留期已过、真跑 `--auto` 属数据销毁，需另获授权。
 
