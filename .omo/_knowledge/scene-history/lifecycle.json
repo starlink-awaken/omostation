@@ -1,5 +1,16 @@
 {
  "note": "derived from data/scene-metrics.db — DB 是唯一写入口, 勿手编",
- "rows": [],
+ "rows": [
+  {
+   "actor": "calibration-engine",
+   "calibration_score": 0.48,
+   "created_at": "2026-10-25T22:00:00.752768+00:00",
+   "from_level": "routine",
+   "id": 1,
+   "reason": "needs_human/demote/calibration-drop (calibration < 0.5, action=demote_one_level)",
+   "scene_id": "scene-document-review",
+   "to_level": "supervised"
+  }
+ ],
  "schema": "scene-history-export/v1"
 }

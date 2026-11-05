@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: unclassified
-generated_at: 2026-10-14T09:05:11Z
+generated_at: 2026-11-05T03:10:01Z
 status: candidate
 counts:
-  runs: 40
+  runs: 38
   failures: 0
-  total: 40
+  total: 38
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,15 +14,13 @@ failure_breakdown:
 ---
 # unclassified 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-10-14T09:05:11Z
+- generated_at: 2026-11-05T03:10:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 40 成功运行 + 0 失败模式 = 40 草稿
+- sediment 覆盖: 38 成功运行 + 0 失败模式 = 38 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
 
-- 20260823T0000Z-project-code-change-int01.md
-- 20260823T0000Z-role-collab.md
 - delivery-run-pr-4125-v3.md
 - delivery-run-pr-4126-v3.md
 - delivery-run-pr-4127-v3.md
