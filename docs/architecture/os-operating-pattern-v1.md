@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: contract
 owner: 夏明星
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-05
 type: architecture-pattern
 title: 织星脊面运行模式 v1 — Spine-Face Operating Pattern
 created: 2026-08-25
@@ -41,3 +41,5 @@ note: >
 **第3条 enforcement**：B 槽后端（如 AGE-v2 Cell）的 CLI 入口必须经 Mesh `dispatch_backend()` 分发，不得直连后端模块。Mesh 发射 `BackendDispatched` 事件作为观察收件箱。自动化检查：`check-sfop-slots.py` CR-SFOP-03。（2026-09-12 收口）
 
 新项目：声明 `sfop_slot` + `dao_layer`，不要发明新运行时。
+
+分类视图不占槽。work-agent `docs/architecture/infrastructure-landscape/` 的十五中心只挂到上表已有槽位，不新增槽，不成为第二 dispatcher。单脊仍由 `check-sfop-slots.py` 的 CR-SFOP-02 阻断。顺序契约在该目录的 `SEQUENCING.md`，不在本仓另开路线图。

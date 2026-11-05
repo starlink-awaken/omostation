@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: contract
 owner: 夏明星
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-05
 type: theoretical-system
 title: 织星道法术器 — MOF 嵌套的理论体系与硬约束
 created: 2026-08-25
@@ -44,4 +44,4 @@ dao_layer 归类指引（2026-09-11 D7 决议）：**可执行的自检/门禁�
 
 新工作区项目加入方式：新增 `COMP-WS-<name>.yaml`，从既有枚举声明槽位，而不是发明新运行时。registry 有项目、无对应节点 → 检查器 warning（可成长：补节点即可）。缺槽或双 dispatcher → fail-closed。H→B 新调用不得写入 baseline 藏违例。
 
-禁止：第二 dispatcher、第五套本体、把 AGE-v2 / resident / BCOS 当成第二控制面。
+禁止：第二 dispatcher、第五套本体、把 AGE-v2 / resident / BCOS 当成第二控制面。十五中心分类视图同样不是第五套本体，也不新增 S 槽。
