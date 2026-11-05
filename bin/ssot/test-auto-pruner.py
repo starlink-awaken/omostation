@@ -121,6 +121,72 @@ def test_prunable_classes_includes_brief() -> tuple[bool, str]:
             f"PRUNABLE_CLASSES={auto_pruner.PRUNABLE_CLASSES}")
 
 
+def test_prune_runs_takes_run_update_lock() -> tuple[bool, str]:
+    """prune_runs 必须持 run_update_lock 做读改写 (DEBT-20260927-RUN-REGISTRY-RACE)。
+
+    `.omo/_delivery/agent-workflows/` 是全机共享面, 并发会话的 start/claim/close
+    都在写同一批 run 文件。pruner 裸写会把并发会话刚写的字段整份覆盖。
+    """
+    tmp = _make_workspace()
+    try:
+        _patch_workspace_root(tmp)
+        runs = tmp / ".omo" / "_delivery" / "agent-workflows" / "runs"
+        (runs / "RUN-OLD.yaml").write_text(
+            "run_id: RUN-OLD\nstatus: active\nupdated_at: '2026-01-01T00:00:00+00:00'\nobjective: KOS\n",
+            encoding="utf-8",
+        )
+        seen: list[str] = []
+
+        class Spy:
+            def __enter__(self):
+                seen.append("enter")
+                return self
+
+            def __exit__(self, *exc):
+                seen.append("exit")
+                return False
+
+        orig = auto_pruner._run_update_lock
+        auto_pruner._run_update_lock = lambda run_id: Spy()
+        try:
+            actions = auto_pruner.prune_runs(False)
+        finally:
+            auto_pruner._run_update_lock = orig
+        if seen != ["enter", "exit"]:
+            return False, f"lock not taken around read-modify-write: {seen}"
+        if not actions or actions[0].get("applied") is not True:
+            return False, f"not applied: {actions}"
+        return True, "ok"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_prune_runs_degrades_without_omo() -> tuple[bool, str]:
+    """拿不到 omo 时退化为无锁, 但行为不变 (不因缺 omo 整条跑不动)。"""
+    tmp = _make_workspace()
+    try:
+        _patch_workspace_root(tmp)
+        runs = tmp / ".omo" / "_delivery" / "agent-workflows" / "runs"
+        (runs / "RUN-OLD.yaml").write_text(
+            "run_id: RUN-OLD\nstatus: active\nupdated_at: '2026-01-01T00:00:00+00:00'\n",
+            encoding="utf-8",
+        )
+        orig = auto_pruner._run_update_lock
+        auto_pruner._run_update_lock = lambda run_id: None
+        try:
+            actions = auto_pruner.prune_runs(False)
+        finally:
+            auto_pruner._run_update_lock = orig
+        if not actions or actions[0].get("applied") is not True:
+            return False, f"degraded path did not apply: {actions}"
+        text = (runs / "RUN-OLD.yaml").read_text(encoding="utf-8")
+        if "status: closed" not in text:
+            return False, "status not closed"
+        return True, "ok"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main() -> int:
     tests = [
         ("brief-missing", test_brief_missing),
@@ -128,6 +194,8 @@ def main() -> int:
         ("brief-dry-run", test_brief_dry_run),
         ("brief-no-bump-on-apply", test_brief_apply_does_not_bump),
         ("prunable-classes", test_prunable_classes_includes_brief),
+        ("prune-runs-run-update-lock", test_prune_runs_takes_run_update_lock),
+        ("prune-runs-degrades-without-omo", test_prune_runs_degrades_without_omo),
     ]
     passed = 0
     failed = 0
