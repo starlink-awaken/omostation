@@ -52,7 +52,8 @@ last-reviewed: 2026-11-05
 #          `str(lr)[:10]` 解析出的**当日 00:00** 取 `.days` (向下取整), 阈值 `>14`; 故戳记有效期 =
 #          含当日在内 15 个本地日 (第 15 天仍绿、第 16 天红), 且跨时区机器判定不一致。
 #       2) 该规则只在 required `gac-gate` (pull_request 事件) 上评估; main 的定时 governance-check
-#          不跑它 ⇒ main 恒绿、每个 PR 恒红, 红与本 PR 的内容无关。本轮 CI 实测同形 (#5045/#5044)。
+#          不跑它 ⇒ main 恒绿、每个 PR 恒红, 红与本 PR 的内容无关。本轮 CI 实测: #5045 同形;
+#          #5044 只跑到 `check` 一项, 真实阻碍是 `CONFLICTING`, **不要**把它算进本规则的受害面。
 #   - 本轮不代 owner 决策: 3 条无写者声明 (LOCKS/TESTS/ingress_plane) 摘除还是改指、compass_radar
 #       提示串指向未注册子模块的可修缺陷 (**现两处**)、以及 X2-C05 该到期降 warning 还是把戳刷新纳入
 #       排程 (与 debt-dashboard 镜像同一范式: bin/ssot/debt-dashboard-mirror-sync.py), 均留给 governance-team。
