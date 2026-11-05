@@ -30,6 +30,9 @@ REGISTRY_PATH = REPO_ROOT / ".omo" / "_truth" / "registry" / "services.yaml"
 # 声明 `runtime_root: install` 的全部服务。2026-10-23 的 B4b Batch 4 (#4940) 把
 # 常驻族之外的 21 条也切到安装位，名单从 6 条长到 27 条 —— 这条集合是**漂移钉**：
 # 增删一条都必须经过这里，而不是静默发生。
+# 28 → 29：ADR-0456 B4b 批次 3 (BET-Y2Q4-T10-286) 补入
+# `com.omostation.test-archive-purge-7d` —— 它是最后一条 argv/WorkingDirectory 真指检出根的常驻 plist，
+# 改道后按同一条约定登记。
 INSTALL_ROOT_SERVICES = {
     "com.agora.daemon",
     "com.l4.bet-claim-gc",
@@ -57,6 +60,7 @@ INSTALL_ROOT_SERVICES = {
     "com.omostation.spine-daily-ingress",
     "com.omostation.sunset-redirector",
     "com.omostation.tailscale-heartbeat",
+    "com.omostation.test-archive-purge-7d",
     "com.omostation.zhixing-host-drift",
     "com.omostation.zhixing-projection-republisher",
 }
