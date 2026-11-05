@@ -48,9 +48,13 @@ def _load_spine(monkeypatch, source_path: Path, name: str) -> object:
     # 写者用例不得碰本机 profile 的既有 state 根: 环境逐次显式给定。
     monkeypatch.setenv("OMOSTATION_ROOT", str(REPO))
     monkeypatch.delenv("OMOSTATION_ROOT_OVERRIDE", raising=False)
-    # 真实写者 exec 时会把 bin/lib 塞进 sys.path 并缓存 repo_root 模块; 不清回去,
-    # 「缝不可达」变异会靠这点侥幸 import 成功, 用例 4 的红就成了顺序依赖。
+    # 真实写者 exec 时会把 bin/lib 塞进 sys.path 并缓存 repo_root 模块; 兄弟尺的用例
+    # 也会。不先清掉这份残留、「缝不可达去掉守卫」的变异就会侥幸 import 成功 ——
+    # 用例 4 的红于是变成顺序依赖 (同类事故见 test_reporting_reads_ledger)。
+    lib_str = str(REPO / "bin" / "lib")
     path_snapshot = list(sys.path)
+    sys.path[:] = [p for p in path_snapshot if p != lib_str]
+    sys.modules.pop("repo_root", None)
     try:
         return _exec(source_path, name)
     finally:
