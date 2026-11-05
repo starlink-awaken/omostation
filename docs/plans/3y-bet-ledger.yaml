@@ -46324,7 +46324,8 @@ bets:
     except ImportError 静默兜底把 code_root 与 state_root 同时钉死某台机器检出根 —— 与 T10-281 同形但这是写者：声明
     profile 后 spine 写面仍落检出根。附带修 launchd-workspace-reality-check 的 workspace 计数（整份 plist
     子串命中，把从 shell 继承的 PATH 元素也算进去，实测假阳 1 条，使「43 → 0」判据按构造读不到 0）。
-  status: in_progress
+  status: done
+  done_at: 2026-11-05
   window: Y2Q4
   track: T10-GOVERNANCE
   priority: P1
@@ -46373,19 +46374,44 @@ bets:
     expect: exit 0；任何环境或预存失败单独记录
   circuit_breaker: 若 spine 写落点改动会把历史数据面孤立（新写 state 根、旧留检出根）而迁移未获授权，则停止实现并把本 BET 停在 in_progress，不上
     done。
+  value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@0b67fac45451201a70847de7c2dda0f85885ddbe
+          diff:
+            ref: receipt://docs/reports/2026-11-03-b4b-spine-seam-and-ruler-path-discriminator-closeout.md
+            sha256: sha256:03add190f664fbc2a03a4858cf09b97432ec72464a0842b6a135f0610f8dc47a
+          rollback:
+            ref: receipt://docs/reports/2026-11-03-b4b-spine-seam-and-ruler-path-discriminator-closeout.md
+            sha256: sha256:03add190f664fbc2a03a4858cf09b97432ec72464a0842b6a135f0610f8dc47a
+          tests:
+            ref: receipt://docs/reports/2026-11-03-b4b-spine-seam-and-ruler-path-discriminator-closeout.md
+            sha256: sha256:03add190f664fbc2a03a4858cf09b97432ec72464a0842b6a135f0610f8dc47a
       operational:
-        status: NOT_STARTED
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-03-b4b-spine-seam-and-ruler-path-discriminator-closeout.md
+            sha256: sha256:03add190f664fbc2a03a4858cf09b97432ec72464a0842b6a135f0610f8dc47a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-03-b4b-spine-seam-and-ruler-path-discriminator-closeout.md
+            sha256: sha256:03add190f664fbc2a03a4858cf09b97432ec72464a0842b6a135f0610f8dc47a
+          cleanup:
+            ref: receipt://docs/reports/2026-11-03-b4b-spine-seam-and-ruler-path-discriminator-closeout.md
+            sha256: sha256:03add190f664fbc2a03a4858cf09b97432ec72464a0842b6a135f0610f8dc47a
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-282.md
+            sha256: sha256:9e6b55c077da7bbb4c13c1f970dc384afb3f536cdf665557f64ee72dbf6ecb26
       value:
-        status: NOT_STARTED
-        evidence: {}
-    overall_state: not_started
+        status: NOT_PROVEN
+        evidence:
+          note: "修复的是已实测的两处缺陷面（spine 写落点被 import 兜底钉死检出根、验收尺把继承 PATH 算成命中），无新增可度量价值；value_indicator_policy 显式声明 false，与同族 T10-281/T10-284 同判，由工程腿 PR #5045 squash 0b67fac45 闭环。"
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-283
   title: B2 收口 —— 注册 43195 进端口表，并订正 resident-web 的根与摘要
   goal: '`protocols/port-registry.yaml` 结构解析出的声明集（/ports 57 个数字键）不含 43195，而实盘有本仓自有服务在
