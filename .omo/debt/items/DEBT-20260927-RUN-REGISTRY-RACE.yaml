@@ -7,8 +7,25 @@ scope: "workspace"
 severity: "medium"
 weight: 0.1
 entropy_class: "coordination"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-05T00:00:00Z"
+close_reason: >-
+  已修（PR #5059，merge commit 10cc9b85f）。根因与债务描述方向相反：不是并发会话
+  覆写 pruner 的结果，而是 pruner 裸写覆写并发会话的结果。
+resolution_evidence: >-
+  2026-11-05 复核：bin/ssot/auto-pruner.py（每日定时跑，.omo/cron/registry.yaml
+  SH-1）对 run 文件做 read-modify-write 但不持 run_update_lock；而
+  .omo/_delivery/agent-workflows/ 是全机共享面，并发会话的 start/claim/close
+  都在写同一批文件 —— pruner 用旧内容重写，把并发会话刚写的字段整份覆盖。
+  排查确认 lifecycle.py 内 4 个写点里 3 个已在锁内（claim_run:1390 /
+  close_run:1510 / agent-workflow.py:829），只有 start_run:1202 无锁（它新建
+  run，无并发更新对象）—— 真正的漏洞是 lifecycle 之外的 auto-pruner。
+  修法：新增 _run_update_lock(run_id)（拿不到 omo 时返回 None，退化为无锁），
+  prune_runs 改成「廉价预检（无锁）→ 取锁 → 锁内重读 → 判 age/lock → 写」。
+  验证：test-auto-pruner.py 7/7（新增 2 条）；变异对照（把取锁换成 if True）
+  ⇒ 第一条当场失败（6/7）。writeplane §1 的 .omo/_truth 桶因新增站点 162->163，
+  已按 ISC-1 同源重签（spec 第五次复核 + SPEC_MARKER_READINGS）。
 affected_roots:
   - ".omo/_delivery/agent-workflows/runs/"
 evidence_refs:
@@ -29,6 +46,11 @@ gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
 history:
+- at: "2026-11-05T00:00:00Z"
+  action: resolve
+  note: >-
+    PR #5059 修复并合并（10cc9b85f）。根因修正：是 pruner 覆写并发会话，
+    不是反过来。修法为取锁 + 锁内重读，拿不到 omo 时退化为无锁。
 - at: '2026-09-28T00:00:00+00:00'
   action: identify
   note: >-
