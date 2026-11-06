@@ -30,6 +30,11 @@ blockers:
     而 spec §2 基线、§3.1 迁移步骤、debt 的 decision_needed 全部以它为目标。
     实测（2026-11-06）：/Volumes/Model 仍挂载且 Model/omlx 仍在（19G），
     ~/omlx 仍是 0B 空壳，/Volumes/SHAREDMODEL 未挂载/未创建 ⇒ 迁移一步都没做。
+    补充排查（2026-11-06）：/Volumes 下现存卷为 Model(206G 用)、
+    MODEL-STORE(1.9T，仅用 3.1Mi，顶层只有 rsrs)、Multica 0.8.0-arm64、
+    USBDISPLAY —— **没有 SHAREDMODEL，也没有名字/内容对得上 spec §2 描述的替代卷**
+    （spec 说 SHAREDMODEL 有 663G 用量且 LM Studio downloadsFolder 指向它；
+    MODEL-STORE 内容不符，Model 才是当前实际承载 LMStudio 的那一卷）。
     在此前无法执行「删 Model/omlx」——删掉只会丢数据，没有落点。
   needed: "先确认 SHAREDMODEL 卷的下落（是否改名/未挂载/未创建），再重跑 spec §3.1；
     或修订 spec 改指向实际存在的目标卷。
