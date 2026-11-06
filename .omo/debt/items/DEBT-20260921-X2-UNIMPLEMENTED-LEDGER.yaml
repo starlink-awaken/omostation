@@ -7,8 +7,26 @@ scope: "workspace"
 severity: "medium"
 weight: 0.05
 entropy_class: "classification"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-06T00:00:00Z"
+close_reason: >-
+  用户选 (a)：按标准实现。已在 omostation-aetherforge#122（merge commit
+  d48cfb601）落地 append_quota_ledger_event + get_remaining_budget。
+resolution_evidence: >-
+  2026-11-06 复核与实现 —— 债务原文说「契约未实现」，实测是**部分过期**：
+  机制已在（ecos X2BudgetDeducer 写 ~/.omo/state/llm_quota_ledger.jsonl，
+  且由 omostation-ecos#96 补上 fcntl.flock），缺的是标准声明的那个函数与字段
+  schema。omostation-aetherforge#122 补齐：
+  ① llm_gateway/quota_ledger.py（标准 Authority 就是 llm_gateway.quota_ledger）
+     - append_quota_ledger_event(model_id, input_tokens, output_tokens, usd_cost)
+       每条含标准 §4 要求的四要素（时间戳/模型 ID/输入输出 Token/折算 USD），
+       写期间持 fcntl.LOCK_EX（§3 并发控制）
+     - get_remaining_budget() 实时聚合分类账历史（§4），不读缓存快照
+  ② gateway._record_cloud_usage 接线（3 个调用点 1448/1735/1801 自动受益）
+  验证：tests/test_quota_ledger.py 8 passed；变异对照（两处 flock 换成 pass）
+  ⇒ 锁测试当场失败（7/8），还原后 8/8；test_budget.py 10 passed、
+  test_quota_engine.py 8 passed；ruff 干净。
 affected_roots:
   - ".omo/standards/x2-budget-integrity-standard.md"
 evidence_refs:
@@ -39,6 +57,11 @@ last_reviewed_at: "2026-09-21"
 next_review_at: null
 gate_level: none
 history:
+  - at: "2026-11-06T00:00:00Z"
+    action: resolve
+    note: >-
+      用户选 (a) 实现。omostation-aetherforge#122 补齐 append_quota_ledger_event
+      与 get_remaining_budget，并接线到 _record_cloud_usage。债务关闭。
   - at: "2026-09-21T00:00:00+00:00"
     action: register
     note: >-
