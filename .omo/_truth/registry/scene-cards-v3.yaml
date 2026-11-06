@@ -1,17 +1,17 @@
 schema: scene-registry/v1
-generated_at: '2026-11-02T22:15:01.072841+00:00'
-total_scenes: 65
+generated_at: '2026-11-06T07:38:13.450833+00:00'
+total_scenes: 69
 domains:
   knowledge: 1
-  work: 56
+  work: 60
   governance: 2
   health: 4
   research: 2
 lifecycles:
   routine: 63
-  supervised: 2
+  supervised: 6
 classes:
-  business: 65
+  business: 69
 capabilities:
 - bos://capability/compute/generate
 - bos://governance/omo/audit
@@ -29,6 +29,8 @@ capabilities:
 - llm:local-summarize
 - mail:create-draft
 - mail:netease_mailmaster
+- ref://capability/agent-workflow-lifecycle
+- ref://capability/gac-local-gate
 - risk_engine:forward-check
 - risk_engine:send-email-check
 - risk_engine:submit-check
@@ -690,6 +692,20 @@ scenes:
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-documents-zcode-state.yaml
+- scene_id: scene-engineering-delivery
+  name: Engineering Delivery
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: engineering-delivery
+  capability_refs:
+  - bos://capability/compute/generate
+  - bos://governance/omo/audit
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-engineering-delivery.yaml
 - scene_id: scene-governance-audit
   name: 治理合规审计
   scene_class: business
@@ -798,6 +814,20 @@ scenes:
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-knowledge-curation.yaml
+- scene_id: scene-meeting-supervision
+  name: Meeting Supervision
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - ref://capability/agent-workflow-lifecycle
+  - ref://capability/gac-local-gate
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-meeting-supervision.yaml
 - scene_id: scene-meeting-to-delivery
   name: Meeting To Delivery
   scene_class: business
@@ -812,6 +842,34 @@ scenes:
   upstream: []
   downstream: []
   source_file: .omo/_truth/scenarios/v3/scene-meeting-to-delivery.yaml
+- scene_id: scene-periodic-reporting
+  name: Periodic Reporting
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - ref://capability/gac-local-gate
+  - ref://capability/agent-workflow-lifecycle
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-periodic-reporting.yaml
+- scene_id: scene-project-supervision
+  name: Project Supervision
+  scene_class: business
+  scene_type: internal_pipeline
+  domain: work
+  lifecycle: supervised
+  activation: active
+  owner: xiamingxing
+  capability_refs:
+  - ref://capability/gac-local-gate
+  - ref://capability/agent-workflow-lifecycle
+  upstream: []
+  downstream: []
+  source_file: .omo/_truth/scenarios/v3/scene-project-supervision.yaml
 - scene_id: scene-research-pipeline
   name: Research Pipeline
   scene_class: business
