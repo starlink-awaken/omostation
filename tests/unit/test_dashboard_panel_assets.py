@@ -13,7 +13,12 @@ from __future__ import annotations
 import importlib.util
 import re
 import sys
+import json
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PANEL_DIR = ROOT / "bin" / "panorama" / "assets" / "panels"
@@ -90,6 +95,47 @@ def test_pending_authorization_ui_excludes_terminal_states():
     assert "String(p.state||'').toUpperCase()" in template
     assert "terminalPublicationStates[String(p.state||'').toUpperCase()]" in template
     assert "p.verification==='READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION'" in template
+
+
+def test_projection_clocks_show_independent_sources_and_full_identity():
+    template = (ROOT / "bin/panorama/assets/host/template.html").read_text(encoding="utf-8")
+    for token in ("projection_time_semantics", "materialized_brief", "content_generated_at",
+                  "lease_fresh_until", "copied_at", "data_generated_at", "revision_match",
+                  "provenance_comparison", "projection_manifest_sha256", "state_revision",
+                  "dashboard_code_oid", "dashboard_tree_sha256", "dashboard_code_sha256",
+                  "来源自报", "独立副本", "UNKNOWN", "UNCONFIGURED"):
+        assert token in template
+    assert "fetch('/health'" in template
+    assert "renderProjectionClocks(null)" in template
+
+
+def test_projection_clock_rendering_keeps_full_digests_and_clears_old_readings():
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is required to execute the template renderer")
+    template = (ROOT / "bin/panorama/assets/host/template.html").read_text(encoding="utf-8")
+    start = template.index("function renderProjectionClocks(")
+    end = template.index("function refreshProjectionClocks(", start)
+    health = dict(projection_time_semantics=dict(state_revision="a" * 64,
+                  content_generated_at="2026-10-13T02:00:00Z", content_status="STALE",
+                  lease_fresh_until="2026-10-13T02:10:00Z", lease_status="VALID"),
+                  projection_manifest_sha256="b" * 64, dashboard_code_oid="c" * 40,
+                  dashboard_tree_sha256="d" * 64, dashboard_code_sha256="e" * 64,
+                  materialized_brief=dict(status="AVAILABLE", copied_at="2026-10-13T02:00:00Z",
+                    data_generated_at="2026-10-12T02:00:00Z", revision_match="UNKNOWN",
+                    provenance_comparison="MISMATCH", source_revision_id="f" * 64))
+    script = "const el={textContent:''}; const document={getElementById:()=>el};\n"
+    script += template[start:end]
+    script += "renderProjectionClocks(" + json.dumps(health) + "); console.log(JSON.stringify(el));\n"
+    script += "renderProjectionClocks(null); console.log(JSON.stringify(el));"
+    result = subprocess.run([node, "-e", script], capture_output=True, text=True, check=True, timeout=5)
+    shown, cleared = [json.loads(line)["textContent"] for line in result.stdout.splitlines()]
+    for digest in ("a" * 64, "b" * 64, "c" * 40, "d" * 64, "e" * 64, "f" * 64):
+        assert digest in shown
+        assert digest not in cleared
+    for text in ("STALE", "VALID", "独立副本", "来源自报", "MISMATCH", "UNKNOWN"):
+        assert text in shown
+    assert "2026-10-13" not in cleared
 
 
 # ── 契约: 注入标记 ─────────────────────────────────────────────────────
