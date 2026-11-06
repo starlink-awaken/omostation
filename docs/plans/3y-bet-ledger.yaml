@@ -46653,7 +46653,8 @@ bets:
     而 crash-loop。本 bet：给 daemon 加 GET /health (status/uptime_s/udp_port)， 默认端口自 7432
     (与 ecos-event-listener 注册冲突) 迁至 7433 并注册进 port-registry， matrix.yaml 加 health_url
     条目使 cron-service 健康扫描走真 HTTP 探活，安装根同步到含修复的提交。
-  status: in_progress
+  status: done
+  done_at: 2026-11-06
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -46699,17 +46700,41 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-285
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7c21629eca3e8e3740dae63f20e47851f6be5069
+          diff:
+            ref: receipt://docs/reports/2026-11-06-agora-daemon-health-siri51-closeout.md
+            sha256: sha256:1be42f9f33b7f09e19cb58e7ae2cc8724f519d0c1131340dfc5e171aa3a1e433
+          tests:
+            ref: receipt://docs/reports/2026-11-06-agora-daemon-health-siri51-closeout.md
+            sha256: sha256:1be42f9f33b7f09e19cb58e7ae2cc8724f519d0c1131340dfc5e171aa3a1e433
+          rollback:
+            ref: receipt://docs/reports/2026-11-06-agora-daemon-health-siri51-closeout.md
+            sha256: sha256:1be42f9f33b7f09e19cb58e7ae2cc8724f519d0c1131340dfc5e171aa3a1e433
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-06-agora-daemon-health-siri51-closeout.md
+            sha256: sha256:1be42f9f33b7f09e19cb58e7ae2cc8724f519d0c1131340dfc5e171aa3a1e433
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-06-agora-daemon-health-siri51-closeout.md
+            sha256: sha256:1be42f9f33b7f09e19cb58e7ae2cc8724f519d0c1131340dfc5e171aa3a1e433
+          cleanup:
+            ref: receipt://docs/reports/2026-11-06-agora-daemon-health-siri51-closeout.md
+            sha256: sha256:1be42f9f33b7f09e19cb58e7ae2cc8724f519d0c1131340dfc5e171aa3a1e433
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-285.md
+            sha256: sha256:5dca3db82a620f190d31b50fc6f33134695e30c3cf4f7961d2943a46a42d9f2c
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: '价值轴 NOT_PROVEN：本条交付的是可观测性（把一个只能查 PID 的服务面变成可 curl 的健康面），收益在故障可见性而不是业务指标；value_indicator_policy 显式 false，与同族 281/282/284/288/289 同判。时序如实入账 —— 三个面跨三次交付：主仓侧 spec/台账/7433 注册于 2026-11-05 以 #5048 squash 为 7c21629eca3e8e3740dae63f20e47851f6be5069；子仓代码以 omostation-agora PR #126 于 2026-11-04 开、2026-11-06T07:10:18Z squash 为 17028faa35301898fdb17fe29b1c3a873a60038c；而 daemon 早在 11-04 就被安装根 checkout 到 PR head 的本地 commit bf9a70f 并常驻提供 /health —— 即机器态跑在仓态前面约 43 h，期间台账三面全空且无任何门禁报警。engineering 的 merged_reachable_commit 取主仓那一个（本仓对象库可达），子仓 SHA 在收据 §1 逐条对拍。operational 的 live_canary 是行为读数而非配置读数：curl 返回 uptime_s 92760 → 93155 与墙钟一致，⇒ 进程未重启、换 commit 对运行面零影响；launchd runs=1 + last exit code=(never exited) 才是「起跑成功且常驻」，runs>1 或 uptime 归零都意味着 crash-loop 仍在。限制三条：① 主仓 gitlink 仍 pin e1cc383 与 agora main 差 1 commit（本条非目标 3 明确不 bump，submodule-pointer-transaction.sh 在该形态按构造 no-op，由 freshness gatekeeper 报警后另起 chore(submodule) 承接）；② omostation-agora 仓无任何 workflow，PR #126 的 CI 零输出是结构缺失不是通过，工程证据全部来自本地复算（4 passed / ruff 改前后同为 5 errors，装置与被测源码树在收据 §2.5 写明）；③ claim --path 台账被 PITFALL-COO-008 的 A2A 谓词缺陷阻塞（对方 run status=active、心跳 43 h、锁过期 20 h），按该 PITFALL 处置为未 claim 交付，谓词正解仍无承接 BET。'
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-286
   title: ADR-0456 B4b 批次 3 — 把最后一条指向检出根的常驻 plist 改道到安装位 (workspace_scoped 2→1)
   goal: 'plan nimble-bay-asp 的 B4b 验收尺是「指向 Workspace 的 plist 由 43 → 0」。批次 2 之后实测 (base
