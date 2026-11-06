@@ -462,3 +462,9 @@ live-server.pid
 # 注: `.omo/state/{compute,daemon,healer,memory,notification}` 已由上面
 # BET-Y2Q4-T10-276 那段（10 条导出集 + healer）覆盖 —— 那段的判据由
 # tests/unit/test_omo_state_plane_ignore_invariants.py 从源码字面量导出。此处不再单列。
+
+# 个人检索层的视图 (2026-10-31 §5.166): 由 bin/gac/documents-personal-view.py 生成,
+#   内容是符号链接 + 一份重写过的注册表 —— 真源是 .omo/_truth/registry/
+#   personal-retrieval-domains.yaml + ~/Documents/@公共/_control/L4-DOMAIN-REGISTRY.yaml
+#   ⇒ ⇒ 生成物不进仓 (重建只需一条命令)
+runtime/personal-view/
