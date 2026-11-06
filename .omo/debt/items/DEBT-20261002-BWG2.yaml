@@ -7,17 +7,50 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: laowang
 affected_roots:
 - .omo
-evidence_refs: []
+evidence_refs:
+- .omo/_knowledge/network/clash-node-architecture.md
 mitigation_refs: []
 opened_at: '2026-09-23T02:05:30.194354+00:00'
-last_reviewed_at: null
-next_review_at: null
+last_reviewed_at: '2026-11-06'
+next_review_at: '2026-12-06'
 gate_level: none
+closed_at: "2026-11-06T00:00:00Z"
+close_reason: >-
+  四个子项逐一核实，均已在 ClashConfig 仓（SSOT 真源）闭环；债务原文「补
+  bootstrap-server 进仓」的前提（脚本缺失）不成立 —— 脚本一直在 ClashConfig 仓，
+  Reality 也已在 bwg2 上跑了近一个月。
+resolution_evidence: >-
+  2026-11-06 逐项核实（ClashConfig 仓 = ~/dotfiles/sharedconf/ClashConfig，
+  git remote git@github.com:starlink-awaken/dotfiles.git）：
+  ① Reality 铺设 —— bootstrap-server.sh 位于该仓 scripts/（软链
+  ~/.local/bin/bootstrap-server.sh），支持 reality/derper 角色；bwg2 上
+  xray-reality.service active（自 2026-10-06 13:56 UTC），配置
+  /usr/local/etc/xray/reality.json，端口 8444，VLESS+Reality+Vision，
+  dest www.microsoft.com。Workspace 仓 git log --all -- scripts/bootstrap-server.sh
+  无结果 ⇒ 脚本从不属于 Workspace 仓，无需「补」。
+  ② fleet.yaml 补 IP —— 该仓 fleet.yaml 的 bwg2 条目含 ip 74.211.101.240 +
+  ipv6 2607:8700:5501:b294::2 + services [443:vmess, 8444:reality]，已补。
+  ③ SSOT 节点 —— ssot/nodes.yaml 含 搬瓦工2-VMess-{直连,IPv6,CF中转,优选104a/b}
+  与 搬瓦工2-Reality{-IPv6}；ssot/settings.yaml 的 parked 段登记停用原因。
+  ④ vmess 清退评估 —— 结论为不清退、改 parked：settings.yaml parked 记
+  「搬瓦工2-VMess-直连/Reality 被墙（74.211.101.240，2026-10-05 实测）；
+  CF中转/优选不受影响」；groups.yaml 池-搬瓦工-AI 以 池-搬瓦工3 居首，
+  bwg2 降为容灾。评估已落地。
+  附带：Workspace 文档 .omo/_knowledge/network/clash-node-architecture.md
+  §3/§4 的 bwg 行已按 fleet.yaml 校准（原「搬瓦工1 ⏸ 停机至 10-02 重置」已过期）。
 history:
+- at: "2026-11-06T00:00:00Z"
+  action: resolve
+  note: >-
+    四个子项均在 ClashConfig 仓闭环：Reality 已铺（xray-reality active）、
+      fleet.yaml 已含 bwg2 IP/ipv6/服务、ssot/nodes.yaml 已登记节点、
+      vmess 评估结论为 parked（不清退）。原文「补 bootstrap-server 进仓」
+      前提不成立。同轮校准 Workspace 网络文档 §3/§4。
+  actor: governance-agent
 - at: '2026-09-23T02:05:30.194354+00:00'
   action: register
   note: Registered debt item DEBT-20261002-BWG2.
