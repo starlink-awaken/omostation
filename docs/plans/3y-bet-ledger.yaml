@@ -46846,7 +46846,8 @@ bets:
     各新增 `RELATIVE` 类目（判据见 spec §5 AC-01），并把两处确证站点按 spec §2 分别处置：`projects/omo/src/omo/workflow/lock_graph.py`
     死写面显式降级并登记、`bin/notification.py` 的 HITL 提案面默认值改经 `state_root()` 拼接或 env 缺席即拒写；结论写进
     ADR-0456 addendum。
-  status: in_progress
+  status: done
+  done_at: 2026-11-06
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -46864,6 +46865,8 @@ bets:
   - tests/unit/test_resident_write_plane_split.py
   - tests/unit/test_writeplane_root_pin.py
   - bin/notification.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-288.md
+  - docs/reports/2026-11-06-t10-288-cwd-relative-root-anchor-closeout.md
   non_goals:
   - 不删 `lock_graph.py` 的任何代码（删代码需另行授权，spec AC-02）；只裁根与登记。
   - 不改任何 plist、不动 cron、不 unshallow 主仓。
@@ -46877,7 +46880,7 @@ bets:
   verify:
   - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=$(mktemp
       -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with
-      pytest --with pyyaml python -m pytest tests/unit/test_resident_write_plane_split.py
+      pytest --with pytest-timeout --with pyyaml python -m pytest
       tests/unit/test_writeplane_root_pin.py -q -p no:randomly
     expect: 全绿；且新增的 RELATIVE 正面用例命中数非零（空绿不算通过，AGENTS.md §7③）。
   - cmd: /usr/bin/git -C projects/omo cat-file -e origin/main:src/omo/workflow/lock_graph.py
@@ -46894,17 +46897,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c3a93e9cc1c583f0083b5da302f9f9922645d4b2
+          diff:
+            ref: receipt://docs/reports/2026-11-06-t10-288-cwd-relative-root-anchor-closeout.md
+            sha256: sha256:a007feefb207e30dfd467ec241902d9ff59aafedd5c797a19aa1574b7a9ca380
+          tests:
+            ref: receipt://docs/reports/2026-11-06-t10-288-cwd-relative-root-anchor-closeout.md
+            sha256: sha256:a007feefb207e30dfd467ec241902d9ff59aafedd5c797a19aa1574b7a9ca380
+          rollback:
+            ref: receipt://docs/reports/2026-11-06-t10-288-cwd-relative-root-anchor-closeout.md
+            sha256: sha256:a007feefb207e30dfd467ec241902d9ff59aafedd5c797a19aa1574b7a9ca380
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-06-t10-288-cwd-relative-root-anchor-closeout.md
+            sha256: sha256:a007feefb207e30dfd467ec241902d9ff59aafedd5c797a19aa1574b7a9ca380
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-06-t10-288-cwd-relative-root-anchor-closeout.md
+            sha256: sha256:a007feefb207e30dfd467ec241902d9ff59aafedd5c797a19aa1574b7a9ca380
+          cleanup:
+            ref: receipt://docs/reports/2026-11-06-t10-288-cwd-relative-root-anchor-closeout.md
+            sha256: sha256:a007feefb207e30dfd467ec241902d9ff59aafedd5c797a19aa1574b7a9ca380
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-288.md
+            sha256: sha256:b3557b6874a98dc0af7dc7e6a15793505d4f63e4e8614ce5857a686729ec7f42
       value:
         status: NOT_PROVEN
         evidence:
-          note: 价值轴 NOT_STARTED：本条消除的是 ADR-0456 根契约的第四类盲区（落点随进程 CWD 且两把尺按构造看不见），收益面在门禁可见性而不是业务指标；value_indicator_policy
-            显式 false，与同族 281/282/284 同判。
-    overall_state: evaluating
+          note: '价值轴 NOT_PROVEN：本条消除的是 ADR-0456 根契约的第四类盲区 —— 落点随进程 CWD 且两把根尺按构造看不见它，收益面在门禁可见性而不是业务指标；value_indicator_policy 显式 false，与同族 281/282/284 同判。时序如实入账：工程腿以 #5070（c3a93e9cc1c583f0083b5da302f9f9922645d4b2）于 2026-11-06 合入，本条 retro 与 receipt 由第二个 PR 合入。engineering 面 merged_reachable_commit 为该 squash SHA，diff/tests/rollback 由 receipt 的逐字节摘要承接。operational 的 live_canary 是行为读数而不是「类目加了就绿」：在 CWD=/tmp 下 _anchored_proposals_dir() 未声明 HITL_PROPOSALS_DIR 时拒写并 rc=1，_config_path() 解析到检出那份配置且 load_config() 读到 5 个键；同一棵树 scan_cwd_relative_sites 由 8 收敛为 6，而 scan_checkout_pinned_sites 逐桶未变（sites 456 / gated 153 / pairs 143 / files 95），证明反证未退化成「不可见」。replay 指 retro。限制三条：① bin/hitl-proposal.py 的模块常量 PROPOSALS_DIR（生产者半）仍随 CWD，两半须同一次交付改；② 尺 B 的 pinned 谓词结构性不认 code_root()（tip 188 处），扩它须重算 spec §4 全部读数并另立 BET；③ 本条台账路径的 claim 被并发 run 的 A2A 面锁挡住（谓词只看 status 不看锁 TTL），故收口腿在未 claim 状态下交付，理由写进 workflow closeout evidence，未清他人活锁、未用 prune-locks。'
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-289
   title: BET-Y2Q4-T10-289 `.omo/_knowledge` 的根归类裁决 —— 四面矛盾与三个「既跟踪又忽略」面
   goal: 按 spec §3 的判别量（tracked ⇒ 检出根；ignored 且零跟踪 ⇒ profile 的 state 根；两者同时 ⇒ 当场点名冲突）对
@@ -46942,7 +46967,7 @@ bets:
   verify:
   - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=$(mktemp
       -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with
-      pytest --with pyyaml python -m pytest tests/unit/test_writeplane_root_pin.py tests/unit/test_resident_write_plane_split.py
+      pytest --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_writeplane_root_pin.py tests/unit/test_resident_write_plane_split.py
       -q -p no:randomly
     expect: 全绿；分桶读数必须写明产出它的那把尺所在 base（本轮基线 `f2ab7ca3006488a12246d873dace01f89ceb1970`）。
   - cmd: /usr/bin/git ls-tree -r --name-only origin/main -- .omo/_knowledge/signals
