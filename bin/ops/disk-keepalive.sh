@@ -40,10 +40,36 @@ DROPS_WINDOW="90m"
 DISK_MATCH="DK5A1"   # 4T 扩展坞在系统日志里的名称片段(icdd 会记录 USB 设备的移除/出现)
 
 # 守护清单: 挂载点目录名=APFS Volume UUID (来源: diskutil info <卷> | "Volume UUID")
+# 这份是**两机共用的公共项**。单机专属卷写进这里会害到另一台机: 那台机永远判它
+# 「未挂载」→ 每 3 分钟重挂一次 → FAIL_COUNT 累加 → 误报 NEEDS_ATTENTION。
+# 所以本机专属卷放 ~/.disk-keepalive.watch（每行 "名字=UUID"）：
+#   普通行 = 本机追加守护项
+#   "-名字=UUID" = 本机移除公共项（如本机根本没接这块盘，否则会一直误报）
+#   例: mini  → Lex=69B4517B-C234-404A-B774-2D693E87EB33（Respire 记忆空间所在卷）
+#       MBP   → MODEL-STORE=BE36F523-A385-4ABD-B469-283AD2AF05A3（Respire 记忆空间所在卷）
+#            -SharedModel=7B762734-0E1B-4E2B-92EA-D32641384578
+#            -SharedWork=ABEDBB21-FAA6-46A0-BC83-1722B3CB7A3B
+# 注意: launchd 下的守护进程没有「可移动卷」授权，只能问 DiskArbitration、
+# 不能读卷内容（见头注 v3）；rsrs 运行时本体已单独取得该授权。
 WATCH=(
     "SharedModel=7B762734-0E1B-4E2B-92EA-D32641384578"
     "SharedWork=ABEDBB21-FAA6-46A0-BC83-1722B3CB7A3B"
 )
+WATCH_LOCAL="${KEEPALIVE_WATCH_FILE:-$HOME/.disk-keepalive.watch}"
+if [ -f "$WATCH_LOCAL" ]; then
+    while IFS= read -r _line; do
+        case "$_line" in ''|\#*) continue ;; esac
+        case "$_line" in
+            -*=*)
+                _drop="${_line#-}"; _drop="${_drop%%=*}"
+                _kept=()
+                for _e in "${WATCH[@]}"; do [ "${_e%%=*}" = "$_drop" ] || _kept+=("$_e"); done
+                WATCH=("${_kept[@]+"${_kept[@]}"}")
+                ;;
+            *=*) WATCH+=("$_line") ;;
+        esac
+    done < "$WATCH_LOCAL"
+fi
 
 FAIL_COUNT=0
 [ -f "$STATE" ] && FAIL_COUNT=$(cat "$STATE" 2>/dev/null || echo 0)
