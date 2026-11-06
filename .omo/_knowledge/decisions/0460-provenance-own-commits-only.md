@@ -3,7 +3,7 @@ schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-09-29
+last-reviewed: 2026-11-07
 type: ssot
 id: ADR-0460
 related: ADR-0459, ADR-0422, ADR-0457
@@ -98,6 +98,12 @@ clone 绑定的身份**。而 `frozen_root_sha` 是 clone 建立时的 main。
 - 同源修复 `transfer_commit_identities_match`
 - 三项契约测试（`tests/unit/test_clone_provenance_own_commits.py`），已验证有效性：
   还原为旧行为则契约 2 FAILED
+
+### 端到端验收（2026-09-29）
+
+首次试跑：管道已通过 `provenance` 与 `changeset` 两关，`integrate` 不再死于
+`clone_provenance_mismatch`（本次修复前的终态），而是推进到 `changeset_empty` ——
+即 provenance 循环依赖已解除，剩余问题纯属载荷缺失（源分支在试跑期间被合并删除）。
 
 ### 落地时发现的约束
 
