@@ -219,6 +219,10 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
     `installed_lines`: 安装态注入缝 (测试用)。`None` = 读本机 `crontab -l`。
     不注入时行为逐字节不变; 注入时**不碰本机 crontab**, 于是 `ok` 只由
     「登记 ↔ 编译产物」决定, 不随本机 cron 状态漂移。
+
+    比对键是**归一化整行**。截断 (旧 `[:120]`) 会把 120 字符之后才不同的两条任务
+    折成一个键: 于是 `*_count` 欠计真实条数, 且一条 drift 能与一条 orphan 互相
+    抵消成 `ok=True` —— 判定塌缩成假绿 (BET-Y2Q4-T10-291)。
     """
     registered = _load_jobs()
     reg_set = set()
@@ -228,7 +232,7 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
         if "crontab" not in j.get("planes", []):
             continue
         sched, cmd = j.get("schedule", ""), j.get("command", "")
-        reg_set.add(f"{sched} {_normalize_interpreter(_expand_workspace(cmd))}"[:120])
+        reg_set.add(f"{sched} {_normalize_interpreter(_expand_workspace(cmd))}")
     if installed_lines is None:
         try:
             r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
@@ -241,7 +245,7 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
         if s and not s.startswith("#"):
             if "harness-cron.sh" in s:
                 s = '0 */6 * * * cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
-            inst_set.add(_normalize_interpreter(s)[:120])
+            inst_set.add(_normalize_interpreter(s))
 
     drift = reg_set - inst_set
     raw_orphan = inst_set - reg_set

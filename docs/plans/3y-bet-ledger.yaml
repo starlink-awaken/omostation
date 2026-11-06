@@ -47142,6 +47142,70 @@ bets:
           note: '价值轴 NOT_PROVEN：本条把三件不同的事（服务租约 / 绑定内容观测时间 / 文件副本时间）在现网读屏上拆开，收益面是伪造新鲜这件事从不可见变为可观测；value_indicator_policy 显式 false，与同族 281/282/284/288/289 同判。归属如实入账——工程腿由另一会话经 PR #5071 于 2026-11-06T03:56:01Z squash 合入 3349250e84…，本条 retro 与 receipt 由收口腿 PR 合入；生产码面等内容由发布器自行推进，本轮零部署动作（判据见收据 §5 限制①）。operational 的 live_canary 是行为读数而非投放状态：副本文件 current.json 于 06:24:01Z 重写后，/health 仍报 content_generated_at=2026-11-05T14:59:43Z + content_status=STALE 而 lease_status=VALID，即 AC-2/AC-3 的直接形状；TTL 两处常量在部署那份逐字节未变。限制两条：① materialized_brief 整面 UNCONFIGURED，所以 AC-3 现网只证到不伪造与明确不可判，未证到真实复制时间展示；② 内容时间 15.4h 不推进（revision 恒等 1754eefc6dca…）是发布器侧运维线索，本条只把它变得可见，未修它。'
     overall_state: delivery_accepted
   underlying_workflow: project-code-change
+- id: BET-Y2Q4-T10-291
+  title: BET-Y2Q4-T10-291 A4 Scheduler 判据按整行比对 —— 120 字符截断的假绿与债账欠计
+  goal: 把 `bin/scheduler-compile.py::check_drift()` 两侧的比对键从截断 120 字符改为归一化整行，消除「声明与实装只在
+    120 字符之后不同」时门禁照样放行的假绿，并使 `known_orphan_count` 按真实安装行数计数（本机实测 4 → 10）。归一化逻辑与 launchd
+    shadow 段一字不改。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-06-scheduler-drift-full-line-comparison.md
+  - bin/scheduler-compile.py
+  - tests/unit/test_scheduler_compile_launchd_plane.py
+  non_goals:
+  - 不启停或删改任何 cron/launchd 实装，不改 `known_orphans` 内容（只把计数改准，不扩债账）。
+  - 不改 `_normalize_interpreter` 的解释器识别正则，不改 `compile_crontab()` 产物。
+  - 不引入严格度开关或 observe-only 中间态，不新增判定类别。
+  - 不改 `bin/gac/gate-health-check.py` 的 A4 接线与 `ok` 语义。
+  done_when:
+  - 反例用例成立：一对整行不同、前 120 字符相同的登记/安装行，`check_drift()` 报 `ok=False` 且 `drift_count>=1`、`orphan_count>=1`；同对改成整行相同则
+    `ok=True` 且计数为 0。
+  - 欠计反例用例成立：5 条仅角色名不同且差异落在 120 字符之后的安装行，`known_orphan_count == 5`。
+  - 本机读数迁移可解释：`drift_count` 与 `orphan_count` 改动前后同为 0，`known_orphan_count` 由 4 变 10，新增
+    6 条逐条命中既有 `known_orphans` 模式（收据里列出覆盖项）。
+  - '`test_shadow_segment_never_blocks_the_gate` 仍绿且 hermetic（安装态由 `compile_crontab()`
+    注入，不读本机 crontab）。'
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=$(mktemp
+      -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with
+      pytest --with pyyaml python -m pytest tests/unit/test_scheduler_compile_launchd_plane.py
+      -q -p no:randomly
+    expect: 全部通过，无新增 skip；整行比对三条新用例（正反 + 欠计）均命中
+  - cmd: python3 bin/scheduler-compile.py --check
+    expect: ok 值不因本 BET 改变；known_orphan_count 为按整行计的真实条数
+  circuit_breaker: 若整行比对令本机或 CI 出现新的 drift/orphan 命中且无法指到具体的 120 字符之后差异，停止并返回主协调；不得为凑绿收窄判据、不得新增
+    `known_orphans` 条目来消化新暴露的安装行。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-06-scheduler-drift-full-line-comparison.md
+    spec_version: 1.0.0
+    content_digest: sha256:521431132a7de3b4f0d168a3c61af16417a9bd869e583dc7ebf61c3930179961
+    decision_ref: decision://accepted/BET-Y2Q4-T10-291
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47280,7 +47344,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 586
+  total_bets: 587
   windows:
   - Y1Q1
   - Y1Q2

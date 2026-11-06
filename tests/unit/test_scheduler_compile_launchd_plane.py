@@ -193,3 +193,82 @@ def test_launchd_bidirectional_drift_structure() -> None:
     assert "undeclared_installed_sample" in ld
     assert ld["missing_installed_count"] == 0, f"所有 active 登记均应已安装: {ld['missing_installed']}"
 
+
+def _installed_from_registry() -> list[str]:
+    """登记源的编译产物 (= 一台与登记完全同步的机器的 crontab)。"""
+    return [sc._expand_workspace(line) for line in sc.compile_crontab(sc._load_jobs())]
+
+
+def _known_orphan_patterns() -> list[str]:
+    return [str(k) for k in _reg().get("known_orphans", []) if k]
+
+
+def test_full_line_comparison_sees_a_drift_hidden_past_the_old_truncation() -> None:
+    """BET-Y2Q4-T10-291 反例: 差异落在第 120 字符之后的漂移必须被判定出来。
+
+    旧实现把两侧比对键都截到 120 字符, 于是「原行 vs 只在 120 之后不同的行」在
+    尺上逐字相同 —— `ok=True / drift=0 / orphan=0`, 一条真漂移完全隐形。这里把
+    前提**自己断言出来** (`base[:120] == mutated[:120]` 且两者不等), 所以本用例
+    测的是判定本身, 不是截断的副作用。
+    """
+    installed = _installed_from_registry()
+    assert installed, "编译产物为空 —— 尺没命中，不得当作通过"
+    baseline = sc.check_drift(installed_lines=installed)
+    assert baseline["ok"] is True, f"前提不成立: 编译产物自身应零漂移 {baseline}"
+
+    patterns = _known_orphan_patterns()
+    candidates = [
+        line
+        for line in installed
+        if len(sc._normalize_interpreter(line)) > 120
+        and not any(p in sc._normalize_interpreter(line) for p in patterns)
+    ]
+    assert candidates, "登记源需至少一条 >120 字符且不被 known_orphans 覆盖的行，否则反例无从构造"
+    base = candidates[0]
+    mutated = sc._normalize_interpreter(base)[:120] + "MUTATED" + sc._normalize_interpreter(base)[120:]
+    assert mutated[:120] == sc._normalize_interpreter(base)[:120]
+    assert mutated != sc._normalize_interpreter(base), "构造不满足「仅在 120 之后不同」的前提"
+
+    res = sc.check_drift(installed_lines=[mutated if line == base else line for line in installed])
+    assert res["ok"] is False, f"截断塌缩复发: 120 字符之后的漂移被判成通过 {res}"
+    assert res["drift_count"] >= 1, f"登记的原始行在安装态中缺席，应计入 drift: {res}"
+    assert res["orphan_count"] >= 1, f"未登记的变异行应计入 orphan: {res}"
+
+
+def test_full_line_comparison_keeps_a_synced_machine_green() -> None:
+    """BET-Y2Q4-T10-291 正例: 整行比对不得把归一化等价 (解释器写法、$HOME/Workspace) 判成漂移。
+
+    取消截断同时保留了 `_normalize_interpreter` / `_expand_workspace` /
+    harness-cron 改写三段归一化 —— 语义相同的两种写法仍须可比。
+    """
+    installed = _installed_from_registry()
+    res = sc.check_drift(installed_lines=installed)
+    assert res["ok"] is True, f"登记 ↔ 编译产物整行应逐条相等: {res}"
+    assert res["drift_count"] == 0 and res["orphan_count"] == 0
+
+
+def test_known_orphan_count_counts_lines_not_truncated_keys() -> None:
+    """BET-Y2Q4-T10-291 欠计反例: 5 条仅 120 字符之后不同的安装行必须计成 5 而不是 1。
+
+    `known_orphan_count` 是给 principal 看的债务条数; 按截断键计数会把同族多条
+    折叠成一条, 于是「债务只减不增」的 shrink_only 判断建立在欠计数字上。
+    """
+    patterns = _known_orphan_patterns()
+    assert patterns, "登记源应有 known_orphans，否则本用例测不到计数口径"
+    p = min(patterns, key=len)
+    stem = f"5 3 * * * bash scripts/{p}/x"
+    norm_stem = sc._normalize_interpreter(stem)
+    assert len(norm_stem) <= 120, f"known_orphans 模式过长，无法把差异推到 120 之后: {p!r}"
+    filler = "x" * (120 - len(norm_stem))
+    injected = [stem + filler + f"/role-{i:02d}.log" for i in range(5)]
+    assert len({sc._normalize_interpreter(line)[:120] for line in injected}) == 1, (
+        "构造不满足「差异全部落在 120 之后」的前提"
+    )
+    assert len(set(injected)) == 5
+
+    res = sc.check_drift(installed_lines=_installed_from_registry() + injected)
+    assert res["drift_count"] == 0, f"注入行不影响登记侧缺失判定: {res}"
+    assert res["orphan_count"] == 0, f"5 条注入行都应命中 known_orphans: {res}"
+    assert res.get("known_orphan_count") == 5, f"已知债按整行计数: {res}"
+
+
