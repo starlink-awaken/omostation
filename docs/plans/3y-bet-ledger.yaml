@@ -46971,6 +46971,66 @@ bets:
           note: 价值轴 NOT_STARTED：本条裁的是声明与实态的归类矛盾（A 说 state、C 说读面），无新增可度量业务收益；value_indicator_policy
             显式 false。
     overall_state: evaluating
+- id: BET-Y2Q4-T10-290
+  title: FIB-02 Panorama 投影租约、内容观测与复制时间独立展示
+  goal: 用户可同时识别服务租约、真实内容年龄和副本时间；续租或复制旧数据不会伪造新鲜。保留现有300秒TTL与revision摘要身份。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  write_surfaces:
+  - bin/panorama/assets/host/live_server.py.asset
+  - bin/panorama/assets/host/template.html
+  - tests/unit/test_live_server_payload_freshness.py
+  - tests/unit/test_dashboard_panel_assets.py
+  - tests/unit/test_live_server_time_semantics.py
+  - docs/superpowers/specs/2026-11-05-fib02-projection-time-semantics.md
+  - docs/plans/3y-bet-ledger.yaml
+  non_goals:
+  - 不改变现有300秒TTL、revision摘要算法、CODE_DRIFT或fail-closed门禁
+  - 不部署、不启停服务、不改生产数据、调度或external-write-roots
+  - 不更改其他BET、不commit/push、不接管并发claim
+  depends_on: []
+  done_when:
+  - 租约/内容观测/副本时间分开展示；未知值明确不可判
+  - 更新租约与复制时间不使旧内容转鲜；现有300秒TTL边界不变
+  - revision及manifest/code摘要保留；既有错误态保持fail-closed
+  - 定向测试通过且记录静态测试与生产运行的证据边界
+  verify:
+  - cmd: /Users/xiamingxing/Workspace/.venv/bin/python -m pytest tests/unit/test_live_server_payload_freshness.py
+      tests/unit/test_live_server_time_semantics.py tests/unit/test_dashboard_panel_assets.py
+      -q
+    expect: 全部通过，无新增skip/only；旧内容+新租约/新副本仍不新鲜
+  - cmd: git diff --check
+    expect: exit 0；仅本条声明写面发生变化
+  circuit_breaker: 有效BET、run、路径claim或状态根未确认即停止；若需要改TTL、身份校验或生产产物才可达标则停止并返回主协调。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-05-fib02-projection-time-semantics.md
+    spec_version: 1.0.0
+    content_digest: sha256:2f9324db759eb73ecb076619754794d40ea0df5a7338c4c2c33bee8214b1a691
+    decision_ref: decision://accepted/BET-Y2Q4-T10-290
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  underlying_workflow: project-code-change
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47109,7 +47169,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 585
+  total_bets: 586
   windows:
   - Y1Q1
   - Y1Q2

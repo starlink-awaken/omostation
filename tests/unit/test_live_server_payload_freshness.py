@@ -64,6 +64,8 @@ def _load(name, path, monkeypatch):
 
 @pytest.fixture
 def live_module(tmp_path, monkeypatch):
+    # Optional copy metadata must never read a host profile during fixture tests.
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
     deployed = tmp_path / "host"
     deployed.mkdir()
     for filename in ("observatory_query.py", "live_server.py"):
@@ -213,6 +215,9 @@ def test_http_health_uses_bound_payload_age_despite_new_lease(live_module, tmp_p
     assert health["state_revision"] == revision.revision_id
     assert health["source_hashes"] == revision.source_hashes
     assert health["projection_generated_at"] == NOW.isoformat()
+    assert health["projection_time_semantics"]["content_generated_at"] == timestamp
+    assert health["projection_time_semantics"]["content_status"] == status
+    assert health["projection_time_semantics"]["lease_fresh_until"] == revision.fresh_until
 
 
 @pytest.mark.parametrize("payload,error", [
@@ -230,6 +235,8 @@ def test_http_health_invalid_or_future_data_cannot_be_green(live_module, tmp_pat
     assert health["projection_status"] == "UNKNOWN"
     assert health["projection_error"] == error
     assert health["code_drift"] is False
+    assert health["projection_time_semantics"]["content_generated_at"] is None
+    assert health["projection_time_semantics"]["content_status"] == "UNKNOWN"
 
 
 def test_http_health_timezone_offset_is_valid(live_module, tmp_path):
