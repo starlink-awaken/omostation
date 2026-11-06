@@ -68,6 +68,7 @@ type: ssot
 | `phase-escapes/` | Phase 逃逸说明目录 |
 | `phase-scope.yaml` | Phase scope registry — 路径与阶段解锁映射 (ADR-0223) |
 | `phase-verdict.yaml` | Phase unlock verdict SSOT |
+| `personal-retrieval-domains.yaml` | 个人检索层的**域准入声明**（§5.166 · USER-ACTIONS #89）—— ⚠ **允许清单 ⇒ ⇒ 默认拒**（⚠ 新加的域默认不可见 ⇒ ⇒ 漏写不会漏出东西）· ⚠ **两侧共读**（⚠ 本仓的视图生成器 ＋ work-agent 的暴露探针）⇒ ⇒ **不许各抄一份** |
 | `predictive-governance.yaml` | Predictive Governance Registry |
 | `probe-heartbeat-matrix.yaml` | 探测器心跳矩阵 — 心跳 SLA 定义 |
 | `redlines.yaml` | Redline registry (STRAT-P85 G2.1) |
