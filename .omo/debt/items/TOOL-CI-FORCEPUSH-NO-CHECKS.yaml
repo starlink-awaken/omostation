@@ -7,8 +7,25 @@ scope: "repo"
 severity: "medium"
 weight: 0.05
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-06T00:00:00Z"
+close_reason: >-
+  复现结论：假设被否证。同树 force-push 仍正常触发 CI，不需要「5 分钟无
+  check-runs 即 retrigger」的约定。
+resolution_evidence: >-
+  2026-11-06 复现（PR #5064，已关闭；分支 temp-forcepush-repro，已删）：
+  ① 基线：往 PR 分支推一个 tests/unit/ 下的新文件 → CI 正常起跑（01:2x）。
+  ② force-push：git commit --amend 改 committer date ⇒ SHA ca88acbe7 ->
+     e755ee5e7，tree 逐字节相同（40aa6c5a8，两次 rev-parse HEAD^{tree} 一致）。
+  ③ 结果：force-push 后 6 秒内，新 head sha e755ee5e 上 10 个 workflow 全部
+     重新起跑（01:24:09Z；force-push 发生在 01:24:03Z）——**事件没有丢**。
+  结论：GitHub 对「树相同的大改写推送」照常发事件，债务假设的丢事件机制不成立。
+  原 incident（2026-09-25 force-push 后 25 分钟 0 check-runs）的真实成因未明，
+  但既然同树 force-push 可复现地触发 CI，就没有依据立「5 分钟无 check-runs 即
+  retrigger」的约定 —— 该约定在 CI 排队超过 5 分钟时会误触发，反而制造噪声。
+  留记：若将来再遇到「force-push 后无 CI」，先查 PR 的 paths 过滤与 mergeStateStatus
+  （CONFLICTING 的 PR 根本不排队），再怀疑事件丢失。
 affected_roots: []
 evidence_refs:
 - .omo/_knowledge/retros/2026-09-25-pr-4308-merge-support-retro.md
@@ -21,6 +38,11 @@ x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: "复现确认（同树 force-push 是否稳定丢 push 事件），若确认则立约：改写推送后 5 分钟无 check-runs 即视同丢事件，直接空提交 retrigger，不用再等"
 history:
+- at: "2026-11-06T00:00:00Z"
+  action: resolve
+  note: >-
+    复现否证假设：同树 force-push（tree 逐字节相同、SHA 不同）后 6 秒内
+    10 个 workflow 全部重新起跑。不立「5 分钟 retrigger」约定。
 - at: '2026-09-25T12:00:00+00:00'
   action: identify
   note: >-
