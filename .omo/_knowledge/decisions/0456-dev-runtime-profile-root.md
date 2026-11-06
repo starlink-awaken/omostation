@@ -473,3 +473,146 @@ state 根"成立 —— 一旦有人把它改成 `mkdir + 写子集`，读侧会
 
 经上述实证，本 ADR 核心目标全部达成，正式转为 **ACCEPTED** 权威技术基准。
 
+## Addendum — `.omo/_knowledge` 的根归类裁决：四个来源对同一目录各说一遍（2026-11-06, BET-Y2Q4-T10-289）
+
+> 判别量、分桶与前置否证见 spec `docs/superpowers/specs/2026-11-05-knowledge-plane-root-classification.md`。
+> 本 addendum 的**全部读数由 `origin/main = 8f04e272d51eb177b9d28f5e804c2bac56da0b4d` 产出**，装置是尺 B 的
+> `scan_checkout_pinned_sites` / `knowledge_bucket` 与尺 A 的 `scan_writers` / `state_root_planes_without_family`
+> （AGENTS.md §7「门禁的尺本身会随 base 变」——引用下面任何数字必须连带这个 base）。spec 的 base 是
+> `3a1c07702`，两 base 的分桶读数逐项相同（13 / 5 / 44、456 站点、62 `_knowledge`），唯一差额是
+> `.omo/_knowledge/retros` 跟踪数 **656 → 657**（一次无关交付多落了一份 retro）。
+> 跟踪数由 `git ls-tree -r origin/main` 给出，忽略规则由 `git check-ignore --no-index -v` 给出（本 addendum 所在
+> 检出的 `.gitignore` 与 tip 逐字节相同，sha256 前 12 `0b3b8f2c946b`），因此不需要 spec §6 那台隔离对照树。
+
+### 1. 裁决规则：判别量，而不是逐条人工拍
+
+一个面的**权威根 = 它自己的字节来源**：
+
+```
+tracked(ls-tree > 0) 且 not-ignored          ⇒ 检出根（读面）
+tracked == 0        且 ignored               ⇒ profile 的 state 根（生成面）
+tracked(ls-tree > 0) 且 ignored              ⇒ 冲突，必须当场点名
+tracked == 0        且 not-ignored           ⇒ 判别量不覆盖的第四形：无声明的生成面（§2 末行）
+```
+
+第四行不是本 BET 添的宽限，是 spec §3 的三行**不闭合**：`.omo/_knowledge/hitl-proposals` 实测 `tracked=0` 且
+**没有任何 ignore 规则命中**（`rc=1`），它是 BET-Y2Q4-T10-288 准入的第四类根站点（落点随进程 CWD）。
+按三行判别量它会被读成「无跟踪 ⇒ 不是生成面」，而它恰恰是生成面 —— 所以第四形必须显式存在，且它的正确处置是
+**加 ignore 规则或接生成者**，不是改根。
+
+装置口径两条（不连带就会读错）：① 对**目录面**问 `check-ignore` 时探针写占位 basename，`*.jsonl` 这类 glob 才有机会
+命中 —— 所以「容器 `.omo/_knowledge` 命中 `:21`」是**方法诱导**，容器目录本身不被忽略（对 `.md`/`.yaml` 探针
+`rc=1` 可反证）；裁决不得据此写「容器整目录被忽略」。② 渲染串含 `*` 的四个面（`decisions/0*.md`、`patterns/*.md`、
+`pitfalls/PITFALL-*.yaml`、`retros/BET-*.md`）问 `ls-tree` 得 0 是**判别量不适用**，一律按父面计。
+
+### 2. 逐面裁决（`.omo/_knowledge` 桶 62 站点所涉及的面）
+
+| 面 | tracked | ignore | 判别量 | 裁决 |
+|----|---------|--------|--------|------|
+| `evolution-proposals` | **1065** | `:381` 整目录 | **冲突** | 权威根 = **state 根**（尺 A 该族 `state` 桶 7 条，写者 `resident/decision.py PROPOSAL_DIR`）；这 1065 份是**已提交 legacy**，不是「仓库要读它」（AGENTS.md §7「跟踪 ≠ 有意保留」）。处置走 AC-04 两条之一，**动手前必须附一条判据**：证明这 1065 份在摘库后没有任何读者依赖 —— 本轮未做该判据，所以只裁根、不裁摘库。 |
+| `decision-proposals` | **128** | `:399` 整目录 | **冲突** | 同上（尺 A `state` 桶 7 条，写者 `resident/decision.py INBOX_DIR`）。bin 侧唯一读者 `bin/panorama/panorama-collect.py:4600` 是 `:4601 if not proposals_dir.is_dir(): return {"total": 0}` 的 fail-soft 统计 ⇒ 声明 profile 后读到的是**缺席面折叠成 0**，与「真源说零」逐字同形（AGENTS.md §7「目录缺席 ≡ 目录为空」条同族）——**这是本面最坏的失效形态：不报错，只报 0。** |
+| `signals` | **7** | `:424` 整目录 | **冲突** | **反向处置：删 ignore 规则，承认它是跟踪面**，不摘库。三条实测支撑：① 尺 A 该面**没有任何 state 根写者登记**，唯一的写者是钉检出的 `bin/ssot/proposal-to-adr.py:28 SIGNALS_DIR`（`:208 mkdir(parents=True)` + `:191` 写文件）；② 已提交的 7 份不是产物而是 **signal-tier ADR 迁移件**，被 `decisions/0401·0405·0429·0437·0438-reserved.md` 逐号引用（摘库即毁引用链）；③ `docs/plans/2026-09-05-untyped-classification-rules.yaml:26` 已把该目录判为 `ephemeral/archived`。⇒ 该面的失效不是根错位，是**写者产出永不入库**：加了 ignore 却没有生成者承接。 |
+| 容器 `.omo/_knowledge` | 4401 | 无（`:21` 只作用于直接子层 `*.jsonl`） | **双面** | 见 §3 —— 挂单根必错，因为容器里的 `*.md` 递归读同时跨跟踪文档面与生成 `sediment/*.md`。 |
+| `sediment` | 0 | `:383` | 纯生成 | **state 根**（尺 A `state` 桶 10 条，`resident/promote.py`·`sediment.py SEDIMENT_ROOT`）。 |
+| `sediment-archive` | 0 | `:384` | 纯生成 | **state 根**（`promote.py ARCHIVE_ROOT`，1 条）。 |
+| `workflow-mesh`（含 `events.jsonl`） | 0 | `:23` | 纯生成 | **state 根**（`events.jsonl` 在尺 A 登记 **17** 条，本桶读者最多的一面）。 |
+| `_knowledge/*.jsonl`（`omo-events`·`omo-alerts`·`omo-sync`·`omo-trail`·`bos-metrics`） | 0 | `:21` + 各自 | 纯生成 | **state 根**（五个 `omo_*.py` / `omo_bos_metrics.py` 均 `state-anchored`，各 1 条）。 |
+| `decisions` 432 · `retros` 657 · `audits` 242 · `design/plans/archive` 880 · `pitfalls` 60 · `bos-registry.json` 1 | >0 | 无 | 纯跟踪读面 | **检出根，钉得住即为契约**：这六面的 `bin/` 读者（含 `NOT_DECLARED` 桶里 `panorama-collect.py:4412·4427·4438·4449` 四处具名 glob）**不属于收敛对象**，本轮一条都不改。`bos-registry.json` 的写者 `omo_bos.py:105` 用 `code_root` 同样成立。 |
+| `hitl-proposals` | 0 | **无** | **第四形** | 无声明的生成面（T10-288 已裁消费侧 fail-closed）。本 addendum 只补根归类：**它现在既不是检出读面也不是 state 生成面，是没被任何一根声明过的面**。后续处置是加 ignore 规则或接生产者，改根不解决问题。 |
+
+### 3. 容器裁决 = **复核并延伸**既有裁决，不是新决定
+
+`projects/omo/src/omo/omo_logs.py:29-36`（pin `b22152e77`）把容器挂到 `state_root()`，其自述前提是
+「本模块**只在该目录里 glob/读 `*.jsonl`**，不读 `_knowledge/decisions/**` 那类已跟踪内容，所以整目录挂 state 根是
+安全的；治理 SSOT 的已跟踪知识面走 `omo_paths.DECISIONS_DIR`（检出根）」；`omo_observability.py:26-32` 同契约。
+
+该前提的适用范围到此为止。本轮复核出的新事实是：**`bin/` 侧容器上 5 处读者的语义与该前提按构造冲突** ——
+逐处读到消费语句（本 base 复算，行号与 spec §2 相同）：
+
+- `bin/gac/check-gateway-status-doc.py:90`：容器列进 `:87-91` 的 doc-dir 列表 → `:93 doc_dir.rglob("*.md")` → `:94 read_text()`；
+- `bin/panorama/panorama-collect.py:4313`（`_kp` → `:4314 _kp.rglob("*.md")`）、`:4370`、`:4478`、`:4571`（三处内联
+  `_P(ROOT / ".omo/_knowledge").rglob("*.md")`），分别在 `collect_knowledge_health` / `_growth` / `_inbound` / `collect_experience_graph` 四个函数内。
+
+⇒ 5 处**全部落到递归 `*.md`**，而容器里的 `*.md` 既包括已跟踪的治理文档（合法检出读面），也包括生成的
+`sediment/{runs,failures}/*.md`（合法 state 读面）。**所以「容器挂哪个根」这个问题本身没有正确答案**：
+挂 state ⇒ 跟踪文档在声明 profile 的机器上读不到，挂检出 ⇒ 生成的 sediment 读不到。
+
+**裁决（延伸既有裁决，回答它没答的那问）**：容器**不整体挂单根**，显式声明为**双面**，并把这 5 处遍历读者改成
+**按 §2 的具名面枚举**——跟踪面走 `code_root()`（或既有 `omo_paths.DECISIONS_DIR` 一类具名常量），需要生成面时
+再并一次 `state_root()`。不允许的两种改法：把 `ROOT` 整体换成 `state_root()`（会静默丢掉 4401 份跟踪文档），
+或整体换成 `code_root()`（与 `knowledge_dir()` 的既有裁决正面撞车，且读不到 sediment）。
+
+这条裁决的**形状不是新造的**：既有裁决给 omo 侧定的就是「容器只碰 `*.jsonl`，跟踪知识面走具名常量」
+（`omo_bos.py:105` 对 `bos-registry.json` 写的另一半同样是这个规则，其 docstring 原话
+「挂 state 根会让声明 dev profile 后 `load_registry()` 读到一个空目录 —— 而且没有测试会红」）。
+本轮只是把同一条规则**要求到 `bin/` 侧**：容器不是一个面，是一堆面，逐面按 §1 的字节来源挂根。
+
+### 4. 18 处读者的分流（AC-03）
+
+分桶由尺 B 的 `knowledge_bucket()` 与 `gated_pairs()` **同源**产出（同一次扫描、同一个 `_family_of`），不是两份名单。
+
+**A. 模块级 `Assign` 10 处 —— import 时冻结根，一律改调用时刻解析。** 按语义再分三类，因为修法不同：
+
+| 子类 | 站点（`文件:行`） | 消费语句 | 修法 |
+|------|------------------|----------|------|
+| 纯读（6） | `bc-os/north_star_meter_v3.py:40`、`bc-os/north_star_meter_v4.py:35`、`gac/event-loop-lint.py:29`、`ssot/event-ingest-adapter.py:37`、`ssot/resident-orchestrator-daemon.py:36`、`ssot/system-health-check.py:27` | `read_text()` / `_read_jsonl_events()` / `_file_age()`，其中 `event-ingest-adapter:37` 与 `resident-orchestrator-daemon:36` 是**函数默认形参值**（`events_jsonl: Path = EVENTS_JSONL`、`--events-jsonl default=`）⇒ 默认值在 def 语句执行时求值，与模块常量同一冻结时刻 | 改成调用时刻解析到 **state 根**；默认形参改 `None` + 函数体内解析（默认值里调 `state_root()` 仍会在 def 时求值） |
+| 遍历读（1） | `bc-os/proposal-triage.py:28 POOL` | `:47 POOL.glob("*.json")`，`:29 ARCHIVE = POOL / "_archive"` 派生 | 改 state 根；**并须先答 §2 的 1065 份判据** —— 否则 triage 池从 1065 份变 0 份，读数会「合理地」塌空 |
+| 写（3） | `ssot/decision-agent.py:22`（`:27 mkdir` + `:30` 写提案）、`ssot/scene-evolution-loop.py:27`（`:187 mkdir`、`:195` 写、`:228` 又读）、`ssot/knowledge-sediment.py:22`（`:46`/`:50` 写 `failures/`·`runs/`） | 写入目标 | 改 state 根。**这三处是本桶里最实的缺陷**：写者把产物落在一个 `ignored` 面的检出副本里，而尺 A 早已把同一族的写者登记到 state 根 ⇒ 声明 profile 的机器上同一族产物**分池**（提案两份、sediment 两份），且没有任何测试会红 |
+
+**B. 函数内 3 处 —— 先证根的来源，再决定。** AC-03 的原话是「形参 `root` 不是站点自己的事实」。本轮逐处取证：
+`panorama-collect.py:4088`（四份 `events.jsonl` 聚合列表里的一项，`ROOT` 由 `:75` 给出）、`:4600`（`proposals_dir` 局部量）、
+`ssot/evolution-agent.py:230`（`_persist_proposals` 内 `out_dir.mkdir` + `write_text`）——
+**三处都不接任何外部 root 形参**，`ROOT` 是各文件自己的模块常量（`panorama-collect.py:75` 认 `PANORAMA_ROOT`
+env、否则 `__file__` 反推；`evolution-agent.py:25` 纯 `__file__` 反推）。⇒ 与 A 类同性质，改调用时刻解析；
+其中 `panorama-collect.py` **本文件已有现成惯例**：`:3688` 与 `:3925` 写的是
+`state_root() if os.environ.get("OMOSTATION_STATE_ROOT") else ROOT`，同文件另两面已按 profile 走，这 2 处没有 ⇒
+修形照本文件惯例，不新造第三种写法。
+
+**C. 容器 5 处 —— 见 §3。** 与 §4 前提冲突的是**语义**而不是时序，所以它属**新事实**（不属 `knowledge_dir()`
+既有裁决的延伸覆盖面），裁决为「按具名面枚举」，既不是「改 state 根」也不是「留着不动」。
+
+### 5. AC-02 的代价：改判据带出 20 处计账，其中 7 处不是本 BET 的扫描面
+
+按族而不是按 marker 前缀排除，实测 **153/143/95 → 173/163/107**（sites/pairs/files，尺 B 自己的基线）。
+新增 20 处 = 本面 13 处 + **7 处带出**：
+
+- 6 处落 `.omo/_delivery`（`panorama-collect.py:4087`、`ssot/alert-forwarder.py:21`·`:22`、
+  `ssot/event-ingest-adapter.py:38`、`ssot/observability-events.py:30`、`ssot/personal-signals-adapter.py:22`）。
+  跟踪/忽略实测：`observability` `tracked=0` + `:365`；`alert-forwarder`·`event-ingest`·`personal-signals`
+  `tracked=0` + `:12` ⇒ 判别量与尺 A 的族登记**一致**，都是纯生成面 ⇒ 这 6 处计入债是对的，不是误伤。
+- 1 处 `bin/gac/check-test-host-hygiene.py:94` 读 `.omo/_truth/task-center/dispatches`，实测
+  `tracked=15` 且**不被忽略** ⇒ 判别量说**检出读面**，而尺 A 的 `STATE_FAMILIES:794` 把它登记成 state 族
+  （写者 `resident/dispatch.py`·`resident/worker.py`）。**这是族表与字节来源分叉，本 addendum 不裁**：
+  它是 `_truth` 面的问题，不在本 BET 的 62 站点扫描面内。登记为后续项，并留一句判据 —— 该读者的语义是
+  「扫单测残留」（`:95-97` glob `*.json`/`*.yaml` 后逐个 parse），残留只会积在写者真正落笔的那一棵树上，
+  所以「跟 trackedness 走检出根」与「跟写者走 state 根」在此**不等价**，必须由 `_truth` 面自己的 BET 裁。
+
+⇒ 「新入账的 20 处不是新债」：它们是既有站点第一次被计账。尺 B 的 `test_family_gate_counts_the_specific_family_knowledge_sites`
+与 `test_family_gate_keeps_container_and_unregistered_planes_visible_but_uncounted` 把「可见不计不得退化成不可见」钉住。
+
+### 6. 适用范围声明（AC-05，必须连带引用本 addendum 任何结论）
+
+**本次裁的是 `.omo/_knowledge` 桶这 62 站点这一扫描面，不代表 `STATE_FAMILIES` 完整。** 两个名单都不是闭合集，
+实测缺口两处（尺 A 新增判据 `state_root_planes_without_family()` 点名，登记面 `UNREGISTERED_STATE_ROOT_PLANES`）：
+
+- `.omo/_knowledge/workflow-mesh/journey-states` —— 写者 `omo_agent_host.py:483`·`:581` 用 `root_state` 挂 state 根，
+  面本身 `tracked=0` + 命中 `:23` ⇒ **state 根是对的，族表漏登记**（spec §5 的第二面新信息，本轮落成可跑判据）。
+- `.omo/debt/gap-items` —— 写者 `omo_agent_host.py:615`（`root_state / ".omo" / "debt" / "gap-items"`），
+  `tracked=0` + 命中 `:35 .omo/debt/*` ⇒ 同样 state 根正确、族未登记。**同一行的另一半成立**：
+  `:612` 写 `root_code / ".omo" / "debt" / "items"`，该面 `tracked=40` 且不被忽略 ⇒ 检出根。
+  ⇒ `:610` 那句注释「`.omo/debt/items 已跟踪 (台账 SSOT, 读检出), .omo/debt/gap-items 未跟踪 (运行态)`」与
+  `:611`「同一个表达式里两个根, 按各自 trackedness 挂」正是本 addendum §1 判别量的**可执行版本**，
+  它不是权宜，是**该规则在源码里的先例**（`omo_bos.py:100-105` 是第二个）。
+
+后续判据（已在尺 A 落地，不是待办）：`test_state_root_planes_without_family_are_the_reviewed_gaps`
+双向相等（漏一名红、留死名也红）+ `test_family_closure_detector_fires_on_gap_not_on_registered_or_checkout`
+合成正反（且带一条反「按构造就绿」的钉子：被排除的站点必须**进到待判桶里**，排除才归功于锚点判据）+
+`test_family_table_is_declared_not_closed_over_the_scanned_bucket`（`NOT_DECLARED` 必须仍为 44，归零即适用范围变了，
+连本段一起改，不许留永不发火的分支）。
+
+### 7. AC-04 的授权前置（本轮明确不动手）
+
+三个冲突面（`evolution-proposals` 1065、`decision-proposals` 128、`signals` 7）的两条处置 —— `git rm --cached` 摘库
+并显式跑生成者，或删 ignore 规则承认跟踪面 —— **都改跟踪面，均需 principal 授权**。本 BET 只裁根、给判别量、
+把站点计账，**一条都没有动手**；`signals` 的裁决虽已指明方向（删规则而非摘库），执行腿仍须拿到该授权再碰 `.gitignore`。
+§2 那两条判据（1065 份的读者依赖、`_delivery`/`_truth` 后续项）是授权包里必须附的证据，不是执行后可补的说明。
