@@ -16,13 +16,31 @@ evidence_refs:
 - docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
 mitigation_refs: []
 opened_at: "2026-09-23"
-last_reviewed_at: '2026-10-11'
+last_reviewed_at: '2026-11-06'
 next_review_at: '2026-10-25'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: "观察期 (~2026-10-18) 后删除 /Volumes/Model/omlx 与 LMStudio/ 源, 收敛到两份: projects/omlxc (git SSOT) + ~/omlx (运行时落地)"
+blockers:
+- id: OMLX-TARGET-VOLUME-MISSING
+  since: "2026-11-06"
+  detail: >-
+    迁移目标卷 /Volumes/SHAREDMODEL 不存在（ls: No such file or directory），
+    而 spec §2 基线、§3.1 迁移步骤、debt 的 decision_needed 全部以它为目标。
+    实测（2026-11-06）：/Volumes/Model 仍挂载且 Model/omlx 仍在（19G），
+    ~/omlx 仍是 0B 空壳，/Volumes/SHAREDMODEL 未挂载/未创建 ⇒ 迁移一步都没做。
+    在此前无法执行「删 Model/omlx」——删掉只会丢数据，没有落点。
+  needed: "先确认 SHAREDMODEL 卷的下落（是否改名/未挂载/未创建），再重跑 spec §3.1；
+    或修订 spec 改指向实际存在的目标卷。
+"
 history:
+- at: "2026-11-06T00:00:00Z"
+  action: block
+  note: >-
+    复核发现迁移目标卷 /Volumes/SHAREDMODEL 不存在，迁移未执行（Model/omlx 19G 仍在、
+    ~/omlx 0B、SHAREDMODEL 未挂载）。decision_needed 的「观察期后删除」无法执行 ——
+    删除没有落点。需先确认目标卷下落或修订 spec。
 - at: '2026-09-23T00:00:00+00:00'
   action: identify
   note: "健康 CLI 修复设计时发现三份副本漂移。"
