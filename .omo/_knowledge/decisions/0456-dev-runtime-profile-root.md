@@ -593,7 +593,10 @@ env、否则 `__file__` 反推；`evolution-agent.py:25` 纯 `__file__` 反推�
 ### 6. 适用范围声明（AC-05，必须连带引用本 addendum 任何结论）
 
 **本次裁的是 `.omo/_knowledge` 桶这 62 站点这一扫描面，不代表 `STATE_FAMILIES` 完整。** 两个名单都不是闭合集，
-实测缺口两处（尺 A 新增判据 `state_root_planes_without_family()` 点名，登记面 `UNREGISTERED_STATE_ROOT_PLANES`）：
+实测缺口两处（尺 A 新增判据 `state_root_planes_without_family(OMO_SRC)` 点名，登记面
+`UNREGISTERED_STATE_ROOT_PLANES`；**测量面必须随读数一起写** —— 该函数的入参是根，用例传的是
+`OMO_SRC = projects/omo/src/omo`（`test_state_root_planes_without_family_are_the_reviewed_gaps`），
+换成仓库根同一判据得 **16 个面**，多出的 14 个逐条见本节末）：
 
 - `.omo/_knowledge/workflow-mesh/journey-states` —— 写者 `omo_agent_host.py:483`·`:581` 用 `root_state` 挂 state 根，
   面本身 `tracked=0` + 命中 `:23` ⇒ **state 根是对的，族表漏登记**（spec §5 的第二面新信息，本轮落成可跑判据）。
@@ -609,6 +612,23 @@ env、否则 `__file__` 反推；`evolution-agent.py:25` 纯 `__file__` 反推�
 合成正反（且带一条反「按构造就绿」的钉子：被排除的站点必须**进到待判桶里**，排除才归功于锚点判据）+
 `test_family_table_is_declared_not_closed_over_the_scanned_bucket`（`NOT_DECLARED` 必须仍为 44，归零即适用范围变了，
 连本段一起改，不许留永不发火的分支）。
+
+**把同一判据的测量面换成仓库根（`ROOT`）的读数：16 个面，本 BET 只裁了其中 2 个。** 其余 14 个按来源分三档，
+逐档说明为什么不并进本 addendum：
+
+| 档 | 面 → 站点 | 不并进本范围的理由 |
+|----|-----------|--------------------|
+| `bin/` 生产代码 **3** | `.omo/tasks/*`（`bin/panorama/panorama-collect.py:3692`，`bare_inline:task_root`）· `runtime/dashboard/*`（`bin/panorama/materialize-agent-brief.py:84`，`state`）· `runtime/mos/observations.jsonl`（`bin/gac/check-memory-os-surfaces.py:154`，`state`） | 三面都**不在** `.omo/_knowledge` 桶，且本 BET 的 `write_surfaces` 不含 `bin/**`（AGENTS.md §1.4 WorkPacket 是授权边界）。`_knowledge` 之外的面由各自面的 BET 裁。 |
+| 根仓测试 **4** | `.omo/_delivery/agent-workflows/locks`（`tests/unit/test_panorama_field_provenance.py:22·65`）· `.omo/_delivery/evidence-smoke`（`tests/test_evidence_smoke_paths.py:107`）· `runtime/task-inventory/drifts.jsonl`（`tests/test_evidence_smoke_paths.py:127`、`tests/unit/test_b1_ledger_call_time.py:517`）· `runtime/task-inventory/snapshots`（同两文件 `:126`/`:516`） | 全部是 fixture 在 `tmp_path` 下自建 state 根后的落点，不是生产写面 ⇒ 记为**测试装置面**，不进债务名单。 |
+| `projects/omo` 测试 **7** | `runtime/health.yaml`·`runtime/governance-data.json`·`runtime/brief.md`（`projects/omo/tests/test_omo_ingress_state.py:137·139·138`，`bare_inline:dev_state`）· `runtime/omo`（`tests/integration/test_bos_40_uri_smoke.py:88`）· `runtime/omo/_delivery/ingress`·`…/state`·`runtime/omo/change-log/mutations.jsonl`（`test_omo_ingress_state.py:146·189·151`） | 子仓测试面，改它属子仓交付（§6 三步走），不在根仓本 BET 内。 |
+
+一条装置口径必须连带：**整仓扫描（入参 `ROOT`）会把 `projects/omo/**` 从 `.subtrees/omo/**` 再看见一遍**
+（gitignore 的 worktree 副本，AGENTS.md §7「扫描面里的 worktree 副本要归一到 gitlink 路径」）。实测：按 `ROOT`
+扫得 16 个**面**（面是 dict 键，不受重复影响），但站点数翻倍 —— `journey-states` 4 条、`gap-items` 2 条；
+而分别以 `OMO_SRC` 与 `.subtrees/omo/src/omo` 为根各扫一次，两侧读数**逐字节相同**（同 2 个面、同行号）
+⇒ 这是同一处缺陷被数两遍，不是两棵树的差异。所以本节的**站点数一律按单棵树口径**（`OMO_SRC` = 2 面 3 站点），
+整仓那次 16 面的文件列不可当名单引用。
+
 
 ### 7. AC-04 的授权前置（本轮明确不动手）
 
