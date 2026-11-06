@@ -1,0 +1,40 @@
+---
+# 个人检索层的【域准入】—— §5.166 · USER-ACTIONS #89
+#
+# ⚠⚠⚥⚠▣ **为什么有这份声明**（⚠ USER-ACTIONS #89 · §5.142 实测）——
+# ⚠ §3.1 第 **6** 条是**既有不变量**（⚠ 2026-10-29 已点头）：
+# ⚠ 「知识摄入与索引必须带 `data_class`；
+# ⚠ **单位域资料默认不进个人检索层与个人记忆体**」
+# ⚠ ⇒ ⇒ ⚠ 而实测：单位域 5 个（`work-docs` ＋ 4 子域）＋ 家庭域 `family`
+# ⚠     都落在个人检索根（`kos.l4_root` ＋ `cockpit.l4_documents_root`）的覆盖里
+# ⚠ ⇒ ⇒ ⚠ **承诺是破的**（⚠ 而 §8 那条负向清单已撤 ⇒ ⇒ **不是「已知且接受的风险」**）
+#
+# ⚠⚠⚥⚠▣ **口径：允许清单**（allow-list ⇒ ⇒ **默认拒**）——
+# ⚠ ⇒ ⇒ ⚠ 注册表里**新加的域**没被列进来 ⇒ ⇒ **它默认【不可见】**
+# ⚠ ⇒ ⇒ ⚠ **漏写不会漏出东西**（⚠ 这是选 allow 而不是 deny 的唯一理由）
+# ⚠ ⇒ ⇒ ⚠ 而这份清单**两侧共读**（⚠ omostation 的视图生成器 ＋ work-agent 的暴露探针）
+# ⇒ ⇒ ⚠ **不许各抄一份**（⚠ 抄了就漂 ⇒ ⇒ 漂了就是「假绿」）
+#
+# ⚠ **消费者**：① cockpit MCP（`L4_DOCUMENTS_ROOT` ＋ `L4_DOMAIN_REGISTRY`）
+# ⚠ ② KOS 索引（`KOS_L4_ROOT`）
+id: personal-retrieval-domains
+version: 1
+status: active
+last_reviewed: "2026-10-31"
+---
+# ⚠ **允许**进个人检索层的域
+# ⚠（⚠ 这 6 个**恰好**是仓内四级分级的 `internal` 那一档 ⇒ ⇒ 两套口径互为交叉核对）
+allowed_domains:
+  - shared      # @公共
+  - personal    # @个人
+  - vault       # @学习进化
+  - creative    # @创意创作
+  - opc         # @OPC
+  - cockpit     # @驾驶舱
+
+# ⚠ **故意不在**清单里的（⚠ 默认拒 ⇒ ⇒ 不必逐个写）
+# ⚠（⚠ 写出来是为了让人**看见**它们被拒了 —— ⚠ 而不是让它们悄悄不在）：
+#   work-docs / work-weijian / work-guozhuan / work-liyongke / work-contracts
+#     ⇒ 单位域（`unit-restricted`）· ⚠ 19,535 个文件 · ⚠ 15 GB
+#   family
+#     ⇒ 家庭域（`home-private`）· ⚠ 3,519 个文件 · ⚠ 7.87 GB
