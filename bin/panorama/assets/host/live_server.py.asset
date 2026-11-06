@@ -16,6 +16,7 @@ import subprocess
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
 
 from collectors.personal_value import project_panel_value
@@ -1608,6 +1609,103 @@ def bound_payload_freshness(revision, *, max_age_seconds=300):
     }
 
 
+MAX_MATERIALIZED_BRIEF_BYTES = 1024 * 1024
+
+
+def display_timestamp(value, *, deadline=False):
+    """Return an honest display value, never filesystem time or a now fallback."""
+    try:
+        if not isinstance(value, str) or not value or len(value) > 128:
+            return None
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            return None
+        if not deadline and parsed > datetime.now(timezone.utc):
+            return None
+        return value
+    except (ValueError, OverflowError):
+        return None
+
+
+def read_materialized_brief(path):
+    """Bounded read of one configured regular file, refusing symlink components.
+
+    Walk with directory descriptors to avoid check/open races. O_NONBLOCK ensures
+    a FIFO substituted before open cannot hang the request. No directory scans.
+    """
+    path = Path(path)
+    if not path.is_absolute() or ".." in path.parts:
+        raise ValueError("copy_path_invalid")
+    directory = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for part in path.parts[1:-1]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                            dir_fd=directory)
+            os.close(directory)
+            directory = child
+        fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+        try:
+            before = os.fstat(fd)
+            if not stat.S_ISREG(before.st_mode) or before.st_size > MAX_MATERIALIZED_BRIEF_BYTES:
+                raise ValueError("copy_not_bounded_regular_file")
+            with os.fdopen(fd, "rb", closefd=False) as stream:
+                body = stream.read(MAX_MATERIALIZED_BRIEF_BYTES + 1)
+            after = os.fstat(fd)
+            if (len(body) > MAX_MATERIALIZED_BRIEF_BYTES or
+                    (before.st_size, before.st_mtime_ns, before.st_ctime_ns) !=
+                    (after.st_size, after.st_mtime_ns, after.st_ctime_ns)):
+                raise ValueError("copy_changed_or_oversized")
+            return json.loads(body)
+        finally:
+            os.close(fd)
+    finally:
+        os.close(directory)
+
+
+def materialized_brief_metadata(path, configuration_source, health):
+    """Provenance is self-reported; equal names/digests do not prove copy bytes.
+
+    The materializer may add reading-alignment metadata. We do not reproduce its
+    transformation or claim artifact equivalence here. A matching self-report
+    therefore keeps revision_match UNKNOWN. Conflicts are shown only in the
+    provenance_comparison field, never as verified copy identity.
+    """
+    result = dict(status="UNCONFIGURED" if path is None else "UNKNOWN",
+                  configuration_source=configuration_source, provenance_trust="SELF_REPORTED",
+                  copied_at=None, copy_status="UNKNOWN", data_generated_at=None,
+                  data_status="UNKNOWN", source_revision_id=None, source_manifest_sha256=None,
+                  provenance_comparison="UNKNOWN", revision_match="UNKNOWN")
+    if path is None:
+        return result
+    try:
+        payload = read_materialized_brief(path)
+        provenance = payload.get("provenance") if isinstance(payload, dict) else None
+        if not isinstance(provenance, dict):
+            return result
+        result["status"] = "AVAILABLE"
+        result["copied_at"] = display_timestamp(provenance.get("copied_at"))
+        result["copy_status"] = "VALID" if result["copied_at"] else "UNKNOWN"
+        timestamp = display_timestamp(provenance.get("data_generated_at"))
+        result["data_generated_at"] = timestamp
+        freshness = bound_payload_freshness(SimpleNamespace(
+            artifact_bodies={"data": json.dumps({"generated_at": timestamp}).encode()}))
+        result["data_status"] = ("FRESH" if freshness["projection_status"] == "BOUND_FRESH"
+                                 else freshness["projection_status"])
+        for target, source in (("source_revision_id", "revision_id"),
+                               ("source_manifest_sha256", "manifest_sha256")):
+            value = provenance.get(source)
+            if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
+                result[target] = value
+        current = health.get("state_revision"), health.get("projection_manifest_sha256")
+        reported = result["source_revision_id"], result["source_manifest_sha256"]
+        if all(current) and all(reported):
+            result["provenance_comparison"] = "MATCH" if current == reported else "MISMATCH"
+    except (OSError, ValueError, TypeError, RecursionError):
+        # Never disclose source paths or let optional metadata change main health.
+        pass
+    return result
+
+
 class DashboardServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
@@ -1683,7 +1781,43 @@ class DashboardServer(ThreadingHTTPServer):
             )
         return revision.agent_brief_path
 
+    def time_metadata(self, health):
+        content = display_timestamp(health.get("payload_generated_at"))
+        deadline = display_timestamp(health.get("projection_fresh_until"), deadline=True)
+        lease_status = "UNKNOWN"
+        if deadline:
+            lease_status = ("EXPIRED" if datetime.fromisoformat(deadline.replace("Z", "+00:00"))
+                            < datetime.now(timezone.utc) else "VALID")
+        return {
+            "projection_time_semantics": {
+                "state_revision": health.get("state_revision"),
+                "content_generated_at": content,
+                "content_status": (health.get("projection_status") if content else "UNKNOWN"),
+                "lease_fresh_until": deadline,
+                "lease_status": lease_status,
+            },
+            "materialized_brief": materialized_brief_metadata(
+                self.materialized_brief_path, self.materialized_brief_configuration_source, health),
+        }
+
+    def revision_time_metadata(self, revision, freshness):
+        # Always derive fields from this single verified revision; no second load.
+        identity = {
+            "state_revision": revision.revision_id if revision else None,
+            "projection_manifest_sha256": revision.manifest_sha256 if revision else None,
+            "projection_generated_at": revision.generated_at if revision else None,
+            "projection_fresh_until": revision.fresh_until if revision else None,
+            "dashboard_code_oid": revision.dashboard_code_oid if revision else None,
+            "dashboard_tree_sha256": revision.dashboard_tree_sha256 if revision else None,
+            "dashboard_code_sha256": revision.dashboard_code_bundle_sha256 if revision else None,
+        }
+        return {**identity, **self.time_metadata({**identity, **freshness})}
+
     def projection_health(self):
+        health = self._projection_health()
+        return {**health, **self.time_metadata(health)}
+
+    def _projection_health(self):
         if self.projection_store is None:
             return {
                 "projection_status": "LEGACY_TEST_INJECTION",
@@ -2239,6 +2373,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 stream_projection_error = payload_freshness["projection_error"]
                 stream_payload_generated_at = payload_freshness["payload_generated_at"]
                 stream_payload_age_seconds = payload_freshness["payload_age_seconds"]
+                stream_time_metadata = self.server.revision_time_metadata(active_revision, payload_freshness)
 
                 now_str = utc_now()
                 init_evt = {
@@ -2250,6 +2385,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     'generation_id': last_gen_id,
                     'payload_generated_at': stream_payload_generated_at,
                     'payload_age_seconds': stream_payload_age_seconds,
+                    **stream_time_metadata,
                 }
                 if stream_projection_error is not None:
                     init_evt['error'] = stream_projection_error
@@ -2272,6 +2408,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             stream_projection_error = payload_freshness["projection_error"]
                             stream_payload_generated_at = payload_freshness["payload_generated_at"]
                             stream_payload_age_seconds = payload_freshness["payload_age_seconds"]
+                            stream_time_metadata = self.server.revision_time_metadata(current_revision, payload_freshness)
                             if current_revision.revision_id != last_revision_id:
                                 snap = json.loads(
                                     current_revision.artifact_bodies["data"]
@@ -2288,6 +2425,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                                     'projection_error': stream_projection_error,
                                     'payload_generated_at': stream_payload_generated_at,
                                     'payload_age_seconds': stream_payload_age_seconds,
+                                    **stream_time_metadata,
                                     'observed_at': snap.get("observed_at")
                                     or snap.get("generated_at"),
                                     'status': snap.get("status") or "OK",
@@ -2303,11 +2441,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             stream_projection_error = exc.public_error
                             stream_payload_generated_at = None
                             stream_payload_age_seconds = None
+                            stream_time_metadata = self.server.revision_time_metadata(None, {})
                         except (ValueError, TypeError):
                             stream_projection_status = "ARTIFACT_INVALID"
                             stream_projection_error = "projection_artifact_invalid"
                             stream_payload_generated_at = None
                             stream_payload_age_seconds = None
+                            stream_time_metadata = self.server.revision_time_metadata(None, {})
                     elif (
                         self.server.projection_store is None
                         and active_snap_file
@@ -2350,6 +2490,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             'state_revision': last_revision_id,
                             'payload_generated_at': stream_payload_generated_at,
                             'payload_age_seconds': stream_payload_age_seconds,
+                            **stream_time_metadata,
                         }
                         if stream_projection_error is not None:
                             pulse['error'] = stream_projection_error
@@ -3008,8 +3149,22 @@ class DashboardHandler(BaseHTTPRequestHandler):
 def make_server(port=DEFAULT_PORT, page_path=None, sources=None,
                 snapshot_path=None, document_root=DOCUMENT_ROOT,
                 projection_state_root=None, dashboard_code_oid=None,
-                dashboard_tree_sha256=None, dashboard_code_sha256=None):
+                dashboard_tree_sha256=None, dashboard_code_sha256=None,
+                materialized_brief_path=None):
+    """Create a server with an optional read-only materialized brief seam.
+
+    Without injection, ONLY an explicitly configured, absolute
+    OMOSTATION_STATE_ROOT selects runtime/dashboard/agent-brief.json (the existing
+    materializer target). No implicit STATE_ROOT, home, mtime or legacy fallback.
+    This configuration is server-side only; HTTP accepts no copy path parameter.
+    """
     server = DashboardServer(("127.0.0.1", port), DashboardHandler)
+    server.materialized_brief_path = materialized_brief_path
+    server.materialized_brief_configuration_source = "PYTHON_INJECTION" if materialized_brief_path is not None else None
+    configured_root = os.environ.get("OMOSTATION_STATE_ROOT")
+    if materialized_brief_path is None and configured_root:
+        server.materialized_brief_configuration_source = "OMOSTATION_STATE_ROOT"
+        server.materialized_brief_path = Path(configured_root) / "runtime/dashboard/agent-brief.json"
     projection_mode = projection_state_root is not None or (
         page_path is None and snapshot_path is None
     )

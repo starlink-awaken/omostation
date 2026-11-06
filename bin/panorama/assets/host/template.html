@@ -2066,6 +2066,7 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
     <p class="lead" style="margin-bottom:0">综合评估系统运行状态 · 数据源健康 · 门禁态势 · Agent 活跃度</p>
   </div>
   <div id="health-freshness" style="font-size:11px;color:var(--muted)"></div>
+  <div id="projection-clocks" class="small" style="overflow-wrap:anywhere;white-space:pre-wrap" aria-live="polite">受管内容 / 租约：UNKNOWN · 独立副本：UNCONFIGURED（未配置）</div>
 </div>
 <!-- Health Score + Radar -->
 <div class="grid two gap" style="margin-top:16px">
@@ -6253,6 +6254,40 @@ function _gracefulReload() {
   document.body.appendChild(indicator);
   setTimeout(function() { location.reload(); }, 500);
 }
+
+// Projection clocks are fetched together from one health response. The copy is
+// explicitly independent; its self-report never restores managed content health.
+function renderProjectionClocks(health) {
+  var element = document.getElementById('projection-clocks');
+  if (!element) return;
+  var h = health || {}, t = h.projection_time_semantics || {}, c = h.materialized_brief || {};
+  function value(v) { return typeof v === 'string' && v ? v : 'UNKNOWN（不可判）'; }
+  element.textContent = [
+    '受管 revision：' + value(t.state_revision),
+    '内容生成时间：' + value(t.content_generated_at) + ' · 内容状态：' + value(t.content_status),
+    '租约截止时间：' + value(t.lease_fresh_until) + ' · 租约状态：' + value(t.lease_status),
+    'manifest SHA256：' + value(h.projection_manifest_sha256),
+    '代码 OID：' + value(h.dashboard_code_oid),
+    '代码树 SHA256：' + value(h.dashboard_tree_sha256),
+    '代码 bundle SHA256：' + value(h.dashboard_code_sha256),
+    '独立副本：' + value(c.status) + ' · 配置来源：' + value(c.configuration_source),
+    '副本复制时间（来源自报）：' + value(c.copied_at) + ' · ' + value(c.copy_status),
+    '副本数据生成时间（来源自报）：' + value(c.data_generated_at) + ' · ' + value(c.data_status),
+    '副本来源 revision（来源自报）：' + value(c.source_revision_id),
+    '副本来源 manifest（来源自报）：' + value(c.source_manifest_sha256),
+    '来源自报对比：' + value(c.provenance_comparison) + ' · 已验证匹配状态：' + value(c.revision_match),
+    'UNCONFIGURED = 未配置；UNKNOWN = 不可判。来源自报相同不构成哈希证明；副本不代表当前受管发布。'
+  ].join('\n');
+}
+
+function refreshProjectionClocks() {
+  fetch('/health', {cache:'no-store'}).then(function(response) {
+    if (!response.ok) throw new Error('projection_health_unavailable');
+    return response.json();
+  }).then(renderProjectionClocks).catch(function() { renderProjectionClocks(null); });
+}
+refreshProjectionClocks();
+setInterval(refreshProjectionClocks, 30000);
 
 function checkForUpdates() {
   if (document.hidden || document.querySelector('dialog[open]')) {
