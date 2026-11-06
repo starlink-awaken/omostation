@@ -47035,7 +47035,8 @@ bets:
 - id: BET-Y2Q4-T10-290
   title: FIB-02 Panorama 投影租约、内容观测与复制时间独立展示
   goal: 用户可同时识别服务租约、真实内容年龄和副本时间；续租或复制旧数据不会伪造新鲜。保留现有300秒TTL与revision摘要身份。
-  status: pending
+  status: done
+  done_at: 2026-11-06
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -47080,17 +47081,41 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-290
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3349250e8435c0f175da7eb3d29f01d48c9da036
+          tests:
+            ref: receipt://docs/reports/2026-11-06-t10-290-fib02-projection-time-semantics-closeout.md
+            sha256: sha256:a025120403fa98a55d1b40b9dff3ff9c30040687dc02feaa24ee0d8be88886e2
+          diff:
+            ref: receipt://docs/reports/2026-11-06-t10-290-fib02-projection-time-semantics-closeout.md
+            sha256: sha256:a025120403fa98a55d1b40b9dff3ff9c30040687dc02feaa24ee0d8be88886e2
+          rollback:
+            ref: receipt://docs/reports/2026-11-06-t10-290-fib02-projection-time-semantics-closeout.md
+            sha256: sha256:a025120403fa98a55d1b40b9dff3ff9c30040687dc02feaa24ee0d8be88886e2
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-06-t10-290-fib02-projection-time-semantics-closeout.md
+            sha256: sha256:a025120403fa98a55d1b40b9dff3ff9c30040687dc02feaa24ee0d8be88886e2
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-06-t10-290-fib02-projection-time-semantics-closeout.md
+            sha256: sha256:a025120403fa98a55d1b40b9dff3ff9c30040687dc02feaa24ee0d8be88886e2
+          cleanup:
+            ref: receipt://docs/reports/2026-11-06-t10-290-fib02-projection-time-semantics-closeout.md
+            sha256: sha256:a025120403fa98a55d1b40b9dff3ff9c30040687dc02feaa24ee0d8be88886e2
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-290.md
+            sha256: sha256:ba1bcdff91f805caffb48bc4835502d139410e14fa477bc42f101cb139f21127
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: '价值轴 NOT_PROVEN：本条把三件不同的事（服务租约 / 绑定内容观测时间 / 文件副本时间）在现网读屏上拆开，收益面是伪造新鲜这件事从不可见变为可观测；value_indicator_policy 显式 false，与同族 281/282/284/288/289 同判。归属如实入账——工程腿由另一会话经 PR #5071 于 2026-11-06T03:56:01Z squash 合入 3349250e84…，本条 retro 与 receipt 由收口腿 PR 合入；生产码面等内容由发布器自行推进，本轮零部署动作（判据见收据 §5 限制①）。operational 的 live_canary 是行为读数而非投放状态：副本文件 current.json 于 06:24:01Z 重写后，/health 仍报 content_generated_at=2026-11-05T14:59:43Z + content_status=STALE 而 lease_status=VALID，即 AC-2/AC-3 的直接形状；TTL 两处常量在部署那份逐字节未变。限制两条：① materialized_brief 整面 UNCONFIGURED，所以 AC-3 现网只证到不伪造与明确不可判，未证到真实复制时间展示；② 内容时间 15.4h 不推进（revision 恒等 1754eefc6dca…）是发布器侧运维线索，本条只把它变得可见，未修它。'
+    overall_state: delivery_accepted
   underlying_workflow: project-code-change
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
