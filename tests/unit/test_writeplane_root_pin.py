@@ -14,6 +14,13 @@ BET:  BET-Y2Q4-T10-250
 本文件的 `ROOT` 由 `__file__` 反推是被检对象决定的：扫描的是"这份检出自己的源码"，
 不是 profile 根。用 `code_root()` 反而会在声明 `OMOSTATION_ROOT` 时扫到别的树。
 风险由 `test_scan_target_is_the_checkout_holding_this_test` 兜住（根不对就当场红，不空绿）。
+
+2026-11-05 BET-Y2Q4-T10-288 起本文件有**第二把尺**：`scan_cwd_relative_sites` 认第四类根 ——
+`Path(".omo")` 这类**不挂任何根**的相对锚，落点随**进程 CWD**，连 profile 都不读，所以第一把尺
+（按 resolver 归类）与 `test_resident_write_plane_split` 的 state 族**按构造都看不见它**。
+两把尺是并列类目而不是同一判据的放宽：第一把尺的 `SPEC_*` 五个读数逐字不变，否则一次改判据
+就会把 153/143/95 的债基线一起改写。契约见
+`docs/superpowers/specs/2026-11-05-cwd-relative-root-anchor-admission.md` §2/§5 AC-01。
 """
 
 from __future__ import annotations
@@ -299,6 +306,306 @@ def gated_pairs(sites: list[Site]) -> frozenset[tuple[str, str]]:
     return frozenset((f, whole) for f, _, m, whole in sites if m in GATED_MARKERS)
 
 
+# ── AC-01 第四类根：仓内相对锚（落点随进程 CWD） ────────────────────────────
+#
+# 判据 = `docs/superpowers/specs/2026-11-05-cwd-relative-root-anchor-admission.md` §5 两形：
+#   (a) `/`-链的锚既不是 `__file__` 派生、也不是 resolver 或其别名、也不是函数形参，
+#       且展平后的字面量部分以 `.omo/` 或 `runtime/` 开头；
+#   (b) 单个 `Path(...)` / `os.path.join(...)` 调用，其字面量实参同样以 `.omo/` 或 `runtime/`
+#       开头 —— 含 `Path(os.environ.get(NAME, "<仓内相对默认>"))`：env 未声明即默认生效，
+#       所以那一形不是「已外置」，是「默认随 CWD」。
+# 按 AC-03 走**派生变量链**展平而不是常量名（`STATE_DIR → state_dir → mkdir`），并一跳进
+# 本模块的函数体判「这个值是被当根用还是只当后缀拼上去」—— 两种用法在字面量上不可区分，
+# 只有用法能区分（`bin/panorama/compact-observation.py` 的 RELATIVE 命名常量就是后缀面）。
+# 上面 `scan_checkout_pinned_sites` 的准入谓词（要求 `__file__`）正是 spec §3 第三条失明机制，
+# 所以这里是**并列**的第二个检测器而不是把它放宽：钉在检出根的债与随 CWD 的债分桶登记。
+RELATIVE_ROOTS = (".omo/", "runtime/")
+RELATIVE_CONSTRUCTORS = frozenset({"Path", "join"})
+ENV_READERS = frozenset({"get", "getenv"})
+ROOT_ACTION_ATTRS = frozenset(
+    {
+        "mkdir", "write_text", "write_bytes", "read_text", "read_bytes", "touch",
+        "unlink", "rmdir", "chmod", "replace", "rename", "glob", "rglob", "iterdir",
+        "exists", "is_file", "is_dir", "open", "stat", "resolve", "link_to", "samefile",
+    }
+)
+FS_CALLS = frozenset({"open", "exists", "isfile", "isdir", "makedirs", "mkdir", "remove", "rmtree", "copy", "copyfile"})
+
+RelativeSite = tuple[str, int, str, str]  # (仓库相对文件, 行号, marker, 展平后的相对根)
+
+
+def _segments(node: ast.AST, bindings: dict[str, ast.AST], seen: frozenset[str] = frozenset()) -> list[str]:
+    """按源码顺序展平一条路径表达式的段；判不出来的段记 `*`（后缀比较在此截断）。"""
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        return _segments(node.left, bindings, seen) + _segments(node.right, bindings, seen)
+    if isinstance(node, ast.Constant):
+        return [node.value] if isinstance(node.value, str) else ["*"]
+    if isinstance(node, ast.Name):
+        value = bindings.get(node.id)
+        if value is None or node.id in seen:
+            return ["*"]  # 形参 / 参数进来的根 / 自指 —— 根由调用方决定，不是本表达式的
+        return _segments(value, bindings, seen | {node.id})
+    if isinstance(node, ast.Call):
+        fname = node.func.id if isinstance(node.func, ast.Name) else (
+            node.func.attr if isinstance(node.func, ast.Attribute) else ""
+        )
+        if fname in ENV_READERS:
+            lits = [a.value for a in node.args if isinstance(a, ast.Constant) and isinstance(a.value, str)]
+            return [lits[-1]] if lits else ["*"]  # 末位字面量 = 默认值，它才是未声明时的落点
+        if fname == "Path" and len(node.args) == 1:
+            return _segments(node.args[0], bindings, seen)
+        if fname == "join":
+            out: list[str] = []
+            for arg in node.args:
+                out.extend(_segments(arg, bindings, seen))
+            return out
+        return ["*"]
+    return ["*"]
+
+
+def _literal_head(segments: list[str]) -> str:
+    parts: list[str] = []
+    for seg in segments:
+        if seg == "*":
+            break
+        seg = seg.strip("/")
+        if seg and seg != ".":
+            parts.append(seg)
+    return "/".join(parts)
+
+
+def _relative_root(segments: list[str]) -> str | None:
+    head = _literal_head(segments)
+    return head if head.startswith(RELATIVE_ROOTS) else None
+
+
+def _path_bindings(scope: ast.AST) -> dict[str, ast.AST]:
+    """`NAME = <expr>` 登记，模块级与函数内都要（AC-03 那条链是**过程内**的）。
+
+    同名重复赋值取按行号的首次：`root = state_root()` 之后 `root = root / "a"` 的根
+    由第一次赋值决定，反过来 `x = Path(".omo")` 后 `x = x / "state"` 也是。
+    """
+    found: list[tuple[int, str, ast.AST]] = []
+    for node in ast.walk(scope):
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and node.value is not None:
+                    found.append((node.lineno, t.id, node.value))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
+            found.append((node.lineno, node.target.id, node.value))
+    out: dict[str, ast.AST] = {}
+    for _ln, name, value in found:
+        out.setdefault(name, value)
+    return out
+
+
+def _leftmost(node: ast.AST) -> ast.AST:
+    while isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        node = node.left
+    return node
+
+
+def _parent_map(scope: ast.AST) -> dict[int, ast.AST]:
+    par: dict[int, ast.AST] = {}
+    for node in ast.walk(scope):
+        for child in ast.iter_child_nodes(node):
+            par[id(child)] = node
+    return par
+
+
+def _callee_defs(scope: ast.AST) -> dict[str, ast.FunctionDef]:
+    return {n.name: n for n in ast.walk(scope) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+
+
+def _param_is_root(fn: ast.FunctionDef, param: str, depth: int = 0) -> bool:
+    """形参在该函数体里是否被当根用（一跳过程间判据，仍走 AC-03 的用法而非名字）。"""
+    return _name_is_root(param, fn, _path_bindings(fn), _parent_map(fn), _callee_defs(fn), depth + 1)
+
+
+def _name_is_root(
+    name: str,
+    scope: ast.AST,
+    bindings: dict[str, ast.AST],
+    par: dict[int, ast.AST],
+    defs: dict[str, ast.FunctionDef],
+    depth: int = 0,
+) -> bool:
+    for node in ast.walk(scope):
+        if not (isinstance(node, ast.Name) and node.id == name and isinstance(node.ctx, ast.Load)):
+            continue
+        if _expr_is_root(node, scope, par, bindings, defs, depth):
+            return True
+    return False
+
+
+def _assign_target_name(node: ast.AST) -> str | None:
+    """这个表达式若被直接赋值给一个名字，返回那个名字；多目标/解包/属性赋值 ⇒ None。"""
+    if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+        return node.targets[0].id
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+        return node.target.id
+    return None
+
+
+def _expr_is_root(
+    node: ast.AST,
+    scope: ast.AST,
+    par: dict[int, ast.AST],
+    bindings: dict[str, ast.AST],
+    defs: dict[str, ast.FunctionDef],
+    depth: int = 0,
+) -> bool:
+    """这个路径值是被**当根用**（⇒ 落点由它决定）还是只当后缀拼上去（⇒ 落点由被拼的那棵树决定）。
+
+    判据**只正面枚举**什么用法决定落点（R1 链最左、R2 路径动作的接收者、R3 fs 调用的直接实参、
+    R5 一跳进入本模块 callee），其余一律 False。反过来写（默认 True + 逐个摘掉已知的非用法）会
+    在每一种没枚举到的父节点形状上假阳 —— 本轮实测两处：`rel.parent in (Path(".omo/_control"), …)`
+    的元组透明跳一进到 BoolOp 就落到默认分支，`_resolve_input_path` 里 `path = value or default`
+    的默认实参同样落到默认分支，两处都不是落点决策。
+    """
+    if depth > 3:
+        return False
+    p = par.get(id(node))
+    if p is None:
+        return False
+    while isinstance(p, (ast.Tuple, ast.List, ast.Set)):
+        p = par.get(id(p))  # 容器只是把几份候选并排放，落点由消费容器的东西决定
+        if p is None:
+            return False
+    if isinstance(p, ast.BoolOp):
+        target = _assign_target_name(p)
+        if target is None:
+            return False
+        return _name_is_root(target, scope, bindings, par, defs, depth + 1)
+    if isinstance(p, ast.Attribute):
+        return p.attr in ROOT_ACTION_ATTRS
+    if isinstance(p, ast.BinOp) and isinstance(p.op, ast.Div):
+        if _leftmost(p) is node:
+            return True  # R1
+        base = _leftmost(p)
+        bname = ""
+        if isinstance(base, ast.Call):
+            bname = base.func.id if isinstance(base.func, ast.Name) else getattr(base.func, "attr", "")
+        if bname in RELATIVE_CONSTRUCTORS:
+            return _relative_root(_segments(base, bindings)) is not None
+        return False  # 拼到检出根 / 缝 / 形参 / 别的名字上 ⇒ 后缀
+    if isinstance(p, ast.Call):
+        fname = p.func.id if isinstance(p.func, ast.Name) else getattr(p.func, "attr", "")
+        if fname in FS_CALLS:
+            return True  # R3
+        if depth >= 2:
+            return False
+        fn = defs.get(fname)
+        if fn is None:
+            return False  # 跨模块的 callee 不在本文件的可见面里 ⇒ 不可判，不猜
+        params = [a.arg for a in fn.args.posonlyargs + fn.args.args + fn.args.kwonlyargs]
+        received: list[str] = []
+        for i, arg in enumerate(p.args):
+            if arg is node and i < len(params):
+                received.append(params[i])
+        for kw in p.keywords:
+            if kw.value is node and kw.arg in params:
+                received.append(kw.arg)
+        return any(_param_is_root(fn, name, depth) for name in received)  # R5
+    return False
+
+
+def scan_cwd_relative_sites(root: Path, shapes: tuple[str, ...] = ("chain", "call")) -> list[RelativeSite]:
+    """扫 `root/bin/**/*.py` 的第四类根站点；`shapes` 是变异开关（摘掉一形 ⇒ 该形读数归零）。
+
+    按 (文件, 相对根) 去重取首次命中：登记单位是**根**（`state_root()` 拼接时要裁的是它），
+    不是每一行拼接 —— 否则同一处缺陷会按行数被数两遍，且每次加一行拼接都要重签基线。
+    """
+    bin_dir = root / "bin"
+    if not bin_dir.is_dir():
+        return []
+    rows: list[RelativeSite] = []
+    for path in sorted(bin_dir.rglob("*.py")):
+        if set(path.relative_to(bin_dir).parts) & SKIP_SEGMENTS:
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+        except (SyntaxError, ValueError, UnicodeDecodeError):
+            continue
+        rel = str(path.relative_to(root))
+        bindings = _path_bindings(tree)
+        par = _parent_map(tree)
+        defs = _callee_defs(tree)
+        cands: list[tuple[int, str]] = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+                if "chain" not in shapes:
+                    continue
+                rroot = _relative_root(_segments(_leftmost(node), bindings))
+                if rroot is not None:
+                    cands.append((node.lineno, rroot))
+                continue
+            if not isinstance(node, ast.Call) or "call" not in shapes:
+                continue
+            fname = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
+            if fname not in RELATIVE_CONSTRUCTORS:
+                continue
+            rroot = _relative_root(_segments(node, bindings))
+            if rroot is None:
+                continue
+            holders = [
+                t.targets[0].id
+                for t in ast.walk(tree)
+                if isinstance(t, ast.Assign) and getattr(t, "value", None) is node
+                and len(t.targets) == 1 and isinstance(t.targets[0], ast.Name)
+            ]
+            if holders and not _name_is_root(holders[0], tree, bindings, par, defs):
+                continue  # 只当后缀 ⇒ 这一处不是 CWD 根
+            if not holders and not _expr_is_root(node, tree, par, bindings, defs):
+                continue
+            cands.append((node.lineno, rroot))
+        cands.sort(key=lambda x: x[0])
+        seen_roots: set[str] = set()
+        for lineno, rroot in cands:
+            if rroot in seen_roots:
+                continue
+            marker = next((m for m in ALL_MARKERS if rroot == m or rroot.startswith(m + "/")), None)
+            if marker is None:
+                continue
+            seen_roots.add(rroot)
+            rows.append((rel, lineno, marker, rroot))
+    return rows
+
+
+def relative_keys(sites: list[RelativeSite]) -> frozenset[tuple[str, str]]:
+    return frozenset((f, rroot) for f, _ln, _m, rroot in sites)
+
+
+# 2026-11-05 BET-Y2Q4-T10-288 由扫描生成的第四类根登记面：`(文件, 展平后的相对根) -> 为什么它仍是债`。
+# 与 BASELINE_WRITESPANE_PAIRS 同构 —— 还掉一处就从这份名单里删掉那行并改掉那个脚本，只减不增。
+# 读数口径：按**根**去重（一个文件里同一个根拼多少次都算一处），`.omo/_knowledge` 4 处 / `.omo/_truth` 1 处，
+# 另有 1 处是 `_knowledge` 整面（fm_schema_migrate 直接拿 `Path(".omo/_knowledge")` 当遍历根）。
+# 2026-11-06 还掉一处：`bin/notification.py` 的 `.omo/_truth/registry/notification-config.yaml`
+# （spec §5 AC-02 「`:35` 同形一起处理」）改走 `_config_path() = code_root() / CONFIG_RELATIVE`。
+BASELINE_RELATIVE_SITES = {
+    ("bin/gac/gate-roi-report.py", ".omo/_knowledge/governance-history.jsonl"): (
+        "只读（`load_events(HISTORY)`），未声明根 ⇒ 同一份报告在不同 CWD 下读到不同历史面"
+    ),
+    ("bin/hitl-proposal.py", ".omo/_knowledge/hitl-proposals"): (
+        "HITL 提案面的**生产者**（`create_proposal` / `_save_proposal` 写）。T10-288 只裁了消费者"
+        "`bin/notification.py`（env 缺席即拒写），生产者仍随 CWD —— 两半必须同一次交付改，"
+        "否则读写分叉比现状更坏（登记在 ADR-0456 addendum 的后续项）"
+    ),
+    ("bin/ops/continual-harness-refine.py", ".omo/_knowledge/skills"): (
+        "写面（`_emit_skills` mkdir 后逐个 skill 落盘）"
+    ),
+    ("bin/ops/continual-harness-refine.py", ".omo/_knowledge/refinements"): (
+        "写面（`run_refine` 里 mkdir 后写 receipt）"
+    ),
+    ("bin/ssot/auto-bump-doc-governance-budget.py", ".omo/_truth/registry/document-governance.yaml"): (
+        "写治理 SSOT registry（`bump_budget`）—— 随 CWD 意味着在 worktree 里跑就改那份检出"
+    ),
+    ("bin/ssot/fm_schema_migrate.py", ".omo/_knowledge"): (
+        "`main` 里拿它当 `rglob('*.md')` 的遍历根，迁移后回写 frontmatter"
+    ),
+}
+
+
 def _write(tmp_path: Path, rel: str, source: str) -> Path:
     target = tmp_path / "bin" / rel
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -427,3 +734,142 @@ def test_marker_table_is_load_bearing():
     assert gated_pairs(without_state) < BASELINE_WRITESPANE_PAIRS
     dropped = BASELINE_WRITESPANE_PAIRS - gated_pairs(without_state)
     assert all(p[1].startswith(".omo/state") for p in dropped) and dropped
+
+
+# ── AC-01 第四类根的用测（正反 + 登记双向 + 变异） ────────────────────────────
+
+_RELATIVE_CHAIN_SHAPE = (
+    "from pathlib import Path\n"
+    'STATE_DIR = Path(".omo")\n\n\n'
+    "def emit() -> None:\n"
+    '    state_dir = STATE_DIR / "state"\n'
+    "    state_dir.mkdir(parents=True, exist_ok=True)\n"
+    '    out_file = state_dir / "lock-graph.json"\n'
+    '    out_file.write_text("{}")\n'
+)
+
+_RELATIVE_CALL_SHAPE = (
+    "import os\n"
+    "from pathlib import Path\n\n"
+    'PROPOSALS = Path(os.environ.get("DEMO_PROPOSALS_DIR", ".omo/_knowledge/demos"))\n\n\n'
+    "def load() -> str:\n"
+    "    if not PROPOSALS.exists():\n"
+    "        return ''\n"
+    '    return next(PROPOSALS.glob("*.yaml")).read_text()\n'
+)
+
+
+def test_relative_detector_fires_on_both_relative_shapes(tmp_path):
+    """spec §2 两形都要命中：派生变量链（lock_graph 形）与 env 默认值（notification 形）。
+
+    第一形是 AC-03 那条"按派生链展平不按常量名"的正面证据 —— 根锚在 `STATE_DIR`，
+    被施加动作的是 `state_dir`，只看常量名或只看动作行都会漏。
+    """
+    _write(tmp_path, "chain.py", _RELATIVE_CHAIN_SHAPE)
+    _write(tmp_path, "envdefault.py", _RELATIVE_CALL_SHAPE)
+    found = {(f, rroot) for f, _, _, rroot in scan_cwd_relative_sites(tmp_path)}
+    assert found == {
+        ("bin/chain.py", ".omo/state"),
+        ("bin/envdefault.py", ".omo/_knowledge/demos"),
+    }, found
+
+
+def test_relative_detector_does_not_fire_on_seam_checkout_or_suffix(tmp_path):
+    """反过宽四条：经缝取根 / 挂检出根 / 当后缀拼到别人的根上 / 只进谓词比较，都不算第四类根。
+
+    后两形是本轮实测的假阳源（`bin/panorama/compact-observation.py` 的 `DEFAULT_RELATIVE_OUTPUT`
+    与 `bin/ssot/check-cross-refs.py` 的 `rel.parent in (Path(".omo/_truth"), …)`），
+    判据只能看用法不能看字面量。同时断言第一把尺**仍然**看见那处检出根站点 ——
+    收窄第四类不得把已有的钉根债读成不存在（spec §5 AC-01 的反证不退化）。
+    """
+    _write(
+        tmp_path,
+        "seam.py",
+        "from pathlib import Path\n"
+        "def state_root() -> Path:\n"
+        "    return Path('/tmp/state')\n\n\n"
+        'TARGET = state_root() / ".omo/state" / "x.json"\n'
+        "TARGET.write_text('')\n",
+    )
+    _write(
+        tmp_path,
+        "checkout.py",
+        "from pathlib import Path\n"
+        "WORKSPACE = Path(__file__).resolve().parents[2]\n"
+        'TARGET = WORKSPACE / ".omo/state" / "y.json"\n'
+        "TARGET.write_text('')\n",
+    )
+    _write(
+        tmp_path,
+        "suffix.py",
+        "from pathlib import Path\n"
+        'DEFAULT_RELATIVE_OUTPUT = ".omo/_knowledge/compact/observation.md"\n\n\n'
+        "def write_out(root: Path) -> None:\n"
+        "    target = root / DEFAULT_RELATIVE_OUTPUT\n"
+        "    target.write_text('')\n",
+    )
+    _write(
+        tmp_path,
+        "predicate.py",
+        "from pathlib import Path\n"
+        "def interesting(rel: Path) -> bool:\n"
+        "    return rel.parent in (Path(\".omo/_control\"), Path(\".omo/_truth\"))\n",
+    )
+    _write(
+        tmp_path,
+        "defaultarg.py",
+        "from pathlib import Path\n"
+        'DEFAULT_SCENARIO_DIR = Path(".omo/_knowledge/contracts")\n\n\n'
+        "def _resolve(root: Path, value, default: Path) -> Path:\n"
+        "    path = value or default\n"
+        "    return path if path.is_absolute() else root / path\n\n\n"
+        "def main() -> Path:\n"
+        "    return _resolve(Path('/tmp'), None, DEFAULT_SCENARIO_DIR)\n",
+    )
+    assert relative_keys(scan_cwd_relative_sites(tmp_path)) == frozenset()
+    pinned = gated_pairs(scan_checkout_pinned_sites(tmp_path))
+    assert ("bin/checkout.py", ".omo/state/y.json") in pinned, pinned
+
+
+def test_relative_sites_are_the_reviewed_register():
+    """双向相等 + 每条理由指向真实文件：新增一处 ⇒ 红；还掉一处不删名单 ⇒ 红。"""
+    measured = relative_keys(scan_cwd_relative_sites(ROOT))
+    assert measured == frozenset(BASELINE_RELATIVE_SITES), {
+        "new_debt": sorted(measured - frozenset(BASELINE_RELATIVE_SITES)),
+        "paid_off_not_removed": sorted(frozenset(BASELINE_RELATIVE_SITES) - measured),
+    }
+    for (rel, _root), reason in BASELINE_RELATIVE_SITES.items():
+        assert (ROOT / rel).is_file(), rel
+        assert len(reason) > 12, (rel, reason)
+
+
+def test_relative_category_is_load_bearing(tmp_path):
+    """变异对照：摘掉一形 ⇒ 该形**独立承重的那一处**当场消失。
+
+    合成树是主证据：`Path(".omo") / "state" / file` 只有链形看得见（`Path(".omo")`
+    单独一形的 head 是 `.omo`，不在 `RELATIVE_ROOTS` 前缀内）；`Path(os.environ.get(N, ".omo/…"))`
+    的根只有调用形看得见（那个文件里没有任何 `/` 链）。两形各自归零一次，才是两形。
+
+    真实树这一面（`bin/**`）的读数是 2026-11-06 复算的量：**调用形覆盖全部 6 处，链形只覆盖 4 处**，
+    差的那两处是"根锚只被施加动作、从不参与 `/` 拼接"的形状。链形今天在 `bin/**` 上不是必需项，
+    但 spec §2 站点①（`projects/omo/.../lock_graph.py` 的 `STATE_DIR / "state" / file`）正是它唯一
+    能认的形状 —— 摘掉链形就等于把第四类根的第一条确证证据判成不存在。
+    """
+    _write(tmp_path, "chain.py", _RELATIVE_CHAIN_SHAPE)
+    _write(tmp_path, "envdefault.py", _RELATIVE_CALL_SHAPE)
+    both_keys = {
+        "chain": ("bin/chain.py", ".omo/state"),
+        "call": ("bin/envdefault.py", ".omo/_knowledge/demos"),
+    }
+    for shape, other in (("chain", "call"), ("call", "chain")):
+        assert relative_keys(scan_cwd_relative_sites(tmp_path, shapes=(shape,))) == {both_keys[shape]}
+        assert both_keys[other] not in relative_keys(scan_cwd_relative_sites(tmp_path, shapes=(shape,)))
+    assert relative_keys(scan_cwd_relative_sites(tmp_path, shapes=())) == frozenset()
+
+    measured = relative_keys(scan_cwd_relative_sites(ROOT))
+    assert relative_keys(scan_cwd_relative_sites(ROOT, shapes=("call",))) == measured
+    assert measured - relative_keys(scan_cwd_relative_sites(ROOT, shapes=("chain",))) == {
+        ("bin/gac/gate-roi-report.py", ".omo/_knowledge/governance-history.jsonl"),
+        ("bin/ssot/auto-bump-doc-governance-budget.py", ".omo/_truth/registry/document-governance.yaml"),
+    }
+

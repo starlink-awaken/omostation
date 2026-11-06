@@ -39,6 +39,7 @@ jsonl 面)，而本文件的登记表一直停在 18 —— 这就是 BET-Y2Q4-T
 from __future__ import annotations
 
 import ast
+import importlib.util
 import json
 import os
 import subprocess
@@ -105,6 +106,17 @@ def _repo_path(text: str) -> bool:
 
 
 def _classify(value: ast.AST) -> str:
+    """模块级名字的**根类别**。故意只有四类，第四类根 (CWD) 不在这里 —— 见下方 RELATIVE 类目的注释。
+
+    `RELATIVE` 不是这个函数的一个分支，两个原因，都是量出来的而不是推理：
+    ① 这里拿到的只有**值表达式**，没有用法，因而无法区分「根」与「后缀」。
+       `bin/lib/repo_root.py` 的 `LEDGER_RELATIVE = Path("runtime/omo/event-ledger.sqlite3")`
+       按值形状命中 spec §5 AC-01 (b)，但它实际是 `state_root() / LEDGER_RELATIVE` 的**后缀片段** ——
+       按值判会把 33 个 bin 侧片段判成 CWD 根 (本轮实测)，其中绝大多数根本不是根。
+    ② 读侧不缺这一类：`reader_pairs` 的 223 行里，锚点是仓内相对量的**零行** (本轮实测 klass
+       差集 = 0)，即加进来是一个在真实树上永不发火的装饰性分支 (§7③「按构造就绿」的反面)。
+    所以第四类根在尺 A 的落点是**写侧桶** (`scan_writers` 的第 5 桶 `relative`)，判据带用法。
+    """
     d = ast.dump(value)
     if any(k in d for k in _STATE_MARKERS):
         return "STATE"
@@ -256,13 +268,266 @@ def _templates(tree: ast.AST) -> dict[str, str]:
     return out
 
 
+# ── RELATIVE 类目 (BET-Y2Q4-T10-288, spec §5 AC-01) —— 第四类根：不挂任何根的仓内相对锚 ──────
+#
+# 这尺原先按构造看不见这类根，机制是 spec §3 前两条，都在这个文件自己身上：
+# ① **尾段比较** —— `_text(segs[1:])` 丢掉 `segs[0]`（锚）再比对族名，于是
+#    `Path(".omo") / "state" / "x"` 的比较串是 `state/x`，既过不了 `_repo_path()` 也匹配不上任何族；
+# ② **只走 `Div` 节点** —— `bin/notification.py:35` 那种单个 `Path(...)` 调用连候选都不是。
+# 所以这里补的是**并列**的第五桶，不是把前四桶的准入放宽：前四桶的读数逐字节未变
+# （由本文件已有的 `STATE_FAMILIES` / `DEFERRED_RESIDENT_WRITERS` / `OPAQUE_WRITERS` 等断言钉着），
+# 第四类根站点原先不在任何桶里，现在只进 `relative`。
+#
+# 判据与被检对象**同源**：与 `tests/unit/test_writeplane_root_pin.py` 的相对锚检测器同一份语义
+# （函数名逐一对应），并由 `test_two_rulers_agree_on_the_relative_face` 在 bin 面上双向对拍 ——
+# 两份各写一遍而不对拍，就是 AGENTS.md §7「检测器的分类规则要与标记清单同源」的下一个事故。
+RELATIVE_ROOTS = (".omo/", "runtime/")
+RELATIVE_CONSTRUCTORS = frozenset({"Path", "join"})
+ENV_READERS = frozenset({"get", "getenv"})
+RELATIVE_SKIP_SEGMENTS = {"_archive", "_vendored", "__pycache__", ".venv"}
+ROOT_ACTION_ATTRS = frozenset(
+    {
+        "mkdir", "write_text", "write_bytes", "read_text", "read_bytes", "touch",
+        "unlink", "rmdir", "chmod", "replace", "rename", "glob", "rglob", "iterdir",
+        "exists", "is_file", "is_dir", "open", "stat", "resolve", "link_to", "samefile",
+    }
+)
+FS_CALLS = frozenset({"open", "exists", "isfile", "isdir", "makedirs", "mkdir", "remove", "rmtree", "copy", "copyfile"})
+
+
+def _segments(node: ast.AST, bindings: dict[str, ast.AST], seen: frozenset[str] = frozenset()) -> list[str]:
+    """按源码顺序展平一条路径表达式的段；判不出来的段记 `*`（AC-03 的派生链就走这条路）。"""
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        return _segments(node.left, bindings, seen) + _segments(node.right, bindings, seen)
+    if isinstance(node, ast.Constant):
+        return [node.value] if isinstance(node.value, str) else ["*"]
+    if isinstance(node, ast.Name):
+        value = bindings.get(node.id)
+        if value is None or node.id in seen:
+            return ["*"]  # 形参 / 别处进来的根 / 自指 —— 落点不由本表达式决定
+        return _segments(value, bindings, seen | {node.id})
+    if isinstance(node, ast.Call):
+        fname = node.func.id if isinstance(node.func, ast.Name) else (
+            node.func.attr if isinstance(node.func, ast.Attribute) else ""
+        )
+        if fname in ENV_READERS:
+            lits = [a.value for a in node.args if isinstance(a, ast.Constant) and isinstance(a.value, str)]
+            return [lits[-1]] if lits else ["*"]  # 末位字面量 = 默认值，它才是 env 未声明时的落点
+        if fname == "Path" and len(node.args) == 1:
+            return _segments(node.args[0], bindings, seen)
+        if fname == "join":
+            out: list[str] = []
+            for arg in node.args:
+                out.extend(_segments(arg, bindings, seen))
+            return out
+        return ["*"]
+    return ["*"]
+
+
+def _literal_head(segments: list[str]) -> str:
+    parts: list[str] = []
+    for seg in segments:
+        if seg == "*":
+            break
+        seg = seg.strip("/")
+        if seg and seg != ".":
+            parts.append(seg)
+    return "/".join(parts)
+
+
+def _relative_root(segments: list[str]) -> str | None:
+    head = _literal_head(segments)
+    return head if head.startswith(RELATIVE_ROOTS) else None
+
+
+def _path_bindings(scope: ast.AST) -> dict[str, ast.AST]:
+    """`NAME = <expr>` 登记，模块级与函数内都要 —— AC-03 那条链 (`STATE_DIR → state_dir`) 是过程内的。"""
+    found: list[tuple[int, str, ast.AST]] = []
+    for node in ast.walk(scope):
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and node.value is not None:
+                    found.append((node.lineno, t.id, node.value))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
+            found.append((node.lineno, node.target.id, node.value))
+    out: dict[str, ast.AST] = {}
+    for _ln, name, value in found:
+        out.setdefault(name, value)
+    return out
+
+
+def _leftmost(node: ast.AST) -> ast.AST:
+    while isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        node = node.left
+    return node
+
+
+def _parent_map(scope: ast.AST) -> dict[int, ast.AST]:
+    par: dict[int, ast.AST] = {}
+    for node in ast.walk(scope):
+        for child in ast.iter_child_nodes(node):
+            par[id(child)] = node
+    return par
+
+
+def _callee_defs(scope: ast.AST) -> dict[str, ast.FunctionDef]:
+    return {n.name: n for n in ast.walk(scope) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+
+
+def _assign_target_name(node: ast.AST) -> str | None:
+    if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+        return node.targets[0].id
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+        return node.target.id
+    return None
+
+
+def _param_is_root(fn: ast.FunctionDef, param: str, depth: int = 0) -> bool:
+    return _name_is_root(param, fn, _path_bindings(fn), _parent_map(fn), _callee_defs(fn), depth + 1)
+
+
+def _name_is_root(
+    name: str,
+    scope: ast.AST,
+    bindings: dict[str, ast.AST],
+    par: dict[int, ast.AST],
+    defs: dict[str, ast.FunctionDef],
+    depth: int = 0,
+) -> bool:
+    for node in ast.walk(scope):
+        if not (isinstance(node, ast.Name) and node.id == name and isinstance(node.ctx, ast.Load)):
+            continue
+        if _expr_is_root(node, scope, par, bindings, defs, depth):
+            return True
+    return False
+
+
+def _expr_is_root(
+    node: ast.AST,
+    scope: ast.AST,
+    par: dict[int, ast.AST],
+    bindings: dict[str, ast.AST],
+    defs: dict[str, ast.FunctionDef],
+    depth: int = 0,
+) -> bool:
+    """这个相对值是**被当根用**（落点由它 = 进程 CWD）还是只当后缀拼上去（落点由被拼的那棵树）。
+
+    只正面枚举决定落点的用法：R1 链最左、R2 路径动作的接收者、R3 fs 调用的直接实参、
+    R5 一跳进本模块 callee。默认 False —— 反过来写会在每一种没枚举到的父节点形状上假阳
+    （尺 B 本轮实测两处：元组比较里的 `x.parent in (Path(".omo/_control"), …)`、`path = value or default`
+    的默认实参）。
+    """
+    if depth > 3:
+        return False
+    p = par.get(id(node))
+    if p is None:
+        return False
+    while isinstance(p, (ast.Tuple, ast.List, ast.Set)):
+        p = par.get(id(p))
+        if p is None:
+            return False
+    if isinstance(p, ast.BoolOp):
+        target = _assign_target_name(p)
+        if target is None:
+            return False
+        return _name_is_root(target, scope, bindings, par, defs, depth + 1)
+    if isinstance(p, ast.Attribute):
+        return p.attr in ROOT_ACTION_ATTRS
+    if isinstance(p, ast.BinOp) and isinstance(p.op, ast.Div):
+        if _leftmost(p) is node:
+            return True
+        base = _leftmost(p)
+        bname = ""
+        if isinstance(base, ast.Call):
+            bname = base.func.id if isinstance(base.func, ast.Name) else getattr(base.func, "attr", "")
+        if bname in RELATIVE_CONSTRUCTORS:
+            return _relative_root(_segments(base, bindings)) is not None
+        return False
+    if isinstance(p, ast.Call):
+        fname = p.func.id if isinstance(p.func, ast.Name) else getattr(p.func, "attr", "")
+        if fname in FS_CALLS:
+            return True
+        if depth >= 2:
+            return False
+        fn = defs.get(fname)
+        if fn is None:
+            return False
+        params = [a.arg for a in fn.args.posonlyargs + fn.args.args + fn.args.kwonlyargs]
+        received: list[str] = []
+        for i, arg in enumerate(p.args):
+            if arg is node and i < len(params):
+                received.append(params[i])
+        for kw in p.keywords:
+            if kw.value is node and kw.arg in params:
+                received.append(kw.arg)
+        return any(_param_is_root(fn, name, depth) for name in received)
+    return False
+
+
+def _relative_in_file(rel: str, tree: ast.AST, shapes: tuple[str, ...]) -> dict[str, tuple[str, int, str]]:
+    """单文件的相对锚根：`{family: (src 相对文件, 首次命中行号, 形名)}`，按根去重（登记单位是根，不是每次拼接）。"""
+    bindings = _path_bindings(tree)
+    par = _parent_map(tree)
+    defs = _callee_defs(tree)
+    cands: list[tuple[int, str, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            if "chain" not in shapes:
+                continue
+            rroot = _relative_root(_segments(_leftmost(node), bindings))
+            if rroot is not None:
+                cands.append((node.lineno, rroot, "chain"))
+            continue
+        if not isinstance(node, ast.Call) or "call" not in shapes:
+            continue
+        fname = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
+        if fname not in RELATIVE_CONSTRUCTORS:
+            continue
+        rroot = _relative_root(_segments(node, bindings))
+        if rroot is None:
+            continue
+        holders = [
+            t.targets[0].id
+            for t in ast.walk(tree)
+            if isinstance(t, ast.Assign) and getattr(t, "value", None) is node
+            and len(t.targets) == 1 and isinstance(t.targets[0], ast.Name)
+        ]
+        if holders and not _name_is_root(holders[0], tree, bindings, par, defs):
+            continue  # 只当后缀 ⇒ 这一处不是 CWD 根（`LEDGER_RELATIVE` 那一形）
+        if not holders and not _expr_is_root(node, tree, par, bindings, defs):
+            continue
+        cands.append((node.lineno, rroot, "call"))
+    out: dict[str, tuple[int, str]] = {}
+    for lineno, rroot, shape in sorted(cands):
+        if rroot in out or not _repo_path(rroot):
+            continue
+        out[rroot] = (lineno, shape)
+    return {fam: (rel, line, shape) for fam, (line, shape) in out.items()}
+
+
+def scan_relative_writers(src: Path, shapes: tuple[str, ...] = ("chain", "call")) -> dict[str, list[tuple[str, int, str]]]:
+    """第四类根站点：`{family: [(src 相对文件, 行号, 形名)]}，形名 ∈ chain|call。"""
+    buckets: dict[str, list[tuple[str, int, str]]] = {}
+    for path in sorted(src.rglob("*.py")):
+        if set(path.relative_to(src).parts) & RELATIVE_SKIP_SEGMENTS:
+            continue
+        tree = _parse(path)
+        if tree is None:
+            continue
+        rel = str(path.relative_to(src))
+        for fam, hit in _relative_in_file(rel, tree, shapes).items():
+            buckets.setdefault(fam, []).append(hit)
+    return buckets
+
+
 def scan_writers(src: Path) -> dict[str, dict[str, list[tuple[str, int, str]]]]:
-    """src/**.py → {bucket: {family: [(file, line, kind)]}}, bucket ∈ state|bare_template|bare_inline|opaque。"""
+    """src/**.py → {bucket: {family: [(file, line, kind)]}}, bucket ∈ state|bare_template|bare_inline|opaque|relative。"""
     buckets: dict[str, dict[str, list[tuple[str, int, str]]]] = {
         "state": {},
         "bare_template": {},
         "bare_inline": {},
         "opaque": {},
+        "relative": {},
     }
     for path in sorted(src.rglob("*.py")):
         tree = _parse(path)
@@ -294,6 +559,9 @@ def scan_writers(src: Path) -> dict[str, dict[str, list[tuple[str, int, str]]]]:
                 buckets["bare_inline"].setdefault(text, []).append((rel, node.lineno, anchor or "?"))
         for name, text in templates.items():
             buckets["bare_template"].setdefault(text, []).append((rel, 0, f"template:{name}"))
+        if not set(path.relative_to(src).parts) & RELATIVE_SKIP_SEGMENTS:
+            for fam, hit in _relative_in_file(rel, tree, ("chain", "call")).items():
+                buckets["relative"].setdefault(fam, []).append(hit)
     return buckets
 
 
@@ -1383,3 +1651,201 @@ def test_default_db_path_consumers_are_anchored_at_call_time(omo_src):
     host = {(name, ln) for name, ln in hits if name == "task_queue.py"}
     assert wrapped | host == set(hits), sorted(set(hits) - wrapped - host)
     assert {name for name, _ in wrapped} == {"daemon.py", "decision.py", "sediment.py"}, sorted(wrapped)
+
+
+# ── RELATIVE 类目用例 (BET-Y2Q4-T10-288, spec §5 AC-01) ────────────────────
+
+RULER_B = ROOT / "tests" / "unit" / "test_writeplane_root_pin.py"
+
+# 登记单位是 `(文件, 展平后的相对根)`，与尺 B 的 `BASELINE_RELATIVE_SITES` 同构：还掉一处就同时
+# 删这一行并改那个脚本，只减不增。键口径 = 仓库相对路径（尺 B 同口径，便于两把尺对拍）。
+# 2026-11-06 还掉 `bin/notification.py` 的两处：提案面改 env 缺席即拒写、配置读面改 `_config_path()`
+# 经 `code_root()`（spec §5 AC-02）。差额判据见 `test_two_rulers_agree_on_the_relative_face`。
+RELATIVE_REGISTER: dict[tuple[str, str], str] = {
+    ("projects/omo/src/omo/workflow/lock_graph.py", ".omo/state"): (
+        "spec §2 站点①：`:5 STATE_DIR = Path(\".omo\")` → `:10 state_dir` → mkdir/write_text，"
+        "写面 = `<CWD>/.omo/state/lock-graph.json`。T10-288 裁为**显式降级 + 登记**（今天无生产者，"
+        "只把 `:5` 换成缝是化妆式修复）；删代码需另行授权，见 ADR-0456 addendum"
+    ),
+    ("bin/gac/gate-roi-report.py", ".omo/_knowledge/governance-history.jsonl"): "只读（`load_events(HISTORY)`），未声明根 ⇒ 不同 CWD 读到不同历史面",
+    ("bin/hitl-proposal.py", ".omo/_knowledge/hitl-proposals"): (
+        "HITL 提案面的**生产者**（`create_proposal`/`_save_proposal` 写）。T10-288 只裁了消费者 "
+        "`bin/notification.py`（env 缺席即拒写），生产者仍随 CWD —— 两半必须同一次交付改，否则读写分叉比现状更坏"
+    ),
+    ("bin/ops/continual-harness-refine.py", ".omo/_knowledge/skills"): "写面（`_emit_skills` mkdir 后逐个 skill 落盘）",
+    ("bin/ops/continual-harness-refine.py", ".omo/_knowledge/refinements"): "写面（`run_refine` 里 mkdir 后写 receipt）",
+    ("bin/ssot/auto-bump-doc-governance-budget.py", ".omo/_truth/registry/document-governance.yaml"): (
+        "写治理 SSOT registry（`bump_budget`）—— 随 CWD 意味着在 worktree 里跑就改那份检出"
+    ),
+    ("bin/ssot/fm_schema_migrate.py", ".omo/_knowledge"): "`main` 里拿它当 `rglob('*.md')` 的遍历根，迁移后回写 frontmatter",
+    ("bin/gac/check-debt-closure-discipline.py", ".omo/debt/items"): (
+        "读 `.omo/debt/items` 面（`scan_gate_level_enum(Path(\".omo/debt/items\"))`，形参在 callee 里被当遍历根）。"
+        "尺 B 不登记这一条，因为它的 `ALL_MARKERS` 不含 `.omo/debt` —— 见 `test_two_rulers_agree_on_the_relative_face` "
+        "的标记边界差量"
+    ),
+}
+
+# 两把尺在 bin 面的**声明差额**：尺 B 只登记 `ALL_MARKERS` 命中的根，`.omo/debt` 不在其中，
+# 所以这一条只有尺 A 看得见。它是标记边界的产物，不是判据分歧 —— 多出第二处即说明两把尺真的分叉了。
+RULER_B_MARKER_BLIND = frozenset({("bin/gac/check-debt-closure-discipline.py", ".omo/debt/items")})
+
+_REL_B_CHAIN = (
+    "from pathlib import Path\n"
+    "STATE_DIR = Path('.omo')\n"
+    "def emit(out):\n"
+    "    state_dir = STATE_DIR / 'state'\n"
+    "    state_dir.mkdir(parents=True, exist_ok=True)\n"
+    "    (state_dir / 'lock-graph.json').write_text(out)\n"
+)
+_REL_B_CALL = (
+    "import os\n"
+    "from pathlib import Path\n"
+    "D = Path(os.environ.get('SOME_UNDECLARED_DIR', '.omo/_knowledge/hitl-proposals'))\n"
+    "D.mkdir(parents=True, exist_ok=True)\n"
+)
+
+
+def _write_tree(tmp_path: Path, files: dict[str, str]) -> Path:
+    src = tmp_path / "src"
+    for rel, text in files.items():
+        p = src / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text, encoding="utf-8")
+    return src
+
+
+def test_relative_category_hits_shape_a_on_the_omo_write_plane(writers):
+    """spec §2 站点① 在真实 omo 树上必须是**活的读数**，而不是只在合成树上演示。
+
+    同一处站点原先四个桶全部不命中（`reader_pairs:325`/`scan_writers:551` 的 `_text(segs[1:])`
+    把锚丢掉后比较串是 `state/…`，过不了 `_repo_path`），所以「只进 relative」这一句本身就是
+    「第四类根此前按构造不可见」的反证 —— 若有人把 relative 并进 state/bare_*，这条会因
+    第二个断言而红，而不是静默换个桶。
+    """
+    got = writers["relative"]
+    assert ".omo/state" in got, sorted(got)
+    assert ("workflow/lock_graph.py", 23, "chain") in got[".omo/state"], got[".omo/state"]
+    for bucket in ("state", "bare_template", "bare_inline", "opaque"):
+        hits = {(rel, line) for fam in writers[bucket].values() for rel, line, _k in fam}
+        assert not [rel for rel, _ in hits if rel == "workflow/lock_graph.py"], bucket
+
+
+def test_relative_register_is_the_reviewed_list():
+    """两棵真实树的站点**逐条在册**，双向钉：多一处未登记即红，少一处（还掉了却没删登记）也红。"""
+    omo_tail = "projects/omo/src/omo" if ".subtrees" in OMO_SRC.as_posix() else OMO_SRC.relative_to(ROOT).as_posix()
+    rows: set[tuple[str, str]] = set()
+    for fam, hits in scan_relative_writers(OMO_SRC).items():
+        for rel, _line, _shape in hits:
+            rows.add((f"{omo_tail}/{rel}", fam))
+    for fam, hits in scan_relative_writers(BIN).items():
+        for rel, _line, _shape in hits:
+            rows.add((f"bin/{rel}", fam))
+    assert rows == set(RELATIVE_REGISTER), rows ^ set(RELATIVE_REGISTER)
+
+
+def test_relative_detector_fires_on_both_shapes(tmp_path):
+    """正面：AC-01 两形各一（派生链 / 单 `Path()` 调用带仓内相对默认）。"""
+    chain = _write_tree(tmp_path / "a", {"m_chain.py": _REL_B_CHAIN})
+    call = _write_tree(tmp_path / "b", {"m_call.py": _REL_B_CALL})
+    got_chain = scan_relative_writers(chain)
+    got_call = scan_relative_writers(call)
+    assert {f for f in got_chain if f.startswith(".omo/state")} == {".omo/state"}, sorted(got_chain)
+    assert got_chain[".omo/state"][0][2] == "chain", got_chain
+    assert ".omo/_knowledge/hitl-proposals" in got_call, sorted(got_call)
+    assert got_call[".omo/_knowledge/hitl-proposals"][0][2] == "call", got_call
+
+
+def test_relative_detector_does_not_fire_on_seam_checkout_or_suffix(tmp_path):
+    """反面：缝 / 检出根 / 后缀片段 / 形参进来的根 / env 无相对默认 —— 都不是第四类根。
+
+    第 2 条是本轮最有价值的一条：`LEDGER_RELATIVE = Path("runtime/omo/event-ledger.sqlite3")`
+    按值形状命中 AC-01(b)，但它被 `state_root() / LEDGER_RELATIVE` 当**后缀**用，落点由 state 根
+    决定。按值判（而不是按用法判）会把这一形判成 CWD 根 —— 本轮实测 bin/ 侧有 33 个这样的值形状，
+    绝大多数不是根，这正是 `_classify` 里不加 RELATIVE 分支的原因。
+    """
+    src = _write_tree(
+        tmp_path,
+        {
+            "seam.py": (
+                "from pathlib import Path\n"
+                "def state_root(): return Path('/tmp/state')\n"
+                "p = state_root() / '.omo/state/x.json'\n"
+                "p.write_text('{}')\n"
+            ),
+            "checkout.py": (
+                "from pathlib import Path\n"
+                "W = Path(__file__).resolve().parents[2]\n"
+                "p = W / '.omo/state/x.json'\n"
+                "p.write_text('{}')\n"
+            ),
+            "suffix.py": (
+                "from pathlib import Path\n"
+                "LEDGER_RELATIVE = Path('runtime/omo/event-ledger.sqlite3')\n"
+                "def state_root(): return Path('/tmp/state')\n"
+                "p = state_root() / LEDGER_RELATIVE\n"
+                "p.parent.mkdir(parents=True, exist_ok=True)\n"
+            ),
+            "param.py": (
+                "from pathlib import Path\n"
+                "def emit(base):\n"
+                "    p = base / '.omo/state/x.json'\n"
+                "    p.write_text('{}')\n"
+                "emit(Path('/tmp/elsewhere'))\n"
+            ),
+            "env_abs.py": (
+                "import os\n"
+                "from pathlib import Path\n"
+                "D = Path(os.environ.get('SOME_DIR', '/var/tmp/elsewhere'))\n"
+                "(D / 'x').mkdir()\n"
+            ),
+            "env_bare.py": "import os\nfrom pathlib import Path\nD = Path(os.environ.get('SOME_DIR'))\n(D / 'x').mkdir()\n",
+        },
+    )
+    got = scan_relative_writers(src)
+    assert got == {}, {fam: hits for fam, hits in got.items()}
+
+
+def test_classifier_does_not_claim_a_root_for_relative_fragments():
+    """`_classify` 不新增 RELATIVE 分支，是裁决而不是遗漏 —— 钉住它，防止下一轮「补全类目」把它补错。
+
+    该函数只拿得到值表达式，拿不到用法，所以按值判必然把 `LEDGER_RELATIVE` 这类后缀片段判成
+    CWD 根；且读侧 223 行里锚点是仓内相对量的为 0 行，加了也是永不发火的装饰。
+    """
+    assert _classify(ast.parse("Path('runtime/omo/event-ledger.sqlite3')").body[0].value) == "DERIVED"
+    assert _classify(ast.parse("Path(os.environ.get('X', '.omo/_knowledge/x'))").body[0].value) == "EXTERNAL"
+
+
+def test_relative_category_is_load_bearing(tmp_path):
+    """变异对照：摘掉一形 ⇒ 该形读数归零；两形全摘 ⇒ 空，而真实树非空 ⇒ 「绿」不是装置没命中。"""
+    both = _write_tree(tmp_path, {"m.py": _REL_B_CHAIN + "\n" + _REL_B_CALL})
+    chain_only = scan_relative_writers(both, ("chain",))
+    call_only = scan_relative_writers(both, ("call",))
+    off = scan_relative_writers(both, ())
+    assert set(chain_only) == {".omo/state"}, sorted(chain_only)
+    assert set(call_only) == {".omo/_knowledge/hitl-proposals"}, sorted(call_only)
+    assert off == {}, off
+    assert scan_relative_writers(OMO_SRC), "真实 omo 树读数为空 ⇒ 类目退化成了不可见"
+    assert scan_relative_writers(BIN), "真实 bin 树读数为空 ⇒ 类目退化成了不可见"
+
+
+def test_two_rulers_agree_on_the_relative_face():
+    """两把尺的第四类根在 **bin 面**必须对得上：尺 B 的读数 ⊆ 尺 A 的读数，差额只能是有界的那一条。
+
+    判据同源靠对拍保证，不靠「两边都照抄 spec」—— 抄两遍而不对拍，就是 §7「检测器的分类规则要
+    与标记清单同源」的下一个事故。差额是**声明集合**（尺 A 侧的登记面含 omo 树，尺 B 只扫 bin/，
+    所以这里比的是 bin 面）：`.omo/debt` 不在尺 B 的 `ALL_MARKERS` 里，那一条尺 B 结构性看不见
+    （本轮实测），不是尺 A 多判。反向差额（尺 B 有、尺 A 无）由 `b_keys <= a_keys` 直接堵死 ——
+    两把尺同源函数名，出现反向差额说明有一把的匹配规则退化。
+    """
+    spec_ = importlib.util.spec_from_file_location("t288_ruler_b_under_test", RULER_B)
+    assert spec_ is not None and spec_.loader is not None
+    ruler_b = importlib.util.module_from_spec(spec_)
+    sys.modules["t288_ruler_b_under_test"] = ruler_b
+    try:
+        spec_.loader.exec_module(ruler_b)
+        b_keys = {(f, fam) for f, _ln, _m, fam in ruler_b.scan_cwd_relative_sites(ROOT)}
+    finally:
+        sys.modules.pop("t288_ruler_b_under_test", None)
+    a_keys = {(f"bin/{rel}", fam) for fam, hits in scan_relative_writers(BIN).items() for rel, _l, _s in hits}
+    assert b_keys <= a_keys, b_keys - a_keys
+    assert a_keys - b_keys == RULER_B_MARKER_BLIND, a_keys ^ (b_keys | RULER_B_MARKER_BLIND)

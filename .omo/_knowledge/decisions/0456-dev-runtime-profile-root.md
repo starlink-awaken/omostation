@@ -3,7 +3,7 @@ schema: md/v1
 status: ACCEPTED
 lifecycle: spec
 owner: governance-team
-last-reviewed: 2026-10-29
+last-reviewed: 2026-11-06
 type: ssot
 id: ADR-0456
 related:
@@ -407,6 +407,69 @@ state 根"成立 —— 一旦有人把它改成 `mkdir + 写子集`，读侧会
 > 代码修复本体不依赖本段内容（判据行为由 `tests/unit/gac/test_check_resident_status.py`
 > 9 例钉住，不解析本文件）。CI 侧 lane 检查空转这一缺口属装置接线面，需单独授权面处理
 > （接线 `PUSH_RANGE` 导出点 或 让 CI 以 `--scope files` 跑 lane 检查），不在本条范围。
+
+## Addendum — 第四类根（CWD 相对锚）准入与两处站点裁决（2026-11-06, BET-Y2Q4-T10-288）
+
+契约：`docs/superpowers/specs/2026-11-05-cwd-relative-root-anchor-admission.md`（spec_version 1.0.0）。
+本段的读数 base = `origin/main = 159ca353e`，装置 = `git archive origin/main bin | tar -x` 对照树 +
+`importlib` 载入改造后的尺本身（AGENTS.md §7⑦「反基线读数必须在判据指定的那把尺上复算」）。
+
+**1. 类目缺失已补，两把尺同源。** 根的第四类落点（进程 CWD）此前在两把根尺里按构造不可见，
+机制逐条见 spec §3（尾段比较 / 只走 `Div` / 准入谓词要求 `__file__`）。现由两份判据补齐：
+`tests/unit/test_writeplane_root_pin.py` 的 `scan_cwd_relative_sites`（+ 登记面 `BASELINE_RELATIVE_SITES`）
+与 `tests/unit/test_resident_write_plane_split.py` 的 `scan_relative_writers`（+ `scan_writers` 的第 5 桶
+`relative`、登记面 `RELATIVE_REGISTER`）。判据 = spec §5 AC-01 的两形：(a) `/`-链的锚既非 `__file__` 派生、
+又非 resolver/别名、又非形参，且字面量段以 `.omo/` 或 `runtime/` 开头；(b) 单个 `Path()`/`os.path.join()`
+调用带仓内相对字面量，含 `Path(os.environ.get(NAME, "<仓内相对默认>"))`。**「根 vs 后缀」按用法判，不按值判**
+（AC-03 的派生变量链展平）：`LEDGER_RELATIVE = Path("runtime/omo/event-ledger.sqlite3")` 这一形按值命中 (b)，
+但它是 `state_root() / LEDGER_RELATIVE` 的后缀，落点由 state 根决定，因此不记。两把尺的 bin 面由
+`test_two_rulers_agree_on_the_relative_face` 对拍（不是各抄一份 spec），唯一允许差额是
+`RULER_B_MARKER_BLIND`。变异开关 `shapes=("chain"|"call")` 由 `test_relative_category_is_load_bearing` 使用，
+实测摘形读数见 §4。
+
+**2. 站点① `projects/omo/src/omo/workflow/lock_graph.py`：显式降级 + 登记，不缝不删。**
+`:5 STATE_DIR = Path(".omo")` → `:10 state_dir` → `:11 mkdir` + `:24 write_text`，写面 =
+`<CWD>/.omo/state/lock-graph.json`；唯一读者 `bin/gac/swarm-activity-dashboard.py:140` 挂在 import 时求值的
+检出根上且 `:141` fail-soft ⇒ 生产者/消费者/契约三方错位，而 `generate_lock_graph_snapshot` 在生产路径零调用点。
+**裁决**：该面定为**非权威且无生产者**（死写面 + 活读者），根由尺 A 的 `RELATIVE_REGISTER` 按
+`(文件, 展平后的相对根)` 钉住；**不把 `:5` 换成 `state_root()` 缝** —— 今天没有写者，缝上去不改变任何读数，
+是化妆式修复（spec §5 AC-02）；**不删代码**（spec §7，删需另行授权）。gitlink 边界判据本轮复跑：
+`git -C projects/omo cat-file -e origin/main:src/omo/workflow/lock_graph.py` → rc=0。
+
+**3. 站点② `bin/notification.py`：写面 fail-closed，读面改经 `code_root()`，两处都还掉了。**
+- 写（原 `:33`）：`PROPOSALS_DIR` 的仓内相对默认删除，改为 `_anchored_proposals_dir()` ——
+  `HITL_PROPOSALS_DIR` 未声明即**拒写**（打印具名原因、rc=1），不再跟着进程 CWD 落笔。选 fail-closed 而非
+  `state_root()` 拼接的理由：该 env 在全机任何 plist / registry / yaml / toml / sh 与 `crontab -l` 里都未被声明
+  （spec §2 实测），凭空拼一个 state 根等于替机器做一个未获授权的决定。
+- 读（原 `:35`）：`DEFAULT_CONFIG_PATH` 改为 `_config_path()`，在**调用时刻**经 `code_root()` 解析
+  （ADR-0456 §1：读面跟随检出）；不在 import 时冻成模块常量（AGENTS.md §7「写路径要在调用时刻解析」同族）。
+- 正向落点断言（不只是否定式「登记里删了一行」）：在 `CWD=/tmp` 下 `_config_path()` 解析到检出根那份
+  `.omo/_truth/registry/notification-config.yaml` 且 `load_config()` 读到 5 个键。
+- 读数：`scan_cwd_relative_sites` 在 **tip 对照树 = 8 处**，在**本分支 = 6 处**，差额恰为 `bin/notification.py`
+  的这两处（`.omo/_knowledge/hitl-proposals` 与 `.omo/_truth/registry/notification-config.yaml`）；
+  `scan_checkout_pinned_sites` 两侧逐桶相等（456 站点，`{_truth:163, _state:103, _delivery:78, runtime:50, _knowledge:62}`，
+  gated 153 / pairs 143 / files 95）⇒ **这次修复没有移动钉检出根基线**，spec §4 的反证未退化为「不可见」。
+
+**4. 为什么第 3 项的读面修复不进 `SPEC_MARKER_READINGS['.omo/_truth']` —— 尺 B 自己的盲区，须登记。**
+`_checkout_root_aliases` 只收「值里含 `__file__` 的模块级赋值」，`pinned` 谓词因此不认 `code_root()` 这一形，
+所以本分支新增的那处 `code_root() / CONFIG_RELATIVE` 结构性不进检出桶（尺 A 相反，`CHECKOUT_MARKERS`
+2026-11-02 起含 `code_root`）。tip 实测：未被 `__file__` 归类而字面量命中 marker 的 `/`-链 **188 处**
+（其中 `code_root()` Call 形 1 处、`state_root()` Call 形 8 处 —— 后者本就不该进检出桶，它是 profile 面）。
+**本轮不扩这把尺**：扩它会使 spec §4 记下的基线读数不可复算，与 done_when[2] 直接冲突（AGENTS.md §7
+「门禁的尺本身会随 base 变」）。登记为后续项，扩展时必须连带重算 spec §4 全部读数并另立 BET。
+
+**5. 后续项（三条，具名）与一条不裁决的裁决。**
+- `bin/hitl-proposal.py` 的模块常量 `PROPOSALS_DIR`（`:30`，HITL 提案面的**生产者**）仍随 CWD，且在 import
+  时冻结。消费者已 fail-closed，
+  所以现状不是读写分叉而是「未声明即拒写」；但一旦只给消费侧声明 env（例如某个 plist），两半就会落到不同目录。
+  **两半必须同一次交付改**，故生产者不在本轮单独动（spec §7 非目标 + 本段裁决）。
+- 尺 B 的 `pinned` 谓词补 `code_root()`（见第 4 项），连带重算 spec §4。
+- `.omo/debt` 标记边界：尺 B 的 `ALL_MARKERS` 不含 `.omo/debt`，`bin/gac/check-debt-closure-discipline.py:143`
+  的 `Path(".omo/debt/items")` 因此只有尺 A 看得见，差额钉在 `RULER_B_MARKER_BLIND`（多出第二处即两尺真分叉）。
+- **尺 A 的 `_classify` 不新增 RELATIVE 分支**，这是裁决不是遗漏：该函数只拿得到值表达式、拿不到用法，
+  按值判必然把后缀片段判成 CWD 根（实测 bin 侧按值命中的模块常量 33 个，绝大多数是后缀），
+  而读侧 223 行里锚点为仓内相对量的**零行** ⇒ 加了是永不发火的装饰。第四类根在尺 A 的落点是写侧桶。
+  由 `test_classifier_does_not_claim_a_root_for_relative_fragments` 钉住。
 
 经上述实证，本 ADR 核心目标全部达成，正式转为 **ACCEPTED** 权威技术基准。
 
