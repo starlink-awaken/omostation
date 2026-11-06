@@ -46935,7 +46935,8 @@ bets:
   goal: 按 spec §3 的判别量（tracked ⇒ 检出根；ignored 且零跟踪 ⇒ profile 的 state 根；两者同时 ⇒ 当场点名冲突）对
     `.omo/_knowledge` 桶 62 个检出钉站点逐面给根归类结论，写进 ADR-0456 addendum；把 pin-gate 的排除面由「按 marker
     前缀」改为「按族」，并收敛 13 个具体族读者中的 10 处模块级常量。
-  status: in_progress
+  status: done
+  done_at: 2026-11-06
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -46988,17 +46989,49 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e2357d7e7d5f66b82cb12d2ff06ec57e5e34b7f7
+          diff:
+            ref: receipt://docs/reports/2026-11-06-t10-289-knowledge-root-classification-closeout.md
+            sha256: sha256:e8e62df678227f486b70820bd66e422bd1d6fb4ab9b6f5efd1bd510210d5113c
+          tests:
+            ref: receipt://docs/reports/2026-11-06-t10-289-knowledge-root-classification-closeout.md
+            sha256: sha256:e8e62df678227f486b70820bd66e422bd1d6fb4ab9b6f5efd1bd510210d5113c
+          rollback:
+            ref: receipt://docs/reports/2026-11-06-t10-289-knowledge-root-classification-closeout.md
+            sha256: sha256:e8e62df678227f486b70820bd66e422bd1d6fb4ab9b6f5efd1bd510210d5113c
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-06-t10-289-knowledge-root-classification-closeout.md
+            sha256: sha256:e8e62df678227f486b70820bd66e422bd1d6fb4ab9b6f5efd1bd510210d5113c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-06-t10-289-knowledge-root-classification-closeout.md
+            sha256: sha256:e8e62df678227f486b70820bd66e422bd1d6fb4ab9b6f5efd1bd510210d5113c
+          cleanup:
+            ref: receipt://docs/reports/2026-11-06-t10-289-knowledge-root-classification-closeout.md
+            sha256: sha256:e8e62df678227f486b70820bd66e422bd1d6fb4ab9b6f5efd1bd510210d5113c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-289.md
+            sha256: sha256:4c1061bc05c45c3ac3052089cda825c63939d14eb5b1db88862f1a1710c303df
       value:
         status: NOT_PROVEN
         evidence:
-          note: 价值轴 NOT_STARTED：本条裁的是声明与实态的归类矛盾（A 说 state、C 说读面），无新增可度量业务收益；value_indicator_policy
-            显式 false。
-    overall_state: evaluating
+          note: '价值轴 NOT_PROVEN：本条裁的是四个来源对同一个 `.omo/_knowledge` 目录各说一遍的声明矛盾 ——
+            收益面在两把尺的计账可见性与裁决可复核性，不是业务指标；value_indicator_policy 显式 false，与同族
+            281/282/284/288 同判。时序如实入账：工程腿以 #5074（e2357d7e7d5f66b82cb12d2ff06ec57e5e34b7f7）于 2026-11-06T05:40Z squash 合入，本条
+            retro 与 receipt 由第二个 PR 合入；engineering 的 merged_reachable_commit 即该 squash SHA（单亲
+            `8f04e272d`），分支上按 lane 拆的 4 个 commit 因此不在 main 祖先图内。operational 的 live_canary
+            是行为读数而非「判据加了就绿」：同一份扫描（sites_total=456）在旧谓词与新谓词下
+            153/143/95 → 173/163/107，新增 20 处 = 本面 13 + 带出 7；同时 `knowledge_bucket` 三桶 13/5/44
+            逐项未变，证明「可见不计」没退化成「不可见」。限制三条：① AC-03 只交付裁决未交付 `bin/**` 迁移，
+            因为本条 write_surfaces 不含 `bin/` 且 done_when 四条无一为此次迁移 —— 须另立 BET 承接；
+            ② AC-04 三个冲突面一条未动（改跟踪面需另行授权）；③ 尺 A 闭合性判据的覆盖面是 `OMO_SRC`，
+            整仓那 14 面只点名不裁定。'
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-290
   title: FIB-02 Panorama 投影租约、内容观测与复制时间独立展示
   goal: 用户可同时识别服务租约、真实内容年龄和副本时间；续租或复制旧数据不会伪造新鲜。保留现有300秒TTL与revision摘要身份。
