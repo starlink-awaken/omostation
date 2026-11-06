@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: governance-state-mutation
-generated_at: 2026-11-05T03:10:01Z
+generated_at: 2026-11-06T23:00:01Z
 status: candidate
 counts:
-  runs: 28
+  runs: 27
   failures: 0
-  total: 28
+  total: 27
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # governance-state-mutation 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-11-05T03:10:01Z
+- generated_at: 2026-11-06T23:00:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 28 成功运行 + 0 失败模式 = 28 草稿
+- sediment 覆盖: 27 成功运行 + 0 失败模式 = 27 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -47,7 +47,6 @@ failure_breakdown:
 - 20260930T094353Z-governance-state-mutation-58617ec5.md
 - 20260930T135956Z-governance-state-mutation-0c0df2da.md
 - 20260930T140232Z-governance-state-mutation-6ff2a364.md
-- 20261006T160849Z-governance-state-mutation-a95f0940.md
 - 20261010T022613Z-governance-state-mutation-5725812f.md
 
 ## 失败模式 (failures/)
@@ -222,13 +221,6 @@ failure_breakdown:
   - 结果与证据: ok=False, status=blocked, evidence_count=3
   - 失败根因: step=execute, error=None
   - 指标: event_count=6, duration_s=254168.308
-- **20261006T160849Z-governance-state-mutation-a95f0940**
-  - 计划 (objective): H0 finite role and mandate authority components only; canonical OMO broker; exact Event Ledger paths; no BET allocation, no production effect; preserve T10-233 and registry owner
-  - workflow: governance-state-mutation
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=1
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=3524.888
 - **20261010T022613Z-governance-state-mutation-5725812f**
   - 计划 (objective): A4 gate: .omo/cron/registry.yaml known_orphans 补 6 条个人基建 cron (clash-speed×2/zvec-log-rotate/bwg-maint/plist-integrity-check/secretctl scan), 消除 scheduler-compile 未声明 orphan
   - workflow: governance-state-mutation

@@ -1,12 +1,12 @@
 ---
 schema: resident-retro-candidate/v1
 topic: project-code-change
-generated_at: 2026-11-05T03:10:01Z
+generated_at: 2026-11-06T23:00:01Z
 status: candidate
 counts:
-  runs: 85
+  runs: 73
   failures: 0
-  total: 85
+  total: 73
 failure_rate: 0.0
 failure_breakdown:
   by_event_type:
@@ -14,9 +14,9 @@ failure_breakdown:
 ---
 # project-code-change 运行复盘聚合 (resident 事件驱动)
 
-- generated_at: 2026-11-05T03:10:01Z
+- generated_at: 2026-11-06T23:00:01Z
 - status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
-- sediment 覆盖: 85 成功运行 + 0 失败模式 = 85 草稿
+- sediment 覆盖: 73 成功运行 + 0 失败模式 = 73 草稿
 - 失败率: 0.00%
 
 ## 成功运行 (runs/)
@@ -78,18 +78,6 @@ failure_breakdown:
 - 20260929T105440Z-project-code-change-970e11eb.md
 - 20260929T112412Z-project-code-change-59906d82.md
 - 20261003T141319Z-project-code-change-ee0aa19d.md
-- 20261006T122008Z-project-code-change-ba10c1ac.md
-- 20261006T122121Z-project-code-change-aadae7a5.md
-- 20261006T122238Z-project-code-change-5aa12618.md
-- 20261006T122348Z-project-code-change-eaaa69f3.md
-- 20261006T122456Z-project-code-change-93f1d1e0.md
-- 20261006T122628Z-project-code-change-270ae955.md
-- 20261006T122745Z-project-code-change-ffc1e501.md
-- 20261006T122858Z-project-code-change-78c0bf55.md
-- 20261006T123004Z-project-code-change-1e05ade2.md
-- 20261006T123117Z-project-code-change-6a9e2b13.md
-- 20261006T123240Z-project-code-change-cd51fd55.md
-- 20261006T123407Z-project-code-change-7ca0b817.md
 - 20261013T051123Z-project-code-change-19550a9a.md
 - 20261013T145928Z-project-code-change-92d02624.md
 - 20261017T045732Z-project-code-change-aad3b60c.md
@@ -485,90 +473,6 @@ failure_breakdown:
   - 实际步骤: execute
   - 结果与证据: ok=True, status=ok, evidence_count=1
   - 指标: event_count=6, duration_s=67636.808
-- **20261006T122008Z-project-code-change-ba10c1ac**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=failed, evidence_count=1
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=642963.847
-- **20261006T122121Z-project-code-change-aadae7a5**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=failed, evidence_count=1
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=642867.982
-- **20261006T122238Z-project-code-change-5aa12618**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=failed, evidence_count=1
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=642795.696
-- **20261006T122348Z-project-code-change-eaaa69f3**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=failed, evidence_count=1
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=642719.568
-- **20261006T122456Z-project-code-change-93f1d1e0**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327916.445
-- **20261006T122628Z-project-code-change-270ae955**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327964.049
-- **20261006T122745Z-project-code-change-ffc1e501**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327961.1
-- **20261006T122858Z-project-code-change-78c0bf55**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327949.473
-- **20261006T123004Z-project-code-change-1e05ade2**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327944.538
-- **20261006T123117Z-project-code-change-6a9e2b13**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327940.332
-- **20261006T123240Z-project-code-change-cd51fd55**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327919.061
-- **20261006T123407Z-project-code-change-7ca0b817**
-  - 计划 (objective): test objective
-  - workflow: project-code-change
-  - 实际步骤: execute
-  - 结果与证据: ok=False, status=blocked, evidence_count=3
-  - 失败根因: step=execute, error=None
-  - 指标: event_count=6, duration_s=327896.806
 - **20261013T051123Z-project-code-change-19550a9a**
   - 计划 (objective): Implement scoped workspace facet provenance MVP from controller decision SHA 87adc75512d9df6ab5b231aceb693e72a7eb4192499386378ee7652672a7c2f2; exact root/child paths only, full DCP trace audit deferred
   - workflow: project-code-change

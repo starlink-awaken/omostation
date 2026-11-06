@@ -1,5 +1,5 @@
 {
- "checked_at": "2026-11-04T19:20:01.089170+00:00",
+ "checked_at": "2026-11-06T19:20:01.248449+00:00",
  "note": "derived from data/scene-metrics.db — DB 是唯一写入口, 勿手编",
  "row_counts": {
   "calibration": 49,
