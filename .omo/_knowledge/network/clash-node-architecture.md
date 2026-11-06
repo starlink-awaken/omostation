@@ -4,11 +4,11 @@ status: active
 lifecycle: entry
 owner: auto-fix-loop
 type: documentation
-last-reviewed: 2026-09-23
+last-reviewed: 2026-11-06
 ---
 # Clash 节点架构 · 全量文档
 
-> 最后更新: 2026-09-23 (下午, 探测改造后) · SSOT 真源: `SharedConf/ClashConfig` (iCloud git 仓库)
+> 最后更新: 2026-11-06 (§3/§4 节点表按 `fleet.yaml` 校准) · SSOT 真源: `SharedConf/ClashConfig` (iCloud git 仓库)
 > 本文件为知识层快照; 运行时事实以 SSOT 为准, 勿在此硬编码会漂移的值。
 
 ## 1. 内核与运行时
@@ -39,18 +39,21 @@ SharedConf/ClashConfig/          ← iCloud git 仓库, 全机同步
 - 校验: `--check` 只读 diff; lint 0 err 才允许 deploy
 - 回退: 原版 ClashX 路径由降级版覆盖 (剔除 vless, 2021 老内核不认 Reality)
 
-## 3. 节点资产 (2026-09-23, 真实转发探测口径)
+## 3. 节点资产 (2026-11-06 按 `fleet.yaml` 校准, 真实转发探测口径)
 
 > 实时状态以 `check-nodes.sh` / `clash-node-states` 为准; 下表只记结构与已证实的结论。
+> 机器ID 与 `fleet.yaml` 一致 (bwg2=74.211.101.240, bwg3=176.122.177.208)。
 
 | 家族 | 节点 | 协议 | 状态 |
 |------|------|------|------|
-| 腾讯云硅谷 | Reality 43.173.115.36:8443 (samsung) | VLESS+Reality+Vision | ✅ 真实转发可用 |
-| 阿里云 | Reality :8444 (apple) + VMess 直连/CF中转 | VLESS+Reality / VMess | ✅ 全部可用 |
-| GCP | Reality :8444 (cloudflare) + SS-2022 + VMess CF中转 | 同左 | ✅ 全部可用 |
-| 搬瓦工2 (CN2GIA LA, 74.211.101.240) | CF中转 (vps2) + 优选104a/b + Reality:8444 + 直连 | VMess+WS+TLS / VLESS+Reality | ✅ CF 线可用; 直连与 Reality 被墙 (v4 直连 EOF) |
-| 搬瓦工1 | CF中转 (vps) + 优选 ×8 | VMess | ⏸ 停机至 10-02 重置 |
+| 腾讯云硅谷 | Reality 43.173.115.36:8443 (samsung) + VMess 443 | VLESS+Reality+Vision / VMess | ✅ 真实转发可用 |
+| 阿里云 | Reality 47.253.89.56:8444 (apple) + VMess 直连/CF中转 | VLESS+Reality / VMess | ✅ 可用 (maintenance: true) |
+| HKVM | Reality 143.203.52.36:8444 (samsung) | VLESS+Reality | ✅ 2026-10-10 纳入; 大流量/AI 备用 (绕美) |
+| 搬瓦工3 (CN2GIA LA, 176.122.177.208) | CF中转 (vps3) + 优选104a/b + 直连 | VMess+WS+TLS | ✅ 现役主力 (池-搬瓦工3 居首) |
+| 搬瓦工2 (CN2GIA LA, 74.211.101.240) | CF中转 (vps2) + 优选104a/b + Reality:8444 + 直连 | VMess+WS+TLS / VLESS+Reality | ⚠️ CF 线可用; 直连与 Reality 被墙 (v4 EOF) → parked; IPv6 端口通但 Reality 握手失败 |
+| GCP | — | — | ⏹ 2026-10-24 到期整机不可达, 已退役 (节点 parked) |
 | 腾讯云上海 | 无代理 (国内云红线) | — | Tailscale derper |
+| 腾讯云北京 | 无代理 (国内云红线) | — | Tailscale derper 主中继 (bj-aly) |
 | 猎豹 | 本地 SOCKS5 51081 | SOCKS5 | ✅ 出口为机房 IP |
 
 **已证实的根因 (09-23)**:
@@ -65,7 +68,7 @@ SharedConf/ClashConfig/          ← iCloud git 仓库, 全机同步
 
 ## 4. 策略组与规则
 
-- 组: Proxy / 智能路由(url-test) / 大流量 / 住宅IP(fallback) / 全局兜底 / 开发 / **AI服务 (fallback: 搬瓦工2-CF中转 → 搬瓦工2 优选池 → Reality ×3 → 猎豹 …)** / 流媒体 / 视频会议 / 猎豹-白名单 / 池-搬瓦工×2
+- 组: Proxy / 智能路由(url-test) / 大流量 / 住宅IP(fallback) / 全局兜底 / 开发 / **AI服务 (select: 池-搬瓦工-AI → 阿里云-Reality → HKVM-Reality → 猎豹-白名单 → …)** / AI-OpenAI (fallback, 直测 chatgpt.com) / 流媒体 / 视频会议 / 猎豹-白名单 / 池-搬瓦工2-CF优选 / 池-搬瓦工3 / 池-搬瓦工-AI
 - 规则 (home): common 直连白名单 + 广告拦截 → AI 服务段 → 大流量 (含 huggingface/hf.co/lmstudio.ai) → 开发 → 支付 → 流媒体/会议 → MATCH
 - travel: 回国加速 (cn→智能路由, 其余 DIRECT)
 - Tailscale 控制台域名走代理
