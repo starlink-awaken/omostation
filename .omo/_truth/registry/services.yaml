@@ -6122,7 +6122,7 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.zhixing-projection-fullrefresh.plist
-  content_digest: sha256:357fa625f7ef8fda919a7123e64605c7210e79d69a2893bba4f356eb43a78c88
+  content_digest: sha256:897f33b4b77d2492a1c7dd2d331f0175340330ac18e04773767b17a4e06c549c
   run_at_load: true
   scheduler: launchd
   trigger: interval
@@ -6246,6 +6246,26 @@ services:
   notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 未 bootstrap (launchctl print 不可见)。'
   depends_on: []
   disabled_reason: "macOS 系统设置「允许在后台」已关闭 (sfltool dumpbtm: disallowed), launchd 不加载; 注册表对齐现实, 重新允许后改回 true (TASK-F54F176A, 2026-09-28)"
+
+- id: user.lms-pin-qwythos
+  enabled: true
+  generate: false
+  config_source: ~/Library/LaunchAgents/com.user.lms-pin-qwythos.plist
+  content_digest: sha256:74545fbb338afc909af5acb23c68a7f9cac50ba32e3c0caaf7d46942c429d80c
+  scheduler: launchd
+  trigger: interval
+  interval_sec: 600
+  label: com.user.lms-pin-qwythos
+  program:
+    interpreter: /bin/bash
+    entrypoint: /Users/xiamingxing/local-ops/bin/lms-pin-qwythos.sh
+    args: []
+  run_at_load: true
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/lms-pin-qwythos-agent.log
+    stderr: /Users/xiamingxing/.local/log/lms-pin-qwythos-agent.log
+  notes: '2026-11-07 observe-only 回填: plist 由本机 local-ops 外部工具安装, 本仓不生成 (generate: false); 登记为了让「已装 label == 注册表」可证 (E2 归零)。'
+  depends_on: []
 
 - id: omostation.resident-agent
   enabled: true
