@@ -7,7 +7,19 @@ scope: host
 severity: low
 weight: 0.1
 entropy_class: low
-lifecycle_state: open
+lifecycle_state: closed
+closed_at: "2026-11-06T00:00:00Z"
+close_reason: >-
+  坏件已不在位：com.l4.omo.sync 的 plist 已于 2026-09-30 被移出 LaunchAgents
+  （现在在 ~/Library/LaunchAgents/.corrupted-json-backup-20260930/ 下），
+  launchctl list 无此 label，崩溃循环已停。债务目的达成。
+resolution_evidence: >-
+  2026-11-06 复核 —— ① ~/Library/LaunchAgents/ 下无 com.l4.omo.sync.plist；
+  ② launchctl list 无该 label（未加载）；③ 该 plist 在
+  ~/Library/LaunchAgents/.corrupted-json-backup-20260930/com.l4.omo.sync.plist
+  （2026-09-30 移出，非活跃）。原 mitigation（bootout + rm plist）的实质已完成。
+  备注：.corrupted-json-backup-* 是「损坏文件的备份」，如需彻底清掉可删该目录，
+  但删备份不属于本债务范围，留由 owner 决定。
 owner: governance-team
 affected_roots:
 - ~/Library/LaunchAgents/com.l4.omo.sync.plist
