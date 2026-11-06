@@ -1,0 +1,28 @@
+schema: agent-error/v1
+id: PITFALL-COO-008
+category: coordination
+severity: medium
+title: A2A surface-lock 碰撞谓词只看 run status，不看锁 TTL，闲置他人的活锁可无限期阻塞同一台账路径的 claim
+symptom: 'bin/agent-workflow.py claim <run> --path docs/plans/3y-bet-ledger.yaml 报 A2A Path Lock Collision:
+  path overlaps with active claim in run 20261104T115230Z-project-code-change-d825f60f；实测该 run 的 status=active
+  但 heartbeat 停在 2026-11-04T11:54:48Z（约 40 h 前），对应锁文件 expires_at 已过期，且 BET-Y2Q4-T10-285 零 open PR、台账仍
+  in_progress。同一谓词另一次在心跳 28 h、锁过期 13 h 的 run 上复发。'
+root_cause: A2A 冲突谓词把「锁是否还有效」等价成「run.status 是否 active」，没有读锁文件自己声明的 expires_at。锁的 TTL 与 run 的心跳是两套独立时钟：run
+  永远停在 active（会话被掐断，没人写终态），锁却早已按 TTL 过期，于是谓词在一个按构造已经失效的对象上判冲突，且冲突无限期持续。
+solution: 不要用 prune-locks 绕（_HEARTBEAT_STALE_SECONDS=3600 只看心跳时间，实测会把共享面 29 条锁里的 22 条判成 zombie 并拆掉别人的活锁），也不要替并发
+  agent 清锁。本轮做法：在未 claim 状态下完成交付，并把碰撞原因原文写进 workflow close 的 evidence。正解是给谓词补一条判据——status 活跃且锁未过期才算冲突（读
+  lock 文件的 expires_at，而不是 run.status），另立 BET。
+prevention: claim 撞上 A2A Path Lock Collision 时先做三量分诊：① 对方 run 的 last_heartbeat 距今多久 ② 对方锁文件的 expires_at
+  是否已过 ③ 对方 BET 有没有 open PR。三条都指向「僵尸」才考虑升级，但升级不等于自己动手——不清别人的锁、不跑 prune-locks，改为未 claim 交付并在 closeout evidence
+  里写明原因，同时把谓词缺陷登记成 PITFALL 与后续 BET。
+tags:
+- a2a
+- path-lock
+- heartbeat
+- ttl
+- claim
+discovered_by: qoder
+discovered_at: '2026-11-06'
+times_encountered: 1
+last_confirmed_at: '2026-11-06'
+status: active
