@@ -1146,7 +1146,7 @@ jobs:
   - name: local-ops-test-all
     schedule: "23 7 * * *"
     command: >-
-      /opt/homebrew/bin/python3 /Users/xiamingxing/local-ops/bin/test-all >> /Users/xiamingxing/.local/log/test-all.log 2>&1
+      /Users/xiamingxing/.local/share/local-ops/dev-venv/bin/python /Users/xiamingxing/local-ops/bin/test-all >> /Users/xiamingxing/.local/log/test-all.log 2>&1
     planes: [crontab]
     reality: installed
     status: active
@@ -1339,3 +1339,7 @@ known_orphans:
   - bwg-maint.sh  # 用户本机搬瓦工周检(服务/待重启) (~/.local/bin), 2026-10-10 确认为外部工具
   - plist-integrity-check.sh  # 用户本机 launchd plist 完整性巡检 (~/.local/bin), 2026-10-10 确认为外部工具
   - secretctl scan  # 用户本机 secret 扫描 (~/.local/bin), 2026-10-10 确认为外部工具
+  - omo.cli resident daemon --once --role  # 常驻 agent 的 crontab 面 (sediment/decision/execute/monitor/heartbeat 五角色), 与 launchd com.l4.resident.* 并存, 2026-11-06 确认
+  - omo.cli resident ingest  # 常驻 ingest 的 crontab 面, 2026-11-06 确认
+  - pdb-p0-probe  # 本机 PDB P0 探针 (SLO 网关可用性+决策延迟), 2026-11-03 装入
+  - PYTHONPATH=/Users/xiamingxing/Workspace/projects/omo/src  # 常驻 agent 的 crontab 面 (resident daemon 五角色 / promote / inbox / ingest), 与 launchd com.l4.resident.* 并存; 判据按前 120 字符截断, 只能以该前缀匹配, 2026-11-06 确认
