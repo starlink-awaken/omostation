@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/gac/documents-personal-view.py
+name: Documents Personal View
+category: governance
+owner: governance-team
+description: "个人检索层的域视图生成器 (§5.166 · USER-ACTIONS #89) —— 把单位域 5 个 + 家庭域挪出个人检索层。build 生成视图 (符号链接 + 只列允许域的注册表), check 校验视图与准入声明一致。"
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - .omo/_truth/registry/personal-retrieval-domains.yaml
+triggers: []
+related:
+  - .omo/_truth/registry/personal-retrieval-domains.yaml
+  - bin/gac/check-bin-quota-diff.py
+maturity: draft
+last_reviewed: "2026-11-06"
