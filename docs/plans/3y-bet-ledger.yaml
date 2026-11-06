@@ -47147,7 +47147,8 @@ bets:
   goal: 把 `bin/scheduler-compile.py::check_drift()` 两侧的比对键从截断 120 字符改为归一化整行，消除「声明与实装只在
     120 字符之后不同」时门禁照样放行的假绿，并使 `known_orphan_count` 按真实安装行数计数（本机实测 4 → 10）。归一化逻辑与 launchd
     shadow 段一字不改。
-  status: in_progress
+  status: done
+  done_at: 2026-11-06
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -47179,11 +47180,8 @@ bets:
   - '`test_shadow_segment_never_blocks_the_gate` 仍绿且 hermetic（安装态由 `compile_crontab()`
     注入，不读本机 crontab）。'
   verify:
-  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=$(mktemp
-      -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with
-      pytest --with pyyaml python -m pytest tests/unit/test_scheduler_compile_launchd_plane.py
-      -q -p no:randomly
-    expect: 全部通过，无新增 skip；整行比对三条新用例（正反 + 欠计）均命中
+  - cmd: 'env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=$(mktemp -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with pytest --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_scheduler_compile_launchd_plane.py -q -p no:randomly'
+    expect: '三条新用例（反例 / 正例 / 欠计反例）与 test_shadow_segment_never_blocks_the_gate 全绿；同文件两条 host 运行态用例 test_every_active_launchd_entry_resolves_to_an_installed_label 与 test_launchd_bidirectional_drift_structure 在该装置下预存红（基线 a59a966e7 逐名同为这两条 2 failed），不属本条判据，见收据 §4 边界 1-2。'
   - cmd: python3 bin/scheduler-compile.py --check
     expect: ok 值不因本 BET 改变；known_orphan_count 为按整行计的真实条数
   circuit_breaker: 若整行比对令本机或 CI 出现新的 drift/orphan 命中且无法指到具体的 120 字符之后差异，停止并返回主协调；不得为凑绿收窄判据、不得新增
@@ -47197,15 +47195,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ed737e423e26c89ebfde84a31c55f57dc7f0b7bb
+          tests:
+            ref: receipt://docs/reports/2026-11-06-t291-scheduler-full-line-comparison-closeout.md
+            sha256: sha256:b2a33e12890d6bec44b2b73e0ad29798efb86fca897d8e3f751412da371e7e88
+          diff:
+            ref: receipt://docs/reports/2026-11-06-t291-scheduler-full-line-comparison-closeout.md
+            sha256: sha256:b2a33e12890d6bec44b2b73e0ad29798efb86fca897d8e3f751412da371e7e88
+          rollback:
+            ref: receipt://docs/reports/2026-11-06-t291-scheduler-full-line-comparison-closeout.md
+            sha256: sha256:b2a33e12890d6bec44b2b73e0ad29798efb86fca897d8e3f751412da371e7e88
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-06-t291-scheduler-full-line-comparison-closeout.md
+            sha256: sha256:b2a33e12890d6bec44b2b73e0ad29798efb86fca897d8e3f751412da371e7e88
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-06-t291-scheduler-full-line-comparison-closeout.md
+            sha256: sha256:b2a33e12890d6bec44b2b73e0ad29798efb86fca897d8e3f751412da371e7e88
+          cleanup:
+            ref: receipt://docs/reports/2026-11-06-t291-scheduler-full-line-comparison-closeout.md
+            sha256: sha256:b2a33e12890d6bec44b2b73e0ad29798efb86fca897d8e3f751412da371e7e88
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-291.md
+            sha256: sha256:89d9a296ce0c9ae8ec179121ce51acd5bd148640f1e459dbbbbed0ac3e0b7ee9
       value:
         status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        evidence:
+          note: '价值轴 NOT_PROVEN：本条把 A4 门禁最后一处判据截断消除，收益面是「声明与实装只在 120 字符之后不同」从放行变为点名，债账读数从欠计变为实计（4 → 10）；这不是可量化收益，且 value_indicator_policy 显式 false，与同族 281/282/284/288/289/290 同判。归属如实入账——工程腿经 PR #5086 于 2026-11-06T09:46:57Z squash 合入 ed737e423e…，retro/receipt/台账由收口腿 PR 合入。数字变大不是新增债务：原先被截断键折叠的 6 条一直在机器上、只是没被数到，后续 shrink_only 判断要用新基线 10（逐条覆盖证据见收据 §2.2，not-covered=0）。operational 的 live_canary 是判据行为读数（本机 check_drift 两侧同分钟对照），非投放动作：本轮零 crontab / launchd 变更。'
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
