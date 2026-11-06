@@ -256,11 +256,14 @@ def test_known_orphan_count_counts_lines_not_truncated_keys() -> None:
     patterns = _known_orphan_patterns()
     assert patterns, "登记源应有 known_orphans，否则本用例测不到计数口径"
     p = min(patterns, key=len)
-    stem = f"5 3 * * * cd /Users/xiamingxing/Workspace && bash {p}/"
-    assert len(stem) <= 120, f"known_orphans 模式过长，无法把差异推到 120 之后: {p!r}"
-    filler = "x" * (120 - len(stem))
+    stem = f"5 3 * * * bash scripts/{p}/x"
+    norm_stem = sc._normalize_interpreter(stem)
+    assert len(norm_stem) <= 120, f"known_orphans 模式过长，无法把差异推到 120 之后: {p!r}"
+    filler = "x" * (120 - len(norm_stem))
     injected = [stem + filler + f"/role-{i:02d}.log" for i in range(5)]
-    assert len({line[:120] for line in injected}) == 1, "构造不满足「差异全部落在 120 之后」的前提"
+    assert len({sc._normalize_interpreter(line)[:120] for line in injected}) == 1, (
+        "构造不满足「差异全部落在 120 之后」的前提"
+    )
     assert len(set(injected)) == 5
 
     res = sc.check_drift(installed_lines=_installed_from_registry() + injected)
