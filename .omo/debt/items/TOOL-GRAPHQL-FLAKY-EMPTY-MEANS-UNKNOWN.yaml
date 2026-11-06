@@ -7,8 +7,29 @@ scope: "workspace"
 severity: "medium"
 weight: 0.05
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-06T00:00:00Z"
+close_reason: >-
+  债务的 decision_needed 已落地：bin/lib/gh_query.py 提供重试+空保护，
+  并已接线到唯一做破坏性 PR/worktree 操作的调用方。
+resolution_evidence: >-
+  2026-11-06 复核 —— decision_needed 要求的两件事都已存在：
+  ① 「给常用 gh 查询包一层重试+空保护」：bin/lib/gh_query.py 的 gh_json()
+     瞬态失败（EOF/timed out/connection/network/http 5xx/rate limit）重试 3 次
+     指数退避；rc=0 且空输出 = GraphQL 抖动签名，同样重试；耗尽后按调用方语义
+     抛 GhQueryUnknown（默认）或原样返回（treat_empty_as_unknown=False 由非破坏性
+     调用方显式选择）。非瞬态失败抛 GhQueryFailed，不重试。
+  ② 「失败/空时 abort 而不是继续删东西」：唯一做破坏性操作的调用方
+     bin/gac/clone-lifecycle.py:1694 已接线 —— GhQueryUnknown → reject
+     ("pr_query_unknown")，GhQueryFailed → reject（"pr_query_failed"），
+     不再把 UNKNOWN 当「无 OPEN PR」继续走建 PR 路径。
+  验证：tests/test_gh_query_safety.py 7 passed（含瞬态重试、空=UNKNOWN、
+  非破坏性调用方显式放行三条路径）。
+  范围说明（如实留记）：其余 gh api 调用点（gac-worktree.sh:1374/1378、
+  gac-branch-protection.sh:144、audit-repo-health.sh:63、gen-real-evalset.py）
+  仍是裸调用 —— 它们不做破坏性决策，本次不强制改造；如将来某个变成破坏性
+  调用方，按本债务的口径接 gh_json。
 affected_roots: []
 evidence_refs:
 - .omo/_knowledge/retros/2026-09-25-pr-4308-merge-support-retro.md
@@ -21,6 +42,11 @@ x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: "给常用 gh 查询包一层重试+空保护（失败/空时 abort 而不是继续删东西）；排查脚本一律用 REST（commits/check-runs、runs list）为主，GraphQL 只做展示"
 history:
+- at: "2026-11-06T00:00:00Z"
+  action: resolve
+  note: >-
+    bin/lib/gh_query.py 已提供重试+空保护，并接线到 clone-lifecycle 的破坏性
+    PR 查询路径（UNKNOWN → reject）。测试 7 passed。债务关闭。
 - at: '2026-09-25T12:00:00+00:00'
   action: identify
   note: >-
