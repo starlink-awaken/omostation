@@ -46030,7 +46030,8 @@ bets:
 - id: BET-Y2Q4-T10-278
   title: 同机双根决策与入口文档对齐
   goal: 依据当前完整文件名的已接受决策，修正 AGENTS.md 与 ARCHITECTURE.md 的陈旧入口描述，保留逐进程实测及未覆盖边界。
-  status: pending
+  status: done
+  done_at: 2026-11-05
   window: Y2Q4
   track: T10-DOCS
   priority: P1
@@ -46072,17 +46073,41 @@ bets:
   value_indicator_policy: false
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@3eb6b1567e89fdcbb47b6a0b0eff9c6a5dbcb36f
+          diff:
+            ref: receipt://docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+            sha256: sha256:2fe9949371d9a57e85a3fec172f87d7139a190d71fc337a51f80081c399fba5f
+          rollback:
+            ref: receipt://docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+            sha256: sha256:2fe9949371d9a57e85a3fec172f87d7139a190d71fc337a51f80081c399fba5f
+          tests:
+            ref: receipt://docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+            sha256: sha256:2fe9949371d9a57e85a3fec172f87d7139a190d71fc337a51f80081c399fba5f
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+            sha256: sha256:2fe9949371d9a57e85a3fec172f87d7139a190d71fc337a51f80081c399fba5f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+            sha256: sha256:2fe9949371d9a57e85a3fec172f87d7139a190d71fc337a51f80081c399fba5f
+          cleanup:
+            ref: receipt://docs/reports/2026-10-31-fleet-ssot-entry-closeout.md
+            sha256: sha256:2fe9949371d9a57e85a3fec172f87d7139a190d71fc337a51f80081c399fba5f
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-278.md
+            sha256: sha256:3155cb8b69ac09dd9303c2e1e1a30116444754b9500dc777e46c8c5d4314f46f
       value:
         status: NOT_PROVEN
-        evidence: {}
+        evidence:
+          note: "价值轴 NOT_PROVEN：这条消除的是入口文档与已接受双根决策之间的陈旧描述（两文件按编号同名会互相指错），没有新增可度量业务收益；value_indicator_policy 显式 false，与同族 T10-216/T10-219/T10-277 同判。规范四条必须满足项在登记前即已成立：AGENTS.md:45-48/:59 由 ec2f14252（2026-09-30，PR #4586）引入，ARCHITECTURE.md:21-23 由 f8ac358f8（2026-11-01，PR #4996）引入；本 BET 交付的是 retro + 报告定稿 + 簿记。operational 面的 live_canary 是三条台账 verify 判据在含定稿的最终树重跑（LANE_RC=0 / WHITESPACE_RC=0 / GATE_RC=0，70 checks，2 SOFT WARN 均与本 diff 无关并逐项点名）。限制如实入账：change-lane-check 的 CI 侧接线缺口（PUSH_RANGE 未在 .githooks 赋值、CI 缺省 --scope staged 在干净检出读到空集）意味着 lane 判据的效力来自本地显式 --file 调用，不来自 CI；多机 writer 与逐服务码面实测属 ADR-0456 B4b，不由本 BET 推断。"
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-279
   title: BET-Y2Q4-T10-279 compute-i9-01 Integration —— 受治理 CPU 执行节点接入
   goal: 将 compute-i9-01 以单一 OMO 控制面纳入受治理 Code/Test/Batch 执行体系；先完成只读发现与提案，再在明确授权后完成隔离
@@ -46685,6 +46710,267 @@ bets:
       value:
         status: NOT_PROVEN
         evidence: {}
+- id: BET-Y2Q4-T10-286
+  title: ADR-0456 B4b 批次 3 — 把最后一条指向检出根的常驻 plist 改道到安装位 (workspace_scoped 2→1)
+  goal: 'plan nimble-bay-asp 的 B4b 验收尺是「指向 Workspace 的 plist 由 43 → 0」。批次 2 之后实测 (base
+    0b67fac45, registry a361bd09c3eb): e7_checkout=0、workspace_scoped=2、其一条是本 label
+    com.omostation.test-archive-purge-7d, 另一条 ai.hermes.gateway 是 #194 登记的尺假阳 (整 blob
+    子串命中, 非真写检出根)。 本条把这条真实残差改道: plist 的 ProgramArguments cd 目标与 WorkingDirectory 从 /Users/xiamingxing/Workspace
+    改到安装位 ~/.local/opt/omostation, 删掉 argv 内的 shell 重定向 (改由 launchd StandardOut/ErrorPath
+    承接到 ~/.local/log/), 新增 OMOSTATION_STATE_ROOT, 并声明 runtime_root: install。 改道的正当性来自否证旧理由:
+    初版 (2026-10-28) 写作「派发归档 .omo/tasks/archived/dispatches_test_archive/ 是主仓数据面, 安装位那份是
+    独立 clone 副本, 删错地方等于没删」—— ADR-0466 复核段 :76 记录该目录在 main 上从未存在 (仅见于未合并 分支 chore/closeout-20261022),
+    2026-11-05 实测该目录在检出根/安装位/prod state 根三处全部不存在, 全仓唯一引用是常量定义本身 (bin/ops/purge-test-archive-7d.py:31,
+    无任何写者); 故范围 2 在任何根下都是 永久 no-op, 范围 1 (cards_archive) 是机器级路径与根无关, 两者都不构成选根依据, 而旧
+    argv 的重定向与 WorkingDirectory 本身在往检出根写日志 (检出根不是运行时根, ADR-0456 决策 1)。 行为无差实证: 改道前后
+    各跑一次无参只读 status(), 两态均 cards=0 / dispatches=0 / due=0; 全程未跑 --auto/--purge。 三面对齐判据不变:
+    仓内源 == 本机安装副本 == content_digest 逐字节同源 (镜像仍 generate: false)。'
+  status: done
+  done_at: 2026-11-05
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 hours
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-05-b4b-last-plist-install-root-diversion.md
+  - bin/ops/launchd/com.omostation.test-archive-purge-7d.plist
+  - .omo/_truth/registry/services.yaml
+  - .omo/cron/registry.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-286.md
+  - docs/reports/2026-11-05-b4b-last-plist-install-root-diversion-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-05-b4b-last-plist-install-root-diversion.md
+    spec_version: 1.0.0
+    content_digest: sha256:d8afab8eb2a0e822c96060848362d80183725af82e6018e6f94dae96c3e9455d
+    decision_ref: decision://accepted/BET-Y2Q4-T10-286
+  non_goals:
+  - 不修 gen-service-configs.py:729 的 workspace_scoped 整 blob 子串判据本体 —— 尺与 B4b 验收尺读数分裂的根因是缺陷编号
+    194（另案），本 BET 只让真实残差归零，ai.hermes.gateway 那条假阳留在案上。
+  - 不宣称 ADR-0456 B4b 闭合 —— E4 未分区 22 条异主 label 属署名裁定缺陷编号 147，本 BET 不碰。
+  - 不做数据迁移，不删任何归档条目 (cards_archive / dispatches 两侧都不跑 --auto / --purge)。
+  - 不把该条镜像改成 generate 为 true —— plist 含 WorkingDirectory 键，而 gen_launchd_plist 从不输出该键，改
+    true 会立刻产生 E1 漂移。
+  - 机器侧动作只限本 label 的 cp + bootout + bootstrap (principal 于 2026-11-05 逐项授权)，不碰其它 86
+    条已装作业。
+  done_when:
+  - 仓内 plist 源 plistlib 可解析，且 ProgramArguments/WorkingDirectory/EnvironmentVariables/StandardOut/StandardError
+    五处零 Workspace 字面量。
+  - 三面对齐重签：本机安装副本 sha256 == services.yaml content_digest == 仓内源 sha256 (b36857f044…)
+    逐字节一致。
+  - 同检出 --reality-check 读数 workspace_scoped 由 2 → 1 且剩余一条恰为 ai.hermes.gateway (#194
+    尺假阳)；e1_drift/e2_undeclared/e3_malformed/e7_checkout/e7_undeclared 与基线逐字段相同 (0/0/0/0/0)。
+  - 反证由同一次扫描产出 —— 把 argv 的 cd 目标改回检出根则 workspace_scoped 回 2 且点名本 label (不得只断言 1)。
+  - 行为无差：安装位与检出根各跑一次无参只读 status()，输出计数一致且零删除；launchctl print 对本 label 可读且 state 非 spawn
+    scheduled 失败。
+  - make gac-local-gate 硬失败集合等于基线 (零新增)。
+  verify:
+  - cmd: python3 -c "import plistlib;raw=open('bin/ops/launchd/com.omostation.test-archive-purge-7d.plist','rb').read();d=plistlib.loads(raw);vals=[d['ProgramArguments'][2],d['WorkingDirectory'],d['StandardOutPath'],d['StandardErrorPath']]+list(d['EnvironmentVariables'].values());print(len([v
+      for v in vals if 'Workspace' in v]))"
+    expect: plistlib 解析成功且五面计数 0
+  - cmd: python3 bin/mof/gen-service-configs.py --reality-check --json | python3 -c
+      "import json,sys; r=json.load(sys.stdin); want=dict(workspace_scoped=1,workspace_scoped_labels=['ai.hermes.gateway'],e1_drift=0,e2_undeclared=0,e3_malformed_labels=[],e3_lint_debt=0,e7_checkout=0,e7_undeclared=0,e6_non_ok=6,e6_blocking=0);
+      print(' '.join('%s=%s'%(k,r.get(k)) for k in want)); sys.exit(0 if all(r.get(k)==v
+      for k,v in want.items()) else 1)"
+    expect: 十个字段逐一等于期望值时退出 0。不判 report 的 ok 键 —— 它由 E4 未分区 22 条（缺陷编号 147，署名裁定面）独立置 false，把本条判据钉成常驻红。注册表侧取脚本
+      local_root（本检出， gen-service-configs.py:960），但 workspace_scoped 与 e6 的比较针取 canonical_root()（:35
+      刻意如此：机器级配置不得锚 worktree），且 OMOSTATION_ROOT 会改写它 —— 实测 声明 OMOSTATION_ROOT=本检出 时读数为
+      workspace_scoped=0 与 e6_non_ok=5（少掉 spine-daily-ingress 的两处检出根字面量与 hermes 的整 blob
+      假阳，缺陷编号 194）， 所以本条判据必须在未声明 OMOSTATION_ROOT 的环境里跑。
+  - cmd: python3 bin/mof/gen-service-configs.py --validate --json
+    expect: ok true, violation_count 0
+  - cmd: python3 -c "import sys,hashlib;from pathlib import Path;sys.path.insert(0,'bin/mof');import
+      importlib.util as u;s=u.spec_from_file_location('g','bin/mof/gen-service-configs.py');m=u.module_from_spec(s);s.loader.exec_module(m);a=hashlib.sha256(Path('bin/ops/launchd/com.omostation.test-archive-purge-7d.plist').read_bytes()).hexdigest();b=hashlib.sha256((Path.home()/'Library/LaunchAgents/com.omostation.test-archive-purge-7d.plist').read_bytes()).hexdigest();e=[x
+      for x in m.load_services(Path('.omo/_truth/registry/services.yaml')) if x.get('label')=='com.omostation.test-archive-purge-7d'][0]['content_digest'].removeprefix('sha256:');print(a==b==e,a,b,e);sys.exit(0
+      if a==b==e else 1)"
+    expect: 三方同源逐字节一致时退出 0 并打印该摘要；registry 侧经 load_services() 读，不用正则截取。 读的路径是本检出（与尺的
+      local_root 同口径，gen-service-configs.py:960），不走 services_yaml_path() —— 后者经 canonical_root()
+      指向共享主检出，它落后 origin/main 时会把 改道前的 content_digest 读进来（PITFALL-COO-006 同形），三方比对里只有安装副本属机器面。
+  circuit_breaker: '若机器侧 bootout/bootstrap 后 launchctl print 报路径不存在、或 --auto 语义在未授权情况下被触发导致任何条目删除
+    → 立即按 spec §4 回滚 (git revert + 重装旧 plist)，并停止宣称完成。若 E7/workspace_scoped 归零需要修改 gen-service-configs.py
+    判据本体 → 停止，那是署名裁定面 (任务 #194)。不宣布 ADR-0456 B4b 或整个 plan 完成。'
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@dd50f60975acf5664a73a938036c128f5ddb2e66
+          diff:
+            ref: receipt://docs/reports/2026-11-05-b4b-last-plist-install-root-diversion-closeout.md
+            sha256: sha256:84437786497b9c9258ff07e437692e9df6673e18e21f2d87ca9a41e4ad5715fe
+          tests:
+            ref: receipt://docs/reports/2026-11-05-b4b-last-plist-install-root-diversion-closeout.md
+            sha256: sha256:84437786497b9c9258ff07e437692e9df6673e18e21f2d87ca9a41e4ad5715fe
+          rollback:
+            ref: receipt://docs/reports/2026-11-05-b4b-last-plist-install-root-diversion-closeout.md
+            sha256: sha256:84437786497b9c9258ff07e437692e9df6673e18e21f2d87ca9a41e4ad5715fe
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-05-b4b-last-plist-install-root-diversion-closeout.md
+            sha256: sha256:84437786497b9c9258ff07e437692e9df6673e18e21f2d87ca9a41e4ad5715fe
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-05-b4b-last-plist-install-root-diversion-closeout.md
+            sha256: sha256:84437786497b9c9258ff07e437692e9df6673e18e21f2d87ca9a41e4ad5715fe
+          cleanup:
+            ref: receipt://docs/reports/2026-11-05-b4b-last-plist-install-root-diversion-closeout.md
+            sha256: sha256:84437786497b9c9258ff07e437692e9df6673e18e21f2d87ca9a41e4ad5715fe
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-286.md
+            sha256: sha256:2aca7d3864929a499ec42bf737149ee9eb3c9041903a9f68cb094f9b4d680ecf
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: '价值轴 NOT_PROVEN：本条消除的是 ADR-0456 决策 1 的最后一个真实残差形状 —— com.omostation.test-archive-purge-7d
+            的常驻作业从检出根启动并往检出根写日志；没有新增可度量业务收益，value_indicator_policy 显式 false，与同族 281/282/284
+            同判。登记时序如实入账：代码腿于 2026-11-05 以 #5049（dd50f6097）合入，retro 与 receipt 于 #5051（2c80be0b9）合入，台账条目当时未落，故本条是已完成工作的追认登记；编号沿用三份已合入材料自己声明的
+            BET-Y2Q4-T10-286，未改写任何已合入文件。engineering 面：merged_reachable_commit 为 #5049
+            的 squash SHA；diff/tests/rollback 三项由 receipt 的逐字节摘要承接。operational 面的 live_canary
+            是真机读数（launchctl print 的 runs 随 StartCalendarInterval 增长 + last exit code=0
+            + argv/WorkingDirectory 指向安装位），不是 bootstrap 成功即算跑过；replay 指 retro。限制如实入账：E7/workspace_scoped
+            的读数分裂（尺按整 blob 子串判，ai.hermes.gateway 为假阳）属缺陷编号 194 另案，本条不据此宣称 ADR-0456 B4b
+            闭合 —— E4 的 26 条异主 label 分区仍需署名裁定。'
+    overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-288
+  title: BET-Y2Q4-T10-288 第四类根准入 —— CWD 相对锚在两把根尺里按构造不可见
+  goal: 给 `tests/unit/test_resident_write_plane_split.py` 与 `tests/unit/test_writeplane_root_pin.py`
+    各新增 `RELATIVE` 类目（判据见 spec §5 AC-01），并把两处确证站点按 spec §2 分别处置：`projects/omo/src/omo/workflow/lock_graph.py`
+    死写面显式降级并登记、`bin/notification.py` 的 HITL 提案面默认值改经 `state_root()` 拼接或 env 缺席即拒写；结论写进
+    ADR-0456 addendum。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 2 days
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-05-cwd-relative-root-anchor-admission.md
+  - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
+  - tests/unit/test_resident_write_plane_split.py
+  - tests/unit/test_writeplane_root_pin.py
+  - bin/notification.py
+  non_goals:
+  - 不删 `lock_graph.py` 的任何代码（删代码需另行授权，spec AC-02）；只裁根与登记。
+  - 不改任何 plist、不动 cron、不 unshallow 主仓。
+  - 不在本 BET 内迁移 HITL 提案面的历史内容，只裁其根。
+  - 不把 D1 的一次性粗扫计数（`bare_inline 84` 等）当契约名单引用。
+  done_when:
+  - '`RELATIVE` 类目在两把尺里各命中 spec §2 的两形（`Path(".omo")` 派生链 / 单 `Path()` 调用带仓内相对默认），正反用例齐且各配变异对照（摘掉类目
+    ⇒ 用例当场红）。'
+  - '`lock_graph` 与 `notification` 两处站点的处置结论写进 ADR-0456 addendum（按文件名引用）。'
+  - 改造后的尺在 tip 对照树上仍复现 `SPEC_MARKER_READINGS` / `SPEC_GATED_*` 基线（反证不得退化为「不可见」）。
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=$(mktemp
+      -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with
+      pytest --with pyyaml python -m pytest tests/unit/test_resident_write_plane_split.py
+      tests/unit/test_writeplane_root_pin.py -q -p no:randomly
+    expect: 全绿；且新增的 RELATIVE 正面用例命中数非零（空绿不算通过，AGENTS.md §7③）。
+  - cmd: /usr/bin/git -C projects/omo cat-file -e origin/main:src/omo/workflow/lock_graph.py
+    expect: rc=0（存在性判据，防把 gitlink 边界读成文件缺席，AGENTS.md §6）。
+  circuit_breaker: 若执行窗口复测发现 tip 上这两把尺的分类规则已被并发交付改写（先 `git diff --stat <起手 base> origin/main
+    -- tests/unit/test_*`），则本轮只登记差量，不改判据，避免两条尺同时改造成不可比读数。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-05-cwd-relative-root-anchor-admission.md
+    spec_version: 1.0.0
+    content_digest: sha256:0bb74afcc60ae553e9760794226b85b852fc3f22a01a586bab3de35817c25eb1
+    decision_ref: decision://accepted/BET-Y2Q4-T10-288
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: 价值轴 NOT_STARTED：本条消除的是 ADR-0456 根契约的第四类盲区（落点随进程 CWD 且两把尺按构造看不见），收益面在门禁可见性而不是业务指标；value_indicator_policy
+            显式 false，与同族 281/282/284 同判。
+    overall_state: evaluating
+- id: BET-Y2Q4-T10-289
+  title: BET-Y2Q4-T10-289 `.omo/_knowledge` 的根归类裁决 —— 四面矛盾与三个「既跟踪又忽略」面
+  goal: 按 spec §3 的判别量（tracked ⇒ 检出根；ignored 且零跟踪 ⇒ profile 的 state 根；两者同时 ⇒ 当场点名冲突）对
+    `.omo/_knowledge` 桶 62 个检出钉站点逐面给根归类结论，写进 ADR-0456 addendum；把 pin-gate 的排除面由「按 marker
+    前缀」改为「按族」，并收敛 13 个具体族读者中的 10 处模块级常量。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 3 days
+  risk_level: L2
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-05-knowledge-plane-root-classification.md
+  - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
+  - tests/unit/test_writeplane_root_pin.py
+  - tests/unit/test_resident_write_plane_split.py
+  non_goals:
+  - 不改 `.gitignore`、不 `git rm --cached` 摘库 —— 改跟踪面需另行授权（spec AC-04），本条只给判别量与点名。
+  - 不在本 BET 内迁移 `_knowledge` 下的历史内容，只裁根。
+  - 不改任何 plist、不动 cron、不 unshallow 主仓。
+  - 不把 §5 的粗扫条目数当契约名单引用（AGENTS.md §7「抽样探测的覆盖面上限是它的样本集」）。
+  done_when:
+  - ADR-0456 addendum 按 §3 判别量**逐面**给结论：3 个冲突面（evolution-proposals / decision-proposals
+    / signals）+ 容器 + 5 个纯生成面 + 6 个纯跟踪读面。
+  - pin-gate 排除面改按族后，`.omo/_knowledge` 的 13 个具体族站点进入计账、44 个未登记面保持「可见不计」（`test_detector_does_not_fire_on_seam_or_read_plane`
+    的反过宽语义不得退化，spec AC-02）。
+  - 容器 5 站点（全部落到 `rglob("*.md")`）的裁决写明：改走具名跟踪面常量，或显式声明容器为双面 —— 二者择一并给理由。
+  - 族表闭合性按 spec AC-05 显式声明适用范围，并给「有 state 根写者但族未登记 ⇒ 点名」的后续判据。
+  verify:
+  - cmd: env -u OMOSTATION_ROOT -u OMOSTATION_STATE_ROOT -u OMO_EVENT_LEDGER_DB HOME=$(mktemp
+      -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with
+      pytest --with pyyaml python -m pytest tests/unit/test_writeplane_root_pin.py tests/unit/test_resident_write_plane_split.py
+      -q -p no:randomly
+    expect: 全绿；分桶读数必须写明产出它的那把尺所在 base（本轮基线 `f2ab7ca3006488a12246d873dace01f89ceb1970`）。
+  - cmd: /usr/bin/git ls-tree -r --name-only origin/main -- .omo/_knowledge/signals
+      | /usr/bin/wc -l
+    expect: 非零（冲突面之一，实测 7）；与 `git check-ignore -v` 命中 `.gitignore:424` 同时成立才构成「既跟踪又忽略」。
+  circuit_breaker: 若执行窗口复测发现三个冲突面已被并发交付摘库或补规则（`git diff --stat <起手 base> origin/main
+    -- .gitignore .omo/_knowledge`），则该面从裁决清单里摘出并如实记「已由他方闭合」，不重复裁决。
+  value_indicator_policy: false
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-05-knowledge-plane-root-classification.md
+    spec_version: 1.0.0
+    content_digest: sha256:c9ddcfd9bd260533a664a82eea22281a12088d2ed868cfa54224290851c782fd
+    decision_ref: decision://accepted/BET-Y2Q4-T10-289
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: 价值轴 NOT_STARTED：本条裁的是声明与实态的归类矛盾（A 说 state、C 说读面），无新增可度量业务收益；value_indicator_policy
+            显式 false。
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -46823,7 +47109,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 582
+  total_bets: 585
   windows:
   - Y1Q1
   - Y1Q2
