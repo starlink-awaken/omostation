@@ -565,6 +565,75 @@ def scan_writers(src: Path) -> dict[str, dict[str, list[tuple[str, int, str]]]]:
     return buckets
 
 
+# ── AC-05 族表闭合性 (BET-Y2Q4-T10-289, spec §7 AC-05) ────────────────────
+#
+# spec §5 的结论是「`STATE_FAMILIES` 与读者名单**都不是闭合集**」，所以本文件的分桶读数不能被当成
+# 「全部的面都在表里」。这条判据把那句话变成能跑的尺：挂在 state 根上、族表却没登记的面 ⇒ 点名。
+# 两个细节都是从量出来的而不是推出来的：
+# ① **容器族只覆盖它自己**。`.omo/_knowledge` 登记为族（`omo_logs.knowledge_dir()` 那条裁决），
+#    但它不替后代声明「已登记」—— 否则 `workflow-mesh/journey-states` 会被容器顺带盖掉，
+#    与尺 B 的 AC-02 是同一个形状的错误（用容器判等于整串排除）。
+# ② 分桶按**形状**收集，读写不分。今天点名的两条都是 `root_state / ... .glob()` 形态的读点，
+#    所以这条尺子证的是「族表闭合性」，不是「谁在写」。把它读成写者名单就是 §7「判据报警先 print
+#    原始行再定性」的下一次事故。
+
+CONTAINER_FAMILIES = frozenset({".omo/_knowledge"})
+
+
+def _family_covers(plane: str) -> str | None:
+    """族表登记了这个平面吗？返回命中的族名；没登记 ⇒ None。通配族覆盖它前缀下的一切。"""
+    for fam in STATE_FAMILIES:
+        if fam in CONTAINER_FAMILIES:
+            if plane == fam:
+                return fam
+            continue
+        if fam.endswith("/*"):
+            base = fam[:-2]
+            if plane == base or plane.startswith(base + "/"):
+                return fam
+        elif plane == fam or plane.startswith(fam + "/"):
+            return fam
+    return None
+
+
+def _anchor_is_state_root(src: Path, rel: str, anchor: str) -> bool:
+    """锚点变量在本文件里是否绑到 profile 解析器 —— 判据与 `_classify` 共用 `_STATE_MARKERS`。"""
+    tree = _parse(src / rel)
+    if tree is None or not anchor.isidentifier():
+        return False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Name) and t.id == anchor for t in node.targets
+        ) and any(marker in ast.dump(node.value) for marker in _STATE_MARKERS):
+            return True
+    return False
+
+
+def state_root_planes_without_family(src: Path) -> dict[str, list[tuple[str, int, str]]]:
+    """`src/**.py` 里挂在 state 根上、却不被族表覆盖的面 ⇒ {平面: [(文件, 行, 来源桶)]}。
+
+    两个来源桶都要扫：`state` 桶（resolver 直接命中）与 `bare_inline` 桶里锚点确实绑到 profile
+    解析器的那些（`root_state = state_root()` 这类别名，resolver 匹配不到变量名本身）。
+    只扫 `state` 桶的话，本轮 spec §5 点名的 `journey-states` 会再次漏掉 —— 它在 `bare_inline`。
+    """
+    buckets = scan_writers(src)
+    out: dict[str, list[tuple[str, int, str]]] = {}
+    for plane, items in buckets["state"].items():
+        if _family_covers(plane) is None:
+            out[plane] = [(rel, line, "state") for rel, line, _kind in items]
+    for plane, items in buckets["bare_inline"].items():
+        if _family_covers(plane) is not None:
+            continue
+        hits = [
+            (rel, line, f"bare_inline:{anchor}")
+            for rel, line, anchor in items
+            if _anchor_is_state_root(src, rel, anchor)
+        ]
+        if hits:
+            out[plane] = hits
+    return out
+
+
 def reader_pairs(src: Path, families: set[str]) -> list[tuple[str, str, str, int, str, str]]:
     """bin/**.py 里对 families 的读取: (family, kind, rel_file, line, anchor, root_class)。
 
@@ -1849,3 +1918,96 @@ def test_two_rulers_agree_on_the_relative_face():
     a_keys = {(f"bin/{rel}", fam) for fam, hits in scan_relative_writers(BIN).items() for rel, _l, _s in hits}
     assert b_keys <= a_keys, b_keys - a_keys
     assert a_keys - b_keys == RULER_B_MARKER_BLIND, a_keys ^ (b_keys | RULER_B_MARKER_BLIND)
+
+
+# ── AC-05 的用测（登记双向 + 合成正反 + 容器不覆盖后代 + 适用范围） ─────────────
+#
+# 登记表 = 「有 state 根锚、族表未登记」的面。键是平面，值是具名理由（哪一处锚、该谁收口）。
+# 规则与 `SPLIT_EXACT` 那批允许清单同构：**只减不增**，且双向相等 —— 新面出现 ⇒ 红；面已经
+# 登记进族表却还留在这里 ⇒ 也红（否则这条尺会变成一份追不上代码的名单，§7「检测器的分类规则要
+# 与标记清单同源」的反面）。
+
+UNREGISTERED_STATE_ROOT_PLANES = {
+    ".omo/_knowledge/workflow-mesh/journey-states": (
+        "omo_agent_host.py 的 `root_state`（:483/:581）挂在 state 根上读这个面，族表只有容器和 "
+        "`workflow-mesh/events.jsonl`。spec §5 点名的就是这一条 —— 收口方式二选一：登记成族，"
+        "或把锚改回具名跟踪面。"
+    ),
+    ".omo/debt/gap-items": (
+        "omo_agent_host.py:615 同一个表达式里两个根（:612 `root_code` 读已跟踪的 `debt/items`、"
+        ":615 `root_state` 读未跟踪的 `debt/gap-items`，BET-Y2Q4-T10-239 的按 trackedness 分根）。"
+        "`debt` 整支不在本 BET 的扫描面（`.omo/_knowledge` 桶）里，所以这里点名而不在 289 内裁定。"
+    ),
+}
+
+
+def test_state_root_planes_without_family_are_the_reviewed_gaps():
+    measured = state_root_planes_without_family(OMO_SRC)
+    assert set(measured) == set(UNREGISTERED_STATE_ROOT_PLANES), (
+        f"新增未登记的 state 根面: {sorted(set(measured) - set(UNREGISTERED_STATE_ROOT_PLANES))} / "
+        f"已闭合却仍挂名单: {sorted(set(UNREGISTERED_STATE_ROOT_PLANES) - set(measured))}"
+    )
+    assert all(reason.strip() for reason in UNREGISTERED_STATE_ROOT_PLANES.values())
+
+
+def test_family_closure_detector_fires_on_gap_not_on_registered_or_checkout(tmp_path):
+    """合成正反：只有点名得中「state 根 + 未登记面」这一组合才算数。"""
+    src = tmp_path / "omo"
+    src.mkdir(parents=True)
+    (src / "gap.py").write_text(
+        "from pathlib import Path\n\n"
+        "def state_root() -> Path:\n"
+        "    return Path('/tmp/state')\n\n"
+        "def code_root() -> Path:\n"
+        "    return Path('/tmp/checkout')\n\n"
+        "def run() -> None:\n"
+        "    root_state = state_root()\n"
+        '    list((root_state / ".omo" / "_knowledge" / "brand-new-plane").glob("*.json"))\n'
+        '    list((root_state / ".omo" / "_knowledge" / "sediment" / "x").glob("*.json"))\n'
+        "    root_code = code_root()  # 检出根锚点：同一个面挂 code 根是契约不是缺口\n"
+        '    list((root_code / ".omo" / "_knowledge" / "another-new").glob("*.json"))\n',
+        encoding="utf-8",
+    )
+    named = state_root_planes_without_family(src)
+    assert ".omo/_knowledge/brand-new-plane" in named, named
+    assert ".omo/_knowledge/sediment/x" not in named, named  # 已登记族的后代
+    assert ".omo/_knowledge/another-new" not in named, named  # 锚点是检出根，不是 state 根
+    # 反「按构造就绿」：第三处必须**进到待判桶里**，被排除靠的是锚点判据而不是没被扫到。
+    assert ".omo/_knowledge/another-new" in scan_writers(src)["bare_inline"], (
+        "该站点没进 bare_inline 桶 ⇒ 上面那条 not-in 是按构造成立，锚点判据不被承重"
+    )
+
+
+def test_container_family_covers_itself_but_not_its_descendants():
+    """AC-05 与尺 B 的 AC-02 同一条错误的两面：容器族不得替后代声明「已登记」。"""
+    assert _family_covers(".omo/_knowledge") == ".omo/_knowledge"
+    assert _family_covers(".omo/_knowledge/decisions") is None
+    assert _family_covers(".omo/_knowledge/sediment/runs") == ".omo/_knowledge/sediment"
+    assert _family_covers(".omo/state/whatever/deep.json") == ".omo/state/*"
+    assert _family_covers(".omo/_knowledge/workflow-mesh/events.jsonl") == (
+        ".omo/_knowledge/workflow-mesh/events.jsonl"
+    )
+
+
+def test_family_table_is_declared_not_closed_over_the_scanned_bucket():
+    """适用范围（spec §7 AC-05 末句）：裁的是 `.omo/_knowledge` 桶这 62 站点，不是族表全量。
+
+    这条用例是那句声明的**可跑版本**：尺 B 的分桶里 `NOT_DECLARED` 必须仍然非零。若哪天它归零
+    （族表补全或桶改名），说明适用范围变了，本条连同 ADR-0456 addendum 的适用范围那句一起改，
+    不许静默留下一个永不发火的分支。
+    """
+    spec_ = importlib.util.spec_from_file_location("t289_ruler_b_for_closure", RULER_B)
+    assert spec_ is not None and spec_.loader is not None
+    ruler_b = importlib.util.module_from_spec(spec_)
+    sys.modules["t289_ruler_b_for_closure"] = ruler_b
+    try:
+        spec_.loader.exec_module(ruler_b)
+        buckets = ruler_b.knowledge_bucket(ruler_b.scan_checkout_pinned_sites(ROOT))
+    finally:
+        sys.modules.pop("t289_ruler_b_for_closure", None)
+    assert len(buckets["NOT_DECLARED"]) == 44, len(buckets["NOT_DECLARED"])
+    assert len(buckets["SPECIFIC_FAMILY"]) == 13
+    unregistered_in_bucket = {
+        s[3] for s in buckets["NOT_DECLARED"] if _family_covers(s[3]) is None
+    }
+    assert unregistered_in_bucket, "44 个未登记面全部被族表覆盖了 —— 适用范围那句要重写"

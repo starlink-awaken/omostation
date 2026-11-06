@@ -18,23 +18,77 @@ BET:  BET-Y2Q4-T10-250
 2026-11-05 BET-Y2Q4-T10-288 起本文件有**第二把尺**：`scan_cwd_relative_sites` 认第四类根 ——
 `Path(".omo")` 这类**不挂任何根**的相对锚，落点随**进程 CWD**，连 profile 都不读，所以第一把尺
 （按 resolver 归类）与 `test_resident_write_plane_split` 的 state 族**按构造都看不见它**。
-两把尺是并列类目而不是同一判据的放宽：第一把尺的 `SPEC_*` 五个读数逐字不变，否则一次改判据
-就会把 153/143/95 的债基线一起改写。契约见
+两把尺是并列类目而不是同一判据的放宽：第一把尺的 `SPEC_MARKER_READINGS` 五个**分桶**读数逐字不变，
+否则一次改判据就会把债基线一起改写。契约见
 `docs/superpowers/specs/2026-11-05-cwd-relative-root-anchor-admission.md` §2/§5 AC-01。
+
+2026-11-06 BET-Y2Q4-T10-289 AC-02 改的是**门禁集合的准入谓词**（`gated_pairs`），不是分桶：
+排除面由「按 marker 前缀」改为「按族」—— `.omo/_delivery` / `.omo/_knowledge` / `.omo/_truth` 是
+读写混合面，整串排除会让「写者已迁 state 根、读者仍钉检出」的真缺陷与合法读面同形（spec §7 AC-02）。
+族的名单**不在本文件复制**，由 `_state_families()` 从尺 A 的 `STATE_FAMILIES` 按 AST 取。
+后果如实记账：门禁三读数 153/143/95 → 173/163/107，新入账的 20 处不是新债，是同一批站点先前
+不计；`SPEC_MARKER_READINGS` 五桶逐字未变（分桶口径没动，动的只是「计不计」）。
 """
 
 from __future__ import annotations
 
 import ast
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BIN_DIR = ROOT / "bin"
 
-# 门禁只管这两类（spec §1）。其余四类是读面 / 全机协调桥 / 署名文档面，排除理由见 §1 表。
+# 整面都是写目标的两类（spec §1）：这两串前缀本身即 profile 面，按前缀判与按族判在此等价。
 GATED_MARKERS = (".omo/state", "runtime")
+# 其余四类是读写混合面 / 全机协调桥 / 署名文档面。混合面**不再整串排除**（AC-02），改由下面的
+# `_family_of` 决定计不计；`kos` 没有任何登记族，因此实际仍不计 —— 那不是特例，是判据的输出。
 ALL_MARKERS = (".omo/state", ".omo/_delivery", ".omo/_knowledge", ".omo/_truth", "runtime", "kos")
 SKIP_SEGMENTS = {"_archive", "_vendored", "__pycache__", ".venv"}
+
+RULER_A = ROOT / "tests" / "unit" / "test_resident_write_plane_split.py"
+
+
+def _state_families() -> frozenset[str]:
+    """state 族名单的**单一来源** = 尺 A 的 `STATE_FAMILIES`，只按 AST 取字面量，不 exec 那个文件。
+
+    不复制一份名单的理由是 AGENTS.md §7「检测器的分类规则要与标记清单同源」与 T10-239「契约名单
+    由源码判据导出且单一来源，消费者只 import」—— 两处各抄一份，就是下一个「漏认一半」的事故。
+    用 AST 而不是 importlib：尺 A 的用例 `test_two_rulers_agree_on_the_relative_face` 会反过来
+    载入本文件，exec 会造出双向加载；只读文本取常量则两边都在自己的树上求值，尺 A 改了这里立刻
+    跟着变，不需要有人记得同步。
+    **取不到就抛错，不退回空集**：退回空集是 §7⑧「坏了与内容为空同形」，会让按族门禁静默退回
+    marker 前缀，读数看着正常（153/143/95）而判据已经不存在。
+    """
+    tree = ast.parse(RULER_A.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Name) and t.id == "STATE_FAMILIES" for t in node.targets
+        ):
+            return frozenset(
+                c.value
+                for c in ast.walk(node.value)
+                if isinstance(c, ast.Constant) and isinstance(c.value, str)
+            )
+    raise AssertionError(f"{RULER_A} 里取不到 STATE_FAMILIES 赋值，按族判据已失效")
+
+
+STATE_FAMILIES = _state_families()
+
+# 能决定「计不计」的族必须有名有姓。摘掉两类：
+# ① 通配项（`.omo/state/*`、`…/watermarks/*`）匹配一片而不是一个面，拿它判等于用前缀判；
+# ② 容器 `.omo/_knowledge` 匹配它的**一切**后代，用它判就是把「整串排除」反着搬回来 —— 那样
+#    44 个未登记的合法读面会全部入账，正是 AC-02 禁止的退化（spec §7 AC-02 末句）。
+GATEABLE_FAMILIES = frozenset(
+    f for f in STATE_FAMILIES if "*" not in f and f != ".omo/_knowledge"
+)
+
+
+def _family_of(whole: str) -> str | None:
+    """整条拼接路径落到的**最具体**登记族；不落任何族 ⇒ None（由同一扫描分类出来，但不计）。"""
+    hits = [f for f in GATEABLE_FAMILIES if whole == f or whole.startswith(f + "/")]
+    return max(hits, key=len) if hits else None
+
 
 # spec §1 的读数表 —— 与本文件扫描出的分类逐桶相等（同一判据、同一次扫描产出）。
 # 2026-10-29 T10-278 读侧收敛把 resident-orchestrator 的 4 处检出根常量改成 state_root()
@@ -53,9 +107,13 @@ SPEC_MARKER_READINGS = {
     "runtime": 50,
     ".omo/_knowledge": 62,
 }
-SPEC_GATED_SITES = 153
-SPEC_GATED_PAIRS = 143
-SPEC_GATED_FILES = 95
+# 2026-11-06 BET-Y2Q4-T10-289 AC-02（准入谓词改按族，**分桶读数一条未动**）：门禁三读数
+# 153/143/95 → 173/163/107。差额 20 站点 / 20 对 / 12 个文件里 9 个是新出现的文件，逐项是
+# `.omo/_knowledge` 13 处 + `.omo/_delivery` 6 处 + `.omo/_truth` 1 处（spec §2 只裁了
+# `_knowledge` 桶，另两个 marker 的 7 处是同一判据的连带命中，逐面裁决见 ADR-0456 addendum）。
+SPEC_GATED_SITES = 173
+SPEC_GATED_PAIRS = 163
+SPEC_GATED_FILES = 107
 
 # 2026-10-13 由 BET-Y2Q4-T10-250 的扫描生成的登记面（(文件, 拼出的相对路径) 去重）。
 # 还掉一处债 = 从这份名单里删掉那一行，且必须同时改掉那个脚本；名单只减不增。
@@ -203,7 +261,33 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/ssot/value-operator-doctor.py', '.omo/state/value-baselines'),
         ('bin/ssot/value-operator-doctor.py', '.omo/state/value-baselines/value-recorder-baseline-20260919-unique-exec.json'),
         ('bin/ssot/value-recorder.py', '.omo/state/value-baselines'),
-        ('bin/ssot/weekly-review.py', '.omo/state/heartbeats'),    ]
+        ('bin/ssot/weekly-review.py', '.omo/state/heartbeats'),
+        # ── 2026-11-06 BET-Y2Q4-T10-289 AC-02：排除面改按族后入账的 20 处 ──────────────
+        # 站点全部先前就有，「不计」是 marker 前缀排除造成的，不是它们合规。规则照旧 shrink_only：
+        # 还掉一处 = 删这一行 **且**把那个脚本的根改到缝上（调用时刻解析），二者不同次交付。
+        # 分组注释按 spec §2 的三桶；`_knowledge` 13 处里模块级常量 10 / 函数内 3（AC-03 分流）。
+        ('bin/bc-os/north_star_meter_v3.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
+        ('bin/bc-os/north_star_meter_v4.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
+        ('bin/bc-os/proposal-triage.py', '.omo/_knowledge/evolution-proposals'),
+        ('bin/gac/event-loop-lint.py', '.omo/_knowledge/omo-events.jsonl'),
+        ('bin/panorama/panorama-collect.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
+        ('bin/panorama/panorama-collect.py', '.omo/_knowledge/decision-proposals'),
+        ('bin/ssot/decision-agent.py', '.omo/_knowledge/evolution-proposals'),
+        ('bin/ssot/event-ingest-adapter.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
+        ('bin/ssot/evolution-agent.py', '.omo/_knowledge/evolution-proposals'),
+        ('bin/ssot/knowledge-sediment.py', '.omo/_knowledge/sediment'),
+        ('bin/ssot/resident-orchestrator-daemon.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
+        ('bin/ssot/scene-evolution-loop.py', '.omo/_knowledge/evolution-proposals'),
+        ('bin/ssot/system-health-check.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
+        # `.omo/_delivery` 6 处 + `.omo/_truth` 1 处：同一判据在另两个混合面上的连带命中。
+        ('bin/panorama/panorama-collect.py', '.omo/_delivery/observability/events.jsonl'),
+        ('bin/ssot/alert-forwarder.py', '.omo/_delivery/alert-forwarder/watermark.json'),
+        ('bin/ssot/alert-forwarder.py', '.omo/_delivery/observability/events.jsonl'),
+        ('bin/ssot/event-ingest-adapter.py', '.omo/_delivery/event-ingest/watermark.json'),
+        ('bin/ssot/observability-events.py', '.omo/_delivery/observability/events.jsonl'),
+        ('bin/ssot/personal-signals-adapter.py', '.omo/_delivery/personal-signals/watermark.json'),
+        ('bin/gac/check-test-host-hygiene.py', '.omo/_truth/task-center/dispatches'),
+    ]
 )
 
 Site = tuple[str, int, str, str]  # (仓库相对文件, 行号, marker, 整条拼接路径)
@@ -302,8 +386,42 @@ def scan_checkout_pinned_sites(root: Path, markers: tuple[str, ...] = ALL_MARKER
     return sites
 
 
+def is_gated(site: Site) -> bool:
+    """单个站点进门禁集合的判据 —— `gated_pairs` 与读数对拍用例共用这一份，不写两遍。"""
+    _, _, marker, whole = site
+    return marker in GATED_MARKERS or _family_of(whole) is not None
+
+
 def gated_pairs(sites: list[Site]) -> frozenset[tuple[str, str]]:
-    return frozenset((f, whole) for f, _, m, whole in sites if m in GATED_MARKERS)
+    """门禁集合 = 整面写目标 marker（`GATED_MARKERS`）∪ 落在登记 state 族下的其余站点。
+
+    后半句是 BET-Y2Q4-T10-289 AC-02 的改法：混合面上的站点**一律由同一次扫描分类出来**（可见），
+    只有落在具体族下的才计（不计的仍是 62 桶里的一员，`test_one_scan_reproduces_the_spec_readings`
+    的分桶读数不变就是这件事的证据）。反过来把族串加进 `ALL_MARKERS` 或按 `.omo/_knowledge`
+    整串计，都会让 `test_detector_does_not_fire_on_seam_or_read_plane` 当场红。
+    """
+    return frozenset((site[0], site[3]) for site in sites if is_gated(site))
+
+
+def knowledge_bucket(sites: list[Site]) -> dict[str, list[Site]]:
+    """`.omo/_knowledge` 的 62 站点按 spec §2 三桶分开：具体族 / 容器本身 / 不在任何族下。
+
+    分桶与 `gated_pairs` 由同一个 `_family_of` 产出（同源），所以「13 处进入计账」和「44 处
+    可见不计」不是两份手抄名单，而是同一判据的两个输出。
+    """
+    out = {"SPECIFIC_FAMILY": [], "CONTAINER": [], "NOT_DECLARED": []}
+    for site in sites:
+        if site[2] != ".omo/_knowledge":
+            continue
+        whole = site[3]
+        if _family_of(whole) is not None:
+            out["SPECIFIC_FAMILY"].append(site)
+        elif whole == ".omo/_knowledge":
+            out["CONTAINER"].append(site)
+        else:
+            out["NOT_DECLARED"].append(site)
+    return out
+
 
 
 # ── AC-01 第四类根：仓内相对锚（落点随进程 CWD） ────────────────────────────
@@ -628,7 +746,7 @@ def test_one_scan_reproduces_the_spec_readings():
         buckets[marker] = buckets.get(marker, 0) + 1
     assert buckets == SPEC_MARKER_READINGS, f"分类读数与 spec §1 分叉: {buckets}"
 
-    gated = [s for s in sites if s[2] in GATED_MARKERS]
+    gated = [s for s in sites if is_gated(s)]
     pairs = gated_pairs(sites)
     assert len(gated) == SPEC_GATED_SITES
     assert len(pairs) == SPEC_GATED_PAIRS
@@ -729,11 +847,121 @@ def test_new_pinned_site_breaks_the_baseline_equality(tmp_path):
 
 
 def test_marker_table_is_load_bearing():
-    """ISC-1 的反证：砍掉 `.omo/state` 这个 marker，登记面当场缺一半 —— 基线不是随便抄的。"""
+    """ISC-1 的反证：摘掉 `.omo/state` 这串 marker，登记面当场缺一大半 —— 基线不是随便抄的。
+
+    2026-11-06 AC-02 之后差额不再只有 `.omo/state*`：靠族表入账的那 20 处，其 marker 一并从分类
+    里消失（`scan_checkout_pinned_sites` 按 marker 归类），所以掉的是「`.omo/state` 整面 + 族表
+    入账且挂在被摘 marker 上的站点」。两种来源都要能点名，不然「缺一半」这句话会被读成只少了
+    一个 marker。
+    """
     without_state = scan_checkout_pinned_sites(ROOT, markers=("runtime", "kos"))
     assert gated_pairs(without_state) < BASELINE_WRITESPANE_PAIRS
     dropped = BASELINE_WRITESPANE_PAIRS - gated_pairs(without_state)
-    assert all(p[1].startswith(".omo/state") for p in dropped) and dropped
+    assert dropped and len(dropped) > len(BASELINE_WRITESPANE_PAIRS) // 2, len(dropped)
+    assert all(
+        p[1].startswith(".omo/state") or _family_of(p[1]) is not None for p in dropped
+    ), sorted(p for p in dropped if not p[1].startswith(".omo/state") and not _family_of(p[1]))
+
+
+# ── AC-02 用测：排除面「按族」而不是「按 marker 前缀」（正反 + 同源 + 变异） ─────
+#
+# 契约 = `docs/superpowers/specs/2026-11-05-knowledge-plane-root-classification.md` §7 AC-02。
+# 四条各管一件事，缺任一条都能让改判据这件事变成假绿：
+# ① 13 处具体族站点确实计账（done_when[1] 左半边）；
+# ② 容器 5 处 + 未登记 44 处仍由同一次扫描分类出来、但不计（done_when[1] 右半边，
+#    也就是「可见不计」不得退化成「不可见」）；
+# ③ 合成树上的正反两面，证明**判据本身**认得族与不认得族的差别（不是靠基线抄出来的巧合）；
+# ④ 族表承重：把族表清空 ⇒ 读数退回 AC-02 之前，说明那 20 处是族表带来的，不是 marker 表带来的。
+
+
+def test_family_gate_counts_the_specific_family_knowledge_sites():
+    """spec §2 的三分桶在 tip 上必须是 13 / 5 / 44，且 13 处全部进门禁集合。"""
+    sites = scan_checkout_pinned_sites(ROOT)
+    buckets = knowledge_bucket(sites)
+    assert {k: len(v) for k, v in buckets.items()} == {
+        "SPECIFIC_FAMILY": 13,
+        "CONTAINER": 5,
+        "NOT_DECLARED": 44,
+    }, {k: len(v) for k, v in buckets.items()}
+    gated = gated_pairs(sites)
+    specific = {(f, whole) for f, _, _, whole in buckets["SPECIFIC_FAMILY"]}
+    assert specific <= gated, f"落具体族的站点没进计账: {sorted(specific - gated)}"
+    assert specific <= BASELINE_WRITESPANE_PAIRS, "计账了却没登记 —— shrink_only 名单要同步加行"
+
+
+def test_family_gate_keeps_container_and_unregistered_planes_visible_but_uncounted():
+    """「可见不计」两面：容器本身 5 处 + 不在任何族下 44 处，都在扫描输出里、都不在门禁集合里。
+
+    这条是 AC-02 末句的承重判据 —— 把容器 `.omo/_knowledge` 当成可计族（或把整串 marker 加进
+    `GATED_MARKERS`）会当场把它打红，因为那时这 49 处全部进 `gated`。
+    """
+    sites = scan_checkout_pinned_sites(ROOT)
+    buckets = knowledge_bucket(sites)
+    uncounted = buckets["CONTAINER"] + buckets["NOT_DECLARED"]
+    assert len(uncounted) == 49, len(uncounted)  # 站点口径；同一文件的同名容器会并成一对
+    invisible = {(f, whole) for f, _, _, whole in uncounted}
+    visible = {(f, whole) for f, _, m, whole in sites if m == ".omo/_knowledge"}
+    assert invisible <= visible, "有站点从扫描里消失了 —— 排除面退化成不可见"
+    gated = gated_pairs(sites)
+    assert not (invisible & gated), sorted(invisible & gated)
+
+
+def test_family_gate_fires_on_injected_family_not_on_container_child(tmp_path):
+    """③ 合成正反：同一种代码形状，只有落在登记族下的那处计账。"""
+    _write(
+        tmp_path,
+        "family.py",
+        "from pathlib import Path\n"
+        "WORKSPACE = Path(__file__).resolve().parents[2]\n"
+        'PROPOSALS = WORKSPACE / ".omo/_knowledge" / "evolution-proposals" / "x.json"\n',
+    )
+    _write(
+        tmp_path,
+        "unregistered.py",
+        "from pathlib import Path\n"
+        "WORKSPACE = Path(__file__).resolve().parents[2]\n"
+        'RETROS = WORKSPACE / ".omo/_knowledge" / "retros" / "BET-Y.md"\n',
+    )
+    _write(
+        tmp_path,
+        "container.py",
+        "from pathlib import Path\n"
+        "WORKSPACE = Path(__file__).resolve().parents[2]\n"
+        'DOC = WORKSPACE / ".omo/_knowledge"\n',
+    )
+    sites = scan_checkout_pinned_sites(tmp_path)
+    assert len(sites) == 3, sites  # 三处全部分类出来（可见）
+    assert gated_pairs(sites) == frozenset(
+        {("bin/family.py", ".omo/_knowledge/evolution-proposals/x.json")}
+    ), gated_pairs(sites)
+    # 「不计」的两处不是被摘出扫描，而是留在桶里：分类 marker 仍是 `.omo/_knowledge`。
+    assert {(s[0], s[2]) for s in sites if not is_gated(s)} == {
+        ("bin/unregistered.py", ".omo/_knowledge"),
+        ("bin/container.py", ".omo/_knowledge"),
+    }, sites
+
+
+def test_family_table_is_load_bearing_and_single_sourced(monkeypatch):
+    """④ 族表承重 + 单一来源：清空 `GATEABLE_FAMILIES` ⇒ 门禁读数退回 AC-02 之前（153/143/95）。
+
+    同时反证「容器不作为族参与判定」与「通配项不参与判定」两条筛选都在承重 —— 把它们放回来，
+    计账集合会胀到包含合法读面（44 处那一桶），正是 AC-02 禁止的退化方向。
+    """
+    sites = scan_checkout_pinned_sites(ROOT)
+    assert GATEABLE_FAMILIES and ".omo/_knowledge" not in GATEABLE_FAMILIES
+    assert not [f for f in GATEABLE_FAMILIES if "*" in f]
+    # 单一来源：本文件的族 = 尺 A 文件里那份赋值里的字面量，两处不是手抄。
+    parsed = _state_families()
+    assert parsed == STATE_FAMILIES and len(parsed) == 42, len(parsed)
+
+    before = gated_pairs(sites)
+    monkeypatch.setattr(
+        sys.modules[__name__], "GATEABLE_FAMILIES", frozenset(), raising=False
+    )
+    after = gated_pairs(sites)
+    assert after < before, "族表清空后门禁集合没变 —— 说明那 20 处不是族表带来的"
+    assert (len(after), len(before)) == (143, 163), (len(after), len(before))
+
 
 
 # ── AC-01 第四类根的用测（正反 + 登记双向 + 变异） ────────────────────────────
