@@ -459,7 +459,8 @@ state 根"成立 —— 一旦有人把它改成 `mkdir + 写子集`，读侧会
 「门禁的尺本身会随 base 变」）。登记为后续项，扩展时必须连带重算 spec §4 全部读数并另立 BET。
 
 **5. 后续项（三条，具名）与一条不裁决的裁决。**
-- `bin/hitl-proposal.py:32` 的 `PROPOSALS_DIR`（HITL 提案面的**生产者**）仍随 CWD。消费者已 fail-closed，
+- `bin/hitl-proposal.py` 的模块常量 `PROPOSALS_DIR`（`:30`，HITL 提案面的**生产者**）仍随 CWD，且在 import
+  时冻结。消费者已 fail-closed，
   所以现状不是读写分叉而是「未声明即拒写」；但一旦只给消费侧声明 env（例如某个 plist），两半就会落到不同目录。
   **两半必须同一次交付改**，故生产者不在本轮单独动（spec §7 非目标 + 本段裁决）。
 - 尺 B 的 `pinned` 谓词补 `code_root()`（见第 4 项），连带重算 spec §4。
