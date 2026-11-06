@@ -47228,6 +47228,79 @@ bets:
         evidence:
           note: '价值轴 NOT_PROVEN：本条把 A4 门禁最后一处判据截断消除，收益面是「声明与实装只在 120 字符之后不同」从放行变为点名，债账读数从欠计变为实计（4 → 10）；这不是可量化收益，且 value_indicator_policy 显式 false，与同族 281/282/284/288/289/290 同判。归属如实入账——工程腿经 PR #5086 于 2026-11-06T09:46:57Z squash 合入 ed737e423e…，retro/receipt/台账由收口腿 PR 合入。数字变大不是新增债务：原先被截断键折叠的 6 条一直在机器上、只是没被数到，后续 shrink_only 判断要用新基线 10（逐条覆盖证据见收据 §2.2，not-covered=0）。operational 的 live_canary 是判据行为读数（本机 check_drift 两侧同分钟对照），非投放动作：本轮零 crontab / launchd 变更。'
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-292
+  title: BET-Y2Q4-T10-292 A2A Path Lock Collision 谓词补锁过期判据 —— PITFALL-COO-008 的承接
+  goal: 把 `projects/omo/src/omo/workflow/lifecycle.py::claim_run()` 的 A2A 路径冲突判定（`:1409-1441`）从「对方
+    run `status == active` 即冲突」补成「对方 run `status == active` **且**覆盖该重叠 claim 的锁未被证明过期才算冲突」，判据只读锁文件
+    payload 的 `expires_at`，不可证明时一律 fail-closed 维持今日拦截。锁层 `acquire_locks()` 早按 `expires_at`
+    放行（`_classify_existing_lock` 先看过期），本条消除 run 记录层与锁层之间的矛盾。`last_heartbeat` 与 `_HEARTBEAT_STALE_SECONDS`
+    一律不得进入该谓词。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-06-a2a-collision-lock-expiry.md
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-292.md
+  - docs/reports/2026-11-07-a2a-collision-lock-expiry-closeout.md
+  non_goals:
+  - 不改 `acquire_locks()` 与 `_classify_existing_lock()` 的既有准入与分类，不给心跳续期加写 `expires_at`，不改
+    `runner.lock_ttl_hours` 缺省值。
+  - 不删改任何既有 run 记录，不替别的 agent 收口 run，不手工 unlink 别人的锁，不用 `prune-locks` 绕门禁。
+  - 不动 `prune_stale_locks()` 的危险分类面，不为放行新增豁免 flag 或环境变量开关。
+  - 不改 surface 维判定、不改 WorkPacket 校验与 affected-graph receipt 前置、不改 `A2A Path Lock Collision:`
+    报错前缀。
+  done_when:
+  - 正例成立：对方 run `status=active` 且覆盖重叠 claim 的锁 `expires_at` 早于当前时刻时，`claim_run()` 放行；同一装置把该锁改成未过期，该用例当场红（变异对照按此两条分别记读数，写进收据）。
+  - 宽度成立：`expires_at` 未到而 `last_heartbeat` 已超 `_HEARTBEAT_STALE_SECONDS` 的锁，冲突仍成立；把判据换成复用
+    `_classify_existing_lock()` 的变异当场红（钉住「心跳面不得进入本谓词」）。
+  - fail-closed 四面成立：锁文件缺失、YAML 不可解析、payload 无 `expires_at`、`expires_at` 不可解析 —— 四种形状各自一条用例且全部仍拒；把任一面改成放行时该条当场红。
+  - 零回归：`projects/omo/tests/test_workflow_locks.py` 既有 38 条用例在同一 hermetic 装置下仍全绿（改动前先复算基线
+    38 passed）。
+  - 实机 canary 成立：交付后在真实共享协调面（含 `20261104T115230Z-project-code-change-d825f60f` 这条 `status=active`、锁已过期
+    35 h 的记录）对 `docs/plans/3y-bet-ledger.yaml` 的 claim 成功，且该记录逐字节未动。
+  verify:
+  - cmd: env HOME=$(mktemp -d) UV_CACHE_DIR=$(mktemp -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+      uv run --no-project --with pytest --with pytest-asyncio --with pyyaml python -m
+      pytest tests/test_workflow_locks.py -q -p no:randomly
+    expect: 在 projects/omo 目录内执行。改动前基线 38 passed；改动后为 38 既有用例加新增用例全绿，且新增用例覆盖正例、心跳宽度反例与
+      fail-closed 四面。
+  - cmd: python3 bin/agent-workflow.py observe --json
+    expect: findings 里 kind=expired_lock 的条数等于 lock_count（基线 4c662cdbb 实测 7 条全过期），且含
+      path_docs_plans_3y-bet-ledger.yaml.lock.yaml 一条。该读数由 diagnostics 侧的 observe 产出，与本
+      BET 新 helper 不是同一段代码，可作独立尺；读数为 0 而锁文件仍在，说明 helper 与 observe 有一边没命中形状，不得据此放行。
+  circuit_breaker: 若新增判据在任何一面不可证明过期时放行（fail-open），或把 `last_heartbeat` 引入谓词，或为凑绿而删掉对方
+    run 记录/别人的锁，停止并返回主协调；不得放宽反例与 fail-closed 用例来换取通过。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-06-a2a-collision-lock-expiry.md
+    spec_version: 1.0.0
+    content_digest: sha256:61ea3f8a941d8d1e9426a2db196011abc714b603dd342ab364b6494bb2e7548f
+    decision_ref: decision://accepted/BET-Y2Q4-T10-292
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: 铸条目本身不宣称价值；价值轴按同族治理条默认 NOT_PROVEN 与 value_indicator_policy false 结算。
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47366,7 +47439,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 587
+  total_bets: 588
   windows:
   - Y1Q1
   - Y1Q2
