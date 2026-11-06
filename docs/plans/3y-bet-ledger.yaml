@@ -46952,6 +46952,8 @@ bets:
   - .omo/_knowledge/decisions/0456-dev-runtime-profile-root.md
   - tests/unit/test_writeplane_root_pin.py
   - tests/unit/test_resident_write_plane_split.py
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-289.md
+  - docs/reports/2026-11-06-t10-289-knowledge-root-classification-closeout.md
   non_goals:
   - 不改 `.gitignore`、不 `git rm --cached` 摘库 —— 改跟踪面需另行授权（spec AC-04），本条只给判别量与点名。
   - 不在本 BET 内迁移 `_knowledge` 下的历史内容，只裁根。
@@ -46969,7 +46971,8 @@ bets:
       -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null uv run --no-project --with
       pytest --with pytest-timeout --with pyyaml python -m pytest tests/unit/test_writeplane_root_pin.py tests/unit/test_resident_write_plane_split.py
       -q -p no:randomly
-    expect: 全绿；分桶读数必须写明产出它的那把尺所在 base（本轮基线 `f2ab7ca3006488a12246d873dace01f89ceb1970`）。
+    expect: '全绿；分桶读数必须写明产出它的那把尺所在 base（本轮执行腿起手 base = 8f04e272d51eb177b9d28f5e804c2bac56da0b4d，
+      即 2026-11-06T04:33Z 的 origin/main tip；spec §2 的 f2ab7ca30 是准入轮基线，两 base 之间 13/5/44 分桶已复测未变）。'
   - cmd: /usr/bin/git ls-tree -r --name-only origin/main -- .omo/_knowledge/signals
       | /usr/bin/wc -l
     expect: 非零（冲突面之一，实测 7）；与 `git check-ignore -v` 命中 `.gitignore:424` 同时成立才构成「既跟踪又忽略」。
