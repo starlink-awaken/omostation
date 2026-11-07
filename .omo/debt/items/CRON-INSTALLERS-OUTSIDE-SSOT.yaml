@@ -16,6 +16,10 @@ evidence_refs:
 - "bin/ssot/install-resident-cron.sh (resident 平面, 见 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT)"
 - ".omo/cron/registry.yaml (声明为单一登记源)"
 - "bin/ops/install-cron-plane.py (唯一 registry-driven 的安装器)"
+- "bin/ssot/install-maturity-cron.sh:32-38 (`REGISTRY=` + `check_registry_coverage()` 用 grep 不用 python+yaml) 与 :63 / :71 (守卫挂在 `--install` 与 `--dry-run` 两条路径) —— #5131 `5075c70e4` 加, 本案 06:45 那条'未加'已过期"
+- "bin/ssot/install-resident-cron.sh:54-57 (5 个角色 daemon 由循环生成) + :63-71 (ingest/signals/inbox/promote/proposal-adr/health) = 11 个作业, 非 10; 全文无 registry 引用"
+- "lib/resident-role-tick.sh —— registry 里 9 条 `resident-launchd-*` (6 active: decision/execute/signals/inbox/promote/event-ingest; 3 proposed: sediment/monitor/heartbeat) 指向它, 即登记面收的是 launchd 平面, 不是本条 crontab 平面 (见 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT)"
+- "bin/gac/ops-cron-install.py:54 (`REGISTRY=`) 与 :80 (`unregistered_jobs()`) 与 :112-114 (`install()` 一进门见 missing 即 return 非零) 与 :165 (预检输出明说 `--install 会被拒`) —— #5124 的 fail-closed; 复算其 4 个作业确实 0 个在登记面"
 mitigation_refs: []
 opened_at: "2026-11-07"
 last_reviewed_at: '2026-11-07'
@@ -51,3 +55,39 @@ history:
     用的是**系统 python3** (pyyaml 未必在, 见 AGENTS.md §7 的 projection-refresh
     pyyaml 丢失实证), 在 shell 里内联 Python 读 YAML 是脆的; 先立案待决。
   actor: "governance-agent"
+
+- at: '2026-11-07T08:25:00+00:00'
+  action: correct
+  actor: "governance-agent"
+  note: >-
+    复算后四处过期/错数 (不改变裁决问题本身, 只把事实面更新到 main 现状):
+
+    (1) **install-maturity-cron.sh 已经加上 fail-closed** —— 本案 06:45 写的「未加, 因为 shell 里内联 Python 读 YAML
+    脆 (pyyaml 未必在)」已被 #5131 (`5075c70e4`) 推翻: 它按 `:34-35` 的注释用 grep 而不是 python+yaml, 正是本案给出的
+    理由的解法。守卫同时挂在 `--install` (`:63`) 与 `--dry-run` (`:71`), `--remove`/`--status` 不挂。
+    实测 (安装器自己的判据, `bash bin/ssot/install-maturity-cron.sh --dry-run` → rc=1): 5 个作业里 4 个不在册
+    (signal-poller / remediation-engine / anti-corrosion-check / north-star-weekly), 第 5 个 unified-health-score.py
+    在册但 `status=proposed` 且参数不同 (`--sync`)。⇒ 该 cron **今天连 `--dry-run` 都过不去**, 已装不上;
+    在裁决前它不再是「会造 orphan」, 而是「被自己的守卫挡住」。
+
+    (2) **install-resident-cron.sh 是 11 个作业, 不是 10** —— 5 个角色 daemon 由循环生成 (`:54-57`) 加 6 条具名
+    (`:63-71`); 文件 `:74` 的注释同样写「其下 11 行」。原表「10 个作业, 0 个在 registry」两个数都要改口径:
+    9 条 `python3 -m omo.cli resident ...` 的 crontab 命令确实不在册, 但 `proposal-to-adr-daily` 与
+    `system-health-emit-daily` 在册且 active; 并且同一批角色以 **launchd 封装** `lib/resident-role-tick.sh` 在册
+    (registry 9 条 `resident-launchd-*`: 6 active = decision/execute/signals/inbox/promote/event-ingest, 3 proposed = sediment/monitor/heartbeat)。也就是: 登记面收的是**另一个平面**, 本条的 crontab
+    平面才是登记面外的 —— 与姊妹案 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT 是同一件事的两面, 两案要并起来看。
+
+    (3) **4 个安装器里 3 个已 fail-closed** (#5124 `ops-cron-install.py` + #5131 `install-maturity-cron.sh`),
+    全文不含 registry 引用的只剩 `install-resident-cron.sh` —— 它是当前**唯一**还能造 orphan 的写入方。
+    ops-cron-install.py 那 4 个作业 (`bin/ops/health-check-cron.py`、`bin/gac/weekly-evolution-report.py`、
+    `bin/gac/weekly-review.py`、`bin/gac/architecture-drift.py`) 复算确实 0 个在册, 原表该行成立。
+    ⇒ 「唯一 SSOT 是不是 registry」这个裁决现在是**阻塞依赖**, 不是卫生问题: 不裁决, maturity cron 只能保持装不上。
+
+    (4) 顺带记录一个自证覆盖面缺陷, **只记录未改** (本案明令裁决前不逐个改工具): `install-resident-cron.sh:103`
+    用 `grep -A9` 回显安装结果, 实际写入 11 行 ⇒ 它自己的确认输出少报 2 条, 与 AGENTS.md §7 「检测器的覆盖面上限」
+    同型。
+
+    本案 `decision_needed` 措辞与 `lifecycle_state: identified` 不动 —— 裁决面没有变化。
+  review_refs:
+  - "bash bin/ssot/install-maturity-cron.sh --dry-run ⇒ rc=1 (4 条不在册)"
+  - "git show 5075c70e4 --stat ⇒ bin/ssot/install-maturity-cron.sh +32, tests/unit/gac/test_install_maturity_cron.py +100"
