@@ -306,6 +306,59 @@ def test_dry_run_remove_does_not_write(monkeypatch: pytest.MonkeyPatch) -> None:
     assert state["lines"] == before, "--remove --dry-run 写了 crontab"
 
 
+def test_install_skips_write_when_already_aligned(monkeypatch: pytest.MonkeyPatch) -> None:
+    """已对齐时不得重写 crontab。
+
+    无条件重写会让每次 --install 都触发 cron 重载 + crontab mtime 变动, 即使什么
+    都没改。本机 `crontab(1)` 写入持续 EINTR 时, 这一条还能让「已对齐」的安装
+    成功 (否则明明没事也会失败)。
+    """
+    module = _load()
+    compiled = module._compiled_lines()
+    assert compiled, "登记面应编译出条目, 否则本用例恒绿"
+    writes: list[str] = []
+
+    def fake_run(args, **kwargs):
+        if args[0] == "crontab" and args[1] == "-l":
+            return subprocess.CompletedProcess(args, 0, "\n".join(compiled) + "\n", "")
+        if args[0] == "crontab" and args[1] == "-":
+            writes.append(kwargs.get("input") or "")
+            return subprocess.CompletedProcess(args, 0, "", "")
+        raise AssertionError(f"unexpected command: {args}")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    monkeypatch.setattr(sys, "argv", ["install-cron-plane.py", "--install"])
+    assert module.main() == 0
+    assert writes == [], "已对齐却仍调用了 crontab - 写入"
+
+
+def test_write_failure_returns_nonzero_and_prints_content(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """写入失败必须返回非 0 且把将写入的内容打出来。
+
+    只抛 CalledProcessError 的话, 调用者拿不到可以直接手工应用的内容 —— 实测
+    本机 `crontab(1)` 写入持续 EINTR (系统级) 时卡住的正是这一步。
+    """
+    module = _load()
+
+    def fake_run(args, **kwargs):
+        if args[0] == "crontab" and args[1] == "-l":
+            return subprocess.CompletedProcess(args, 0, "", "")
+        if args[0] == "crontab" and args[1] == "-":
+            return subprocess.CompletedProcess(
+                args, 1, "", "crontab: tmp/tmp.1: Interrupted system call"
+            )
+        raise AssertionError(f"unexpected command: {args}")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    monkeypatch.setattr(sys, "argv", ["install-cron-plane.py", "--install"])
+    assert module.main() == 1
+    err = capsys.readouterr().err
+    assert "Interrupted system call" in err, "失败原因要原样带出来"
+    assert module._compiled_lines()[0][:40] in err, "失败时要打印将写入的内容"
+
+
 # ── scheduler-compile.py --diff: 整份替换的破坏面预览 ────────────────────────
 
 
