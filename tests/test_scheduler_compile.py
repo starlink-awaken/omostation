@@ -57,6 +57,43 @@ def test_registry_no_duplicate_job_names() -> None:
     )
 
 
+def test_registry_no_duplicate_schedule_command_pairs() -> None:
+    """同一 (schedule, 归一化 command) 不得有两条 active crontab 登记 —— 否则作业跑多遍.
+
+    **为什么重名判据不够** (test_registry_no_duplicate_job_names): 重复登记往往
+    **名字不同**. 实测三例:
+
+    - `l4-harness-6h` vs `l4-harness-6h-active` —— 同 schedule 同 command, 一个写
+      `$HOME/Workspace`、一个写死本机用户根 (PR #5110 修);
+    - `branch-prune-daily` vs `worktree-prune-daily` —— #3518 登记 vs #3658
+      「补齐登记」, 名字不同、command 逐字相同;
+    - `weekly-hygiene-patrol` vs `hygiene-patrol-weekly` —— 同上.
+
+    判据用 `bin/lib/cron_normalize.py` 的 `comparison_key` (与生产同一份归一化),
+    而不是裸字符串: 裸字符串查不出「同一个根、两种写法」那一例。
+    """
+    jobs = _load_registry_jobs()
+    seen: dict[str, str] = {}
+    dups: dict[str, list[str]] = {}
+    for j in jobs:
+        if j.get("status") != "active":
+            continue
+        if "crontab" not in (j.get("planes") or []):
+            continue
+        key = _comparison_key(f"{j.get('schedule', '')} {j.get('command', '')}")
+        if not key:
+            continue
+        name = j.get("name", "")
+        if key in seen:
+            dups.setdefault(key, [seen[key]]).append(name)
+        else:
+            seen[key] = name
+    assert not dups, (
+        f"registry.yaml 含同 (schedule, command) 的多条 active crontab 登记: "
+        f"{list(dups.values())} —— 同一作业会执行多遍, 请合并成一条。"
+    )
+
+
 def test_registry_job_names_unique_preserved() -> None:
     """dedup 后, 关键 job 仍在 (回归保护)."""
     jobs = _load_registry_jobs()
@@ -64,7 +101,7 @@ def test_registry_job_names_unique_preserved() -> None:
     must_keep = {
         "log-rotate-daily",
         "worktree-hygiene-daily",
-        "worktree-prune-daily",
+        "branch-prune-daily",
         "hygiene-dir-daily",
         "ssot-guardian-weekly",
         "capability-registry-sync-daily",
@@ -206,6 +243,11 @@ def _load_normalize_module():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _comparison_key(line: str) -> str:
+    """与生产同一份比较键 (bin/lib/cron_normalize.comparison_key)。"""
+    return _load_normalize_module().comparison_key(line)
 
 
 def _normalize(cmd: str) -> str:
