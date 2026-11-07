@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import importlib.util
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[3]
@@ -59,3 +61,63 @@ def test_render_preserves_foreign_lines_and_replaces_its_own_block() -> None:
     out2 = mod.render(stale)
     assert "old" not in out2, "旧的 tag 块没有被替换掉"
     assert out2.count(mod.CRONTAG) == len(mod.JOBS) + 2
+
+
+class _FakeSubprocess:
+    """只接管 crontab 读写, 不碰全局 subprocess 模块 (避免污染同进程的其他用例)。"""
+
+    CompletedProcess = subprocess.CompletedProcess
+
+    @staticmethod
+    def run(args, **kwargs):
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+
+def test_install_refuses_jobs_missing_from_the_registry(tmp_path, monkeypatch, capsys) -> None:
+    """登记面里没有的作业必须拒绝安装 —— 否则 scheduler-compile --check 报 orphan。"""
+    mod.REGISTRY = tmp_path / "registry.yaml"
+    (tmp_path / "registry.yaml").write_text("jobs: []\n", encoding="utf-8")
+    monkeypatch.setattr(mod, "subprocess", _FakeSubprocess)
+    monkeypatch.setattr(sys, "argv", ["ops-cron-install.py", "--install"])
+    assert mod.main() == 1
+    err = capsys.readouterr().err
+    assert "不在 .omo/cron/registry.yaml" in err
+    assert "--install 会被拒" not in err, "install 路径不该打印 dry-run 的告警文案"
+
+
+def test_registered_job_is_accepted(tmp_path, monkeypatch, capsys) -> None:
+    """正控制: 作业一旦进了登记面 active crontab 就放行。
+
+    没有这条, 「把 unregistered_jobs() 改成恒返回全部」也能让上一条变绿。
+    """
+    import yaml
+
+    jobs = []
+    for i, job in enumerate(mod.JOBS):
+        script = job["command"].split("python3 ", 1)[-1].split(" ", 1)[0]
+        jobs.append(
+            {
+                "name": f"j{i}",
+                "schedule": "*/5 * * * *",
+                "command": f"cd /x && python3 {script}",
+                "planes": ["crontab"],
+                "status": "active",
+            }
+        )
+    reg = tmp_path / "registry.yaml"
+    reg.write_text(yaml.safe_dump({"jobs": jobs}), encoding="utf-8")
+    monkeypatch.setattr(mod, "REGISTRY", reg)
+    monkeypatch.setattr(mod, "subprocess", _FakeSubprocess)
+    monkeypatch.setattr(sys, "argv", ["ops-cron-install.py", "--install"])
+    assert mod.main() == 0, capsys.readouterr().err
+
+
+def test_dry_run_reports_unregistered_jobs(tmp_path, monkeypatch, capsys) -> None:
+    """dry-run 也要把「会被拒」显式说出来 —— 这是装之前唯一的可见面。"""
+    mod.REGISTRY = tmp_path / "registry.yaml"
+    (tmp_path / "registry.yaml").write_text("jobs: []\n", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["ops-cron-install.py", "--dry-run"])
+    assert mod.main() == 1
+    err = capsys.readouterr().err
+    assert "会被拒" in err
+    assert mod.JOBS[0]["comment"] in err

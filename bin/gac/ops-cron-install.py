@@ -51,6 +51,48 @@ def get_current_crontab():
     return r.stdout if r.returncode == 0 else ""
 
 
+REGISTRY = Path(__file__).resolve().parents[2] / ".omo" / "cron" / "registry.yaml"
+
+
+def registered_active_commands() -> list[str]:
+    """登记面里 status=active 且 planes 含 crontab 的命令 (空白归一化)。
+
+    `.omo/cron/registry.yaml` 是 cron 作业的唯一 SSOT —— 装登记面外的作业会让
+    scheduler-compile --check 报 orphan。
+    """
+    import yaml
+
+    if not REGISTRY.is_file():
+        return []
+    docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
+    if not docs:
+        return []
+    out = []
+    for job in docs[-1].get("jobs", []):
+        if job.get("status") != "active":
+            continue
+        if "crontab" not in (job.get("planes") or []):
+            continue
+        out.append(" ".join((job.get("command") or "").split()))
+    return out
+
+
+def unregistered_jobs() -> list[dict]:
+    """本工具 JOBS 里未出现在登记面 active crontab 条目中的作业。
+
+    判据取「命令里的脚本路径是否出现在任一条登记面命令里」而不是整行相等:
+    登记面写 `$HOME/Workspace`、本工具写绝对路径, 整行永远不相等。
+    """
+    registered = registered_active_commands()
+    missing = []
+    for job in JOBS:
+        marker = "python3 "
+        script = job["command"].split(marker, 1)[-1].split(" ", 1)[0] if marker in job["command"] else ""
+        if script and not any(script in cmd for cmd in registered):
+            missing.append(job)
+    return missing
+
+
 def render(crontab: str) -> str:
     """渲染要写入的 crontab 全文。
 
@@ -67,10 +109,28 @@ def render(crontab: str) -> str:
     return "\n".join(lines)
 
 
-def install():
+def install() -> int:
+    missing = unregistered_jobs()
+    if missing:
+        print(
+            "❌ 以下作业不在 .omo/cron/registry.yaml 的 active crontab 条目里:",
+            file=sys.stderr,
+        )
+        for job in missing:
+            print(f"   - {job['comment']}: {job['command']}", file=sys.stderr)
+        print(
+            "   装它们会让 scheduler-compile --check 报 orphan (门禁红)。",
+            file=sys.stderr,
+        )
+        print(
+            "   请先把它们登记进 registry 并置 active, 或用 bin/ops/install-cron-plane.py。",
+            file=sys.stderr,
+        )
+        return 1
     new_crontab = render(get_current_crontab())
     subprocess.run(["crontab", "-"], input=new_crontab, text=True, check=True)
     print(f"Installed {len(JOBS)} cron jobs")
+    return 0
 
 
 def remove():
@@ -98,14 +158,23 @@ def list_jobs():
     print(f"\nTotal: {count} jobs installed")
 
 
-def dry_run():
+def dry_run() -> int:
+    missing = unregistered_jobs()
+    if missing:
+        print(
+            f"⚠️  {len(missing)}/{len(JOBS)} 个作业不在登记面的 active crontab 条目里 —— --install 会被拒:",
+            file=sys.stderr,
+        )
+        for job in missing:
+            print(f"   - {job['comment']}", file=sys.stderr)
     print("Would install:")
     for line in render("").splitlines():
         if line.strip():
             print(f"  {line}")
+    return 1 if missing else 0
 
 
-def main():
+def main() -> int:
     import argparse
     parser = argparse.ArgumentParser(description="运维 Cron 安装器")
     parser.add_argument("--install", action="store_true")
@@ -114,15 +183,17 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if args.install:
-        install()
-    elif args.remove:
+        return install()
+    if args.remove:
         remove()
-    elif args.list:
+        return 0
+    if args.list:
         list_jobs()
-    elif args.dry_run:
-        dry_run()
-    else:
-        parser.print_help()
+        return 0
+    if args.dry_run:
+        return dry_run()
+    parser.print_help()
+    return 0
 
 
 if __name__ == "__main__":
