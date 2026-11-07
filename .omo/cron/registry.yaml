@@ -493,16 +493,6 @@ jobs:
       installed/active 并同步安装，登记与安装同改以杜绝 TASK-B3229A65
       式 double-write 漂移。
 
-  - name: worktree-prune-daily
-    schedule: "30 4 * * *"
-    command: 'cd "$HOME/Workspace" && make worktree-prune >> runtime/cron/branch-prune.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: worktree 修剪 (每日 04:30)，已在 crontab -l 运行，补齐登记。
-
   - name: hygiene-dir-daily
     schedule: "0 5 * * *"
     command: 'cd "$HOME/Workspace" && make hygiene-dir >> runtime/cron/hygiene-dir.log 2>&1'
@@ -512,16 +502,6 @@ jobs:
     owner: governance-team
     sfop_slot: S
     reconciliation_note: 目录卫生日检 (每日 05:00)，已在 crontab -l 运行，补齐登记。
-
-  - name: hygiene-patrol-weekly
-    schedule: "0 7 * * 1"
-    command: 'cd "$HOME/Workspace" && make hygiene-patrol >> runtime/cron/weekly-hygiene.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: 周巡检 (每周一 07:00)，已在 crontab -l 运行，补齐登记。
 
   - name: ssot-guardian-weekly
     schedule: "0 6 * * 3"
