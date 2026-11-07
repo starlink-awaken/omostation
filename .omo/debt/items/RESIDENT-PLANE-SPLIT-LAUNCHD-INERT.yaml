@@ -53,4 +53,26 @@ history:
 
     launchd 侧不是没跑: `launchctl print` 显示 runs=167 / last exit code=0 /
     state=active, 但台账零增长 —— **空转**。
+
+- at: '2026-11-07T05:30:00+00:00'
+  action: evidence-reinforce
+  note: >-
+    补三条把「分裂」钉死的读数 (追查 ledger 时顺带发现, 分裂不止于 ledger):
+
+    ① **事件源不同**: `omo.resident.daemon` 读
+       `write_path(DEFAULT_EVENTS_JSONL)` = `<state_root>/.omo/_knowledge/workflow-mesh/
+       events.jsonl`。launchd 侧 state_root=~/.local/state/omostation/prod ⇒ 读那份;
+       crontab 侧无 profile ⇒ 读检出那份。两份文件都真实存在但**内容不同**。
+    ② **水位/计数不同**: 同一 role (decision) 两侧报的 `events_in_file` 差三个数量级 ——
+       launchd 侧 22918 (start_index 22906, processed 0, skipped=true), crontab 侧
+       6018276 (processed 143)。`events_in_file = last_index + len(scanned)`, 而
+       `last_index` 取自**各自 ledger 的 checkpoint** ⇒ 两个 checkpoint 各自演进,
+       不是同一份进度。
+    ③ **字节水位各自独立**: `_load_byte_offset(projector)` 走 `write_path(...)` ⇒ 每侧
+       一份 watermark, 互不可见。
+
+    结论: 这不是「一边写了、一边没写」, 而是**两套独立演进的读+写**。裁决时不能只
+    对齐 ledger 路径 —— 还要决定用哪份事件源与哪个 checkpoint, 否则对齐路径后两边
+    仍会从各自的水位继续, 处理重复或漏处理。
+  actor: "governance-agent"
   actor: "governance-agent"
