@@ -47433,6 +47433,92 @@ bets:
         evidence:
           note: "消除的是 acquire_locks 锁层的同 run 同 scope 第二次撞车（T10-292 run 记录层修复够不到的那一层）；价值指示器按台账显式声明 false，由工程腿 PR #5108 squash a8bdba3af 闭环，实机 canary 读数 SAME_RUN_RENEW True 1 1。"
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-342
+  title: BET-Y2Q4-T10-342 A2A 冲突谓词补「锁对象缺席」判据并让 force 接管可达 —— T10-292 契约 2 的第三种形状
+  goal: 给 `projects/omo/src/omo/workflow/lifecycle.py` 的 A2A 谓词（`:1440-1446`）补一个与 `lock_scopes_past_expiry()`
+    互补的判据 `lifecycle_locks.py::lock_scope_object_present()——按写者同一个有界名探测该 scope 现在有没有锁对象。缺席即说明该
+    claim 只是历史意图（锁写在记录之前 `:1468`→`:1484`，写记录失败会回滚刚建的锁 `:1485-1491`，所以「记录 advertise 这条路径」蕴含「claim
+    当时锁存在」）。放行只发生在显式接管：`force_lock=True` 时跳过该 (path, other_path) 对，`force_lock=False`
+    的 fail-closed 宽度一字不动（T10-292 契约 2 保住）。报错前缀仍是 `A2A Path Lock Collision:`，缺席分支追加两行诊断点名
+    scope 与 --force 出口。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-07-a2a-claim-absent-lock-takeover.md
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-342.md
+  - docs/reports/2026-11-07-a2a-claim-absent-lock-takeover-closeout.md
+  non_goals:
+  - 不删改任何既有 run 记录，不手工 unlink 别人的锁，不改 `release_locks()` 与 `prune_stale_locks()` 的行为。
+  - 不改 `acquire_locks()` 的 force 分支语义，不改 `_HEARTBEAT_STALE_SECONDS` 与僵尸分类宽度（T10-341
+    面不重开）。
+  - 不把「锁缺席」做成普通 claim 的豁免——T10-292 契约 2 的 fail-closed 宽度不得放宽，既有用例 `test_claim_fail_closed_when_expiry_cannot_be_proven[lock_file_absent]`
+    必须照常绿。
+  - 不新增 CLI flag、环境变量开关或豁免常量；复用 CLI 早已存在的 `--force`。不重开、不回退 T10-292 契约 1–5。
+  done_when:
+  - 正例成立——对方 active claim 且该 scope 锁对象缺席、`force_lock=True` 时 claim 放行，自己拿到这把锁，对方 run
+    记录逐字节不变；把放行分支摘掉，该用例与粒度面用例当场红（实测 2 条红）。
+  - 反例配平成立——同一份 seed 只有 force 不同：`force_lock=False` 仍拒，报错前缀 `A2A Path Lock Collision:`
+    不变，正文点名缺席与 --force。把豁免放宽到全部 claim 时，该用例与既有 `[lock_file_absent]` 一起红（实测 2 条红）——契约
+    2 未退化由**既有**用例作证，不靠本轮新增用例自证。
+  - 反向边界两面成立——锁存在且 live 加 force 仍拒；锁存在但 YAML 不可解析加 force 仍拒。放行判据是「没有对象可持」，不是「读不出」。
+  - 粒度面成立——同一个对方 run 两条 claim 路径（一条锁在且 live、一条锁缺席）同时请求时整体仍拒；只请缺席那条时放行，且对方那把 live 锁的
+    payload 未被改动。
+  - 判据面成立——`lock_scope_object_present()` 与写者按同一个有界名落位（超长 scope 经 `acquire_locks()` 造出的锁立即可探到）；锁目录不可
+    stat 时返回 True。把探测换成 `Path.is_file()` 该用例当场红（实测 1 条红）。
+  - 零回归——`projects/omo/tests/test_workflow_locks.py` 既有 58 条在同一 hermetic 装置下仍全绿，改动后
+    58 既有加新增共 65 passed；ruff 干净。
+  verify:
+  - cmd: cd projects/omo && env HOME=$(mktemp -d) GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+      UV_CACHE_DIR=$(mktemp -d) PYTHONPATH=src uv run --no-project --with pytest --with
+      pyyaml python -m pytest tests/test_workflow_locks.py -q -p no:randomly -o addopts=""
+    expect: 改动前基线 58 passed（含 `[lock_file_absent]` 的 fail-closed 拦截）；改动后 65 passed，新增
+      7 条覆盖正例、force 配平反例、live/不可解析两反向边界、粒度面与判据面。三组变异分别记读数：摘放行分支恰 2 条红；放宽到全部 claim 恰
+      2 条红且含既有用例；探测换成 is_file 恰 1 条红。
+  - cmd: python3 -c "import sys, tempfile; sys.path.insert(0, 'projects/omo/src'); from
+      pathlib import Path; import omo.workflow.core as c, omo.workflow.lifecycle as
+      l; d=Path(tempfile.mkdtemp()); (d/'locks').mkdir(); c.WORKSPACE=d; l.WORKSPACE=d;
+      r={'runner':{'lock_state_dir':'locks'}}; print('ABSENT_PROBE', l.lock_scope_object_present(d/'locks',
+      'path:x.py'), len(l.acquire_locks(r,['path:x.py'],'run-a','agent-a',False)), l.lock_scope_object_present(d/'locks','path:x.py'))"
+    expect: 实机 canary，读数为 `ABSENT_PROBE False 1 True`（缺席→探到→探不到）。收据必须带这条命令的原文读数，缺读数即视为该面未验。
+  - cmd: python3 -c "import sys; sys.path.insert(0, 'projects/omo/src'); from omo.workflow.lifecycle
+      import lock_scopes_past_expiry; print('T292_SURFACE_PRESENT', hasattr(lock_scopes_past_expiry,
+      '__call__'))"
+    expect: 独立性钉子——T10-292 交付面在本轮改动后仍可达，读数为 `T292_SURFACE_PRESENT True`；读数转假说明本轮把上一层的修复带走了，属
+      circuit_breaker 范围。
+  circuit_breaker: 若缺席分支被放宽成「payload 读不出也算缺席」、或放行条件不再要求 force_lock、或为凑绿删除/改窄 `[lock_file_absent]`
+    等既有 fail-closed 用例、或本轮开始删改别人的 run 记录与锁，停止并返回主协调。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-07-a2a-claim-absent-lock-takeover.md
+    spec_version: 1.0.0
+    content_digest: sha256:cd84df39ddf0ddcc8ec7ce0b284b68deaf8ebe988cdbb28781301113c0ac935d
+    decision_ref: decision://accepted/BET-Y2Q4-T10-342
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: 本轮为门禁谓词的可达性修复，不设价值指标。
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47571,7 +47657,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 589
+  total_bets: 590
   windows:
   - Y1Q1
   - Y1Q2
