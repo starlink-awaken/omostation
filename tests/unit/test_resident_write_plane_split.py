@@ -865,7 +865,6 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
     },
     ".omo/_delivery/observability/events.jsonl": {
         ("bin/compass_radar.py", "CALLER"),
-        ("bin/meta/compass_radar.py", "CALLER"),
         ("bin/panorama/panorama-collect.py", "CHECKOUT"),
         ("bin/ssot/alert-forwarder.py", "CHECKOUT"),
         ("bin/ssot/observability-events.py", "CHECKOUT"),
@@ -922,7 +921,6 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
         ("bin/gac/value-evolution-connector.py", "DERIVED"),
         ("bin/kb/knowledge-graph.py", "CALLER"),
         ("bin/kb/staleness-check.py", "CALLER"),
-        ("bin/meta/compass_radar.py", "CALLER"),
         ("bin/mof/generate-brief.py", "CHECKOUT"),
         ("bin/mof/m4-health-score.py", "CHECKOUT"),
         ("bin/panorama/panel-collect.py", "CHECKOUT"),
@@ -992,7 +990,6 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
         ("bin/gac/event-loop-lint.py", "CHECKOUT"),
         ("bin/gac/evidence-smoke.py", "CHECKOUT"),
         ("bin/gac/p0-event-listener.py", "CALLER"),
-        ("bin/meta/compass_radar.py", "CALLER"),
     },
     ".omo/_knowledge/retros/resident": {
         ("bin/bc-os/north_star_meter_v2.py", "CALLER"),
@@ -1084,10 +1081,6 @@ CALLER_EVIDENCE: dict[tuple[str, str], dict[str, object]] = {
     # ws_root = args.omo_dir.resolve(); --omo-dir 默认 __file__ 反推 → 检出根
     ("bin/compass_radar.py", "ws_root"): {
         "exprs": ['default=Path(__file__).resolve().parent.parent / ".omo"', "omo_dir = args.omo_dir.resolve()"],
-        "checkout": True,
-    },
-    ("bin/meta/compass_radar.py", "ws_root"): {
-        "exprs": ['Path(__file__).resolve().parent.parent / ".omo"'],
         "checkout": True,
     },
     # _knowledge_consumption(ROOT)，ROOT 是模块级检出常量
