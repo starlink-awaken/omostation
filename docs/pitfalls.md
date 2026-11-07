@@ -1,9 +1,9 @@
 ---
 schema: md/v1
 status: active
-lifecycle: active
+lifecycle: history
 owner: governance
-last-reviewed: 2026-11-03
+last-reviewed: 2026-11-07
 ---
 
 # Workspace Agent Pitfalls —— 历史实证避坑档案
@@ -289,3 +289,5 @@ last-reviewed: 2026-11-03
 - **规则接线覆盖检查对子模块检出状态敏感（2026-11-05 实测）**：`bin/gac/check-rule-wiring-coverage.py` 的语料含 `projects/*/src`，所以**子模块没 checkout 的 worktree 里读数会虚高**。实证：`X1AuditChainChecker` 明明在 `projects/ecos/src/ecos/l0/governance/checkers.py:11`（governance-checks.yaml 声明的 `module: ecos.l0.governance.checkers` 就是它），但空子模块的 worktree 里 `candidates_unwired` 报 `governance-checks: 2`（`x1-audit-chain` / `CR-X1-AGENT-AUDIT`），同一份检出在主工作区（含子模块）是 **0**。**判读该指标必须在含子模块的检出上做**，否则会把「语料没覆盖到」读成「规则没接线」——与「判据报警先 print 原始行再定性」同族：先确认测量装置本身没问题。
 ---
 
+- **crontab 注册表是「部分视图」，不是全量 SSOT —— `generate + install` 会删掉 resident daemon（2026-11-07 实测）**：`.omo/cron/registry.yaml` 只登记 15 条，已装 crontab 有 63 行（含 resident daemon 五角色 `*/2`、harness-cron 等）；`bin/scheduler-compile.py --check` 把多出的记成 **orphan（5 条）** 而不是「注册表缺登记」。⇒ **整份 `scheduler-compile.py --generate crontab | crontab -` 会把 resident daemon 条目删掉** —— 那是常驻 Agent 的驱动，删了等于停掉 resident。**纪律**：装机一律**逐条 merge**（候选与已装 diff，只加缺的、只删确认过期的），永远不做整份替换；判据是「已装 − 注册表 = orphan 集合」，而 **orphan 不等于该删**，先逐条认领。
+- **`omo state refresh` 不读 `OMOSTATION_STATE_ROOT`，只有 `omo state sync` 读（2026-11-07 实测）**：`cmd_state_refresh` 的写目标来自 dispatcher 传的 `omo_dir`（`WORKSPACE_ROOT or code_root()`），而 `cmd_state_sync` 经 `sync_state_projection → _resolve_write_root` 解析 profile —— **同一族 state 子命令两条口径不一致**。后果：把 plist 入口从检出侧 omo 换成安装位 omo、再钉 `OMOSTATION_STATE_ROOT` 想「入口与状态根两全」，`sync` 会听话地写到 state 根，`refresh` 仍写回 `code_root()`（安装位）⇒ **状态根分叉**（实测 `~/.local/opt/omostation/.omo/state/runtime/system_health.yaml` 被刷新，检出侧那份不动；回滚入口后两侧恢复同步）。**纪律**：任何「换入口 + 钉 env」的组合改动，必须**逐条子命令**验证写面，不能假定同族命令共享同一个根解析；判据是 `cmd_*` 的写目标是否都经过 `_resolve_write_root`（或 `state_root()`）。
