@@ -67,7 +67,13 @@ def _normalize(cmd: str) -> str:
 
 
 def _key(line: str) -> str:
-    """一行 crontab 的比较键 (前 120 字符, 与 scheduler-compile 同口径)。"""
+    """一行 crontab 的比较键 (归一化整行, 与 scheduler-compile 同口径)。
+
+    不得截断: 截断会把「前 120 字符相同、之后不同」的两条行折成一个键 ——
+    认领侧让用户自装的外部行被误认成登记面 (安装时**删掉**), 缺失侧让登记面里
+    内容不同的两条塌成一条。与 scheduler-compile 的 BET-Y2Q4-T10-291 同族,
+    那边已整行化, 本函数此前漏改。
+    """
     s = line.strip()
     if not s or s.startswith("#"):
         return ""
@@ -76,7 +82,7 @@ def _key(line: str) -> str:
             "0 */6 * * * cd {home}/Workspace && bash "
             "projects/l4-kernel/scripts/harness-cron.sh >>".format(home=Path.home())
         )
-    return _normalize(s)[:120]
+    return _normalize(s)
 
 
 def _compiled_lines() -> list[str]:

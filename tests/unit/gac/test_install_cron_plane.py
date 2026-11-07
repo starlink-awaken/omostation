@@ -81,6 +81,39 @@ def test_foreign_lines_are_left_alone() -> None:
         )
 
 
+def test_key_does_not_truncate_long_lines() -> None:
+    """比较键必须是整行, 不得截断到 120 字符。
+
+    截断会把「前 120 字符相同、之后不同」的两条行折成一个键:
+    认领侧让用户自装的外部行被误认成登记面 (安装时**删掉**), 缺失侧让登记面里
+    内容不同的两条塌成一条。与 scheduler-compile 的 BET-Y2Q4-T10-291 同族,
+    那边已整行化, 本函数此前漏改。
+    """
+    module = _load()
+    # 前 120 字符完全相同, 差异只在 120 之后 —— 截断恰好把这个差异抹掉。
+    head = "0 6 * * * cd /some/where && python3 script.py --flag " + "x" * 100
+    assert len(head) > 120, "前缀未超 120 字符 —— 本用例失去判别力"
+    assert module._key(head + "--alpha") != module._key(head + "--beta"), (
+        "比较键被截断: 前 120 字符相同的两条行被折成一个键"
+    )
+
+
+def test_foreign_line_sharing_120_char_prefix_is_not_claimed() -> None:
+    """外部行只在前 120 字符上与登记面相同 ⇒ 不得被认领。
+
+    这是安装器**安全性**的直接判据: 认领错一行就等于把用户自装的作业删掉。
+    用合成行而非真实登记面 —— 判据只依赖 `_key` 的截断行为, 与 registry 内容无关。
+    """
+    module = _load()
+    target = "0 6 * * * cd /some/where && python3 script.py --flag " + "x" * 200
+    foreign = target[:120] + "--user-own-tool"
+    managed = {module._key(target)}
+    assert module._is_managed(target, managed), "正控制: 登记面行本身应被认领"
+    assert not module._is_managed(foreign, managed), (
+        "外部行只在前 120 字符上与登记面相同就被认领 —— 安装时会把它删掉"
+    )
+
+
 def test_managed_detection_is_not_vacuous() -> None:
     """正控制: 判据确实会拒认领 —— 否则上面两条可能恒真。"""
     module = _load()
