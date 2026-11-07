@@ -293,11 +293,13 @@ def test_diff_installation_names_what_wholesale_replace_would_delete() -> None:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
 
+    # 夹具用合成根: 本机绝对路径会被 tests/unit host 字面量门禁点名, 且这条判据
+    # 不依赖任何真实用户名
     res = module.diff_installation(
         installed_lines=[
-            "*/2 * * * * cd /Users/xiamingxing/Workspace && /opt/homebrew/bin/python3 "
+            "*/2 * * * * cd /home/agent/Workspace && /opt/homebrew/bin/python3 "
             "-m omo.cli resident daemon --once --role decision "
-            ">> /Users/xiamingxing/Workspace/.omo/_delivery/resident-orchestrator/cron-decision.log 2>&1",
+            ">> /home/agent/Workspace/.omo/_delivery/resident-orchestrator/cron-decision.log 2>&1",
             "0 3 * * * cd $HOME/Workspace && python3 bin/ssot/log-rotate.py --daily "
             ">> runtime/cron/log-rotate.log 2>&1",
         ]
