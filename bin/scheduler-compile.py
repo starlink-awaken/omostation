@@ -14,10 +14,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin" / "lib"))
+from cron_normalize import expand_workspace as _expand_workspace  # noqa: E402
+from cron_normalize import normalize_installed_line as _normalize_installed_line  # noqa: E402
+from cron_normalize import normalize_interpreter as _normalize_interpreter  # noqa: E402
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
@@ -180,61 +184,6 @@ def check_launchd_plane(registered):
     }
 
 
-_INTERPRETER_RE = re.compile(r"(?:\S*/)?python3(?:\.\d+)?(?=[\s]|$)")
-_INTERPRETER_BOUNDARY = re.compile(r"(?<=[\s;&|])")
-
-
-def _normalize_interpreter(cmd: str) -> str:
-    """把解释器写法归一化成裸 `python3`, 使声明与安装态可比。
-
-    注册表声明用 `python3 …`, 而安装态可能写成 `/opt/homebrew/bin/python3.13 …`
-    (cron 环境里裸 `python3` 解析到 Xcode 的 3.9, 缺 `datetime.UTC`, 2026-10-22
-    有 4 条 cron 因此连续失败数周)。两者语义相同, 不该算 drift。
-
-    只替换**位于命令起始**的解释器 (`cd … &&` 之后也算), 避免把参数里的
-    `python3.x` 误当解释器。
-    """
-    out, last = [], 0
-    for boundary in _INTERPRETER_BOUNDARY.finditer(cmd):
-        seg = cmd[last:boundary.end()]
-        out.append(_INTERPRETER_RE.sub("python3", seg))
-        last = boundary.end()
-    out.append(cmd[last:])
-    return "".join(out)
-
-
-def _expand_workspace(cmd: str) -> str:
-    """把 registry 里的 `$HOME/Workspace` 写法展开成绝对路径, 使声明与安装态可比。
-
-    抽取成函数是为了让**测试缝**能复用同一个展开 (见 `check_drift` 的
-    `installed_lines`) —— 两侧各写一份替换, 迟早会只改一侧。
-
-    根从 `Path.home()` 派生, 不写字面量: 与 install-cron-plane.py 的 `_expand_workspace`
-    同口径。写死本机用户目录会让换机后登记面全部指向不存在的路径 ⇒ check_drift 永久 drift。
-    """
-    home = str(Path.home())
-    return cmd.replace('"$HOME/Workspace"', f"{home}/Workspace").replace(
-        "$HOME/Workspace", f"{home}/Workspace"
-    )
-
-
-def _normalize_installed_line(s: str) -> str:
-    """把一条已装 crontab 行折成规范形, 使登记面与安装态可比。
-
-    `harness-cron.sh` 特例: 登记面把同一作业登记了两次 (`l4-harness-6h` 与
-    `l4-harness-6h-active`), 已装面也因此有两行 —— 不折叠的话重复登记会被
-    报成 drift/orphan。根从 `Path.home()` 派生, 不写字面量 (换机后仍可比)。
-
-    抽成函数是因为 `check_drift` 与 `diff_installation` **都要用** ——
-    两侧各写一份替换, 迟早会只改一侧。
-    """
-    if "harness-cron.sh" in s:
-        return (
-            "0 */6 * * * cd "
-            f"{Path.home()}/Workspace && bash projects/l4-kernel/scripts/"
-            "harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1"
-        )
-    return s
 
 
 def diff_installation(installed_lines: list[str] | None = None) -> dict:

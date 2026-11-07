@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import re
 import subprocess
 import sys
 import unittest
@@ -197,16 +196,26 @@ def test_compile_crontab_excludes_non_crontab_plane_jobs() -> None:
         assert len(schedule) == 5, f"非法 schedule 字段数: {line}"
 
 
+def _load_normalize_module():
+    spec = importlib.util.spec_from_file_location(
+        "cron_normalize_under_test", WORKSPACE / "bin" / "lib" / "cron_normalize.py"
+    )
+    if spec is None:
+        raise RuntimeError("cannot load bin/lib/cron_normalize.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def _normalize(cmd: str) -> str:
-    """与 scheduler-compile._normalize_interpreter 同语义的本地副本（避免跨模块 import）。"""
-    import re as _re
-    boundary = _re.compile(r"(?<=[\s;&|])")
-    interp = _re.compile(r"(?:\S*/)?python3(?:\.\d+)?(?=[\s]|$)")
-    out, last = [], 0
-    for b in boundary.finditer(cmd):
-        out.append(interp.sub("python3", cmd[last:b.end()])); last = b.end()
-    out.append(cmd[last:])
-    return "".join(out)
+    """直接用 bin/lib/cron_normalize.py —— 不再维护本地副本。
+
+    这里曾有一份「同语义的本地副本」, 与生产码一起漂移: 「末段不归一化」这个
+    off-by-one 就是两边同形继承下来的 (见 cron_normalize.normalize_interpreter)。
+    判据与被检对象同源时无法发现漂移, 必须引用同一份实现。
+    """
+    return _load_normalize_module().normalize_interpreter(cmd)
 
 
 class InterpreterNormalizationTests(unittest.TestCase):
