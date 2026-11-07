@@ -1,5 +1,5 @@
 id: "DIRECT-IO-GATE-TWO-TREES-TWO-COPIES"
-title: "direct-IO 契约由两棵被评的树与两份检测器实现分别判定 —— 根仓 main 连绿而定时 job 连红 29h+ (60 次运行零成功)"
+title: "direct-IO 契约由两棵被评的树与两份检测器实现分别判定 —— governance-check 绿, 同一 commit 的 freshness job 却在每次 push 连红 (定时 29h+ 零成功; push 窗口 6.5h 内 28 failure)"
 dimension: "governance"
 subdimension: "gate"
 domain: "infrastructure"
@@ -12,7 +12,10 @@ owner: "governance-team"
 affected_roots: []
 evidence_refs:
 - ".github/workflows/governance-check.yml:248 (governance-verify job, :261 submodules: recursive, :619 make governance-verify) — 按接受的 gitlink 评"
-- ".github/workflows/submodule-freshness-gatekeeper.yml:27 (git submodule update --remote) 与 :48 (make governance-verify) — 按各子仓 remote main 评"
+- ".github/workflows/submodule-freshness-gatekeeper.yml:46 (git submodule update --remote) 与 :67 (make governance-verify) — 按各子仓 remote main 评"
+- "同文件 :4-6 `push: branches: [main]` + :8 每日 schedule ⇒ 这个 job 不只跑定时, 每次并入 main 都跑"
+- "同文件 :63 `if: env.CHANGED == 'true'` ⇒ verify 腿只在 update --remote 造出 gitlink 漂移时才执行: 该门禁**只**在被改判的那棵树上评, 永不评 root 接受的树"
+- "Makefile:665-666 `governance-verify: bash bin/ssot/verify-omo.sh` — :67 那步的实体"
 - "projects/ecos/scripts/contract_gatekeeper.py (size 13197 / mtime 2026-09-22, sha256 2c2479a8…) — 主区门禁经 omo lint direct-omo-io 调的那份"
 - "projects/aetherforge/scripts/contract_gatekeeper.py (size 7536 / mtime 2026-08-08, sha256 38320e3e…) — 子仓 CI 调的那份, 无方法名级 mutation 判定"
 - "projects/aetherforge/.github/workflows/ci.yml:34 — 子仓确实接了门禁, 只是接的是自己那份旧副本"
@@ -62,4 +65,32 @@ history:
 
 
     本项只立案, 不改任何门禁标注/判据/副本; 门禁语义与跨仓副本收敛均属 principal 裁决面。
+  actor: "governance-agent"
+- at: '2026-11-07T07:29:00+00:00'
+  action: correct
+  note: >-
+    两处订正 + 一处补证, 都不改裁决面。
+
+
+    (1) **行号引错了**: 首版把 verify 腿写成 `submodule-freshness-gatekeeper.yml:27 / :48`, 真实是 `:46`
+    (git submodule update --remote) 与 `:67` (make governance-verify)。该文件自 a1ecb980b (#4921) 起未再改动,
+    fc0511a80 与 f99b7124b 两个版本读数一致 ⇒ 不是漂移, 是本项落盘时没逐条按同一 revision 核验。首版共 6 个行号
+    指针, 其余 4 个 (governance-check.yml :248/:261/:619、aetherforge ci.yml :34) 复算为真; 顺带把 #5125 那条
+    pitfalls 里的 5 个指针 (sync-submodules-push.sh :31/:38/:39/:40 与 hook-runner.sh :231) 也逐行量过, 均为真。
+    教训: 指针成批写时也要逐条量, 不能凭 grep 片段一次性誊抄。
+
+
+    (2) **范围比首版写的更宽**: 该 workflow `on:` 除 `:8` 每日 schedule 外还有 `:4-6 push: branches: [main]`,
+    所以它不是"定时 job", 而是**每次并入 main 都跑**的 push 检查。实测最近 30 次运行全部 event=push, 窗口
+    2026-11-07T00:45:49Z → 07:15:52Z (6.5h) 内 28 failure + 2 cancelled + 0 success; 抽样 42350544059 /
+    42349585464 / 42349208466 三次红点完全同一处: quota_ledger.py 的 `.mkdir()` 与 `open(..., "a")`,
+    `Gatekeeper: violations detected in 1054 files checked — FAIL`, `make: *** [Makefile:666]`。
+    同一 commit 694218951 上 governance-check.yml 的 governance-verify = success 而这里 = failure ⇒
+    "一棵树绿一棵树红"在同一次 push 里直接可见, 不必等定时。首版标题「根仓 main 连绿而定时 job 连红」因此改窄。
+
+
+    (3) **红为什么绕不开**: `:63 if: env.CHANGED == 'true'` 让 verify 腿只在 `update --remote` 造出 gitlink
+    漂移时执行。⇒ 这条 direct-IO 判据**只**在 root 尚未接受的那棵子仓树上被评, 永远不会评 root 接受的树;
+    #4509 把漂移腿在 push 下降为 warning (:160-172) 也管不到它, 因为红来自 :67 那步本身而非漂移判定。
+    这正是 D2 要分开裁决的"verify 步按哪棵树评", 本条补的是它的发生面, 不是判准。
   actor: "governance-agent"
