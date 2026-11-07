@@ -18,7 +18,7 @@ evidence_refs:
 - "bin/ops/install-cron-plane.py (唯一 registry-driven 的安装器)"
 - "bin/ssot/install-maturity-cron.sh:32-38 (`REGISTRY=` + `check_registry_coverage()` 用 grep 不用 python+yaml) 与 :63 / :71 (守卫挂在 `--install` 与 `--dry-run` 两条路径) —— #5131 `5075c70e4` 加, 本案 06:45 那条'未加'已过期"
 - "bin/ssot/install-resident-cron.sh:54-57 (5 个角色 daemon 由循环生成) + :63-71 (ingest/signals/inbox/promote/proposal-adr/health) = 11 个作业, 非 10; 全文无 registry 引用"
-- "lib/resident-role-tick.sh —— registry 里 11 条 `resident-launchd-*` (8 active + 3 proposed) 指向它, 即登记面收的是 launchd 平面, 不是本条 crontab 平面 (见 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT)"
+- "lib/resident-role-tick.sh —— registry 里 9 条 `resident-launchd-*` (6 active: decision/execute/signals/inbox/promote/event-ingest; 3 proposed: sediment/monitor/heartbeat) 指向它, 即登记面收的是 launchd 平面, 不是本条 crontab 平面 (见 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT)"
 - "bin/gac/ops-cron-install.py:54 (`REGISTRY=`) 与 :80 (`unregistered_jobs()`) 与 :112-114 (`install()` 一进门见 missing 即 return 非零) 与 :165 (预检输出明说 `--install 会被拒`) —— #5124 的 fail-closed; 复算其 4 个作业确实 0 个在登记面"
 mitigation_refs: []
 opened_at: "2026-11-07"
@@ -74,7 +74,7 @@ history:
     (`:63-71`); 文件 `:74` 的注释同样写「其下 11 行」。原表「10 个作业, 0 个在 registry」两个数都要改口径:
     9 条 `python3 -m omo.cli resident ...` 的 crontab 命令确实不在册, 但 `proposal-to-adr-daily` 与
     `system-health-emit-daily` 在册且 active; 并且同一批角色以 **launchd 封装** `lib/resident-role-tick.sh` 在册
-    (registry 11 条 `resident-launchd-*`: 8 active + 3 proposed)。也就是: 登记面收的是**另一个平面**, 本条的 crontab
+    (registry 9 条 `resident-launchd-*`: 6 active = decision/execute/signals/inbox/promote/event-ingest, 3 proposed = sediment/monitor/heartbeat)。也就是: 登记面收的是**另一个平面**, 本条的 crontab
     平面才是登记面外的 —— 与姊妹案 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT 是同一件事的两面, 两案要并起来看。
 
     (3) **4 个安装器里 3 个已 fail-closed** (#5124 `ops-cron-install.py` + #5131 `install-maturity-cron.sh`),
