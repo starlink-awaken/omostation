@@ -14,12 +14,16 @@ evidence_refs:
 - ~/Library/Logs/disk-keepalive.drops
 - ~/Library/Logs/disk-keepalive.log
 - Plans/macmini-7t-ancient-twilight.md
+- mbp ~/Library/Logs/disk-keepalive.log 实测 106 行, 窗口 2026-11-05 22:59:10 → 11-07 18:46:10 (= 43.8h, 即本次守护进程存活期, stdout/stderr 与 .v3 标记同 mtime 2026-11-05 22:59) 内 3 次 "MODEL-STORE 未挂载 → REMOUNT OK", 其中 11-07 两次 17:35:13 / 18:46:10 相隔 71 分钟; 守护卷只有 MODEL-STORE, 本条的 MOVESPEED/SHAREDWORK/SHAREDMODEL 从未出现于该日志
+- mbp ~/Library/Logs/disk-keepalive.drops 不存在 (即上面 evidence_refs 第一项声称的证据件从未产出), 而 disk-keepalive.drops.stamp mtime 2026-11-07 18:30:53 ⇒ 采集周期在跑且恒 0 记录
+- ~/bin/disk-keepalive.sh:40 DISK_MATCH="DK5A1" 与 :132 collect_drops 的触发 predicate process == "icdd": 实测 icdd 是 com.apple.imagecapture (--last 3d 共 180 行, 内容为 Lenovo LJ2655DN 打印机与 Device DB 维护), icdd AND CONTAINS "DK5A1" 在 --last 7d 命中 0 行
+- mbp 统一日志最老 chunk /var/db/diagnostics/Special/000000000000332a.tracev3 mtime 2026-10-31 21:47 (≈6.9 天) ⇒ 2026-10-11 14:47:44 真掉线的 bluetoothd 阳性对照已不可取回; correct 记录里"约 18h 留存"的口径在 mbp 侧不成立
 mitigation_refs:
 - ~/bin/disk-keepalive.sh
 - bin/ops/hot-tier-resilience.sh
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-10-11'
+last_reviewed_at: '2026-11-07'
 next_review_at: '2026-10-18'
 gate_level: none
 x1_policy_ref: ""
@@ -54,4 +58,17 @@ history:
     三个卷被系统卸载 (整条 hub 链路一起掉, 与 9/7 厂家故障说明"只有盘自己断开"的特征不同)。
     盘实际经 VIA VL822 hub 接入, 非直连。keepalive 已升 v3 (diskutil 判定挂载 + 真实掉线采集到
     disk-keepalive.drops), 标题与 decision_needed 已据此订正; 历史记录保留原文以便追溯。
+  actor: "governance-agent"
+- at: '2026-11-07T11:12:00+00:00'
+  action: review-measure
+  note: >-
+    复核（只测量与登记，不改判据、不改 decision_needed 文本、不改 severity / lifecycle_state / next_review_at；last_reviewed_at 推到 2026-11-07（本轮确实做了复核），next_review_at 保持过期的 2026-10-18 以让条目继续显现在待办面，新周期由 owner 定；next_review_at 2026-10-18 已过期 20 天，留原值待 owner 定）。全部读数在 mbp 取，本会话未登 mini。
+
+    (1) **本条指定的观察实验按现有仪器做不出结论，且会给出假阴性**。decision_needed 写「观察 3~7 天，看 disk-keepalive.drops 的 ss_removed；不再掉 → 问题在 hub」。实测该文件在 mbp **不存在**（evidence_refs 第一项声称的证据件从未产出），而 drops.stamp 今日 18:30:53 刚更新 ⇒ 采集周期正常在跑、**恒 0 记录**。原因在触发半条链：`collect_drops`（~/bin/disk-keepalive.sh:132）用 `process == "icdd"` 取「设备从 USB 总线消失」，而 icdd 实测是 **com.apple.imagecapture**（图像采集；--last 3d 的 180 行内容是 Lenovo LJ2655DN 打印机与 Device DB 维护），不是 USB 总线事件源；`icdd AND eventMessage CONTAINS "DK5A1"`（:40 的扩展坞名片段）在 --last 7d 命中 **0 行**。⇒ 照现在的仪器跑满 3~7 天，读数仍停在「无记录」，会被读成「不再掉 ⇒ 问题在 hub 或线」，**当场送掉一次换盘售后**（盘购于 2025-10-15）。换通道属 principal 裁决面，本条只登记仪器不可用。
+
+    (2) **bluetoothd 那半条链不能用今日读数判死**：今日 18:40–19:00（含一次已知卷缺席 18:46:10）窗口内 `bluetoothd AND "removed from the root hub port"` = 0 行；2026-10-11 14:45–14:50 的阳性对照窗口也 0 行 —— 但 mbp 统一日志最老 chunk 实测 mtime 2026-10-31 21:47（≈6.9 天），10-11 早已超期 ⇒ 对照不成立，只证明「0 行分不清『没发生』与『留存外』」，这也正是本条必须**在事件当场采集**而不能事后 log show 的原因。correct 记录里「约 18h 留存」的口径在 mbp 不成立。
+
+    (3) **今日确有 3 次卷缺席，但不是那三个卷**。v3 已改用 diskutil 判挂载，排除了 10-11 记录里 launchd/TCC 误报 `ls` 的形状；但 43.8h 是**本次守护进程的存活期**（stdout/stderr 与 .v3 标记同 mtime 2026-11-05 22:59），不是观察期全貌。3 次缺席中 17:35:13 那次紧跟「维护标记已超过 2 小时, 自动失效, 恢复监控」⇒ **不能排除是维护窗口内的人工卸载**；18:46:10 那次无维护上下文 —— 但同一时刻统一日志里**找不到总线级证据**：18:44–18:48 窗口 `process == "kernel"` 且 eventMessage 含 usb/storage/disk = **0 行**，也没有任何 `diskutil unmount` 的 argv 回显，只有 mds 的 `openStoresByUUIDArray ... unmounting:0` 与 Finder cache_delete 这类**挂载态被动反应** ⇒ 两次缺席都不能归因于 hub 掉线，也不能归因于人工卸载。脚本在 mbp 只守护 MODEL-STORE，而本条的 MOVESPEED/SHAREDWORK/SHAREDMODEL 今日在本机**全部 NOT-MOUNTED** 且从不出现在该日志 ⇒ **频次仍待实测**，缺的是覆盖这三个卷的通道 + mini 侧复测。
+
+    (4) **给替代仪器留一条硬约束：避开观察者污染**（本轮当场撞上）。`log show` 非交互调用的完整 argv —— 含 predicate 字符串本身 —— 会被写进统一日志。第一次 `eventMessage CONTAINS "DK5A1"` --last 7d 报 28 行，按进程分布**全是 `log[...]` 自身**；加 `AND process != "log"` 后同一窗口 **0 行**。任何用 CONTAINS 计数的事件通道都必须先排除 process=="log"，否则「我查过 N 次」会被读成「系统发生过 N 次」。
   actor: "governance-agent"
