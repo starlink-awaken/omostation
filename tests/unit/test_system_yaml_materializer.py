@@ -361,8 +361,13 @@ def test_guardian_resolves_system_yaml_at_call_time(state_only_tree, repo_root):
     assert code._load_system_value("health_score") == "88"
 
 
-def test_meta_compass_radar_write_target_is_the_state_root(state_only_tree, repo_root):
-    code = _load("b5r_meta_compass", "bin/meta/compass_radar.py", repo_root.code_root())
+def test_live_compass_radar_write_target_is_the_state_root(state_only_tree, repo_root):
+    """活副本 `bin/compass_radar.py` 的 system.yaml 写目标必须跟随 state root。
+
+    原指向 `bin/meta/compass_radar.py` —— 那是同一工具的死副本 (无调用者, 两份的
+    `_system_yaml()` 逐字节相同), 已随 BET-Y2Q4-T10-220 D6 退役; 覆盖改挂到活副本。
+    """
+    code = _load("b5r_live_compass", "bin/compass_radar.py", repo_root.code_root())
     assert code._system_yaml() == state_only_tree[1] / STATE_REL
 
 
