@@ -8,7 +8,8 @@ inputs: []
 outputs:
   - type: exit_code
   - type: json
-dependencies: []
+dependencies:
+  - bin/lib/cron_normalize.py
 triggers: []
 related: []
 maturity: draft

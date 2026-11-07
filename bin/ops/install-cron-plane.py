@@ -29,16 +29,16 @@
 from __future__ import annotations
 
 import argparse
-import re
 import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "lib"))
+from cron_normalize import comparison_key as _key  # noqa: E402
+from cron_normalize import expand_workspace as _expand_workspace  # noqa: E402
+
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
-
-_INTERPRETER_RE = re.compile(r"(?:\S*/)?python3(?:\.\d+)?(?=[\s]|$)")
-
 
 def _load_raw() -> dict:
     import yaml
@@ -48,41 +48,6 @@ def _load_raw() -> dict:
     docs = [d for d in yaml.safe_load_all(REGISTRY.read_text(encoding="utf-8")) if d]
     return docs[-1] if docs else {}
 
-
-def _expand_workspace(cmd: str) -> str:
-    """把 registry 里的 `$HOME/Workspace` 展开成绝对路径 (与 scheduler-compile 同口径)。
-
-    装到 crontab 的行必须是绝对路径 —— cron 的 PATH 只有 /usr/bin:/bin,
-    且 crontab 不走 shell 的变量展开 ⇒ `$HOME` 原样留在 crontab 里会指向字面量。
-    """
-    home = str(Path.home())
-    return cmd.replace('"$HOME/Workspace"', f"{home}/Workspace").replace(
-        "$HOME/Workspace", f"{home}/Workspace"
-    )
-
-
-def _normalize(cmd: str) -> str:
-    """归一化解释器写法, 使登记面与安装态可比 (与 scheduler-compile 同口径)。"""
-    return _INTERPRETER_RE.sub("python3", cmd)
-
-
-def _key(line: str) -> str:
-    """一行 crontab 的比较键 (归一化整行, 与 scheduler-compile 同口径)。
-
-    不得截断: 截断会把「前 120 字符相同、之后不同」的两条行折成一个键 ——
-    认领侧让用户自装的外部行被误认成登记面 (安装时**删掉**), 缺失侧让登记面里
-    内容不同的两条塌成一条。与 scheduler-compile 的 BET-Y2Q4-T10-291 同族,
-    那边已整行化, 本函数此前漏改。
-    """
-    s = line.strip()
-    if not s or s.startswith("#"):
-        return ""
-    if "harness-cron.sh" in s:
-        s = (
-            "0 */6 * * * cd {home}/Workspace && bash "
-            "projects/l4-kernel/scripts/harness-cron.sh >>".format(home=Path.home())
-        )
-    return _normalize(s)
 
 
 def _compiled_lines() -> list[str]:

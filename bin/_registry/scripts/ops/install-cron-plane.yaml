@@ -9,6 +9,7 @@ outputs:
   - type: exit_code
 dependencies:
   - bin/scheduler-compile.py
+  - bin/lib/cron_normalize.py
 triggers:
   - type: manual
 related:
