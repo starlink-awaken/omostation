@@ -17,7 +17,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+# parents[1] 是 bin/ (命令会变成 cd bin && python3 bin/ops/... => bin/bin/ops/...);
+# 本脚本在 bin/gac/ 下, 仓库根是 parents[2]。
+REPO = Path(__file__).resolve().parents[2]
 CRONTAG = "# omostation-ops"
 
 JOBS = [
@@ -49,15 +51,24 @@ def get_current_crontab():
     return r.stdout if r.returncode == 0 else ""
 
 
-def install():
-    current = get_current_crontab()
-    lines = [l for l in current.splitlines() if CRONTAG not in l and l.strip()]
+def render(crontab: str) -> str:
+    """渲染要写入的 crontab 全文。
+
+    dry-run 与 install **共用这一份**: 此前 dry-run 只打印 schedule + comment、
+    不打印 command, 于是「命令里的路径写错了」在装之前完全看不见 (实证: REPO
+    曾解析成 bin/, 4 条命令全指向不存在的 bin/bin/..., 而 --dry-run 一切正常)。
+    """
+    lines = [l for l in crontab.splitlines() if CRONTAG not in l and l.strip()]
     lines.append(f"\n{CRONTAG}-start")
     for job in JOBS:
         lines.append(f"# {job['comment']}")
         lines.append(f"{job['schedule']} {job['command']} {CRONTAG}")
     lines.append(f"{CRONTAG}-end\n")
-    new_crontab = "\n".join(lines)
+    return "\n".join(lines)
+
+
+def install():
+    new_crontab = render(get_current_crontab())
     subprocess.run(["crontab", "-"], input=new_crontab, text=True, check=True)
     print(f"Installed {len(JOBS)} cron jobs")
 
@@ -89,8 +100,9 @@ def list_jobs():
 
 def dry_run():
     print("Would install:")
-    for job in JOBS:
-        print(f"  [{job['schedule']}] {job['comment']}")
+    for line in render("").splitlines():
+        if line.strip():
+            print(f"  {line}")
 
 
 def main():
