@@ -47441,7 +47441,8 @@ bets:
     当时锁存在」）。放行只发生在显式接管：`force_lock=True` 时跳过该 (path, other_path) 对，`force_lock=False`
     的 fail-closed 宽度一字不动（T10-292 契约 2 保住）。报错前缀仍是 `A2A Path Lock Collision:`，缺席分支追加两行诊断点名
     scope 与 --force 出口。
-  status: in_progress
+  status: done
+  done_at: 2026-11-07
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -47509,16 +47510,40 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@bd5afa2e6343a0c13f52d89a9b891b63d3054862
+          tests:
+            ref: receipt://docs/reports/2026-11-07-a2a-claim-absent-lock-takeover-closeout.md
+            sha256: sha256:377044eff488557e7f9676de8520357d3c1af735eb076076578ac5bdf0fab92c
+          diff:
+            ref: receipt://docs/reports/2026-11-07-a2a-claim-absent-lock-takeover-closeout.md
+            sha256: sha256:377044eff488557e7f9676de8520357d3c1af735eb076076578ac5bdf0fab92c
+          rollback:
+            ref: receipt://docs/reports/2026-11-07-a2a-claim-absent-lock-takeover-closeout.md
+            sha256: sha256:377044eff488557e7f9676de8520357d3c1af735eb076076578ac5bdf0fab92c
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-07-a2a-claim-absent-lock-takeover-closeout.md
+            sha256: sha256:377044eff488557e7f9676de8520357d3c1af735eb076076578ac5bdf0fab92c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-07-a2a-claim-absent-lock-takeover-closeout.md
+            sha256: sha256:377044eff488557e7f9676de8520357d3c1af735eb076076578ac5bdf0fab92c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-342.md
+            sha256: sha256:1756d29351e4c4d84609a9e8c90ce8e0ede3e3eafc1f684627ab07d16aa9e641
+          cleanup:
+            ref: receipt://docs/reports/2026-11-07-a2a-claim-absent-lock-takeover-closeout.md
+            sha256: sha256:377044eff488557e7f9676de8520357d3c1af735eb076076578ac5bdf0fab92c
       value:
         status: NOT_PROVEN
         evidence:
-          note: 本轮为门禁谓词的可达性修复，不设价值指标。
-    overall_state: evaluating
+          note: '价值面不构成本轮的领用条件：它消除的是一次真实发生的封锁（本机协调面 2026-11-07 实读 ABSENT=1，被锁的路径正是台账本身），但「以后不再因此停摆」要由后续真实接管事件计量，当前无指标对象（value_indicator_policy:
+            false）。'
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
