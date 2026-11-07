@@ -1,0 +1,56 @@
+id: "RESIDENT-PLANE-SPLIT-LAUNCHD-INERT"
+title: "resident agent 两个驱动平面分裂 —— launchd 侧空转 (0 台账事件) 且与 crontab 侧读不同事件源、写不同 ledger"
+dimension: "governance"
+subdimension: "consistency"
+domain: "system"
+scope: "host"
+severity: "high"
+weight: 0.25
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- "~/Library/LaunchAgents/com.l4.resident.decision.plist (EnvironmentVariables.OMOSTATION_STATE_ROOT => ~/.local/state/omostation/prod)"
+- "~/.local/state/omostation/prod/runtime/omo/event-ledger.sqlite3 (event_log 0 行 / event_outbox 0 行)"
+- "~/Workspace/runtime/omo/event-ledger.sqlite3 (event_log 452 行 / event_outbox 452 行)"
+- "已装 crontab 的 5 条 `omo.cli resident daemon --once --role <role> --ledger ~/Workspace/runtime/omo/event-ledger.sqlite3`"
+- ".omo/_truth/registry/services.yaml (resident 服务声明 OMOSTATION_STATE_ROOT)"
+mitigation_refs: []
+opened_at: "2026-11-07"
+last_reviewed_at: '2026-11-07'
+next_review_at: '2026-11-14'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "先裁决「哪个平面是 resident 的权威驱动」，再让两边的 ledger 与事件源收敛到同一处。可选: (a) 以 launchd 为唯一平面 —— 把 crontab 那 5 条摘掉 (需 crontab 写入恢复), 并让 launchd 侧真的产生台账; (b) 以 crontab 为唯一平面 —— 停用 com.l4.resident.* 六个 agent; (c) 保留双平面但统一 ledger (给 launchd plist 也加 OMO_EVENT_LEDGER_DB, 或去掉 crontab 行的 --ledger 改用 state_root())。**不要**在没裁决前单独改一侧 —— 那会造出「一边有事件、一边没有」的更大分裂。"
+history:
+- at: '2026-11-07T05:00:00+00:00'
+  action: identify
+  note: >-
+    实测 (2026-11-07): resident 五角色 (sediment/decision/execute/monitor/heartbeat)
+    同时被两个平面驱动 ——
+    ① launchd: com.l4.resident.<role>, StartInterval=120, ProgramArguments=
+       /bin/bash ~/.local/opt/omostation/lib/resident-role-tick.sh <role>
+       (即 uv run --project <安装位>/projects/omo python -m omo.resident.cli daemon
+       --once --role <role>), EnvironmentVariables.OMOSTATION_STATE_ROOT=
+       ~/.local/state/omostation/prod; registry 侧对应 resident-launchd-* 条目
+       (status: active, reality: installed)。
+    ② crontab: `*/2 * * * *` 五条, 走 **检出** 的 omo.cli, 且显式
+       `--ledger ~/Workspace/runtime/omo/event-ledger.sqlite3`; 这五条在
+       registry 里没有登记, 只在 known_orphans 里 (模式 `omo.cli resident daemon
+       --once --role`)。
+
+    分裂的三处读数:
+    - **台账**: state-root ledger event_log = **0 行**; 检出 ledger event_log =
+      **452 行**。即 launchd 平面驱动的那些角色没有产生任何台账事件。
+    - **事件源**: 手动跑 launchd 侧命令 (带同样的 OMOSTATION_STATE_ROOT) 得
+      `{"events_in_file": 22918, "processed": 0, "start_index": 22906,
+      "task_queue": {..., "skipped": true}}` —— 读的是另一个事件源, 且处理 0 条。
+      同期 crontab 侧日志每次处理 143 条。
+    - **码面**: launchd 跑的是安装位 (~/.local/opt/omostation, 主仓落后
+      origin/main), crontab 跑的是检出 —— 同一角色由两份代码执行。
+
+    launchd 侧不是没跑: `launchctl print` 显示 runs=167 / last exit code=0 /
+    state=active, 但台账零增长 —— **空转**。
+  actor: "governance-agent"
