@@ -1,5 +1,5 @@
 id: "DIRECT-IO-GATE-TWO-TREES-TWO-COPIES"
-title: "direct-IO 契约由两棵被评的树与两份检测器实现分别判定 —— governance-check 绿, 同一 commit 的 freshness job 却在每次 push 连红 (定时 29h+ 零成功; push 窗口 6.5h 内 28 failure)"
+title: "direct-IO 契约由两棵被评的树与两份检测器实现分别判定 —— governance-check 绿, 同一 commit 的 freshness job 连红 (红期 32h+ 共 70 次运行零成功; 内含 verify 与 drift 两条独立失效腿)"
 dimension: "governance"
 subdimension: "gate"
 domain: "infrastructure"
@@ -21,6 +21,10 @@ evidence_refs:
 - "projects/aetherforge/.github/workflows/ci.yml:34 — 子仓确实接了门禁, 只是接的是自己那份旧副本"
 - "projects/aetherforge: 接受 pin 8639c682 内无 packages/gateway/src/llm_gateway/quota_ledger.py; 该文件由 tip d48cfb6 (PR #122, 2026-11-06 09:06) 新增, pin→tip 差 1 个提交"
 - "docs/pitfalls.md § 2026-11-07 三条 (advisory/blocking 矛盾、broker 无对象可走、本项的两棵树两副本订正)"
+- "green→red 边界: run 41999104798 (event=push, root `3a1c07702`, 2026-11-05T09:02:22Z, success) 与 run 42137562580 (event=schedule, **同一个** root `3a1c07702`, 2026-11-06T00:32:28Z, failure); 两次之间 0 个 run, 且 `git rev-list --count 3a1c07702..d5329c876` = 1 (下一个 root 提交 #5061 落在红点之后 41 分钟) —— 复算 `gh api repos/starlink-awaken/omostation/actions/workflows/submodule-freshness-gatekeeper.yml/runs?per_page=100`"
+- "红期总量: 100 次运行窗口 2026-11-03T12:40:22Z → 2026-11-07T08:41:30Z (96 push + 4 schedule) = 30 success / 64 failure / 6 cancelled; 首个红点之后 70 次运行 0 success (64 failure + 6 cancelled), 红期跨度 32:09:02, 连续红剔除 cancelled 为 64 次"
+- "失效腿归因 (step 级, 复算 `gh api .../actions/runs/<id>/jobs` 再 `.../actions/jobs/<id>`): job 127629478480 (run 42137562580, schedule 00:32:28Z) step 7 `Run Workspace Tests (kairon, agora, omo, bus-foundation)` = success 而 step 10 `Fail closed on detected drift (no self-heal)` = failure; 对照 job 127645495060 (d5329c876 01:13:21Z) / 127649255451 (8b8d001f4 01:23:14Z) / 128237309825 (4eba1b9e4 schedule 2026-11-07T00:30:04Z) / 128355778895 (303d5d471 08:41:30Z) 均 step 7 = failure 且 step 8-11 = skipped"
+- "00:32 那次红与 quota_ledger.py 无关的直接证据: 子仓 aetherforge 在 2026-11-06T00:40Z 的 main 头 = `8639c682d`, 与 root `3a1c07702` **接受**的 pin 同一对象 (`gh api repos/starlink-awaken/omostation-aetherforge/commits?until=2026-11-06T00:40:00Z` 首行 vs `git ls-tree -r 3a1c07702 projects/aetherforge`); 违规提交 d48cfb6 的 committer date 01:06:02Z 晚于该 run"
 mitigation_refs: []
 opened_at: "2026-11-07"
 last_reviewed_at: '2026-11-07'
@@ -37,6 +41,7 @@ decision_needed: >-
   且该步失败会 skip 掉后面的漂移提案 / 上传 / fail-closed 腿 (实测 skipped), 有漂移的运行反而发不出提案。
   **不要**在裁决前动 CR-L2-DIRECT-IO 的 advisory/blocking 标注, 也不要收窄 _has_forbidden_prefix() 判据 ——
   前者让规则更不可信, 后者会把 Path.home()/".omo" 这类真实写入一并放过; 两者都是判准宽度改动, 属 principal。
+  (3) **裁决 (2) 时要同时覆盖两条失效腿**: 实测红期里 step 7 (verify) 与 step 10 (drift fail-closed) 各红过, 且 drift 腿在 root 树零变化下也能红。只把 verify 改为按接受 gitlink 评, 定时 run 仍会因 `update --remote` 与接受 pin 的差集而红 —— 要么 drift 腿对 schedule 一并降为 warning, 要么明确 drift 的参照系同样是接受面。
 history:
 - at: '2026-11-07T06:50:00+00:00'
   action: identify
@@ -93,4 +98,19 @@ history:
     漂移时执行。⇒ 这条 direct-IO 判据**只**在 root 尚未接受的那棵子仓树上被评, 永远不会评 root 接受的树;
     #4509 把漂移腿在 push 下降为 warning (:160-172) 也管不到它, 因为红来自 :67 那步本身而非漂移判定。
     这正是 D2 要分开裁决的"verify 步按哪棵树评", 本条补的是它的发生面, 不是判准。
+  actor: "governance-agent"
+- at: '2026-11-07T09:25:00+00:00'
+  action: evidence-reinforce
+  note: >-
+    第三条: 把红期的**归因**收窄, 并给出一条能复算的边界。零门禁改动, 零判准改动。
+
+    (1) **前两版都没做过的边界测量**: 最后一次绿是 run 41999104798 (push, root `3a1c07702`, 2026-11-05T09:02:22Z), 第一次红是 run 42137562580 (schedule, **同一个** root `3a1c07702`, 2026-11-06T00:32:28Z), 中间 15:30:06 **没有任何 run**, 且这段时间 root 一个提交都没进 (`git rev-list --count 3a1c07702..d5329c876` = 1, #5061 反而落在红点之后 41 分钟)。⇒ root 侧输入完全相同而判定翻转, 比二版『同一 push 里一棵树绿一棵树红』更干净地证明判定不是 root 树的函数。
+
+    (2) **但翻转的变量不是 direct-IO —— 这是本条要改的主要结论**: 该 run 的 step 7 `Run Workspace Tests` = success, 红在 step 10 `Fail closed on detected drift (no self-heal)`; 而 01:13Z 起的红 (job 127645495060 / 127649255451 / 128237309825 / 128355778895) 全部红在 step 7 并把 step 8-11 skip 掉。⇒ 同一个 job 里至少有**两条独立失效腿**, 前两版把整段红期都记在两棵树机制名下是过度归因。旁证: 子仓 aetherforge 在 2026-11-06T00:40Z 的 main 头就是 root 接受的 pin `8639c682d`, 违规提交 d48cfb6 (committer 01:06:02Z) 当时还不在子仓头上, 所以 00:32 的红必然与 quota_ledger.py 无关。首版『定时 job 首次红 01:27Z 恰在子仓合入后 21 分钟 ⇒ 因果闭合』因此降级为: 01:27Z 只是**第一个可归因于 direct-IO 的红点**, 不是红期起点。
+
+    (3) **口径更新**: 标题原写『定时 29h+ 零成功; push 窗口 6.5h 内 28 failure』是受抽样窗口上限所限的低估; 实测红期 2026-11-06T00:32:28Z → 2026-11-07T08:41:30Z = 32:09:02, 其间 70 次运行 0 success (64 failure + 6 cancelled), 连续红剔除 cancelled 为 64 次。
+
+    (4) **对裁决的增量**: D2 若只裁『verify 步按哪棵树评』, 定时 run 的 drift fail-closed 腿仍会红 (它参照的是 `update --remote` 后的子仓头与接受 pin 的差集, 与 verify 腿无关)。已在 decision_needed 追加第 (3) 问, 要求两条腿一并裁决; 本条不改任何门禁标注。
+
+    (5) **取不到的东西如实记**: 00:32 那次究竟检测到**哪个子模块**的漂移**未确定** —— job 日志取不到 (`gh api .../actions/jobs/<id>/logs` 返回 0 字节; 带 token 直连 3 次 `SSL_ERROR_SYSCALL`, api.github.com 与 productionresultssa14.blob.core.windows.net 各中过; `.../actions/runs/42137562580/attempts/1` 亦 TLS 失败 2 次)。本条因此只写 step 级结论 (其判据 `actions/runs/<id>/jobs` 与 `actions/jobs/<id>` 均可复算), 不引用日志原文, 也不引用无法当场复算的早期会话措辞。
   actor: "governance-agent"
