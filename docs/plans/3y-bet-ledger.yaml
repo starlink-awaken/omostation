@@ -47277,9 +47277,12 @@ bets:
     expect: 在 projects/omo 目录内执行。改动前基线 38 passed；改动后为 38 既有用例加新增用例全绿，且新增用例覆盖正例、心跳宽度反例与
       fail-closed 四面。
   - cmd: python3 bin/agent-workflow.py observe --json
-    expect: findings 里 kind=expired_lock 的条数等于 lock_count（基线 4c662cdbb 实测 7 条全过期），且含
-      path_docs_plans_3y-bet-ledger.yaml.lock.yaml 一条。该读数由 diagnostics 侧的 observe 产出，与本
-      BET 新 helper 不是同一段代码，可作独立尺；读数为 0 而锁文件仍在，说明 helper 与 observe 有一边没命中形状，不得据此放行。
+    expect: 该读数由 diagnostics 侧的 observe 产出，与本 BET 新 helper 不是同一段代码，可作独立尺；读数为 0 而锁文件仍在，
+      说明 helper 与 observe 有一边没命中形状，不得据此放行。口径两条：① 基线 4c662cdbb 交付前实测 7 条锁全过期、findings
+      里 kind=expired_lock 恰 7 条且含 path_docs_plans_3y-bet-ledger.yaml.lock.yaml；② 交付后该台账锁由本 run 以新 TTL
+      接管，读数随之变为 expired_lock=6 / lock_count=9，observe 因剩余 6 条他主过期锁而 exit 非 0 —— 那 6 条属别的 agent
+      的 run，本 BET 非目标明令不碰，故 exit code 不是本 BET 的放行判据；放行判据是「helper 与 observe 对同一条台账锁给出
+      同向读数」，交付前后两次读数均记录于收据。
   circuit_breaker: 若新增判据在任何一面不可证明过期时放行（fail-open），或把 `last_heartbeat` 引入谓词，或为凑绿而删掉对方
     run 记录/别人的锁，停止并返回主协调；不得放宽反例与 fail-closed 用例来换取通过。
   accepted_specifications:
