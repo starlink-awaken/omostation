@@ -208,10 +208,33 @@ def _expand_workspace(cmd: str) -> str:
 
     抽取成函数是为了让**测试缝**能复用同一个展开 (见 `check_drift` 的
     `installed_lines`) —— 两侧各写一份替换, 迟早会只改一侧。
+
+    根从 `Path.home()` 派生, 不写字面量: 与 install-cron-plane.py 的 `_expand_workspace`
+    同口径。写死本机用户目录会让换机后登记面全部指向不存在的路径 ⇒ check_drift 永久 drift。
     """
-    return cmd.replace('"$HOME/Workspace"', "/Users/xiamingxing/Workspace").replace(
-        "$HOME/Workspace", "/Users/xiamingxing/Workspace"
+    home = str(Path.home())
+    return cmd.replace('"$HOME/Workspace"', f"{home}/Workspace").replace(
+        "$HOME/Workspace", f"{home}/Workspace"
     )
+
+
+def _normalize_installed_line(s: str) -> str:
+    """把一条已装 crontab 行折成规范形, 使登记面与安装态可比。
+
+    `harness-cron.sh` 特例: 登记面把同一作业登记了两次 (`l4-harness-6h` 与
+    `l4-harness-6h-active`), 已装面也因此有两行 —— 不折叠的话重复登记会被
+    报成 drift/orphan。根从 `Path.home()` 派生, 不写字面量 (换机后仍可比)。
+
+    抽成函数是因为 `check_drift` 与 `diff_installation` **都要用** ——
+    两侧各写一份替换, 迟早会只改一侧。
+    """
+    if "harness-cron.sh" in s:
+        return (
+            "0 */6 * * * cd "
+            f"{Path.home()}/Workspace && bash projects/l4-kernel/scripts/"
+            "harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1"
+        )
+    return s
 
 
 def diff_installation(installed_lines: list[str] | None = None) -> dict:
@@ -239,9 +262,7 @@ def diff_installation(installed_lines: list[str] | None = None) -> dict:
     for line in installed_lines:
         s = line.strip()
         if s and not s.startswith("#"):
-            if "harness-cron.sh" in s:
-                s = '0 */6 * * * cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
-            inst_set.add(_normalize_interpreter(s))
+            inst_set.add(_normalize_interpreter(_normalize_installed_line(s)))
     removed = sorted(inst_set - cand_set)
     added = sorted(cand_set - inst_set)
     return {
@@ -288,9 +309,7 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
     for line in installed_lines:
         s = line.strip()
         if s and not s.startswith("#"):
-            if "harness-cron.sh" in s:
-                s = '0 */6 * * * cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
-            inst_set.add(_normalize_interpreter(s))
+            inst_set.add(_normalize_interpreter(_normalize_installed_line(s)))
 
     drift = reg_set - inst_set
     raw_orphan = inst_set - reg_set
