@@ -28,8 +28,39 @@ dedupe_preserve_order() {
   awk '!seen[$0]++'
 }
 
+# CRON_REGISTRY_OVERRIDE 是测试注入缝 (与 SCRIPT_BASELINE_SYNC 同族); 生产不设。
+REGISTRY="${CRON_REGISTRY_OVERRIDE:-${WORKSPACE}/.omo/cron/registry.yaml}"
+
+# fail-closed: 作业必须先在登记面里, 否则装上去就是 orphan (scheduler-compile --check 红)。
+# 用 grep 而不是 python+yaml: 本脚本跑在**系统 python3** 下, pyyaml 未必装着
+# (AGENTS.md §7 的 projection-refresh pyyaml 丢失实证)。判据取脚本路径子串 ——
+# 登记面写 `$HOME/Workspace`、这里写绝对路径, 整行永远不相等。
+check_registry_coverage() {
+  if [ ! -f "$REGISTRY" ]; then
+    echo "⚠️  登记面不存在 ($REGISTRY) —— 跳过覆盖检查" >&2
+    return 0
+  fi
+  local missing=() job script
+  for job in "${JOBS[@]}"; do
+    script="$(echo "${job#*|}" | sed 's/.*python3 //')"
+    script="${script%% *}"
+    if ! grep -q -- "$script" "$REGISTRY"; then
+      missing+=("$script")
+    fi
+  done
+  if [ "${#missing[@]}" -gt 0 ]; then
+    echo "❌ 以下作业不在 .omo/cron/registry.yaml 里:" >&2
+    local m
+    for m in "${missing[@]}"; do echo "   - $m" >&2; done
+    echo "   装它们会让 scheduler-compile --check 报 orphan (门禁红)。" >&2
+    echo "   请先把它们登记进 registry 并置 active, 或用 bin/ops/install-cron-plane.py。" >&2
+    return 1
+  fi
+}
+
 case "${1:-}" in
   --install)
+    check_registry_coverage || exit 1
     echo "Installing maturity ops cron jobs..."
     # 一次写盘: 原实现每加一行就 `sort -u | crontab -` 全表重写一遍 (5 行 = 5 次,
     # 且每次都把整份 crontab 按字母重排)。
@@ -37,6 +68,7 @@ case "${1:-}" in
     echo "Cron jobs installed. Use --status to verify."
     ;;
   --dry-run)
+    check_registry_coverage || exit 1
     echo "Would install (not writing):"
     render | dedupe_preserve_order
     ;;
