@@ -85,9 +85,13 @@ def main():
     ap = argparse.ArgumentParser(description="调度编译器 v1")
     ap.add_argument("--check", action="store_true", help="校验登记↔安装一致性")
     ap.add_argument("--generate", choices=["crontab", "launchd"], help="生成指定格式")
+    ap.add_argument("--diff", action="store_true", help="只读: 候选 crontab vs 已装 crontab 的差异 (装机前看会删/会加什么)")
     args = ap.parse_args()
     jobs = _load_jobs()
 
+    if args.diff:
+        print(json.dumps(diff_installation(), ensure_ascii=False, indent=2))
+        return 0
     if args.generate == "crontab":
         print("\n".join(compile_crontab(jobs)))
         return 0
@@ -97,7 +101,7 @@ def main():
 
     result = check_drift() if hasattr(sys.modules[__name__], 'check_drift') else {"ok": True}
     print(json.dumps(result, ensure_ascii=False))
-    return 0
+    return 0 if result.get("ok", True) else 1
 
 
 def _launchd_prefixes():
@@ -210,6 +214,47 @@ def _expand_workspace(cmd: str) -> str:
     )
 
 
+def diff_installation(installed_lines: list[str] | None = None) -> dict:
+    """只读: 候选 crontab (注册表编译产物) vs 已装 crontab 的差异。
+
+    背景 (2026-11-07 实测): `.omo/cron/registry.yaml` 是**部分视图** —— 已装 crontab
+    比它多出 resident daemon 五角色等条目 (check_drift 记为 orphan)。整份
+    `generate crontab | crontab -` 会把这些条目**删掉**, 而 resident daemon 是常驻
+    Agent 的驱动。装机前跑 `--diff` 就能看见「会删哪几条、会加哪几条」, 再逐条决定
+    merge 还是替换。
+
+    与 check_drift 的分工: check_drift 判「登记↔安装是否一致」(drift/orphan),
+    本函数只回答「整份替换会改动什么」, 不做判定、不写盘。
+    """
+    jobs = _load_jobs()
+    candidate = [l for l in compile_crontab(jobs) if l.strip() and not l.startswith("#")]
+    if installed_lines is None:
+        try:
+            r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
+            installed_lines = r.stdout.splitlines() if r.returncode == 0 else []
+        except Exception:
+            installed_lines = []
+    cand_set = {_normalize_interpreter(l) for l in candidate}
+    inst_set = set()
+    for line in installed_lines:
+        s = line.strip()
+        if s and not s.startswith("#"):
+            if "harness-cron.sh" in s:
+                s = '0 */6 * * * cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
+            inst_set.add(_normalize_interpreter(s))
+    removed = sorted(inst_set - cand_set)
+    added = sorted(cand_set - inst_set)
+    return {
+        "ok": True,
+        "mode": "read_only",
+        "removed_count": len(removed),
+        "added_count": len(added),
+        "removed": removed,
+        "added": added,
+        "hint": "整份替换会删掉 removed 里的条目; 装机请逐条 merge, 不要直接替换",
+    }
+
+
 def check_drift(installed_lines: list[str] | None = None) -> dict:
     """校验登记源 vs crontab 安装态一致性.
 
@@ -264,24 +309,8 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
     return res
 
 
-import json as _json
-
 if __name__ == "__main__":
-    # 覆写: 使用完整逻辑而非简化版
-    jobs = _load_jobs()
-    args = sys.argv[1:]
-    if "--generate" in args and "crontab" in args:
-        for line in compile_crontab(jobs):
-            print(line)
-    elif "--generate" in args and "launchd" in args:
-        # T16-01: 此前 main() 支持而本 __main__ 块未实现, 导致 `--generate launchd`
-        # 落入 else 分支打印 usage 却返回 rc=0 —— 命令成功但什么都没做。
-        print(_json.dumps(compile_launchd(jobs), ensure_ascii=False, indent=2))
-    elif "--check" in args:
-        result = check_drift()
-        print(_json.dumps(result, ensure_ascii=False))
-        sys.exit(0 if result["ok"] else 1)
-    else:
-        print("usage: scheduler-compile.py [--check | --generate crontab | --generate launchd]",
-              file=sys.stderr)
-        sys.exit(2)
+    # 统一走 main(): 此前本块是**第二套 dispatch**, 与 main() 并存 ⇒ main() 成了
+    # 死代码, 任何只加进 main() 的分支 (如 --diff) 在脚本方式下根本走不到。
+    # 退出码语义保持不变: --check 漂移 ⇒ 1, 其余 ⇒ 0。
+    sys.exit(main())
