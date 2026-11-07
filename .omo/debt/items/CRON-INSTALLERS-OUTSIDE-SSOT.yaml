@@ -1,0 +1,53 @@
+id: "CRON-INSTALLERS-OUTSIDE-SSOT"
+title: "cron 登记面不是唯一 SSOT —— 三个安装器在 .omo/cron/registry.yaml 之外装作业"
+dimension: "governance"
+subdimension: "consistency"
+domain: "system"
+scope: "host"
+severity: "medium"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- "bin/ssot/install-maturity-cron.sh (5 个作业, 4 个不在登记面)"
+- "bin/gac/ops-cron-install.py (4 个作业, 0 个在登记面; PR #5124 已加 fail-closed 校验)"
+- "bin/ssot/install-resident-cron.sh (resident 平面, 见 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT)"
+- ".omo/cron/registry.yaml (声明为单一登记源)"
+- "bin/ops/install-cron-plane.py (唯一 registry-driven 的安装器)"
+mitigation_refs: []
+opened_at: "2026-11-07"
+last_reviewed_at: '2026-11-07'
+next_review_at: '2026-11-14'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "先裁决「cron 作业的唯一 SSOT 是不是 .omo/cron/registry.yaml」。若是, 三个登记面外安装器要么改为从 registry 渲染(如 install-cron-plane.py), 要么补 fail-closed 校验并明确标注为 legacy; 若否, registry 的『单一登记源』定位要改写, 并说明哪些平面归它管。**不要**在裁决前逐个改工具 —— 那会把一个系统性问题拆成一串互相矛盾的单点修复。"
+history:
+- at: '2026-11-07T06:45:00+00:00'
+  action: identify
+  note: >-
+    清点本机的 cron 写入方, 共 4 个安装器, 只有 1 个真的读登记面:
+
+    | 安装器 | 作业数 | 在 registry active crontab 里 | 机制 |
+    |---|---|---|---|
+    | bin/ops/install-cron-plane.py | 全部 | **是** (唯一) | registry-driven |
+    | bin/ssot/install-maturity-cron.sh | 5 | 0~1 | 硬编码 + tag 块 |
+    | bin/ssot/install-resident-cron.sh | 10 | 0 | 硬编码 heredoc |
+    | bin/gac/ops-cron-install.py | 4 | 0 | 硬编码 + tag 块 |
+
+    实测 install-maturity-cron.sh 的 5 个作业: 4 个 NOT REGISTERED; 第 5 个
+    (unified-health-score.py) registry 里有一条 `unified-health-score-sync-daily`
+    但参数不同 (--sync vs 无) 且 status=proposed。
+
+    后果: 跑这三个里的任意一个, 都会往 crontab 里装登记面外的作业 ⇒
+    scheduler-compile --check 报 orphan ⇒ gac-gate 红。而 install-cron-plane.py
+    --install 只处理自己登记面的行 (外部行保留), 不会清理这些 orphan ——
+    于是「装一次 legacy 安装器 ⇒ 门禁红」是稳定可复现的路径。
+
+    已处置: ops-cron-install.py 于 PR #5124 加 fail-closed 校验 (装前比对登记面,
+    未登记即拒)。install-maturity-cron.sh 未加 —— 它的 guard 需要读 YAML, 而脚本
+    用的是**系统 python3** (pyyaml 未必在, 见 AGENTS.md §7 的 projection-refresh
+    pyyaml 丢失实证), 在 shell 里内联 Python 读 YAML 是脆的; 先立案待决。
+  actor: "governance-agent"
