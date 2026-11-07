@@ -43,13 +43,23 @@ fi
 CRON_MARKER="# resident-agent-schedule (managed by install-resident-cron.sh)"
 
 # M4.3: 五类角色独立 projector 并行调度 (替换单一 daemon, 分片覆盖全部规则事件)
+#
+# daemon 不传 --ledger: omo.resident.daemon 的默认值就是 event_ledger_path()
+# (OMO_EVENT_LEDGER_DB > state_root()/runtime/omo/event-ledger.sqlite3), 与 ADR-0456
+# 的写面口径一致。此前显式钉住 ${WORKSPACE}/runtime/... 在 cron 未声明 profile 时
+# 逐字节等价 (state_root() == 检出), 但会**盖掉** state-root 机制 —— 一旦给 cron
+# 声明了 profile, 这五条仍写检出, 与 launchd 平面 (plist 里钉了
+# OMOSTATION_STATE_ROOT) 分裂成两个 ledger (见债务 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT)。
 _ROLE_CRON=""
 for role in sediment decision execute monitor heartbeat; do
   _ROLE_CRON="${_ROLE_CRON}
-*/2 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident daemon --once --role ${role} --ledger ${WORKSPACE}/runtime/omo/event-ledger.sqlite3 >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/cron-${role}.log 2>&1"
+*/2 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident daemon --once --role ${role} >> ${WORKSPACE}/.omo/_delivery/resident-orchestrator/cron-${role}.log 2>&1"
 done
 
 # 构造 cron 条目 (signals 实际发布, 不 dry-run)
+#
+# ingest 的 --ledger 是**承重**的, 不能像 daemon 那样省掉: omo.resident.ingest 的
+# 默认值是 None, 而 `if ledger is not None` 才入账 —— 省掉等于停掉事件灌入库。
 CRON_INGEST="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident ingest --ledger ${WORKSPACE}/runtime/omo/event-ledger.sqlite3 >> ${WORKSPACE}/.omo/_delivery/event-ingest/cron.log 2>&1"
 CRON_SIGNALS="*/5 * * * * cd ${WORKSPACE} && PYTHONPATH=${PYTHONPATH} ${PYTHON_BIN} -m omo.cli resident signals >> ${WORKSPACE}/.omo/_delivery/personal-signals/cron.log 2>&1"
 # inbox: 感知文件夹轮询(实际发布, 与 signals 并列, T10-15)
