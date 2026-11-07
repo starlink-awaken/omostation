@@ -563,16 +563,6 @@ jobs:
     sfop_slot: S
     reconciliation_note: MOF SLA M0 快照 (04:35, ecos 子模块)，已在 crontab -l 运行，补齐登记。
 
-  - name: l4-harness-6h-active
-    schedule: "0 */6 * * *"
-    command: 'cd /Users/xiamingxing/Workspace && bash projects/l4-kernel/scripts/harness-cron.sh >> runtime/cron/l4-harness-cron.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: K
-    reconciliation_note: l4-kernel harness 巡检 (每 6h)，已在 crontab -l 运行。D7 决议后正式登记为 active (sfop_slot K, 法)。
-
   - name: scene-calibration-weekly-active
     schedule: "0 6 * * 1"
     command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
