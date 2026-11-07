@@ -47336,7 +47336,8 @@ bets:
     与 `payload["scope"]` 两项同时成立则原地续期（保留 `created_at`、推后 `expires_at`、 刷新 `last_heartbeat`、不新增锁文件），任一不成立维持今日
     `lock HELD (live)` 拦截原文。 T10-292 修的是 run 记录层（`claim_run()` 的 A2A 谓词），该层本就跳过自己的 run
     文件， 所以同 run 补 claim 的撞车一直发生在锁层；本条消除的是这第二次撞车。
-  status: in_progress
+  status: done
+  done_at: 2026-11-07
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -47399,16 +47400,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-07-acquire-locks-same-run-renewal-closeout.md
+            sha256: sha256:d52d99a8161b02c21dd3f75344757d10e249accaf9e03a7c8d20d5a032da81fe
+          merged_reachable_commit:
+            ref: git://origin/main@a8bdba3afb059b8db3299c624b341015a28d4195
+          rollback:
+            ref: receipt://docs/reports/2026-11-07-acquire-locks-same-run-renewal-closeout.md
+            sha256: sha256:d52d99a8161b02c21dd3f75344757d10e249accaf9e03a7c8d20d5a032da81fe
+          tests:
+            ref: receipt://docs/reports/2026-11-07-acquire-locks-same-run-renewal-closeout.md
+            sha256: sha256:d52d99a8161b02c21dd3f75344757d10e249accaf9e03a7c8d20d5a032da81fe
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-07-acquire-locks-same-run-renewal-closeout.md
+            sha256: sha256:d52d99a8161b02c21dd3f75344757d10e249accaf9e03a7c8d20d5a032da81fe
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-07-acquire-locks-same-run-renewal-closeout.md
+            sha256: sha256:d52d99a8161b02c21dd3f75344757d10e249accaf9e03a7c8d20d5a032da81fe
+          live_canary:
+            ref: receipt://docs/reports/2026-11-07-acquire-locks-same-run-renewal-closeout.md
+            sha256: sha256:d52d99a8161b02c21dd3f75344757d10e249accaf9e03a7c8d20d5a032da81fe
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-341.md
+            sha256: sha256:44fcd44ad9028b9a1ab5b6749f9402b37d49a6d8288b69248f058774e4971526
       value:
         status: NOT_PROVEN
         evidence:
-          note: 铸条时为 in_progress 骨架；三类读数（hermetic pytest、实机 canary 前后各一次、变异对照）在收口腿填入。
-    overall_state: evaluating
+          note: "消除的是 acquire_locks 锁层的同 run 同 scope 第二次撞车（T10-292 run 记录层修复够不到的那一层）；价值指示器按台账显式声明 false，由工程腿 PR #5108 squash a8bdba3af 闭环，实机 canary 读数 SAME_RUN_RENEW True 1 1。"
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
