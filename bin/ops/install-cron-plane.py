@@ -63,11 +63,41 @@ def _compiled_lines() -> list[str]:
     return out
 
 
-def _current_lines() -> list[str]:
+def _current_text() -> str:
     result = subprocess.run(["crontab", "-l"], capture_output=True, text=True, check=False)
-    if result.returncode != 0:
-        return []
-    return result.stdout.splitlines()
+    return result.stdout if result.returncode == 0 else ""
+
+
+def _current_lines() -> list[str]:
+    return _current_text().splitlines()
+
+
+def _write_crontab(new: str) -> int:
+    """把 new 写进本机 crontab。已一致则跳过; 写入失败时把内容打出来供手工应用。
+
+    **已一致就跳过**: 无条件重写会让每次 --install 都触发 cron 重载 + crontab
+    mtime 变动, 即使什么都没改。本机 `crontab(1)` 写入持续 EINTR 时, 这一条还能
+    让「已对齐」的安装成功 (否则明明没事也会失败)。
+
+    **失败要把内容打出来**: 只抛 CalledProcessError 的话, 调用者拿不到可以直接
+    手工应用的内容 (实测本机 crontab 写入 EINTR 时就卡在这里)。
+    """
+    if new == _current_text():
+        print("已对齐，无需写入")
+        return 0
+    result = subprocess.run(["crontab", "-"], input=new, text=True, capture_output=True)
+    if result.returncode == 0:
+        return 0
+    err = (result.stderr or "").strip()
+    print(f"❌ crontab 写入失败 (rc={result.returncode})", file=sys.stderr)
+    if err:
+        print(f"   {err}", file=sys.stderr)
+    print("   把下面内容手工写入 crontab:", file=sys.stderr)
+    print("   " + "-" * 60, file=sys.stderr)
+    for line in new.splitlines():
+        print(f"   {line}", file=sys.stderr)
+    print("   " + "-" * 60, file=sys.stderr)
+    return 1
 
 
 def _is_managed(line: str, managed_keys: set[str]) -> bool:
@@ -90,7 +120,7 @@ def main() -> int:
 
     compiled = _compiled_lines()
     managed_keys = {_key(line) for line in compiled}
-    current = _current_lines()
+    current = _current_text().splitlines()
     current_keys = {_key(line) for line in current}
 
     if args.status:
@@ -110,7 +140,8 @@ def main() -> int:
         if args.dry_run:
             print(new)
             return 0
-        subprocess.run(["crontab", "-"], input=new, text=True, check=True)
+        if _write_crontab(new) != 0:
+            return 1
         print("已移除本仓登记面的 crontab 行 (外部工具行保留)")
         return 0
 
@@ -121,7 +152,8 @@ def main() -> int:
     if args.dry_run:
         print(new)
         return 0
-    subprocess.run(["crontab", "-"], input=new, text=True, check=True)
+    if _write_crontab(new) != 0:
+        return 1
     print(
         f"已安装 {len(compiled)} 条登记面 crontab 条目 "
         f"(保留 {len(kept)} 行非登记面条目)"
