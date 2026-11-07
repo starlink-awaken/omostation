@@ -1313,3 +1313,4 @@ known_orphans:
   - omo.cli resident ingest  # 常驻 ingest 的 crontab 面, 2026-11-06 确认
   - pdb-p0-probe  # 本机 PDB P0 探针 (SLO 网关可用性+决策延迟), 2026-11-03 装入
   - PYTHONPATH=/Users/xiamingxing/Workspace/projects/omo/src  # 常驻 agent 的 crontab 面 (resident daemon 五角色 / promote / inbox / ingest), 与 launchd com.l4.resident.* 并存; 判据按前 120 字符截断, 只能以该前缀匹配, 2026-11-06 确认
+  - respire-supervisor-ensure.sh  # mini 侧 Respire 守护兜底引导 (2026-11-07): macOS 27 只有 gui 域接受 launchd bootstrap, 图形会话结束即失去 runtime 与保活作业; 该引导每 5 分钟按 pidfile 拉起脱离 launchd 的 supervisor
