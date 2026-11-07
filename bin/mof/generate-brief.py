@@ -279,10 +279,10 @@ def scan_x3_metrics() -> dict:
 
     # 1. 创意创作发布度量 (检测并递归扫描实际创意创作输出路径)
     creation_dirs = [
-        Path("/Users/xiamingxing/Documents/@创意创作/_outputs"),
-        Path("/Users/xiamingxing/Documents/@创意创作"),
+        Path.home() / "Documents" / "@创意创作" / "_outputs",
+        Path.home() / "Documents" / "@创意创作",
         WORKSPACE / "创意创作" / "_outputs",
-        Path("/Users/xiamingxing/Documents/@驾驶舱/_outputs"),
+        Path.home() / "Documents" / "@驾驶舱" / "_outputs",
         WORKSPACE / "data" / "creations",
     ]
     for d in creation_dirs:

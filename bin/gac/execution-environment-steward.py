@@ -41,7 +41,7 @@ _spec = importlib.util.spec_from_file_location("gate_evidence_receipt", _ger_pat
 ger = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ger)
 
-APP = Path("/Users/xiamingxing/.local/share/zhixing-dashboard")
+APP = Path.home() / ".local" / "share" / "zhixing-dashboard"
 ALLOWED_ROOT = APP / "evidence" / "execution-environment"
 REGISTRY_PATH = APP / "execution-environment-sources.json"
 REGISTRY_SCHEMA = "execution-environment-source-registry/v1"

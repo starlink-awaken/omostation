@@ -19,7 +19,10 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path("/Users/xiamingxing/Workspace")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "lib"))
+from repo_root import code_root  # noqa: E402
+
+REPO = code_root()
 META_DOCTOR = REPO / "bin" / "gac" / "meta-doctor.py"
 REMEDIATION = REPO / "bin" / "gac" / "remediation-engine.py"
 INBOX_PATH = REPO / ".omo" / "state" / "decision-inbox.json"
