@@ -4,5 +4,4 @@
 禁止 import projects/* 业务模块.
 
 构件:
-- compass_radar (从 bin/ symlink 或复制)
-- debt_metrics_helper (从 omo 子仓导出的纯计算函数)
+- sub-project-health (子项目健康度量; 纯计算, 不依赖 projects/*)
