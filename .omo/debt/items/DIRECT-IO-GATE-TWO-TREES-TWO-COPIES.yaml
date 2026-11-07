@@ -1,0 +1,65 @@
+id: "DIRECT-IO-GATE-TWO-TREES-TWO-COPIES"
+title: "direct-IO 契约由两棵被评的树与两份检测器实现分别判定 —— 根仓 main 连绿而定时 job 连红 29h+ (60 次运行零成功)"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "high"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- ".github/workflows/governance-check.yml:248 (governance-verify job, :261 submodules: recursive, :619 make governance-verify) — 按接受的 gitlink 评"
+- ".github/workflows/submodule-freshness-gatekeeper.yml:27 (git submodule update --remote) 与 :48 (make governance-verify) — 按各子仓 remote main 评"
+- "projects/ecos/scripts/contract_gatekeeper.py (size 13197 / mtime 2026-09-22, sha256 2c2479a8…) — 主区门禁经 omo lint direct-omo-io 调的那份"
+- "projects/aetherforge/scripts/contract_gatekeeper.py (size 7536 / mtime 2026-08-08, sha256 38320e3e…) — 子仓 CI 调的那份, 无方法名级 mutation 判定"
+- "projects/aetherforge/.github/workflows/ci.yml:34 — 子仓确实接了门禁, 只是接的是自己那份旧副本"
+- "projects/aetherforge: 接受 pin 8639c682 内无 packages/gateway/src/llm_gateway/quota_ledger.py; 该文件由 tip d48cfb6 (PR #122, 2026-11-06 09:06) 新增, pin→tip 差 1 个提交"
+- "docs/pitfalls.md § 2026-11-07 三条 (advisory/blocking 矛盾、broker 无对象可走、本项的两棵树两副本订正)"
+mitigation_refs: []
+opened_at: "2026-11-07"
+last_reviewed_at: '2026-11-07'
+next_review_at: '2026-11-14'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: >-
+  两问分开裁决, 有顺序依赖。(1) **子仓那份 contract_gatekeeper.py 副本是否废除**: 它是 08-08 的实现,
+  判定项集合不含 MUTATION_METHOD_NAMES / MUTATION_HELPER_NAMES, 因此看不见 mkdir() 与 open(..., "a"),
+  PR #122 才会在自家 CI 绿、在 root 门禁红。收为同一实现 (删副本或指向 ecos 份) 是**加覆盖**, 使子仓 main
+  自己就拦住同类提交。(2) **freshness job 的 verify 步按哪棵树评**: 按接受的 gitlink (与 governance-check.yml
+  对齐) 还是按子仓 remote main (现状)。现状实质是 root 用自己的定时 job 去红一个 root 尚未接受的子仓提交,
+  且该步失败会 skip 掉后面的漂移提案 / 上传 / fail-closed 腿 (实测 skipped), 有漂移的运行反而发不出提案。
+  **不要**在裁决前动 CR-L2-DIRECT-IO 的 advisory/blocking 标注, 也不要收窄 _has_forbidden_prefix() 判据 ——
+  前者让规则更不可信, 后者会把 Path.home()/".omo" 这类真实写入一并放过; 两者都是判准宽度改动, 属 principal。
+history:
+- at: '2026-11-07T06:50:00+00:00'
+  action: identify
+  note: >-
+    同一契约的四处实测读数 (2026-11-07):
+
+
+    | 位置 | 评审树 | 调用的检测器 | 结果 |
+    |---|---|---|---|
+    | governance-check.yml @ main | 接受 gitlink 8639c682 | ecos 份 (新) | success (fc0511a80 / d89d8f465 / 8f5c9b750) |
+    | submodule-freshness-gatekeeper @ 同一 main | update --remote 后的子仓 tip d48cfb6 | ecos 份 (新) | 最近 60 次运行 55 failure + 5 cancelled + 0 success; 起点 2026-11-06T01:27Z, 最新 42347785741 @ 06:36Z |
+    | aetherforge 自家 CI @ PR #122 | 子仓自己的 main | aetherforge 份 (旧, 08-08) | 放行 |
+    | 本地 omo lint direct-omo-io | canonical 检出 | 经 omo 委派 ecos 份 | 子模块未检出时 default_paths 因 if path.exists() 静默不扫 |
+
+
+    关键量: 违规文件 quota_ledger.py (第 59 行 LEDGER_PATH.parent.mkdir(...), 第 60 行
+    open(LEDGER_PATH, "a")) 在 root **接受的** pin 里不存在, pin→tip 仅差 1 个提交 ⇒ 根仓接受的
+    状态是干净的, 红来自定时 job 把未接受的子仓提交当 root 的合规输入。两份检测器 sha256 全不同,
+    旧份缺的正是方法名级 mutation 判定 ⇒ 子仓 CI 与 root 门禁对同一提交给两个答案。
+
+
+    时间线归一 (踩过的坑): 子仓 tip d48cfb6 的 commit date 显示 2026-11-06 09:06:02 +0800 = 01:06:02Z,
+    而 gh 的运行时间是 Z; 直接比较会得出「违规比提交早 7 小时」的假矛盾。归一后定时 job 首次红 01:27Z
+    恰在子仓合入后 21 分钟, 因果闭合。本项因此只声明可复算的 ≥29h / 60 次零成功, 不引用更早会话里
+    「main 连续红 44h」那个未复算的口径。
+
+
+    本项只立案, 不改任何门禁标注/判据/副本; 门禁语义与跨仓副本收敛均属 principal 裁决面。
+  actor: "governance-agent"
