@@ -47328,6 +47328,87 @@ bets:
         evidence:
           note: '价值轴 NOT_PROVEN：本条把 run 记录层的 A2A 冲突判定与锁层对齐，收益面是「他主 run 仍标 active 但其锁已过 TTL」从一票否决变为可证放行，且放行必须有正面证据（可解析的 expires_at 或明确无锁），不可证明时维持今日拦截；这不是可量化收益，且 value_indicator_policy 显式 false，与同族 281/282/284/288/289/290/291 同判。归属如实入账 —— 码面经 omo PR #238 于 2026-11-07T00:15:30Z squash 为 af4ebdd1fe6323966c14dd78d59eb7f17731ba98，规格与台账经根侧受控后继 PR #5098 于 00:37:09Z squash 为 e7c4692d194e5da86766e5a9b020e79ed8b54bea（第一版 PR #5096 因上游 gitlink bump 冲突标注 superseded 关闭），retro / receipt / 台账 done 由收口腿 PR 合入。残余面一条已测量未处理：首次放行后重放同一 claim 会被同一条陈旧记录再次挡住，因为该 scope 的锁已由本 run 以 24h TTL 持有，谓词承认「锁过期」但还不承认「锁在持有者自己手里」；这不是本轮引入的失效（改前首次 claim 同样被挡），已写入收据 §7 并留待后续 BET 承接。'
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-341
+  title: BET-Y2Q4-T10-341 acquire_locks 同 run 同 scope 补 claim 改为幂等续期 —— T10-292 receipt
+    §7 残余形状的收口
+  goal: 把 `projects/omo/src/omo/workflow/lifecycle_locks.py::acquire_locks()` 的 `live`
+    锁分支（原 `:194-202`） 从「锁存在且分类为 live 即冲突」补成「先算这把锁是不是本 run 自己按同一 scope 持有的」—— `payload["run_id"]`
+    与 `payload["scope"]` 两项同时成立则原地续期（保留 `created_at`、推后 `expires_at`、 刷新 `last_heartbeat`、不新增锁文件），任一不成立维持今日
+    `lock HELD (live)` 拦截原文。 T10-292 修的是 run 记录层（`claim_run()` 的 A2A 谓词），该层本就跳过自己的 run
+    文件， 所以同 run 补 claim 的撞车一直发生在锁层；本条消除的是这第二次撞车。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-07-acquire-locks-same-run-renewal.md
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-341.md
+  - docs/reports/2026-11-07-acquire-locks-same-run-renewal-closeout.md
+  non_goals:
+  - 不改 `claim_run()` 的 A2A 谓词与 `lock_scopes_past_expiry()`（T10-292 已交付面，本条不重开、不回退）。
+  - 不改 `_HEARTBEAT_STALE_SECONDS` 与 `prune_stale_locks()` 的分类宽度，不删改任何既有 run 记录，不手工 unlink
+    别人的锁。
+  - 不改 `zombie_expired` 与 `zombie_stale_heartbeat` 两种分类的既有处置（仍 unlink 后重建），不改 `force`
+    路径语义。
+  - 不给 CLI 或 `acquire_locks()` 增加豁免 flag、环境变量开关，不为凑绿放宽 fail-closed 用例。
+  done_when:
+  - 正例成立——同一 run 对同一 scope 的第二次 `acquire_locks()` 返回该锁且不报错，`created_at` 逐字节不变、 `expires_at`
+    被推后 ≥ 23 小时、锁文件数不增加；把续期分支摘掉该用例当场红。
+  - 反例三面各自成立且被用例点名——别 run 抢 live 锁仍拒；同 run 但 payload `scope` 与本次不一致仍拒且原 payload 逐字节未被改动；缺
+    `run_id`/`scope` 的老格式锁仍拒。三条是防「修过头」的闸，不得因正例转绿而放宽。
+  - 回滚面成立——同 run 续期成功、后续 scope 撞车导致整批失败时，本 run 早已持有的那把锁不得被删除（回滚集合只收本次新建的锁）。
+  - 零回归——`projects/omo/tests/test_workflow_locks.py` 既有 54 条用例在同一 hermetic 装置下仍全绿 （改动前基线读数
+    54 passed 已复算，改动后为 54 既有加新增全绿）。
+  verify:
+  - cmd: cd projects/omo && env HOME=$(mktemp -d) UV_CACHE_DIR=$(mktemp -d) PYTHONPATH=src
+      uv run --no-project --with pytest --with pyyaml python -m pytest tests/test_workflow_locks.py
+      -q -p no:randomly -o addopts=""
+    expect: 改动前基线 54 passed（含 `test_acquire_blocks_on_live_lock` 的别 run 拦截）；改动后 58 passed，
+      其中新增 4 条覆盖正例、scope 不一致反例、老格式反例与回滚面。变异对照按「只摘续期分支」单独记读数， 必须恰有 1 条红（正例），其余 3 条仍绿。
+  - cmd: python3 -c "import sys, tempfile; sys.path.insert(0, 'projects/omo/src'); from
+      pathlib import Path; import omo.workflow.core as c, omo.workflow.lifecycle as
+      l; d=Path(tempfile.mkdtemp()); (d/'locks').mkdir(); c.WORKSPACE=d; l.WORKSPACE=d;
+      r={'runner':{'lock_state_dir':'locks'}}; a=l.acquire_locks(r,['path:x.py'],'run-c','agent-a',False);
+      b=l.acquire_locks(r,['path:x.py'],'run-c','agent-a',False); print('SAME_RUN_RENEW',
+      a==b, len(b), len(list((d/'locks').glob('*.lock.yaml'))))"
+    expect: '实机 canary，读数为 `SAME_RUN_RENEW True 1 1`（两次返回同一把锁、锁文件不增加）。改动前该命令报 `WorkflowError:
+      lock HELD (live)`。收据必须带这条命令的两次原文读数（改动前后各一次），缺读数即视为该面未验。'
+  - cmd: python3 -c "import sys; sys.path.insert(0, 'projects/omo/src'); from omo.workflow.lifecycle
+      import lock_scopes_past_expiry; print('T292_SURFACE_PRESENT', hasattr(lock_scopes_past_expiry,
+      '__call__'))"
+    expect: 独立性钉子——T10-292 交付面在本轮改动后仍可达，读数为 `T292_SURFACE_PRESENT True`；读数转假说明本轮把上一层的
+      修复带走了，属 circuit_breaker 范围。
+  circuit_breaker: 若续期放行条件里出现任何一项被放宽（只看 run_id 不看 scope、或允许 payload 不可解析时放行、 或把别人的锁也续期），或为凑绿删除/改窄反例用例，停止并返回主协调。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-07-acquire-locks-same-run-renewal.md
+    spec_version: 1.0.0
+    content_digest: sha256:51af92050f6251fb602030b417b370e69dbf175a5adca086d18acb37cb8a6567
+    decision_ref: decision://accepted/BET-Y2Q4-T10-341
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: 铸条时为 in_progress 骨架；三类读数（hermetic pytest、实机 canary 前后各一次、变异对照）在收口腿填入。
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47466,7 +47547,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 588
+  total_bets: 589
   windows:
   - Y1Q1
   - Y1Q2
