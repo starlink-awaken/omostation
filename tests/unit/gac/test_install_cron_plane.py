@@ -271,3 +271,39 @@ def test_dry_run_remove_does_not_write(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["install-cron-plane.py", "--dry-run", "--remove"])
     assert module.main() == 0
     assert state["lines"] == before, "--remove --dry-run 写了 crontab"
+
+
+# ── scheduler-compile.py --diff: 整份替换的破坏面预览 ────────────────────────
+
+
+def test_diff_installation_names_what_wholesale_replace_would_delete() -> None:
+    """`scheduler-compile.py --diff` 必须点名「整份替换会删掉哪些已装条目」。
+
+    背景 (2026-11-07 实测): 已装 crontab 比 `.omo/cron/registry.yaml` 多出
+    resident daemon 五角色 (`*/2`) 等条目; 整份 `generate crontab | crontab -`
+    会把它们删掉 —— resident daemon 是常驻 Agent 的驱动。--diff 是装机前的
+    只读安全预览, 与 install-cron-plane.py 的分工: 后者只动自己登记面的行,
+    本函数回答「整份替换会改动什么」。
+    """
+    spec = importlib.util.spec_from_file_location(
+        "scheduler_compile", ROOT / "bin" / "scheduler-compile.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    res = module.diff_installation(
+        installed_lines=[
+            "*/2 * * * * cd /Users/xiamingxing/Workspace && /opt/homebrew/bin/python3 "
+            "-m omo.cli resident daemon --once --role decision "
+            ">> /Users/xiamingxing/Workspace/.omo/_delivery/resident-orchestrator/cron-decision.log 2>&1",
+            "0 3 * * * cd $HOME/Workspace && python3 bin/ssot/log-rotate.py --daily "
+            ">> runtime/cron/log-rotate.log 2>&1",
+        ]
+    )
+    assert res["mode"] == "read_only"
+    assert res["removed_count"] >= 1
+    # 关键判据: resident daemon 那条必须被点名 —— 它是常驻 Agent 的驱动,
+    # 整份替换会把它删掉。
+    assert any("resident daemon" in line for line in res["removed"])
