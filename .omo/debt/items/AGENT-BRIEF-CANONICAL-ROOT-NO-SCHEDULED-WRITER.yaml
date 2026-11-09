@@ -1,0 +1,46 @@
+# 立案: 2026-11-09 会话实测 (mbp). 字段口径对齐现行 .omo/debt/items/* 条目
+id: AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER
+title: '入口层 Agent Brief 的仓根读物没有排班写方 (三根各写各的: 仓根无写者 / profile 状态根 30min / 安装根 5min)'
+dimension: governance
+subdimension: agent
+domain: meta
+scope: workspace
+severity: high
+weight: 0.1
+entropy_class: medium
+lifecycle_state: identified
+owner: xiamingxing
+affected_roots: []
+evidence_refs:
+- docs/pitfalls.md
+- bin/panorama/materialize-agent-brief.py
+- .omo/_truth/registry/services.yaml
+- bin/scheduler-compile.py
+mitigation_refs:
+- bin/panorama/materialize-agent-brief.py
+- docs/pitfalls.md
+opened_at: '2026-11-09'
+last_reviewed_at: '2026-11-09'
+next_review_at: '2026-11-16'
+gate_level: none
+x1_policy_ref: ''
+x3_tier: Principle
+decision_needed: 三选一（都要用户裁决，代理不代做机器级变更）：(1) 在 mbp 给仓根 runtime/dashboard/agent-brief.json 装一个排班写方（= 新增
+  launchd 条目 + 改 services.yaml 登记，属机器服务变更）；(2) 改读契约 —— AGENTS.md §1.8 把 brief 路径显式声明按 state_root 解析（属治理文档契约变更，影响所有
+  agent 的选活入口）；(3) 让 scheduler-compile --check 比较 plist 内容而不只比 label（会让已存在的 plist 分叉立刻变红，须与双机分工裁决同时定）。另一条待决：注册表自述
+  mbp 只装了 5 条、38 条登记面巡检从未在本机跑过 —— 全量装机会在这台机器上拉起 resident 执行器（决策面在 mini），装机范围属双机分工问题，不是同步问题。
+history:
+- at: '2026-11-09T11:36:16+00:00'
+  action: identify
+  actor: governance-agent
+  note: '2026-11-09 实测 (mbp): AGENTS.md §1.8 要求 agent 选活前读 runtime/dashboard/agent-brief.json, 仓根那份 generated_at
+    停在 2026-10-28T10:38:34 (冻 12 天), 而写它的 job 全绿 —— launchctl print com.omostation.agent-brief-materialize
+    报 runs=66 / last exit code=0 / interval 1800, materialize --check 报源为活 (revision=4c72bc74fd23 data_generated_at=2026-11-09T11:34:20Z).
+    根因是根分叉: services.yaml:6488 该条带 runtime_root: install 与 OMOSTATION_STATE_ROOT=~/.local/state/omostation/prod,
+    脚本按调用时刻解析 state_root(), 日志逐条 target=~/.local/state/omostation/prod/runtime/dashboard/agent-brief.json;
+    安装根 ~/.local/opt/omostation 那份由 panorama-dashboard-refresh 每 5min 刷新; 仓根那份没有任何排班写方. 已按合法路径手工物化一次 (11:36:16,
+    原样复制不重打戳, 目标 gitignored, git 状态干净), 但这只是止血: 无排班 ⇒ 会再次冻结. 检测器同时两处失明: scheduler-compile --check 报 drift_count=0,
+    而 runtime/cron/com.omostation.panorama-dashboard-refresh.plist (11-07 改) 与已装副本 (10-28) 逐字节不同 (WorkingDirectory
+    / 整套 EnvironmentVariables / 日志落点三处分叉); 反之已登记的 com.omostation.agent-brief-materialize 却被列入 undeclared_installed_sample
+    (registered_count=15 / installed_count=48 / undeclared=33). 登记 notes「只在 mini 装 (MBP 没有 zhixing-dashboard
+    state root)」的前提已被本机推翻: ComputerName=mbp 且该 state root 每几分钟产新 revision.'
