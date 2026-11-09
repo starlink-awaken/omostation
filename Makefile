@@ -22,7 +22,13 @@
 	adr-iteration-rate quota-pressure gov-health-metrics capability-chain-boundary pr-lifecycle \
 	check test lint ci-local sync status
 
-UV ?= uv
+# cron 的最小 PATH 是 /usr/bin:/bin, 不含 `uv` 所在的 ~/.local/bin 与
+# /opt/homebrew/bin ⇒ 任何命令里含 `uv run` 的 `make <target>` 在 cron 下直接
+# "No such file or directory"。实测 (2026-11-09): `env -i PATH=/usr/bin:/bin
+# make root-directory-governance` 失败, 而 crontab 的 hygiene-dir (每日 05:00)
+# 走的正是这条路径 —— 日志里连续 `make: uv: No such file or directory`。
+# 找不到时回退到用户级安装位; CI/交互场景 `command -v uv` 命中, 行为不变。
+UV ?= $(shell command -v uv 2>/dev/null || echo "$(HOME)/.local/bin/uv")
 PYTHON ?= python3
 PY := $(UV) run --with pyyaml python
 PY_STDLIB := bin/gac/managed-python run --profile stdlib --
