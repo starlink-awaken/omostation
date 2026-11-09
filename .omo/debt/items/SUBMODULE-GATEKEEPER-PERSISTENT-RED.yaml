@@ -1,0 +1,53 @@
+id: "SUBMODULE-GATEKEEPER-PERSISTENT-RED"
+title: "Submodule Freshness Gatekeeper 每次 main push 都失败 —— 根因是 aetherforge 子模块的 .omo/ 直写违规 (无债务登记)"
+dimension: "architecture"
+subdimension: "mutation-contract"
+domain: "governance"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+  - "projects/aetherforge/packages/gateway/src/llm_gateway/quota_ledger.py"
+  - ".subtrees/cockpit/scripts/contract_gatekeeper.py"
+evidence_refs:
+  - ".github/workflows/submodule-freshness-gatekeeper.yml"
+  - ".subtrees/cockpit/scripts/contract_gatekeeper.py"
+  - "projects/ecos/scripts/contract_gatekeeper.py"
+mitigation_refs: []
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+review_by: "2026-12-10"
+gate_level: watchlist
+note: |
+  **现象**: `Submodule Freshness Gatekeeper` 这个 CI job 在 main 上**每次 push 都失败**
+  (2026-11-09 11:36 → 11-10 15:34 至少 12 次连续 failure, 横跨 #5197 / #5194 / #5199 /
+  以及多轮 governance_state 提交)。一个长期红的门禁等于没有门禁 —— 它会训练人忽略
+  整个 CI 面板。
+
+  **根因**: `make governance-verify` → `bin/ssot/verify-omo.sh` 的
+  `[2/5] Running governance lint gates` 里, `contract_gatekeeper.py` 报
+  `Gatekeeper: violations detected in 1054 files checked — FAIL`,
+  违规位置 `projects/aetherforge/packages/gateway/src/llm_gateway/quota_ledger.py:59-60`:
+    59: forbidden direct mutation via .mkdir()
+    60: forbidden direct mutation via open(..., mutating mode)
+  即该子模块代码**直接写 `.omo/` 或 `spaces/`**, 而契约要求此类变更必须经
+  omo CLI / omo core / c2g ingress (gatekeeper 的 EXEMPT_PATH_PATTERNS 只豁免
+  tests / conftest / scripts/omo / 自身 / __init__.py / src/omo)。
+
+  **为什么现在立案**: 此前多轮 PR 都把它当作「子模块既有违规」(PITFALL-COO-004)
+  放过, 但连续 12+ 次失败后它已经是**main 的常态**, 必须在债务台帐里留痕。
+
+  **两条修复路径 (需 owner 裁定)**:
+  (a) 改 aetherforge: 把 quota_ledger 的直写改为经 omo CLI / core 的受控入口。
+      属子模块改动 (三步提交流), 且该子模块当前停在 feature 分支
+      (`delivery/aetherforge-omlxc-tool-catalog-...`), 需先确认可安全提交。
+  (b) 改 gatekeeper 范围: 若认为根部门禁不该扫子模块自有代码, 则需要显式定义
+      「哪些子模块受本契约约束」, 而不是让它隐式扫全 workspace 后长期红。
+  **注意**: 直接删 gatekeeper 或把它改成 continue-on-error 会抹掉唯一的
+  `.omo/` 直写防线 —— 不可取。
+
+  **本地不可复现的原因**: `projects/aetherforge` 在本机未初始化 (子模块对象不可用),
+  违规文件内容无法本地核对, 需 CI 日志或完整检出。
