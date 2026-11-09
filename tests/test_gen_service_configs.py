@@ -273,3 +273,59 @@ def test_well_formed_plist_still_enumerates(tmp_path: Path) -> None:
     assert rows[0]["plutil_ok"] is True
     assert rows[0]["label"] == "com.example.good"
     assert rows[0]["program_arguments"] == ["/bin/bash", "/tmp/run.sh"]
+
+
+def test_flag_entrypoint_is_not_path_joined() -> None:
+    """`-c` / `-B` 这类解释器 flag 必须原样落进 ProgramArguments。
+
+    原实现无条件 `_resolve_path(entrypoint, root)`, 于是 `-c` 被拼成
+    "<service_root>/-c" —— launchd 拿它当脚本执行, 当场 exit 127
+    (`<cwd>/-c: No such file or directory`), 而 plist 看着生成成功。
+
+    2026-11-09 实证: omostation.omo-debt-refresh (services.yaml 里 7 个
+    `entrypoint: -c` 之一, 也是其中唯一 generate=true 的) 因此每次运行都失败,
+    日志只有 `omo-debt refresh: error: argument --now: expected one argument`。
+    """
+    module = _module()
+    svc = {
+        "id": "omo.flag-entry",
+        "enabled": True,
+        "scheduler": "launchd",
+        "generate": True,
+        "label": "com.omostation.flag-entry",
+        "program": {
+            "interpreter": "/bin/bash",
+            "entrypoint": "-c",
+            "args": ["echo hi"],
+        },
+    }
+
+    argv = module._plist_program_args(module.gen_launchd_plist(svc))
+
+    assert argv[0] == "/bin/bash"
+    assert argv[1] == "-c"
+    assert not argv[1].startswith("/"), "flag 被拼成了路径 —— 回归"
+    assert argv[2] == "echo hi"
+
+
+def test_script_entrypoint_is_still_resolved() -> None:
+    """反面: 真正的脚本路径仍要按 service_root 解析, 别把修复做过头。"""
+    module = _module()
+    svc = {
+        "id": "omo.script-entry",
+        "enabled": True,
+        "scheduler": "launchd",
+        "generate": True,
+        "label": "com.omostation.script-entry",
+        "program": {
+            "interpreter": "/bin/bash",
+            "entrypoint": "scripts/run.sh",
+            "args": [],
+        },
+    }
+
+    argv = module._plist_program_args(module.gen_launchd_plist(svc))
+
+    assert argv[0] == "/bin/bash"
+    assert argv[1].endswith("/scripts/run.sh")
+    assert argv[1].startswith("/")
