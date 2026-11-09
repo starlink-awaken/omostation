@@ -1,0 +1,59 @@
+id: "LAUNCHD-PLIST-INSTALLED-DIVERGED"
+title: "已安装的 launchd plist 与本仓 plist 漂移 —— omo-debt-refresh 一直失败 (exit 2), 且 --omo-dir 指向缺 _truth 的 state 根"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "host"
+severity: "medium"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- "~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist"
+- "bin/ops/launchd/com.omostation.omo-debt-refresh.plist"
+evidence_refs:
+- "已安装 plist: `NOW=2026-10-28T08:18:36Z` **硬编码** + `--omo-dir /Users/xiamingxing/.local/state/omostation/prod/.omo` + 安装位 venv python"
+- "本仓 bin/ops/launchd/com.omostation.omo-debt-refresh.plist:40: `NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)` **动态** + `--omo-dir /Users/xiamingxing/Workspace/.omo` + `python3` (PATH)"
+- "实测已安装命令: `FileNotFoundError: No debt registry found at ~/.local/state/omostation/prod/.omo/_truth/registry/debt.yaml or .../debt/registry.yaml` ⇒ rc=1 (作业末次退出码 2)"
+- "`~/.local/state/omostation/prod/.omo/` 只有 `_delivery/` `_knowledge/` `state/` —— **完全没有 `_truth/`** (读面按 ADR-0456 跟随检出, 故 state 根本不需要也不该有)"
+- "services.yaml:5856-5860 该条目 `generate: false` + `config_source: ~/Library/LaunchAgents/...` + `content_digest: sha256:bebd759d...` ⇒ plist 是**手工维护**且 digest 追踪, 改了要同步 digest"
+mitigation_refs: []
+opened_at: "2026-11-09"
+last_reviewed_at: "2026-11-09"
+next_review_at: "2026-11-16"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: >-
+  两问。(1) **plist 的正确形态**: 本仓版用 `python3`(PATH, 本机 = 3.9.6) ⇒ 会撞
+  `datetime.UTC` 解释器债务; 已安装版用安装位 venv python (3.13+, 无此问题) 但把
+  `--omo-dir` 指向 state 根 (缺 `_truth`) ⇒ 读不到 registry。两者**各有硬伤**。
+  正解看起来是: **保留安装位 venv python, 但 `--omo-dir` 指向检出** (`.omo` 里有
+  `_truth`), 并恢复动态 `NOW`。(2) **谁负责同步**: plist 是手工维护 + digest 追踪,
+  但没有任何机制保证「本仓 plist 改了 → 已安装 plist 跟着改」—— 本次漂移就是这么发生的
+  (B4b 安装位迁移时手工改了已安装版, 之后本仓修 `NOW` 硬编码时没回头改已安装版)。
+  需要一个「plist 一致性巡检」(比对已安装 plist 与本仓 plist 的关键字段), 或把 plist
+  纳入 `gen-service-configs.py` 的生成面 (把 `generate: false` 改成 true)。
+blockers:
+- id: PLIST-TRACKED-BY-DIGEST
+  since: "2026-11-09"
+  detail: >-
+    services.yaml 用 `content_digest` 追踪已安装 plist —— 直接改 plist 会造 drift,
+    必须同步更新 digest (否则 reality-check 报漂移)。
+history:
+- at: '2026-11-09T09:05:00+00:00'
+  action: identify
+  note: >-
+    扫 launchd 作业退出码时发现 `com.omostation.omo-debt-refresh` 末次退出码 2。
+    手动复跑已安装 plist 的命令 ⇒ `FileNotFoundError: No debt registry found at
+    <state_root>/.omo/_truth/registry/debt.yaml`。
+
+    **两个字段与本仓 plist 不同**: ① `NOW` 从动态 `$(date -u ...)` 变成**硬编码**
+    `2026-10-28T08:18:36Z` (12 天前); ② `--omo-dir` 从检出 `.omo` 变成 state 根 `.omo`,
+    而 state 根按 ADR-0456 只有写面、**没有 `_truth/`** (读面跟随检出) ⇒ 永远读不到 registry。
+
+    **为什么值得修**: 该作业产出 `.omo/debt/*/current.*`, 一直失败 ⇒ 债务衍生视图是陈旧的。
+    同批发现 `com.omostation.tailscale-heartbeat` 也恒失败 (已由 #5176 修好), 说明
+    「已安装 plist 与本仓漂移」不是孤例。
+  actor: "governance-agent"
