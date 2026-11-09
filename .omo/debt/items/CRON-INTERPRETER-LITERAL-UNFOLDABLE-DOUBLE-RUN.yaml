@@ -1,0 +1,62 @@
+id: CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN
+title: cron 登记面钉了不可折回的解释器字面量 —— 比较键永远不可比, 安装同作业双跑
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-11-09T10:44:38.402036+00:00'
+last_reviewed_at: null
+next_review_at: null
+gate_level: none
+history:
+- at: '2026-11-09T10:44:38.402036+00:00'
+  action: register
+  note: Registered debt item CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN.
+- at: '2026-11-09T10:44:57.938525+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''判据缝隙: comparison_key 靠 normalize_interpreter
+    把解释器写法折成裸 python3 才可比, 而 INTERPRETER_RE 只认 python3/python3.x。登记面钉无版本号的 .../bin/python
+    时键永远折不回 ⇒ 安装侧 _is_managed 把已装的另一种写法判成外部行保留, 再追加登记面那条 ⇒ 同一作业双跑。
+
+    实测 (2026-11-09, Mac-mini): install-cron-plane.py --dry-run 候选里 test-all 有 2 条
+    —— 登记面 /Users/xiamingxing/.local/share/local-ops/dev-venv/bin/python 与已装面 /opt/homebrew/bin/python3,
+    同 schedule 23 7 * * * 同脚本; scheduler-compile.py --diff 亦把该作业成对报出。origin/main 登记面
+    43 条 active crontab 作业中命中 1 条 (local-ops-test-all), 其余 42 条写法均可折回。
+
+    已落地: cron_normalize.unfoldable_interpreter_tokens/unfoldable_interpreter_jobs
+    + check_drift 的 interpreter_fold shadow 段 (mode=shadow, blocks_gate=false), 4
+    个测试用例 (含负例 python3 -c "import python" 与 bash run-python.sh 不误判)。
+
+    待裁 (三选一, 裁决前不动 INTERPRETER_RE、不改已装 crontab、不在 mini 装机): ① 放宽 INTERPRETER_RE 也折
+    /python —— 代价: /usr/bin/python 即 Xcode 3.9 这个真实死信号在比较键里消失; ② 把 local-ops-test-all
+    改登记裸 python3 交给 resolve_python_command —— 代价: resolve 只允许可折回候选, dev-venv 的第三方依赖拿不到,
+    脚本可能改换成另一种死法; ③ 给 _is_managed 加「同 schedule + 同脚本」认领 —— 代价: 触碰 #5106 立下的「不得把用户自装外部行误认成登记面」边界。''.'
+x1_policy_ref: ''
+x2_freshness: '2026-11-09T10:44:38+00:00'
+x3_tier: Principle
+description: '判据缝隙: comparison_key 靠 normalize_interpreter 把解释器写法折成裸 python3 才可比,
+  而 INTERPRETER_RE 只认 python3/python3.x。登记面钉无版本号的 .../bin/python 时键永远折不回 ⇒ 安装侧 _is_managed
+  把已装的另一种写法判成外部行保留, 再追加登记面那条 ⇒ 同一作业双跑。
+
+  实测 (2026-11-09, Mac-mini): install-cron-plane.py --dry-run 候选里 test-all 有 2 条 ——
+  登记面 /Users/xiamingxing/.local/share/local-ops/dev-venv/bin/python 与已装面 /opt/homebrew/bin/python3,
+  同 schedule 23 7 * * * 同脚本; scheduler-compile.py --diff 亦把该作业成对报出。origin/main 登记面
+  43 条 active crontab 作业中命中 1 条 (local-ops-test-all), 其余 42 条写法均可折回。
+
+  已落地: cron_normalize.unfoldable_interpreter_tokens/unfoldable_interpreter_jobs +
+  check_drift 的 interpreter_fold shadow 段 (mode=shadow, blocks_gate=false), 4 个测试用例
+  (含负例 python3 -c "import python" 与 bash run-python.sh 不误判)。
+
+  待裁 (三选一, 裁决前不动 INTERPRETER_RE、不改已装 crontab、不在 mini 装机): ① 放宽 INTERPRETER_RE 也折 /python
+  —— 代价: /usr/bin/python 即 Xcode 3.9 这个真实死信号在比较键里消失; ② 把 local-ops-test-all 改登记裸 python3
+  交给 resolve_python_command —— 代价: resolve 只允许可折回候选, dev-venv 的第三方依赖拿不到, 脚本可能改换成另一种死法;
+  ③ 给 _is_managed 加「同 schedule + 同脚本」认领 —— 代价: 触碰 #5106 立下的「不得把用户自装外部行误认成登记面」边界。'

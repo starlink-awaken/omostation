@@ -3,10 +3,6 @@ lifecycle: ssot
 owner: governance-team
 last-reviewed: 2026-11-09
 version: 3
-# REMOVED (2026-09-20): dispatch_ref, campaign_ref, reporting_ref — gap management system never implemented
-#   these fields point to files that were never created; code already handles missing keys gracefully
-#   via registry.get(name, "") in omo_debt_registry.py lines 84-93
-# v3 (2026-09-20): seed_items 与 items 目录对齐 —— 补登 8 个存在但未登记的条目 (ledger 此前对它们不可见)
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml
 review_pack_ref: .omo/debt/reviews/current.md
@@ -44,3 +40,4 @@ seed_items:
 - .omo/debt/items/OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS.yaml
 - .omo/debt/items/INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED.yaml
 - .omo/debt/items/LAUNCHD-PLIST-INSTALLED-DIVERGED.yaml
+- .omo/debt/items/CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN.yaml
