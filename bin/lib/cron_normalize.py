@@ -20,7 +20,11 @@ r"""crontab 平面归一化的唯一实现 —— 登记面与安装态比对的
 
 from __future__ import annotations
 
+import ast
+import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 INTERPRETER_RE = re.compile(r"(?:\S*/)?python3(?:\.\d+)?(?=[\s]|$)")
@@ -106,6 +110,219 @@ def comparison_key(line: str) -> str:
     if not s or s.startswith("#"):
         return ""
     return normalize_interpreter(normalize_installed_line(s))
+
+
+# ---------------------------------------------------------------------------
+# 解释器的宿主侧解析 (CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 选项 ③)
+#
+# 登记面保持中性 (`python3 …`)，安装/生成时按**本机**换成可证可用的绝对路径。
+# 三条不变量：
+#   1. 判据是**执行探测**，不是正则。`from datetime import UTC` 出现在源码里
+#      不等于该解释器会死（可能带 3.9 兼容分支），也不等于不会死（可能从本地
+#      模块间接引入）—— 2026-11-09 实测就误判过一次 `bin/ops/cli.py`。
+#   2. 探测**不执行目标脚本**：只 `find_spec` 顶层第三方模块名 + 版本下限。
+#      import 目标脚本会跑它的模块级代码（网络/写盘），编译期不能碰。
+#   3. 解不出可证安全的解释器就**原样返回**并给出原因。宁可留作业在既有失败
+#      形态上（可登记、可见），也不要把它换成一个新的失败形态。
+# ---------------------------------------------------------------------------
+
+_PYTHON_INVOCATION_RE = re.compile(
+    r"(?P<interp>(?:\S*/)?python3(?:\.\d+)?)[ \t]+"
+    r"(?P<script>(?:[^\s'\"|;&]*/)?[^\s'\"|;&\[\]]+\.py)"
+)
+# 替换后的 token 必须仍能被 INTERPRETER_RE 折回裸 python3，否则 comparison_key
+# 会把「登记面裸写 vs 安装态绝对路径」判成永久假 drift —— 本函数存在的目的
+# 正是消除这类假 drift。
+_FOLDABLE_INTERPRETER_RE = re.compile(r"/python3(?:\.\d+)?$")
+
+# 版本下限的探针：datetime.UTC 只在 3.11+ 存在，等价于「跑得动本仓 cron 代码」。
+_PROBE_SOURCE = (
+    "import importlib.util, sys\n"
+    "from datetime import UTC  # 3.11+ 下限\n"
+    "missing = [m for m in sys.argv[1:] if importlib.util.find_spec(m) is None]\n"
+    "sys.exit(1 if missing else 0)\n"
+)
+
+_probe_cache: dict[tuple[str, tuple[str, ...]], bool] = {}
+_resolve_cache: dict[tuple, tuple[str, str | None]] = {}
+
+
+def interpreter_candidates(repo_root: Path | str | None = None) -> list[str]:
+    """本机候选解释器（绝对路径，按优先级）.
+
+    仓内 `.venv` 排第一：它由项目自己维护，装齐了 cron 脚本的第三方依赖
+    （实测 `bin/ops/cli.py` 需要的 `rich` 只有它和 3.9 的 site-packages 有，
+    而 3.9 又缺 `datetime.UTC` ⇒ 只有 `.venv` 能同时满足）。
+    只保留 basename 可被 `INTERPRETER_RE` 折回裸 `python3` 的候选 ——
+    `.venv/bin/python`（basename 是 `python`）会被排除，用 `.venv/bin/python3`。
+    """
+    root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[2]
+    cands = [
+        str(root / ".venv" / "bin" / "python3"),
+        "/opt/homebrew/bin/python3.13",
+        "/opt/homebrew/bin/python3",
+        "/usr/local/bin/python3",
+        "/usr/bin/python3",
+    ]
+    override = os.environ.get("CRON_INTERPRETER")
+    if override:
+        cands.insert(0, override)
+    return [c for c in cands if _FOLDABLE_INTERPRETER_RE.search(c) and Path(c).exists()]
+
+
+def third_party_imports(script: Path) -> list[str] | None:
+    """脚本顶层 import 的第三方模块名；解析不了返回 None（= 不可判定）."""
+    try:
+        tree = ast.parse(script.read_text(errors="replace"))
+    except (OSError, SyntaxError, ValueError):
+        return None
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.update(a.name.split(".")[0] for a in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                continue
+            if node.module:
+                names.add(node.module.split(".")[0])
+    return sorted(names - set(sys.stdlib_module_names) - {"__future__"})
+
+
+def _interpreter_ok(candidate: str, script_dir: Path, deps: list[str]) -> bool:
+    key = (candidate, tuple(deps))
+    if key not in _probe_cache:
+        env = dict(os.environ)
+        # 仓内脚本靠同目录 import 兄弟模块（`_shared`、`doc_legs`），不加会误报缺包。
+        env["PYTHONPATH"] = os.pathsep.join(
+            [str(script_dir)] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
+        )
+        try:
+            r = subprocess.run(
+                [candidate, "-c", _PROBE_SOURCE, *deps],
+                capture_output=True, text=True, timeout=30, env=env, check=False,
+            )
+            _probe_cache[key] = r.returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            _probe_cache[key] = False
+    return _probe_cache[key]
+
+
+def resolve_python_command(
+    cmd: str,
+    *,
+    candidates: list[str] | None = None,
+    repo_root: Path | str | None = None,
+) -> tuple[str, str | None]:
+    """把 command 里的 `python3 <script>.py` 换成本机可证可用的解释器.
+
+    返回 `(新 command, 原因)`；原因 `None` = 已替换成功或本就无需替换。
+    只在**同时满足**版本下限与目标脚本顶层第三方依赖的候选里选，选不出就原样返回。
+    """
+    # 缓存键必须含候选集与根: 只按 cmd 缓存会让换了 candidates/CRON_INTERPRETER 的
+    # 调用读到上一个宿主布局的结果。
+    key = (cmd, None if candidates is None else tuple(candidates),
+           None if repo_root is None else str(repo_root))
+    if key in _resolve_cache:
+        return _resolve_cache[key]
+    result = _resolve_python_command_uncached(cmd, candidates=candidates, repo_root=repo_root)
+    _resolve_cache[key] = result
+    return result
+
+
+def _repo_local_modules(root: Path) -> frozenset[str]:
+    """仓内自有顶层模块名（脚本运行时靠自己的 sys.path.insert 找到）.
+
+    为什么单独列: `omo` / `repo_root` / `capability_native_sources` 这类名字不在
+    任何解释器的 site-packages 里, 直接 find_spec 会误报「缺包」⇒ 拒绝切换 ⇒ 作业
+    留在 3.9 的 `ImportError: cannot import name 'UTC'` 上。仓内模块的可见性与
+    **解释器无关**（脚本用 `Path(__file__)` 自己插 sys.path），所以只需判断它存在。
+    """
+    search_dirs = [root, root / "bin", root / "src", root / "lib"]
+    search_dirs += sorted(p for p in (root / "bin").iterdir() if p.is_dir()) if (root / "bin").is_dir() else []
+    search_dirs += sorted((root / "projects").glob("*/src")) if (root / "projects").is_dir() else []
+    names: set[str] = set()
+    for d in search_dirs:
+        try:
+            entries = list(d.iterdir())
+        except OSError:
+            continue
+        for e in entries:
+            if e.suffix == ".py" and e.stem != "__init__":
+                names.add(e.stem)
+            elif e.is_dir() and (e / "__init__.py").is_file():
+                names.add(e.name)
+    return frozenset(names)
+
+
+_repo_local_cache: dict[str, frozenset[str]] = {}
+
+
+def _job_workspace(cmd: str, interp_start: int, fallback: Path | str | None) -> Path:
+    """作业实际运行的工作区 = command 里 `cd <dir>` 的目标（可能是 `$HOME` 拼法）.
+
+    解释器候选必须按**作业的工作区**取，而不是按编译副本自己的位置：worktree 里没有
+    `.venv`，而作业永远 `cd $HOME/Workspace`（根有四类落点）。
+    """
+    cd = re.search(r"(?:^|[\s;&|])cd\s+(?P<dir>\"[^\"]+\"|[^\s;&|]+)", cmd[:interp_start])
+    raw = cd.group("dir").strip('"') if cd else None
+    if raw:
+        p = Path(os.path.expanduser(os.path.expandvars(raw)))
+        if p.is_dir():
+            return p
+    return Path(fallback) if fallback else Path(__file__).resolve().parents[2]
+
+
+def pick_interpreter(
+    cmd: str,
+    *,
+    candidates: list[str] | None = None,
+    repo_root: Path | str | None = None,
+) -> str | None:
+    """本机跑动该 command 目标脚本会用的解释器；不可判定 (或没有 python 调用) → None.
+
+    给 launchd 这类「解释器与命令分开存放」的平面用: 它需要的是解释器本身,
+    而不是替换后的整条 command。
+    """
+    new, reason = resolve_python_command(cmd, candidates=candidates, repo_root=repo_root)
+    if reason is not None:
+        return None
+    m = _PYTHON_INVOCATION_RE.search(new)
+    return m.group("interp") if m else None
+
+
+def _resolve_python_command_uncached(cmd, *, candidates, repo_root):
+    m = _PYTHON_INVOCATION_RE.search(cmd)
+    if not m:
+        return cmd, None
+    root = _job_workspace(cmd, m.start(), repo_root)
+    token = m.group("script")
+    script = Path(os.path.expanduser(os.path.expandvars(token)))
+    if not script.is_absolute():
+        script = root / script
+    if not script.is_file():
+        return cmd, f"target script not found: {script}"
+    deps = third_party_imports(script)
+    if deps is None:
+        return cmd, f"unparseable target: {script}"
+    key = str(root)
+    if key not in _repo_local_cache:
+        _repo_local_cache[key] = _repo_local_modules(root)
+    external = [d for d in deps if d not in _repo_local_cache[key]]
+    for cand in candidates if candidates is not None else interpreter_candidates(root):
+        # 入选前复查可折回性: 调用方 (含 CRON_INTERPRETER) 传进不可折回的路径,
+        # 会让 check_drift 把替换读成永久 drift ⇒ 宁可不换。
+        if not _FOLDABLE_INTERPRETER_RE.search(cand):
+            continue
+        if _interpreter_ok(cand, script.parent, external):
+            new = cmd[: m.start("interp")] + cand + cmd[m.end("interp") :]
+            if new == cmd:
+                return cmd, None
+            return new, None
+    tried = ", ".join(candidates if candidates is not None else interpreter_candidates(root)) or "(无候选)"
+    return cmd, (
+        f"no interpreter satisfies {script.name} (needs 3.11+ and {external or 'no third-party'}); "
+        f"tried: {tried}"
+    )
 
 
 def current_host() -> str:

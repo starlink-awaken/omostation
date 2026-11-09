@@ -164,9 +164,15 @@ def test_compile_crontab_does_not_double_log_redirect() -> None:
         j for j in module._host_scoped(jobs)
         if j.get("status") == "active" and "crontab" in j.get("planes", [])
     ]
+    # 比较走 cron_normalize 的既有口径 normalize_interpreter: 登记面的裸 python3
+    # 会在生成/安装时按本机解析成绝对解释器 (CRON-BARE-PYTHON3-PY39-IMPORT-DEATH ③),
+    # 两者语义相同。逐字比较会让本用例依赖某台机器的解释器布局 —— 那正是
+    # AGENTS.md §7「用例断言 host 运行态」的形状。旧 bug 特征 (双 cd / 链式重定向)
+    # 与解释器无关, 仍按原文检测。
+    folded = [module._normalize_interpreter(l) for l in out]
     for j in active_cron:
         expected = f'{j["schedule"]} {j["command"]}'
-        assert expected in out, (
+        assert module._normalize_interpreter(expected) in folded, (
             f"编译输出与契约不符: job={j['name']}\n  expected: {expected}"
         )
 
@@ -186,8 +192,15 @@ def test_compile_crontab_output_matches_registry_command_with_schedule_prefix() 
     ]
     for j in active_jobs[:5]:
         expected = f'{j["schedule"]} {j["command"]}'
-        assert any(expected in line for line in out), (
-            f"未找到预期行: {expected}"
+        assert any(
+            module._normalize_interpreter(expected) in module._normalize_interpreter(line)
+            for line in out
+        ), f"未找到预期行 (按解释器折叠后仍不匹配): {expected}"
+    # 逃生口逐字不变: --no-resolve-interpreter 必须复现改动前的产物
+    raw_out = module.compile_crontab(jobs, resolve=False)
+    for j in active_jobs[:5]:
+        assert f'{j["schedule"]} {j["command"]}' in "\n".join(raw_out), (
+            f"resolve=False 未复现登记面原文: {j['name']}"
         )
 
 
@@ -379,3 +392,167 @@ def test_compile_launchd_uses_same_active_filter_as_crontab() -> None:
     assert proposed, "registry 里应有 proposed 的 launchd 条目, 否则反证恒绿"
     for name in proposed:
         assert f"com.omostation.{name}" not in agents, f"proposed 条目 {name} 被编译进产物"
+
+
+# ---------------------------------------------------------------------------
+# 解释器的宿主侧解析 (CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 选项 ③)
+#
+# 用例全部用假解释器 (按探测协议返回固定退出码) + tmp 工作区，不读本机
+# /opt/homebrew、不读真机 crontab —— 判据不依赖某台机器的 Python 布局。
+# ---------------------------------------------------------------------------
+
+
+def _cron_normalize():
+    sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+    import cron_normalize
+
+    return cron_normalize
+
+
+def _make_shim(dirpath: Path, *, reject: list[str]) -> Path:
+    """假解释器: 探测协议是 `-c <src> [dep…]`；argv 命中 reject 里的名字就退出 1。
+
+    文件名必须是 `python3` —— 不可折回裸 `python3` 的候选会被解析器拒绝。
+    """
+    dirpath.mkdir(parents=True, exist_ok=True)
+    shim = dirpath / "python3"
+    arms = "".join(f"*{n}*) exit 1 ;;\n" for n in reject)
+    shim.write_text(f"#!/bin/sh\ncase \"$*\" in\n{arms}*) exit 0 ;;\nesac\n", encoding="utf-8")
+    shim.chmod(0o755)
+    return shim
+
+
+def _fake_root(tmp_path: Path, src: str, *, repo_local: list[str] | None = None) -> Path:
+    root = tmp_path / "ws"
+    (root / "bin").mkdir(parents=True, exist_ok=True)
+    (root / "bin" / "job.py").write_text(src, encoding="utf-8")
+    for mod in repo_local or []:
+        (root / "bin" / "lib").mkdir(parents=True, exist_ok=True)
+        (root / "bin" / "lib" / f"{mod}.py").write_text("x = 1\n", encoding="utf-8")
+    return root
+
+
+def test_resolve_substitutes_when_a_candidate_provably_works(tmp_path) -> None:
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "from datetime import UTC\nprint(UTC)\n")
+    shim = _make_shim(tmp_path / "good" / "bin", reject=[])
+    cmd = f"cd {root} && python3 bin/job.py >> runtime/cron/job.log 2>&1"
+    new, reason = cn.resolve_python_command(cmd, candidates=[str(shim)])
+    assert reason is None, reason
+    assert new == f"cd {root} && {shim} bin/job.py >> runtime/cron/job.log 2>&1"
+
+
+def test_resolve_leaves_command_untouched_when_nothing_is_verifiable(tmp_path) -> None:
+    """解不出可证安全的解释器 ⇒ 原样返回并给出原因，不换一个新的失败形态。"""
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "import rich\n")
+    shim = _make_shim(tmp_path / "bad" / "bin", reject=["rich"])
+    cmd = f"cd {root} && python3 bin/job.py"
+    new, reason = cn.resolve_python_command(cmd, candidates=[str(shim)])
+    assert new == cmd, "不可判定时必须逐字保留登记面原文"
+    assert reason is not None and "rich" in reason, reason
+
+
+def test_resolve_does_not_mistake_repo_local_modules_for_missing_deps(tmp_path) -> None:
+    """仓内模块靠脚本自己的 sys.path 找到，与解释器无关 ⇒ 不该算「缺包」。
+
+    漏掉这条会把 `import omo` / `repo_root` 的作业判成不可解，让它们继续留在
+    3.9 的 ImportError 上 (2026-11-09 首版实测就是这样)。
+    """
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "import helper\nfrom datetime import UTC\n", repo_local=["helper"])
+    shim = _make_shim(tmp_path / "strict" / "bin", reject=["helper", "rich"])
+    cmd = f"cd {root} && python3 bin/job.py"
+    new, reason = cn.resolve_python_command(cmd, candidates=[str(shim)])
+    assert reason is None, f"repo-local 模块被当成缺包: {reason}"
+    assert str(shim) in new
+
+
+def test_resolve_skips_unfoldable_candidates(tmp_path) -> None:
+    """basename 不是 python3[.N] 的候选会被拒绝 —— 否则替换读起来是永久假 drift。"""
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "x = 1\n")
+    good = _make_shim(tmp_path / "g" / "bin", reject=[])
+    (tmp_path / "g" / "bin" / "python").write_text(good.read_text(), encoding="utf-8")
+    (tmp_path / "g" / "bin" / "python").chmod(0o755)
+    new, reason = cn.resolve_python_command(
+        f"cd {root} && python3 bin/job.py", candidates=[str(tmp_path / "g" / "bin" / "python")]
+    )
+    assert new == f"cd {root} && python3 bin/job.py", "不可折回的候选不该被写入"
+    cmd2, _ = cn.resolve_python_command(
+        f"cd {root} && python3 bin/job.py",
+        candidates=[str(tmp_path / "g" / "bin" / "python"), str(good)],
+    )
+    assert str(good) in cmd2
+
+
+def test_substituted_line_folds_back_so_drift_stays_clean(tmp_path) -> None:
+    """核心不变量: 替换后的行经 normalize_interpreter 必须回到登记面原文。
+
+    这是「装了绝对路径但 check_drift 不报 drift」的唯一保证。
+    """
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "from datetime import UTC\n")
+    shim = _make_shim(tmp_path / "f" / "bin", reject=[])
+    declared = f"0 3 * * * cd {root} && python3 bin/job.py >> log 2>&1"
+    installed = "0 3 * * * " + cn.resolve_python_command(
+        f"cd {root} && python3 bin/job.py >> log 2>&1", candidates=[str(shim)]
+    )[0]
+    assert installed != declared
+    assert cn.comparison_key(installed) == cn.comparison_key(declared)
+
+
+def test_interpreter_candidates_rejects_bare_python_name(tmp_path) -> None:
+    """.venv/bin/python 会被排除，.venv/bin/python3 才入选 (归一化可比性)。"""
+    cn = _cron_normalize()
+    venv = tmp_path / "ws" / ".venv" / "bin"
+    venv.mkdir(parents=True)
+    for name in ("python", "python3"):
+        (venv / name).write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (venv / name).chmod(0o755)
+    cands = cn.interpreter_candidates(tmp_path / "ws")
+    assert str(venv / "python3") in cands
+    assert str(venv / "python") not in cands
+
+
+def test_compile_launchd_interpreter_matches_crontab_resolution(tmp_path) -> None:
+    """launchd 平面不得再写死 /usr/bin/python3 (与 crontab 同一根因)。"""
+    cn = _cron_normalize()
+    sc = _load_compile_module()
+    jobs = _load_registry_jobs()
+    agents = sc.compile_launchd(jobs)
+    assert agents, "registry 应编译出 launchd agent, 否则本用例恒绿"
+    by_label = {
+        f"com.omostation.{j['name']}": j
+        for j in cn.active_plane_jobs(jobs, "launchd")
+    }
+    for label, spec in agents.items():
+        interp = spec["ProgramArguments"][0]
+        job = by_label.get(label)
+        assert job is not None, f"{label} 不在活跃集"
+        if interp == "/usr/bin/python3":
+            continue  # 不可判定 → 退回原行为
+        assert cn.normalize_interpreter(f"x {interp} y") == "x python3 y", (
+            f"{label} 的解释器不可折回, 会让 check_drift 永久报 drift: {interp}"
+        )
+        expected = cn.pick_interpreter(job["command"])
+        assert expected == interp, f"{label}: launchd {interp} != 同作业解析结果 {expected}"
+
+    # 正向断言: 两个平面必须给出同一个解释器 (合成作业, 不靠真机布局)。
+    # 走的是两条独立代码路径 —— crontab 侧在命令串里替换, launchd 侧取 token 放进
+    # ProgramArguments[0] —— 所以这条不是同义反复。
+    root = _fake_root(tmp_path, "from datetime import UTC\n")
+    cmd = f"cd {root} && python3 bin/job.py"
+    fake = [{"name": "fake-launchd-job", "schedule": "0 3 * * *", "status": "active",
+             "planes": ["launchd", "crontab"], "command": cmd}]
+    launchd_py = sc.compile_launchd(fake)["com.omostation.fake-launchd-job"]["ProgramArguments"][0]
+    line = sc.compile_crontab(fake)[-1]
+    crontab_py = line.split("&&", 1)[1].split()[0]
+    assert launchd_py == crontab_py, (
+        f"launchd={launchd_py} 与 crontab={crontab_py} 不同口径"
+    )
+    assert cn.normalize_interpreter(f"x {launchd_py} y") == "x python3 y"
+    # 逃生口: resolve=False 必须复现改动前写死的 /usr/bin/python3
+    assert sc.compile_launchd(fake, resolve=False)[
+        "com.omostation.fake-launchd-job"]["ProgramArguments"][0] == "/usr/bin/python3"
+    assert sc.compile_crontab(fake, resolve=False)[-1] == f"0 3 * * * {cmd}"
