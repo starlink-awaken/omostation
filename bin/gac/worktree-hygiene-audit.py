@@ -98,6 +98,21 @@ def _run(cmd: list[str], cwd: Path | None = None, check: bool = False) -> subpro
     )
 
 
+def _primary_worktree_path() -> Path | None:
+    """主检出 (`git worktree list` 的第一条) —— superproject 本体, 不是可清理的 worktree。
+
+    按 AGENTS.md 主工作区是**共享只读**的: 清理它等于清理他人的在制工作。
+    但 `git worktree list` 把主检出也列在里面, 于是本审计会把它报成
+    `merged_with_dirty` (主检出常常有并发 agent 的未提交改动), 让
+    `make worktree-hygiene` 在共享主工作区**必然失败** —— 那是误报, 不是发现。
+    """
+    out = _run(["git", "worktree", "list", "--porcelain"], check=True)
+    for line in out.stdout.splitlines():
+        if line.startswith("worktree "):
+            return Path(line.split(" ", 1)[1]).resolve()
+    return None
+
+
 def _registered_worktrees() -> list[dict[str, str]]:
     out = _run(["git", "worktree", "list", "--porcelain"], check=True)
     worktrees: list[dict[str, str]] = []
@@ -537,7 +552,10 @@ def _main() -> int:
     registered = _registered_worktrees()
     registered_paths = {w["path"] for w in registered}
 
-    worktree_reports = [_categorize_worktree(w) for w in registered if w.get("path")]
+    worktree_reports = [
+        _categorize_worktree(w) for w in registered
+        if w.get("path") and Path(w["path"]).resolve() != (_primary_worktree_path() or Path("/"))
+    ]
 
     unregistered = [d for d in _candidate_dirs() if not _is_registered(d, registered_paths)]
     unregistered_reports = [_unregistered_dir_info(d) for d in unregistered]
@@ -560,7 +578,10 @@ def _main() -> int:
         if args.execute:
             registered = _registered_worktrees()
             registered_paths = {w["path"] for w in registered}
-            worktree_reports = [_categorize_worktree(w) for w in registered if w.get("path")]
+            worktree_reports = [
+        _categorize_worktree(w) for w in registered
+        if w.get("path") and Path(w["path"]).resolve() != (_primary_worktree_path() or Path("/"))
+    ]
             unregistered = [d for d in _candidate_dirs() if not _is_registered(d, registered_paths)]
             unregistered_reports = [_unregistered_dir_info(d) for d in unregistered]
 
