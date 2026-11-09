@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-11-07
-last-reviewed: 2026-11-07
+last_updated: 2026-11-09
+last-reviewed: 2026-11-09
 lifecycle: entry
 status: active
 ---
@@ -260,12 +260,12 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 
 | 簇 | 覆盖 | 高频咬人条目（条首短语） |
 |---|---|---|
-| **判据/检测器自身的可靠性**（最大簇） | 扫源码的门禁必须自证 · 六类静默失效形状 · 判据报警先 print 原始行 · 解析失败退回空 · 计数含观察者（`log show` 自记 argv）· 抽样探测的覆盖面上限 · 按构造就绿 · glob 字符类陷阱 · YAML 能 parse ≠ 结构正确 · 写路径要在调用时刻解析 · 检测器的分类规则要与标记清单同源 | 「Bash 工具跑的是 zsh」（word-splitting 塌缩 + PIPESTATUS + date %N 三连 + 别名替换 grep/find/ls/cp/ps，其中 `ps -p` rc=2 与 `ps aux` 空表都能让存活判定假负）·「frontmatter UTC 时区」 |
+| **判据/检测器自身的可靠性**（最大簇） | 扫源码的门禁必须自证 · 六类静默失效形状 · 判据报警先 print 原始行 · 解析失败退回空 · 计数含观察者（`log show` 自记 argv）· 抽样探测的覆盖面上限 · 按构造就绿 · glob 字符类陷阱 · YAML 能 parse ≠ 结构正确 · 写路径要在调用时刻解析 · 检测器的分类规则要与标记清单同源 · 仪器阴性先证其能跑（`2>/dev/null` 吞 rc=127 · 记录恒缺 ≠ 事件为零 · `os.walk` 不接 `onerror` 静默丢目录 · 双驱动污染「连续第 N 次」语义 · 未 authored 的调用按仪器故障处理） | 「Bash 工具跑的是 zsh」（word-splitting 塌缩 + PIPESTATUS + date %N 三连 + 别名替换 grep/find/ls/cp/ps，其中 `ps -p` rc=2 与 `ps aux` 空表都能让存活判定假负）·「frontmatter UTC 时区」 ·「`2>/dev/null` 把「仪器根本没跑」洗成「零命中」」 |
 | **测试与 host 状态** | hermetic 测试泄漏 host 状态 · 用例断言 host 运行态 · 判据不被任何 CI 路径跑 = 不存在 | 「memory 索引是硬容量」 |
 | **根与 profile** | 根目录是参数 · 根有四类落点 · 运行时安装位 · XDG 状态根 · 两个根的写面收敛 · 声明 profile 后跑真实 sync · 模块级常量 import 时冻结 | 「根有四类落点」 |
 | **git / 子模块 / worktree** | 并发 agent 分支隔离 · worktree 子模块与 remote 完整性 · 未初始化子模块 git -C 向上解析 · submodule-pointer 空转 · 扫描面 worktree 副本归一 · 规则接线检查对子模块检出敏感 · SKIP_SUBMODULE_INIT 仍跑 guard 全量对齐 | 「未初始化子模块 `git -C` 向上解析」 |
 | **交付与合并** | merge 脚本主区撞脏树 · mergeStateStatus（CLEAN/BLOCKED/DIRTY）· PR 工作流各条 | 「mergeStateStatus」 |
-| **工具链 / 环境** | Chrome GUI 自动化路线 · gbrain 只能用 bun run test · 生成物 CI 口径 ≠ 本地 · 本机代理造成 GitHub 读正常写失败 | 「生成物 CI 口径 ≠ 本地」 |
+| **工具链 / 环境** | Chrome GUI 自动化路线 · gbrain 只能用 bun run test · 生成物 CI 口径 ≠ 本地 · 本机代理造成 GitHub 读正常写失败 · macOS 27 缺 `/usr/bin/{rg,date,df,cat}` 与 `/bin/awk` · `log show` kernel 行的级别与开机会话可见性 · `du -sh` 量的是符号链接自身 | 「生成物 CI 口径 ≠ 本地」 |
 
 ### 当场会咬人的三条（进任何编辑会话前扫一眼）
 
