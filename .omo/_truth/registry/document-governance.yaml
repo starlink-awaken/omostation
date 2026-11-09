@@ -22,14 +22,35 @@ surfaces:
       - README.md
       - ARCHITECTURE.md
       - LAYER-INDEX.md
-      - docs/SYSTEM-INDEX.md
-      - docs/INDEX-*.md
     owner: governance-team
     lifecycle: entry
     ssot: docs/SYSTEM-INDEX.md
     verifier: bin/ssot/doc-governance-check.py
-    metadata: external
+    # 2026-11-09: metadata external -> frontmatter。原值让**全部** metadata 检查
+    # (missing/malformed/invalid + stale_review) 在 `if surface["metadata"] == "frontmatter"`
+    # 守卫下静默跳过 —— 本 surface 的 review_days: 30 因此是纯声明零执行 (DECL_EXEC_GAP)。
+    # 逐条核对: 五份文档 frontmatter 的 status/lifecycle/owner/last-reviewed 齐备且取值合法。
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
     review_days: 30
+    workflow: project-doc-change
+
+  - id: root-index
+    patterns:
+      - docs/SYSTEM-INDEX.md
+      - docs/INDEX-*.md
+    owner: governance-team
+    lifecycle: contract
+    ssot: docs/SYSTEM-INDEX.md
+    verifier: bin/ssot/doc-governance-check.py
+    # 2026-11-09 从 root-entry 拆出并**激活执行**。拆因: 这批文档的 lifecycle 是
+    # history / generated / contract, 套 30 天 SLA 与 X2-C05 同类校准错误 ——
+    # 生成物的新鲜度来自重新生成 (INDEX-PROJECTS/TOOLS 已由生成器盖日期), 历史/契约
+    # 文档在本 registry 其他 surface 一律 180d。拆出后仍受 stale_review 执行, 只是
+    # 节奏校准到 180d; 不是放宽, 是把死声明换成真声明。
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
+    review_days: 180
     workflow: project-doc-change
 
   - id: omo-standards

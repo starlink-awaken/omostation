@@ -1,7 +1,10 @@
 ---
 type: ssot
+status: active
+lifecycle: generated
 owner: governance-team
-last_updated: 2026-11-03
+last_updated: 2026-11-09
+last-reviewed: 2026-11-09
 ---
 
 # INDEX-KNOWLEDGE.md — 知识资产统一索引
@@ -13,7 +16,7 @@ last_updated: 2026-11-03
 > - validation: ADR 数与实际目录一致
 > - status: active
 > - created_at: 2026-07-14
-> - generated_at: 2026-11-03T08:50:24.989058+00:00
+> - generated_at: 2026-11-09T11:03:34.557311+00:00
 
 ---
 

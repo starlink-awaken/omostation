@@ -1,3 +1,10 @@
+---
+status: active
+lifecycle: generated
+owner: governance-team
+last-reviewed: 2026-11-09
+---
+
 # INDEX-AGENTS.md — Agent 能力索引
 
 > **维护规则**
