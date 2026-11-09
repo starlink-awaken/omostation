@@ -63,6 +63,31 @@ echo "  install_root: $INSTALL_ROOT"
 echo "  current:      $cur"
 echo "  target:       $target"
 
+# target 可能是分支名 (如 origin/main) 而非 40 位 SHA。若直接 cat-file, 命中的是
+# **本地远端跟踪引用** —— 它可能是陈旧的, 于是下面「取不到就 fetch」的分支被整段跳过,
+# checkout 静默落在旧码上, 而脚本还会报「完成」。
+# 2026-11-09 实证: 安装位 origin/main 停在 8fb45cfb3 (= #5176), 而 origin/main 实为
+# 5cec6612a; `anchor-install-root.sh origin/main` 打印「HEAD is now at 8fb45cfb3」并
+# 报完成, 常驻族继续跑 6 个 PR 之前的代码 —— 正是本脚本存在的理由被自己复刻了一遍。
+# 故: 分支名一律先 fetch 刷新, 再解析成 SHA。fetch 失败不静默 (见下)。
+if ! [[ "$target" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "-- target 是分支名: 先刷新远端跟踪引用"
+  fetch_ok=0
+  git -C "$INSTALL_ROOT" fetch origin >/dev/null 2>&1 && fetch_ok=1
+  git -C "$INSTALL_ROOT" fetch "$CHECKOUT" main >/dev/null 2>&1 && fetch_ok=1
+  if [[ "$fetch_ok" != 1 ]]; then
+    echo "fetch 全部失败 —— 拒绝用可能陈旧的本地 ref 重锚 (避免静默跑旧码)" >&2
+    exit 4
+  fi
+  resolved="$(git -C "$INSTALL_ROOT" rev-parse "$target" 2>/dev/null || true)"
+  if [[ -z "$resolved" ]]; then
+    echo "分支解析失败: $target" >&2
+    exit 3
+  fi
+  echo "-- 解析为 SHA: $resolved"
+  target="$resolved"
+fi
+
 # 目标 SHA 可能只在检出根里 (未推 origin) —— 先试本地, 再试 origin
 if ! git -C "$INSTALL_ROOT" cat-file -e "${target}^{commit}" 2>/dev/null; then
   echo "-- 从检出根取目标提交"
