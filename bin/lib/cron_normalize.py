@@ -58,11 +58,20 @@ def normalize_interpreter(cmd: str) -> str:
 def expand_workspace(cmd: str) -> str:
     """把 registry 里的 `$HOME/Workspace` 写法展开成绝对路径.
 
-    装到 crontab 的行必须是绝对路径 —— cron 的 PATH 只有 /usr/bin:/bin,
-    且 crontab 不走 shell 的变量展开 ⇒ `$HOME` 原样留在 crontab 里会指向字面量.
+    **cron 会通过 `/bin/sh -c` 执行命令, `$HOME` 会被 shell 展开** —— 实测已装面
+    有 4 条行带着字面 `$HOME/Project/...` 且日志显示它们每次运行都成功
+    (sched-health.log / kems-daily.log / daily-readings.log 当天仍在写)。
+
+    所以展开不是「为了让作业能跑」, 而是为了让**登记面与安装面的比较口径一致**:
+    不展开时 registry 的 `$HOME/Workspace` 与已装面的绝对路径对不上, check_drift
+    会报 drift (PR #5138 之前 --diff 因此把 23 条 `$HOME` 拼法的作业同时报成
+    removed 与 added)。
 
     根从 `Path.home()` 派生, 不写字面量: 写死本机用户目录会让**换机后**登记面
     全部指向不存在的路径 ⇒ check_drift 永久 drift, --diff 的判据随之失真.
+
+    (此前 docstring 写「crontab 不走 shell 的变量展开」—— 那是**事实错误**,
+    已按上面的实测订正。)
     """
     home = str(Path.home())
     return cmd.replace('"$HOME/Workspace"', f"{home}/Workspace").replace(
