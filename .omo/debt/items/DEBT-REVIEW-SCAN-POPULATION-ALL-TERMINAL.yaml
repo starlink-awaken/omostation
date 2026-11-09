@@ -44,7 +44,7 @@ evidence_refs:
   中断整轮, 一度误判「有一项 YAML 损坏」—— 逐份 try/except 后确认 README.md 是合法 Markdown 文档 (标题 `# \`.omo/debt/items/\` — Debt Canonical
   SSOT`), 损坏假设撤回, 44 yaml 全部可解析'
 - '立案后复测 (2026-11-09, #5146 squash 合并为 7c91531d8 之后, 服务端直读 main, 不信本地工作树): 磁盘 `.omo/debt/items/*.yaml` 46 份 vs `.omo/_truth/registry/debt.yaml`
-  的 seed_items 25 条 ⇒ 未收录 21 条 (本项立案时的 20 条 + 当轮新立的 2 条自身)。阳性对照: 同一匹配判据下 `GAP-SEED-DISPATCH` 命中 (证明扫描逻辑本身可用); `BET-LEDGER-CLI-AUTHORITY-SPLIT`
+  的 seed_items 25 条 ⇒ 未收录 21 条 (本项立案时的 19 条 yaml + #5146 新立的 2 条自身 = 21)。阳性对照: 同一匹配判据下 `GAP-SEED-DISPATCH` 命中 (证明扫描逻辑本身可用); `BET-LEDGER-CLI-AUTHORITY-SPLIT`
   与 `STORAGE-SHAREDMODEL-NO-BACKUP` 各 0 命中 —— 与本项自诉一致: 直接写 items 目录而不经 broker 的立案对复审面永久不可见, **包括立这条案的本体**。'
 - '补救及其口径 (同 PR 落地): 向 seed_items 追加**本 PR 自己的 2 条** (25 → 27), 写入语义与 broker 逐字对齐 —— `projects/omo/src/omo/omo_ingress_debt.py:128`
   `debt_ref = f''.omo/debt/items/{debt_id}.yaml''`、`:129` 精确字符串成员判据去重、`:130` 追加表尾 ⇒ 该追加对日后 broker 重放幂等。插入用物理块边界
@@ -68,6 +68,18 @@ evidence_refs:
   会自动加引号, 实测两条文件的 opened_at/last_reviewed_at/next_review_at 经 dumper 后均为带引号 str; 崩点在我用正则手工改 `next_review_at` 时把引号抹掉了。同仓另一套
   `bin/gac/debt-review-scheduler.py:parse_date:36-38` 显式做 `if dt.tzinfo is None: replace(tzinfo=UTC)` 且兼容 `%Y-%m-%d`,
   与 kernel 的裸 fromisoformat 构成两套不兼容的日期口径。**纪律**: 改这类字段后必须回读**装载类型** (isinstance str) 而不只看文件文本。'
+- '三修订全量复算 (2026-11-09, 服务端直读 origin/main, 不信本地工作树):
+  磁盘条目 45 → 46 → 47 (其中 yaml 44 → 46 → 46, 非 yaml 恒
+  1 份 README.md), registry.seed_items 25 → 25 → 27,
+  未登记 yaml 19 → 21 → 19。本轮 (含 #5153) 未登记 19 条的 lifecycle
+  分布 = 8 identified + 1 in_progress (非终态 9) / 9 resolved
+  + 1 closed (终态 10), 其中 16 条带非空 decision_needed。**单位纪律**:
+  「20」是条目单位 (45 条目 − 25 登记), 「19」是 yaml 项单位 (44 − 25),
+  差 1 = README.md; 登记键是 yaml 项 id ⇒ 凡「补登 N 条」「欠登记 N
+  条」一律用 yaml 单位。**选项后果实测** (原样复述, 供 owner 裁决): ① 两面双向同步
+  ⇒ 扫描面 27 → 46 且可办项 2 → 11; ③ registry 为准 + 完整性门禁 ⇒
+  现 19 条历史欠登记立刻成红; Q3 清出 25 条全终态 seed ⇒ seed 27 → 2
+  (kernel 道 actionable_items 由 0 变 2)。'
 mitigation_refs: []
 opened_at: '2026-11-09'
 last_reviewed_at: '2026-11-09'
@@ -76,11 +88,11 @@ gate_level: none
 x1_policy_ref: ''
 x3_tier: Principle
 decision_needed: '三问分开裁决。(1) **复审总体以哪一面为准**: ① 目录为准 (`items/*.yaml` 全量 glob, registry 退化为元数据/加速索引) —— 一处改动即覆盖 9
-  条, 但要确认没有「故意不登记」的项 (实测面外 20 条里 9 条是终态, 说明历史上登记与落盘本就不同步); ② 登记面为准 + 立案入口唯一 (broker-only) —— 语义清楚但先要解决 broker 产出形态与
+  条, 但要确认没有「故意不登记」的项 (实测面外 19 条 yaml 里 10 条终态、9 条非终态, 说明历史上登记与落盘本就不同步); ② 登记面为准 + 立案入口唯一 (broker-only) —— 语义清楚但先要解决 broker 产出形态与
   22 键权威不一致 (见 evidence 第 8 条), 否则「走 broker」等于「换一种文件形状」; ③ 两面取并集 + 反向门禁 (磁盘有而登记面无 = 失败) —— 最省改动, 但会让 `debt-integrity-check.py`
-  从单向变双向, 现有 20 条历史欠登记立刻成红。(2) **立案入口是否强制**: 若裁 broker-only, 需要同时给出 broker 的 22 键模式 (现实现会注入 schema 外键并追加 seen_again
+  从单向变双向, 现有 19 条历史欠登记立刻成红。(2) **立案入口是否强制**: 若裁 broker-only, 需要同时给出 broker 的 22 键模式 (现实现会注入 schema 外键并追加 seen_again
   历史), 否则合规的直写会持续发生。(3) **seed_items 里 25 条全终态是否清出**: 保留则扫描面恒为 0 可办项, `needs_reassessment=0 / overdue=0` 将永远是真但无意义的读数。**裁决前不要直写
-  registry/debt.yaml** —— 该文件由 broker 维护, 手工补登 20 条会与 broker 的 upsert 语义竞争。'
+  registry/debt.yaml** —— 该文件由 broker 维护, 手工补登 19 条（yaml 单位）会与 broker 的 upsert 语义竞争。'
 history:
 - at: '2026-11-09T03:26:00+00:00'
   action: identify
@@ -93,4 +105,14 @@ history:
   note: '复测发现本项立案后自身仍不在扫描面 (磁盘 46 vs 登记 25, 未收录 21), 遂按 broker 同语义补录本 PR 2 条。补录取证得两条新结论: (a) kernel 的日期分道 (due_now/upcoming)
     因 25/27 条 next_review_at 全空而从未被执行过, 本项是首例, 且 bin 道不读该字段 ⇒ 两道口径分叉; (b) 该字段的 5 种 YAML 写法只有「加引号 + 显式偏移」可用, 初版 naive
     写法把 kernel 队列构造打崩, 已在同 PR 内订正。其余 19 条不批量收录, 留待 owner 与本项三问一并裁决; decision_needed 三问未改。'
+  actor: governance-agent
+- at: '2026-11-09T05:16:00+00:00'
+  action: evaluate
+  note: '计数单位与终态极性订正 (4 处, 复核本项自身文本时实测出来): ① evidence 里「20
+    条 + 2 条自身 = 21」单位混用 —— 21 是 yaml 单位, 其构成应是 19 + 2;
+    ② decision Q1①「面外 20 条里 9 条是终态」极性写反 —— 19 条 yaml 里
+    10 条终态 / 9 条非终态; ③④ Q1③「立刻成红」与「手工补登」的 20 改 19。三问本身未改,
+    各选项的数值后果按本轮复算重述 (见 evidence 第 15 条)。同轮把第 4 条测量陷阱
+    (git grep 带 rev 参数时输出行含 rev:path 前缀) 登记进 docs/pitfalls.md
+    与 AGENTS.md §7 索引。'
   actor: governance-agent
