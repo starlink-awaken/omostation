@@ -214,10 +214,11 @@ def resolve_python_command(
     candidates: list[str] | None = None,
     repo_root: Path | str | None = None,
 ) -> tuple[str, str | None]:
-    """把 command 里的 `python3 <script>.py` 换成本机可证可用的解释器.
+    """把 command 里**每个** `python3 <script>.py` 换成本机可证可用的解释器.
 
-    返回 `(新 command, 原因)`；原因 `None` = 已替换成功或本就无需替换。
-    只在**同时满足**版本下限与目标脚本顶层第三方依赖的候选里选，选不出就原样返回。
+    返回 `(新 command, 原因)`；原因 `None` = 每个调用点都已替换或本就无需替换。
+    只在**同时满足**版本下限与目标脚本顶层第三方依赖的候选里选；某个调用点选不出
+    就只留那个调用点原样，并把原因报出来（逐点判定，不整条放弃）。
     """
     # 缓存键必须含候选集与根: 只按 cmd 缓存会让换了 candidates/CRON_INTERPRETER 的
     # 调用读到上一个宿主布局的结果。
@@ -284,45 +285,70 @@ def pick_interpreter(
     给 launchd 这类「解释器与命令分开存放」的平面用: 它需要的是解释器本身,
     而不是替换后的整条 command。
     """
-    new, reason = resolve_python_command(cmd, candidates=candidates, repo_root=repo_root)
-    if reason is not None:
+    m = _PYTHON_INVOCATION_RE.search(cmd)
+    if m is None:
         return None
-    m = _PYTHON_INVOCATION_RE.search(new)
-    return m.group("interp") if m else None
+    root = _job_workspace(cmd, m.start(), repo_root)
+    chosen, _reason = _resolve_invocation(m, candidates, root)
+    return chosen
 
 
 def _resolve_python_command_uncached(cmd, *, candidates, repo_root):
-    m = _PYTHON_INVOCATION_RE.search(cmd)
-    if not m:
+    """逐个调用点替换 —— `A && python3 B && python3 C` 里每个 python3 单独判定.
+
+    只换第一个是 #5171 漏下的形状: 登记面有 5 条作业的 command 含 2-3 个 python
+    调用点，第二个之后的脚本一旦依赖 3.11+ 就仍留在 3.9 上，而 `check_drift` 按
+    折叠口径比较（解释器路径本就被折掉）永远看不见这种残留 ⇒ 必须在这里换干净。
+    """
+    matches = list(_PYTHON_INVOCATION_RE.finditer(cmd))
+    if not matches:
         return cmd, None
-    root = _job_workspace(cmd, m.start(), repo_root)
-    token = m.group("script")
-    script = Path(os.path.expanduser(os.path.expandvars(token)))
+    parts: list[str] = []
+    reasons: list[str] = []
+    pos = 0
+    for m in matches:
+        chosen, reason = _resolve_invocation(
+            m, candidates, _job_workspace(cmd, m.start(), repo_root)
+        )
+        parts.append(cmd[pos : m.start("interp")])
+        parts.append(chosen if chosen is not None else m.group("interp"))
+        pos = m.end("interp")
+        if reason is not None:
+            reasons.append(reason)
+    parts.append(cmd[pos:])
+    new = "".join(parts)
+    return new, ("; ".join(reasons) or None)
+
+
+def _resolve_invocation(
+    m: re.Match[str],
+    candidates: list[str] | None,
+    root: Path,
+) -> tuple[str | None, str | None]:
+    """单个调用点 → (可用的解释器, None) 或 (None, 原因)."""
+    script = Path(os.path.expanduser(os.path.expandvars(m.group("script"))))
     if not script.is_absolute():
         script = root / script
     if not script.is_file():
-        return cmd, f"target script not found: {script}"
+        return None, f"target script not found: {script}"
     deps = third_party_imports(script)
     if deps is None:
-        return cmd, f"unparseable target: {script}"
+        return None, f"unparseable target: {script}"
     key = str(root)
     if key not in _repo_local_cache:
         _repo_local_cache[key] = _repo_local_modules(root)
     external = [d for d in deps if d not in _repo_local_cache[key]]
-    for cand in candidates if candidates is not None else interpreter_candidates(root):
+    pool = candidates if candidates is not None else interpreter_candidates(root)
+    for cand in pool:
         # 入选前复查可折回性: 调用方 (含 CRON_INTERPRETER) 传进不可折回的路径,
         # 会让 check_drift 把替换读成永久 drift ⇒ 宁可不换。
         if not _FOLDABLE_INTERPRETER_RE.search(cand):
             continue
         if _interpreter_ok(cand, script.parent, external):
-            new = cmd[: m.start("interp")] + cand + cmd[m.end("interp") :]
-            if new == cmd:
-                return cmd, None
-            return new, None
-    tried = ", ".join(candidates if candidates is not None else interpreter_candidates(root)) or "(无候选)"
-    return cmd, (
+            return cand, None
+    return None, (
         f"no interpreter satisfies {script.name} (needs 3.11+ and {external or 'no third-party'}); "
-        f"tried: {tried}"
+        f"tried: {', '.join(pool) or '(无候选)'}"
     )
 
 
