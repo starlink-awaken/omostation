@@ -142,7 +142,14 @@ surfaces:
     lifecycle: entry
     ssot: docs/project-registry.yaml
     verifier: bin/ssot/doc-governance-check.py
-    metadata: external
+    # 2026-11-09: metadata external -> frontmatter。与 root-entry 同因 —— 原值让全部
+    # metadata 校验 (含 stale_review) 落在 `if surface["metadata"] == "frontmatter"`
+    # 守卫内被静默跳过, 本 surface 的 review_days: 90 因此是纯声明零执行。
+    # 这是全仓**最后一个**非 frontmatter 型 surface; 激活后 missing_frontmatter
+    # 立即从 0 变 71 (见 warning_exceptions 的 legacy-project-entry-frontmatter)。
+    # stale_review 实测 0 命中: 70 份文档里没有任何一份 last-reviewed 超过 90 天。
+    metadata: frontmatter
+    required_frontmatter: [status, lifecycle, owner, last-reviewed]
     review_days: 90
     workflow: project-doc-change
 
@@ -173,8 +180,14 @@ warning_exceptions:
   #   missing_frontmatter:omo-knowledge        18 / 120    missing_frontmatter:docs-discoverable   2 / 175
   #   invalid_metadata:omo-knowledge           20 /  75    invalid_metadata:docs-discoverable      3 /  24
   #   invalid_metadata:accepted-specifications  1 /   2
+  #   missing_frontmatter:project-entry         71 /  80   ← 2026-11-09 新增桶（见下）
   # 较 2026-11-02 读数：invalid_metadata:omo-knowledge 14→20、invalid_metadata:docs-discoverable 2→3，
   # 均在各自预算内（75 / 24），故未动 max_findings。
+  # missing_frontmatter:project-entry 的 71 是 **pin 实测**（`git ls-tree HEAD projects/` 取 14 个
+  # gitlink 的 pin，再 `git -C <sub> show <pin>:<file>` 逐份读，不动工作区）：68 份 pinned 文档里
+  # 0 份合规，其中 3 份（cockpit-ui 的 AGENTS/ARCHITECTURE/BOUNDARY）完全无 frontmatter（2 findings/份），
+  # 其余 65 份各 1 finding。工作区实测 70 份文件同结构（4 个 `+` 子模块的新增文件不改变缺口形状）。
+  # 该桶由 legacy-project-entry-frontmatter 覆盖（max 80，含 9 条余量，同 actual=117/max=120 口径）。
   # 2026-11-02 据此删掉命中为 0 的三条（legacy-omo-truth-frontmatter / legacy-omo-standards-frontmatter /
   # legacy-omo-standards-enums）：它们已经不压制任何现存告警，但会在窗口内继续压制未来新增的
   # 无 frontmatter 文档，删掉是 shrink_only 方向上的收紧，不是放宽。
@@ -222,3 +235,29 @@ warning_exceptions:
       expires: 2027-01-31
       owner: governance-team
       reason: Newly created specs may have last-reviewed set to creation date which CI flags as future-dated.
+    - id: legacy-project-entry-frontmatter
+      rule: missing_frontmatter
+      surface: project-entry
+      max_findings: 80
+      expires: 2027-03-31
+      owner: governance-team
+      reason: |
+        2026-11-09 激活 project-entry 的 90 天 SLA 时实测的存量债务 (本 surface 此前是
+        metadata: external, 全部 metadata 校验被静默跳过, 故这批缺口不可见)。
+
+        实测读数 (2026-11-09, 主检出 + 其 pin 的子模块): 本 surface 覆盖 70 份文档,
+        分布在 18 个子模块仓; 完全合规仅 2 份。缺口分布:
+          - 68 份缺 status + lifecycle (1 finding/份)
+          - 其中 3 份 (cockpit-ui 的 AGENTS/ARCHITECTURE/BOUNDARY) 完全没有 frontmatter
+            (2 findings/份)
+        ⇒ missing_frontmatter:project-entry 实测 71 条; 本预算 max_findings 取 80 (含 9 条余量,
+        与 legacy-omo-knowledge-frontmatter 的 actual=117/max=120 同口径)。
+
+        stale_review:project-entry 实测 **0** 命中 —— 70 份里没有任何一份 last-reviewed
+        超过 90 天, 故本条只覆盖 missing_frontmatter 一个桶。
+
+        max_findings 是**界**不是豁免: 新增不合规的项目入口文档会当场把它顶穿。
+        清偿路径 = 逐批修子模块文档 (每个仓 commit + push + 父仓 gitlink bump),
+        修一批计数就降一批; 修完即可删本条 (shrink_only 方向)。
+        expires 取 2027-03-31 而非其他 legacy 条的 2027-01-31, 因为清偿要跨 18 个
+        独立子模块仓、每仓一次三步提交, 比仓内文档改动的窗口天然更长。
