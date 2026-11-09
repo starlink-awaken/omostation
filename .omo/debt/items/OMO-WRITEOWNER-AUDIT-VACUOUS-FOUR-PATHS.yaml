@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: in_progress
 owner: governance-team
 affected_roots:
 - .omo
@@ -157,9 +157,12 @@ history:
     同一文件命中 `.omo/debt/*` 与 `/**` 两条规则时按文件计不再翻倍、缺采集面 exit 2 不再
     静默 ok=true、根侧把门禁接线覆盖成 `--range auto --advisory`;
     tests/test_write_owner_audit_range.py 9 例。未做: 阻断化 (见⑤)、子模块侧 sgf-policy
-    同步 (见④)。另按判据⑥ 的群体词表实测把本条目 lifecycle_state 从 broker 自产的
-    `scheduled` 归一回 `identified` (实测 debt-review-scheduler.py:28 TERMINAL_STATES 不含
-    二者, 归一不改变扫描行为)。
+    同步 (见④)。lifecycle_state 归一按状态机原文走: 设计原文
+    (.omo/_knowledge/superpowers/specs/2026-06-02-debt-governance-mechanism-design.md:186)
+    是 identified -> classified -> scheduled -> in_progress -> mitigated -> verified -> closed,
+    所以先前把 broker 自产的 `scheduled` 归一回 `identified` 是**倒退两格**; 本轮交付在途且
+    仍留一问未裁, 群内词表里的正向取值是 `in_progress` (实测 debt-review-scheduler.py:28
+    TERMINAL_STATES 不含这四者, 归一不改变扫描行为)。
 decision_needed: |-
     只剩一问 (2026-11-09 复算后, 原三问的 (1)(2) 已被实测否证为不可执行/非本因):
     **范围面何时从 advisory 升为阻断, 升在哪一层** —— ① 维持现状只报数 (CI 与本地都跑,
