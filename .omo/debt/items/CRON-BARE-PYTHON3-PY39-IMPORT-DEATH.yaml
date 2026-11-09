@@ -108,3 +108,7 @@ history:
   action: correct
   note: '两条立案前提被今天的数据推翻, 记下来以免后续按旧事实裁决: ① `docs/pitfalls.md:301` 的 crontab 写入 EINTR 今天未复现 —— `install-cron-plane.py --install` 两次全程 rc=0 并落盘 68 行, 因此「登记面改了也收敛不了 已装面」这条阻塞解除; ② 死作业计数存在未归一的口径差: 本项按「解释器实跑差分 + 日志末行 ImportError」记 8 条 (7 仓内 + 1 panorama), 今日安装前按模块顶层 ImportError 探测给 9 (单位是作业行, 15 行裸 python3 中的 9 行)。9 vs 7 的差额 1 未在今天的测量中定位, 复核时按本项原口径 (实跑 rc + 日志末行) 重跑即可, 不要各自另起计数单位。 未覆盖面也照记: `compile_launchd` 的 `ProgramArguments[1]` 仍把整条 shell 串当单参数 (#5171 只修了其中的硬编码 解释器), mini 侧 36 行裸 `python3` 未实装。决策(2) `normalize_interpreter` 等价是否收窄、决策(3) 可执行性门禁 起法, 两项仍待 owner 裁决。'
   actor: governance-agent
+- at: '2026-11-09T08:32:20+00:00'
+  action: correct
+  note: '本项 evidence 有一条事实已过期, 单独记下来免得后续复核沿用旧读数: 立案时写「mini `/opt/homebrew/bin` 下**只有** python3.15 (无 3.13/3.14)”, 据此把决策(1)①「登记面写各宿主都存在的绝对路径」判成只剩一条无契约保证的候选。 2026-11-09 ssh Mac-mini 实测: `/opt/homebrew/bin` 下 python3.12 / 3.13 / 3.14 / 3.15 全在, 且 `Workspace/.venv` =  CPython 3.14.7 (本机 mbp 的 `.venv` 是 3.13.13) ⇒ ① 的被否前提今天不再成立; 若要重开(1) 或用「宿主路径不齐」论据,  请先重跑该读数。同期读数: mini crontab 有效 59 行 / 裸 `python3` 调用点 36, **未实装** —— owner 本次授权范围仅本机,  而 #5171/#5174 的解析按宿主取候选 (`.venv` 优先, 其次 homebrew 版本名), 对 mini 的 3.13/3.14/3.15 布局同样可解,  缺的只是一次独立的实装授权。'
+  actor: governance-agent
