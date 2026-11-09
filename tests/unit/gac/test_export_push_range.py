@@ -22,9 +22,12 @@
 from __future__ import annotations
 
 import importlib.util
+import io
+import json
 import os
 import subprocess
 import sys
+from contextlib import redirect_stdout
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -241,4 +244,47 @@ def test_change_lane_check_push_range_uses_per_commit_not_aggregate(tmp_path):
     source = LANE_SCRIPT.read_text(encoding="utf-8")
     assert "push_range" in source
     assert 'git_range = args.git_range or (push_range if ".." in push_range else "")' in source
-    assert "check_range(git_range" in source
+    assert "check_range(" in source
+    # 推送判定要排除已合并 ref (origin/main) —— squash commit 不是本次推送能改的
+    assert "exclude_refs=_merged_refs() if push_range else ()" in source
+
+
+def test_push_range_main_excludes_merged_squash_commits(tmp_path):
+    """main() 的 PUSH_RANGE 分支必须真的排除已合并 commit (接线级, 不只是函数存在)。
+
+    实测 (2026-11-09): rebase 后 force-push 被 pre-push 拦下, 点名的
+    `dd8cd184d` / `5b5b4934e` / `6aa14fa8b` 三条**都已合并** —— 本仓全 squash
+    合并, 它们个个混 lane, 于是范围判据把它们算成假违规。
+    """
+    repo = _make_repo(tmp_path)
+    base_sha = _commit(repo, "base.txt")
+    # 一个「已合并的 squash commit」: 单 commit 混 code + docs 两个 lane
+    (repo / "bin").mkdir(parents=True, exist_ok=True)
+    (repo / "bin" / "a.py").write_text("x\n", encoding="utf-8")
+    (repo / "docs").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "a.md").write_text("y\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "squash merge")
+    merged = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "update-ref", "refs/remotes/origin/main", merged)
+    _commit(repo, "docs/b.md")
+    head = _git(repo, "rev-parse", "HEAD")
+
+    module = _load(LANE_SCRIPT, "lane_check_push_main")
+    module.WORKSPACE = repo
+    module.load_governance_lanes.cache_clear()
+    os.environ["PUSH_RANGE"] = f"{base_sha}..{head}"
+    original = sys.argv
+    sys.argv = ["change-lane-check.py", "--json"]
+    try:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            code = module.main()
+    finally:
+        sys.argv = original
+        os.environ.pop("PUSH_RANGE", None)
+    report = json.loads(buffer.getvalue())
+    assert code == 0, report
+    assert report["ok"], report
+    # 新 commit 仍被看见 (不是「范围为空」式假绿)
+    assert report["commits"] >= 1, report
