@@ -76,7 +76,7 @@ CENSUS_SERIAL = CENSUS_WRITE_WORKSPACE | CENSUS_NETWORK | CENSUS_EXCLUSIVE
 # fallback), 两者内容不同 ⇒ 两环境的清单分别是 88 / 84 个, 并集 94。
 # 账只覆盖其中一套 ⇒ 换台机器 (子模块 init 与否) 判据结论就变 ⇒ 漏登记的
 # 写类 gate 会在某台机器上静默继承「默认并行」。故普查口径改为全集。
-CENSUS_TOTAL_GATES = 94
+CENSUS_TOTAL_GATES = 95
 
 # ── ② 全量分类账：普查中的 A 类（纯读/verification）逐一复审为「可并行」─────────
 # 维护约定：新增 gate 必须显式加入本账（或 SERIAL_ONLY），否则本文件失败。
@@ -111,7 +111,7 @@ PARALLEL_REVIEWED = frozenset(
     command-discovery current-state-coherence check-submodule-rewind
     check-evidence-honest-closure check-gateway-status-doc check-foundry-deck-coverage
     check-evidence-freshness check-governance-trend bus-usage-report bos-tracking-gate
-    check-index-drift root-directory-governance bin-scripts-convergence-audit
+    check-index-drift scene-v3-guardrail root-directory-governance bin-scripts-convergence-audit
     omo-runtime-final-tree doc-governance check-conflict-markers check-swarm-collision
     bin-quota-diff task-field-governance test-collection
     lane-debt-ledger
