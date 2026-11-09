@@ -98,6 +98,31 @@ rules:
       必须有 next_review_at + gate_level。审计失败触发 debt integrity score 扣分。
       巡检脚本: projects/omo/src/omo/omo_audit.py:governance_check_debt
 
+      ⚠️ 2026-11-09 实测: 本条的 ❌ 是**结构性假警报**, 不是发现。三重错位 ——
+        ① 上面声明的「每 14 天自动审计」**没有排程**: 它属于 .omo/cron/registry.yaml
+           的 open_decisions D4 列出的 17 条 status: proposed 治理巡检任务之一
+           (含 debt-refresh), D4 至今未决, 未启用为真实 crontab。launchd /
+           crontab / .omo/cron/registry.yaml 三处都搜不到 omo governance audit。
+        ② 本检查器 (bin/gac/x2-freshness-check.py) 对本条实际走的机制是
+           `path_last_modified` —— 量的是 **target 文件的文件系统 mtime**,
+           不是「审计上次跑是什么时候」。两者不是一回事。
+        ③ 于是回退机制拿 8 份 D-*.yaml 的 mtime 当代理, 而这 8 份
+           **全部是 lifecycle_state: resolved 的历史记录** (2026-09-27 之后无人编辑)。
+           已关闭的债务当然不会被编辑 ⇒ 本条**永久**报 42d 超期。
+        ④ 附带: notes 里「lifecycle_state=closed」与实际数据不符 —— 审计代码
+           (omo_audit_checks.py:governance_check_debt_integrity) 早在 2026-09-19
+           就已同时接受 resolved 与 closed, 只有这段 notes 没跟上。
+        ⑤ 更根本的: `path_last_modified` 量的是**文件系统 mtime**, 而 mtime 取决于
+           **什么时候 clone/checkout**, 与任何治理事件无关。实测同一条规则:
+           在主检出 (2026-09-27 之后未动) 读成 42d ❌, 在一个当天新建的 worktree 里
+           读成 0d ✓ —— 同一条规则、同一份 registry, 读数完全由检出时间决定。
+           这类「环境依赖读数」正是本仓反复警告的假绿/假红来源。
+      正确的 freshness 目标应是**审计产物** ~/runtime/audit/governance-audit.jsonl
+      (omo_audit.py:_default_audit_file; 实测 2026-10-10 之后未再写入), 而不是债务条目本身。
+      **在 D4 决出之前不要**把本条改判成「已巡检」— 那会让唯一还亮着的信号也灭掉。
+      D4 若决定启用这批任务, 同步把 target 改为审计产物并确认审计会写它
+      (run_governance_audit 当前不调用 record(), 需要一并接上线)。
+
   - rule_id: X2-FRESH-CROSS-PROJECT-LINT
     title: 全子项目 ruff 0 errors 7 天巡检
     type: governance_loop_freshness
