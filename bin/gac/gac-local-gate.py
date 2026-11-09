@@ -42,7 +42,12 @@ DEFAULT_POLICY = {
         {"id": "gac-drift", "command": ["bin/gac/gac-drift.py"]},
         {
             "id": "write-owner-audit",
-            "command": ["bin/ssot/write-owner-audit.py", "--staged"],
+            "command": [
+                "bin/ssot/write-owner-audit.py",
+                "--range",
+                "auto",
+                "--advisory",
+            ],
         },
         {
             "id": "install-watch-agent",
@@ -348,6 +353,21 @@ DEFAULT_POLICY = {
 # 动态读取并组装策略
 POLICY = load_sgf_policy() or DEFAULT_POLICY
 GATES_LIST = list(POLICY.get("gates", DEFAULT_POLICY["gates"]))
+
+# 根侧覆盖 write-owner-audit 的采集面 (与下面 root-owned guards 同一理由: 子模块更新不得
+# 静默改回)。sgf-policy.yaml 给的是 `--staged`, 而 git 索引在门禁实际运行的每个场合都是空集 ——
+# CI 的 actions/checkout 不 stage、post-commit 时索引已清空、手工跑门禁也不 stage —— 于是
+# 「审计 0 个文件 ⇒ PASS」恒真, write-owners.yaml 声明的 no-direct-write 从未生效 (实录 #5149,
+# 债务项 OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS)。范围面才看得见交付的改动; 先以 --advisory
+# 只报数上线 —— 实测近 200 commits 里触及规则面的 30 个有 21 个是 broker 自身写入, 直接阻断
+# 会误拦合规交付, 是否升为阻断留给 owner 裁决。
+_woa_cmd = ["bin/ssot/write-owner-audit.py", "--range", "auto", "--advisory"]
+for _i, _g in enumerate(GATES_LIST):
+    if _g.get("id") == "write-owner-audit":
+        GATES_LIST[_i] = {**_g, "command": _woa_cmd}
+        break
+else:
+    GATES_LIST.append({"id": "write-owner-audit", "command": _woa_cmd})
 
 # Root-owned convergence and root-directory guards are intentionally appended outside
 # the ecos submodule policy so a submodule update cannot silently remove them.

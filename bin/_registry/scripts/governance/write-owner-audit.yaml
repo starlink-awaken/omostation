@@ -3,7 +3,18 @@ id: bin/ssot/write-owner-audit.py
 name: Write Owner Audit
 category: governance
 owner: governance-team
-description: ""
+description: >
+  write-owners.yaml 的所有权判据消费者: 对给定变更集逐文件判定「声明的 owner 是否允许这次写入」。
+  两种采集面语义不同, 不能同时给 —— `--staged` 看 git 索引并沿用环境豁免 (CI / AGENT_WORKFLOW_RUN_ID
+  一律放行, 历史语义); `--range <base>..<head>` (或 `auto`: PUSH_RANGE → origin/main...HEAD) 看
+  **交付出来的改动集**, 只按提交者身份集合判定, 不套环境豁免。分面理由是索引面在门禁实际运行的
+  每个场合都是空集 (CI 的 actions/checkout 不 stage、post-commit 时索引已清空、手工跑门禁也不 stage),
+  于是「审计 0 个文件 ⇒ PASS」恒真, 声明的 no-direct-write 从未生效 (债务项
+  OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS, 实录 #5149)。范围面是聚合口径 (所有权按文件判,
+  与 change-lane-check 的 per-commit 粒度服务两条不同规则)。缺采集面 → exit 2, 不给静默绿;
+  `--advisory` 恒退 0 但仍报违规与条数。根侧 bin/gac/gac-local-gate.py 以
+  `--range auto --advisory` 覆盖 sgf-policy.yaml 的 `--staged` 条目上线: 实测近 200 commits
+  触及规则面的 30 个 commit 里 21 个是 broker 自身写入, 直接阻断会误拦合规交付, 是否升为阻断留 owner 裁决。
 inputs: []
 outputs:
   - type: exit_code
@@ -12,4 +23,4 @@ dependencies: []
 triggers: []
 related: []
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-11-09"
