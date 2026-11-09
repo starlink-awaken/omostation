@@ -173,6 +173,15 @@ jobs:
           # (sha256 对拍): 从 services.yaml 摘掉本轮那条声明 → 4 failed 且 reality-check E2 同时回到 1
           # (owned_declared 46 vs owned_installed 47), 反向证明检测器不是空转。
           # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时同样 9 pass (不读 host)。
+          # 2026-11-09 追加: test_bet_ledger_authority_declaration 钉只读出口的读数来源面声明
+          # (BET-LEDGER-CLI-AUTHORITY-SPLIT 的 declare-only 处置)。它补的正是 E2 在 CI 上的结构性
+          # 失明面 —— 该判据此前只存在于本地, CI 永不跑, 于是「声明有没有真的落到 stderr」
+          # 没有任何证据 (同 §7「判据不被任何 CI 路径跑 = 不存在」)。四条断言: 声明含 root/HEAD/
+          # ledger/origin-main 四类信息; blob 相等报「一致」、不等报「不一致」(正反两态);
+          # 缺读数报「无法比较」; status 的声明在 stderr 且 stdout 仍是原总览格式 (下游
+          # maturity-align/strategy-check 用正则解析 stdout)。实测 5 pass; 变异对照: 摘掉 main()
+          # 的声明接线 ⇒ test_status_emits_declaration_on_stderr_not_stdout 当场红
+          # (1 failed / 4 passed), 恢复后复绿。不读 host 状态 (git rev-parse 只读仓内 ref)。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -203,6 +212,7 @@ jobs:
             ../../tests/unit/test_brief_null_shape.py \
             ../../tests/unit/test_chain_bind_runs_anchor_seam.py \
             ../../tests/unit/test_ops_launchd_plist_declared_guard.py \
+            ../../tests/test_bet_ledger_authority_declaration.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
