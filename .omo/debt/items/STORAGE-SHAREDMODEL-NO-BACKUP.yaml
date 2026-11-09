@@ -17,7 +17,7 @@ mitigation_refs:
 - bin/ops/hot-tier-resilience.sh
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-10-12'
+last_reviewed_at: '2026-11-09'
 next_review_at: '2026-10-18'
 gate_level: none
 x1_policy_ref: ""
@@ -40,4 +40,19 @@ history:
     不做数据备份。剩余缺口: 周同步排程装上后从未运行过 (launchd 直启 /bin/bash 缺『可移动卷』TCC 授权,
     runs = 0), 已改为经终端 App 启动器并加心跳补跑, 但需用户人工安装并由 launchd 真实触发成功一次后
     才算持续机制; Lex 与 4.1T 盘之外没有第三份稀有权重。
+  actor: "governance-agent"
+- at: '2026-11-07T12:04:00+00:00'
+  action: review-measure
+  note: >-
+    复核（只测量与登记，不改 decision_needed / severity / lifecycle_state / next_review_at 文本）。载体位置实测：该卷已不在 mbp/mini，而在 **studio-01**(tailscale 100.74.244.58) 的 `/dev/disk4 (external, physical) *4.1 TB`（`DK5A1-4T Media`、`Protocol: USB`、`Solid State: Yes`、`SMART Status: Not Supported`）容器 disk6s2 上；`df -k` Used=889,756,916 KB = **848.5 GiB**（identify 记 ~847G、2026-11-06 studio 复核 849Gi ⇒ 量级未变，敞口没有缩小）。同盘 MOVESPEED 123.2 GB、SHAREDWORK 77.8 KB。mini 的 `~/.disk-keepalive.watch`（注释 dated 2026-11-06）与 mbp 同名文件都已用 `-SharedModel=7B762734…` 把该卷从本机守护清单移除（mbp 侧注释为「这两块盘本机根本没接」，未记日期）。
+    风险叠加：承载这份全机唯一零备份大体量资产的盘，今日在 studio 守护日志里出现 `2026-11-07 06:00:00 REMOUNT SKIP: … 设备(物理层不可见)`，且重启（boot 07:02:07）后 `07:03:01→07:27:00` 每 3 分钟 `Volume on disk6s2 failed to mount` 连续 9 次（详见 HW-DISK8-4TB-FLAKY 同日 review-measure 第二轮）。⇒ 备份决策的前置条件不再是「等观察期结论」，而是这块盘已被观测到一次「关机 stall + 25 分钟拒绝挂载」；SMART 经 USB 桥不可读，不能指望盘自报健康。decision_needed 文本未动，重定由 owner 办。
+  actor: "governance-agent"
+- at: '2026-11-09T01:49:00+00:00'
+  action: review-measure
+  note: >-
+    复测第二轮（2026-11-09 09:45 CST，studio-01 只读，配合 HW-DISK8-4TB-FLAKY 同日第三轮）。只更新读数与 last_reviewed_at，不改 decision_needed 文本、不改 severity / lifecycle_state / next_review_at。
+
+    (1) **敞口没有变小，也没有变大**：`df -k /Volumes/SHAREDMODEL` Used = **889,756,920 KB**（≈848.5 GiB；2026-11-07 为 889,756,916 KB，两天净增 4 KB），容量 2,000,290,968 KB、45% 已用。⇒ decision_needed 里 ~847G 的量级前提继续成立。
+    (2) **备份读不到健康这件事没变**：载体仍是 studio-01 `/dev/disk4` = `DK5A1-4T Media`，`diskutil info disk4` 本轮再测 `Protocol: USB`、`SMART Status: Not Supported` ⇒ 经 USB 桥后 SMART 仍不可读，"先拿到盘的SMART 再决定备份策略"这类前置依赖在本机无解，得走别的证据（文件系统级校验或换桥）。
+    (3) **观察窗内的实际风险敞口（对上一轮 11-07 那 25 分钟拒绝挂载的补数）**：11-07 07:27 之后到 11-09 09:49 共 ≈50.8 小时，`disk-keepalive.log` 无新异常（只有 11-08/11-09 各一条 MOVESPEED 写被拒 NOTE，属 TCC 而非盘故障）、ALERT 计数停在 9 未升级、USB 重新枚举 0 次。⇒ 这两天没有新的整卷不可用事件；但一次已发生的 25 分钟挂载拒绝 + 848.5 GiB 单副本，已足够让「等观察期满再决定备份」这个前置条件失效（上一轮已记），本轮只是确认风险没有在窗口内继续放大。
   actor: "governance-agent"

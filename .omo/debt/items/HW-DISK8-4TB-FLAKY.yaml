@@ -23,7 +23,7 @@ mitigation_refs:
 - bin/ops/hot-tier-resilience.sh
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-11-07'
+last_reviewed_at: '2026-11-09'
 next_review_at: '2026-10-18'
 gate_level: none
 x1_policy_ref: ""
@@ -71,4 +71,36 @@ history:
     (3) **今日确有 3 次卷缺席，但不是那三个卷**。v3 已改用 diskutil 判挂载，排除了 10-11 记录里 launchd/TCC 误报 `ls` 的形状；但 43.8h 是**本次守护进程的存活期**（stdout/stderr 与 .v3 标记同 mtime 2026-11-05 22:59），不是观察期全貌。3 次缺席中 17:35:13 那次紧跟「维护标记已超过 2 小时, 自动失效, 恢复监控」⇒ **不能排除是维护窗口内的人工卸载**；18:46:10 那次无维护上下文 —— 但同一时刻统一日志里**找不到总线级证据**：18:44–18:48 窗口 `process == "kernel"` 且 eventMessage 含 usb/storage/disk = **0 行**，也没有任何 `diskutil unmount` 的 argv 回显，只有 mds 的 `openStoresByUUIDArray ... unmounting:0` 与 Finder cache_delete 这类**挂载态被动反应** ⇒ 两次缺席都不能归因于 hub 掉线，也不能归因于人工卸载。脚本在 mbp 只守护 MODEL-STORE，而本条的 MOVESPEED/SHAREDWORK/SHAREDMODEL 今日在本机**全部 NOT-MOUNTED** 且从不出现在该日志 ⇒ **频次仍待实测**，缺的是覆盖这三个卷的通道 + mini 侧复测。
 
     (4) **给替代仪器留一条硬约束：避开观察者污染**（本轮当场撞上）。`log show` 非交互调用的完整 argv —— 含 predicate 字符串本身 —— 会被写进统一日志。第一次 `eventMessage CONTAINS "DK5A1"` --last 7d 报 28 行，按进程分布**全是 `log[...]` 自身**；加 `AND process != "log"` 后同一窗口 **0 行**。任何用 CONTAINS 计数的事件通道都必须先排除 process=="log"，否则「我查过 N 次」会被读成「系统发生过 N 次」。
+  actor: "governance-agent"
+- at: '2026-11-07T12:04:00+00:00'
+  action: review-measure-studio
+  note: >-
+    复核第二轮（只测量与登记；不改 decision_needed 文本、不改 severity / lifecycle_state / next_review_at）。本轮就是上一轮 (3) 自己留的口子：登 mini、登 studio 复测，全部读数为只读命令实测。
+
+    (0) **主机归属：这块 4.1T 盘现在不在 mini，在 studio-01**（tailscale 100.74.244.58，hostname studio-01，macOS 27.0.1，kern.boottime Sat Nov 7 07:02:07）。实测 studio `/usr/sbin/diskutil list external`：`/dev/disk4 (external, physical) *4.1 TB`，`Device / Media Name: DK5A1-4T Media`、`Protocol: USB`、`Solid State: Yes`、`SMART Status: Not Supported`；容器 disk5→MOVESPEED(123.2 GB)、disk6→SHAREDWORK(77.8 KB)+SHAREDMODEL(848.5 GiB, `df -k` Used=889,756,916 KB)。mini 的 `/Volumes` 只有 Lex / Macintosh HD / Recovery / T3 Code 安装器，`diskutil list` 唯一外接盘是 disk4=2.0 TB，**mini 上没有 disk8**（`diskutil info disk8` 空）。⇒ decision_needed 写的「把盘从 VIA VL822 hub 摘下、直插 mini 后置雷电口、观察 3~7 天」描述的配置已不存在；照原文在 mini 跑，恒 0 记录是结构必然，与被测对象是否掉线无关。三机的守护清单独立记录了同一事实：mini `~/.disk-keepalive.watch`（2026-11-06 注释「两块盘搬到家里 studio」）与 mbp 同名文件，都用 `-SharedModel=7B762734…` / `-SharedWork=ABEDBB21…` 把这两个卷从本机移除；只有 studio 在守护它们，其 plist `~/Library/LaunchAgents/com.local.disk-keepalive.plist` → `~/.local/bin/disk-keepalive.sh`（与 mini `~/bin/` 那份是同一文件：sha256 前缀 520cd524e7ab8f2f，229 行，:40 / :135 同样用 icdd predicate）。
+
+    (1) **上一轮说「缺覆盖这三个卷的通道」——通道在，而且今天当场抓到了事**。studio `~/Library/Logs/disk-keepalive.log`（3825 B，`.v3` 标记 mtime Nov 6 07:35）原文：`[2026-11-07 06:00:00] SHAREDMODEL 未挂载, 尝试按 UUID 安全重挂载` + `REMOUNT SKIP: 查不到 UUID 7B762734-… 的设备(物理层不可见)`，SHAREDWORK 同刻同样，`ALERT: 守护卷异常(连续第 1 次, 未达 10 次升级阈值)`；随后 `07:03:01 / 07:06 / 07:09 / 07:12 / 07:15 / 07:18 / 07:21 / 07:24 / 07:27` 每 3 分钟一次 `Volume on disk6s2 failed to mount` + `Volume on disk6s1 failed to mount`，ALERT 连续 1→9 次（差一次就升级）。现 `disk-keepalive.state=0`（已恢复）；`.drops` 在 mbp/mini/studio 三台机上都不存在。对表系统事件：studio `last` = `shutdown time Sat Nov 7 06:09` / `reboot time Sat Nov 7 07:02`；`/Library/Logs/DiagnosticReports/shutdown_stall_2026-11-07-060939_xiamingxingdeMac-Studio.shutdownStall`（spindump 二进制，文本要 `spindump -i` 才读得出）。⇒ 这是**本条迄今唯一一次覆盖到那三个卷的真实缺席**，形态与 2026-10-11「3 个 SuperSpeed 设备 6 毫秒内同时消失、整条 hub 一起掉」不同：06:00 卷级「物理层不可见」→ 06:09 关机过程 stall → 07:02 重启后该盘 APFS 卷连续 25 分钟拒绝挂载。06:00 时机器并没有在关机（06:04:59 仍在处理 sshd 认证，06:00:00 diskarbitrationd 有回调注册突发）。归因仍待 owner：一次与 reboot 关联的事件不能替代 3~7 天频次。
+
+    (2) **给替代仪器两条可照抄的实测判据 —— 上一轮的「仪器不可用」应降级为「用错了源 + 少了一个 flag」**。(a) 正确的源是 kernel，且事件是 **debug 级**：studio `log show --start '2026-11-07 07:00:00' --end '2026-11-07 07:30:00' --info --debug --predicate 'process == "kernel" AND eventMessage CONTAINS "DK5A1"'` 命中 `07:02:19.876 Df kernel[0:d12] [com.apple.usb:all] DK5A1-4T@01210000: IOUSBHostDevice::setConfigurationGated: AppleUSBHostCompositeDevice selected configuration 1`；同一窗口**不加 `--info --debug` = 0 行**。`Df` 即 debug —— 这解释了 .drops 为何恒缺：脚本 :135 的 `log show` 没有 `--debug`，而 predicate 挂在 icdd 上。`DISK_MATCH="DK5A1"` 本身没错（真实设备名 `DK5A1-4T Media`）。(b) **重启后就查不到本次开机会话之前的 kernel 行了，这不是留存问题**：studio 同一存储里，上一会话的 03:00–03:10 全源 48,335 行而 `process == "kernel"` **0 行**，关机前 05:50–06:00 kernel **0 行**；本会话 07:30–07:40 = 9,531 行、19:00–19:10 = 16,355 行。⇒ 上一轮 (2) 里「10-11 阳性对照 0 行」除留存外还有这层原因：掉线瞬间的总线证据只能当场采，事后 log show 拿不到（脚本 DROPS_EVERY_S=3300 的按小时落盘意图是对的）。(c) **未验证项**：本会话留存窗口内没发生过一次可控 detach，detach 行的措辞与级别尚未取样；新通道上线后第一次真事件必须核对原始行，不要按 attach 的形状假定。
+
+    (3) 顺带读数（不改任何条目正文）：SHAREDWORK 实测用量 **77.8 KB** ⇒ decision_needed 里「SHAREDWORK 976G→300G 配额再平衡」的对象已空。SHAREDMODEL `df -k` Used=848.5 GiB，与 2026-11-06 studio 复核的 849Gi 一致 ⇒「~847G」量级前提仍成立。另记一个坑：`diskutil info /Volumes/SHAREDMODEL` 的 `Volume Used Space` 返回 `1000.0 GB (exactly 1000000000000 Bytes)`，与 df 差约 150 GB；对照同机 MOVESPEED(123,237,236,736 B = df×1024 精确)、SHAREDWORK(77,824 = df×1024 精确)、以及 mbp 的 Macintosh HD / ThinkRail 均精确 ⇒ 只有这个卷给出整十进制常数，不能据此判定「用量涨到 1 TB」。
+  actor: "governance-agent"
+- at: '2026-11-09T01:49:00+00:00'
+  action: review-measure-studio-followup
+  note: >-
+    复核第三轮（2026-11-09 09:45–09:49 CST，studio-01 只读复测；仍不改 decision_needed 文本、不改 severity / lifecycle_state / next_review_at）。上一轮 (1) 留的「频次仍待实测」在本轮拿到了一个可复核的下界，同时上一轮有一处路径读数要修正。
+
+    (0) **修正上一轮 (0) 末句的 plist 路径**：本轮实测 studio 的守护装在**系统域** `/Library/LaunchDaemons/com.local.disk-keepalive.plist`（706 B，mtime 2026-11-08T20:23，`ProgramArguments` = `~/.local/bin/disk-keepalive.sh`、`StartInterval 180`、`UserName xiamingxing`、`RunAtLoad true`）；`~/Library/LaunchAgents/` 下**没有** com.local.disk-keepalive.plist（只有 `com.user.mount-shared-disks.plist`，mtime 2026-11-07T07:29），另有 `~/.Trash/com.local.disk-keepalive.plist`。⇒ 上一轮写的 LaunchAgent 路径按本轮为准作废，不要照它去 studio 找文件。
+
+    (1) **仪器判据可复现**：与上一轮逐字相同的命令，两天后在 studio 重跑仍返回同一行 —— `2026-11-07 07:02:19.876 Df kernel[0:d12] [com.apple.usb:all] DK5A1-4T@01210000: IOUSBHostDevice::setConfigurationGated: AppleUSBHostCompositeDevice selected configuration`；同机 `07:30–07:40 process == "kernel"` 计数 **9,531 行**（上一轮实测 9,531，逐位一致）。⇒ (a) `--info --debug` + `process == "kernel"` 这条判据是稳定的，不是当场运气；(b) 本会话内的 kernel 行至少跨 2 天可读，上一轮「重启后就查不到上一会话」的结论未被推翻，只是同会话留存比想象长。
+
+    (2) **频次下界（新增，本条迄今第一个数）**：`log show --start '2026-11-07 08:47:07' --end '2026-11-09 09:47:07' --info --debug --predicate 'process == "kernel" AND eventMessage CONTAINS "DK5A1"'` = **0 行**（rc=0、stderr 空，同一次调用里对照组 1 行可见，所以 0 不是取数失败）⇒ 11-07 07:02 开机枚举之后 **49 小时内没有第二次 USB 重新枚举**。独立通道佐证：`~/Library/Logs/disk-keepalive.log` 共 55 行、ALERT 10 行，最后一条 ALERT 停在 `[2026-11-07 07:27:00] … 连续第 9 次, 未达 10 次升级阈值`，11-08 / 11-09 除每日 00:00 一条 NOTE 外零异常；`disk-keepalive.state` = `0` 且 mtime 随 3 分钟节奏推进（实测 09:45:01 → 09:48:59）⇒ 这 ≈50.8 小时 / ≥1,000 个探测轮次内，没有发生「持续到下一轮仍未恢复」的卷缺席。⇒ 频次读数：**本会话 1 次缺席事件（就是 11-07 06:00–07:27 那次，跨 reboot），50 小时内无第二次**。这不等于 decision_needed 要的「直插 vs hub 各 3~7 天」对照实验（那个实验已无法照原文在 mini 跑，见上一轮 (0)），但它把「恒 0 记录」和「实测 0 事件」区分开了：前者是仪器缺陷，后者现在有数。
+
+    (3) **`.drops` 恒缺的原因当场钉死（推翻上一轮「可能只是没采到」的宽泛措辞）**：studio `~/.local/bin/disk-keepalive.sh` :135 仍是 `/usr/bin/log show --last "$win" --style compact --predicate 'process == "icdd" AND eventMessage CONTAINS "$DISK_MATCH" AND eventMessage CONTAINS "Removed"' 2>/dev/null` —— 无 `--info --debug`、源挂在 icdd、stderr 弃入 /dev/null。`:211-224` 的采集节拍在跑（`disk-keepalive.drops.stamp` = `1794187440`，mtime 2026-11-09T09:24），而 `disk-keepalive.drops` **文件不存在** ⇒ 按上一轮 (2)(a) 的判据，这条通道对本盘**结构上不可能产出记录**。⇒ 任何人引用「.drops 不存在」时，引用的是坏仪器，不是零掉线；修它只需两处改动（加 `--info --debug`、把源从 icdd 换成 kernel 并保留 `AND process != "log"`），属 owner 决定，我没有代改。
+
+    (4) **写探针这一腿目前在 studio 是盲的**：主日志 11-08 与 11-09 各一条 `[00:00:00] NOTE: MOVESPEED 保活写入被拒(Operation not permitted), 多半是 launchd 下 bash 无『可移动卷』授权(TCC); 卷本身已确认挂载, 不计入异常`，`writenote` 内容 = `2026-11-09` ⇒ 「没有写失败告警」不能读成「写路径健康」；本条的缺席检测实际只剩挂载探测一腿有效。
+
+    (5) **两个 3 分钟驱动并存，会污染「连续第 N 次」的时间语义（未确证，供 owner 核）**：`crontab -l` 有 `*/3 * * * * /bin/bash ~/.local/bin/disk-keepalive-cron.sh`（wrapper 头注释称 studio 的守护「装在图形会话域里，图形会话一结束就没了」—— 与本轮实测的系统域 plist 不一致，注释应已过期），同时 (0) 的 LaunchDaemon `StartInterval 180` 也在。实测 state 更新时刻既出现 cron 对齐的 `09:45:01`，又出现不对齐的 `09:48:59`（+59 s，符合 StartInterval 漂移），与双驱动一致但我没有单独确证；`disk-keepalive-cron.log` 不存在。后果：双驱动下 ALERT 计数不再等于 N×3 分钟，10 次升级阈值会提前到达；对照 11-07 的 ALERT 序列 07:03/06/09/12/15/18/21/24/27 严格每 3 分钟一次 ⇒ 那时只有单驱动在跑。
+
+    (6) 复用读数（只测不改正文）：mini `diskutil info disk8` = `Could not find disk: disk8`（第二次确认 mini 无 disk8）；studio disk4 仍 `Protocol: USB` / `SMART Status: Not Supported`；mini `~/bin/disk-keepalive.sh` 与 studio `~/.local/bin/disk-keepalive.sh` 的 sha256 前缀同为 `520cd524e7ab8f2f`、各 229 行 ⇒ 两份内容一致，:135 的坏 predicate 在两台机上形状相同。`df -k` SHAREDMODEL Used=**889,756,920 KB**（11-07 为 889,756,916，两天 +4 KB）⇒ 848.5 GiB 敞口不变，与 STORAGE-SHAREDMODEL-NO-BACKUP 本轮读数一致；SHAREDWORK Used=80 KB 块。
   actor: "governance-agent"
