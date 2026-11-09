@@ -6,21 +6,46 @@
 # 本心跳钉死 socket 做产出断言: status --json 成功才算 ok; 连接失败 + utun
 # 挂 100.x 时标注 zombie/错socket 嫌疑。
 #
+# 2026-11-09 修: 上面「brew daemon 监听 brew socket」的前提**已不成立** ——
+# /Library/LaunchDaemons/com.tailscale.brew.plist 只传 `--state=...`, **不传
+# `--socket=`** ⇒ daemon 用默认 /var/run/tailscaled.socket, brew socket 根本不存在。
+# 于是 `$TS_SOCKET status` 每次连不上 → 心跳一直 FAIL(zombie_interface=true),
+# 而 `tailscale status` 实际是好的。改为**逐个探测候选 socket**, 第一个能用的胜出。
+#
 # 产物: .omo/state/tailscale-heartbeat.json (运行时区, 不入库)
 # 挂载: launchd 每 10 分钟 (或手动) — bin/health/ 首个健康巡检脚本
 
 set -u
 
-TS_BIN="/opt/homebrew/bin/tailscale"
-TS_SOCKET="--socket=/var/run/tailscale.brew.sock"  # 8/25+9/1 双案教训: CLI 必须钉死 socket
+# TAILSCALE_BIN 供测试注入假二进制 (避免测试去写 /opt/homebrew/bin)
+TS_BIN="${TAILSCALE_BIN:-/opt/homebrew/bin/tailscale}"
+# 候选 socket: 显式 socket 优先 (brew 旧配置), 否则不传 --socket 走 CLI 默认
+# (当前 plist 的实际行为)。逐个探测, 第一个 status 能跑通的胜出。
+TS_SOCKET_CANDIDATES=(
+  "--socket=/var/run/tailscale.brew.sock"
+  "--socket=/var/run/tailscaled.socket"
+  ""
+)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WS_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"  # bin/health/ → workspace root
+# 写面跟随 profile (AGENTS.md「写路径要在调用时刻解析」): launchd plist 设了
+# OMOSTATION_STATE_ROOT, 产物就该落在 state 根 —— 旧版用 SCRIPT_DIR 反推, 落在安装位上。
+DEFAULT_WS_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WS_ROOT="${OMOSTATION_STATE_ROOT:-$DEFAULT_WS_ROOT}"
 STATE_FILE="$WS_ROOT/.omo/state/tailscale-heartbeat.json"
 MACMINI_IP="100.64.110.118"
 
 mkdir -p "$(dirname "$STATE_FILE")"
 
 now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+TS_SOCKET=""
+for candidate in "${TS_SOCKET_CANDIDATES[@]}"; do
+  if "$TS_BIN" $candidate status --json >/dev/null 2>&1; then
+    TS_SOCKET="$candidate"
+    break
+  fi
+done
+
 status_json=$("$TS_BIN" $TS_SOCKET status --json 2>/dev/null)
 rc=$?
 
