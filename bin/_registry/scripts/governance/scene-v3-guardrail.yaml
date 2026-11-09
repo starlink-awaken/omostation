@@ -9,7 +9,8 @@ outputs:
   - type: exit_code
   - type: json
 dependencies: []
-triggers: []
+triggers:
+  - gac-local-gate
 related: []
 maturity: draft
-last_reviewed: "2026-08-24"
+last_reviewed: "2026-11-09"
