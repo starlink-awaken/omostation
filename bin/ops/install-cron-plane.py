@@ -36,7 +36,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "lib"))
 from cron_normalize import comparison_key as _key  # noqa: E402
 from cron_normalize import expand_workspace as _expand_workspace  # noqa: E402
-from cron_normalize import host_scoped_jobs as _host_scoped  # noqa: E402
+from cron_normalize import active_crontab_jobs as _active_crontab_jobs  # noqa: E402
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
@@ -52,19 +52,16 @@ def _load_raw() -> dict:
 
 
 def _compiled_lines() -> list[str]:
-    """登记面编译出的 crontab 行 (已按本机 `hosts` 作用域过滤).
+    """登记面编译出的 crontab 行 (已按本机 `hosts` 作用域 + status/planes 过滤).
 
-    主机维度与 `scheduler-compile.compile_crontab` / `check_drift` **同一份实现**
-    (`cron_normalize.host_scoped_jobs`) —— 此前本函数不过滤, 于是安装器把 mini 专用
-    条目报成 `[MISSING]` 并装上, 让 check_drift 侧的修复被安装侧抵消 (CRON-REGISTRY-NO-HOST-SCOPE)。
+    过滤口径与 `scheduler-compile.compile_crontab` **同一份实现**
+    (`cron_normalize.active_crontab_jobs`) —— 此前本函数自己过滤且漏掉主机维度,
+    于是安装器把 mini 专用条目报成 `[MISSING]` 并装上, 让 check_drift 侧的修复被
+    安装侧抵消 (CRON-REGISTRY-NO-HOST-SCOPE)。
     """
     raw = _load_raw()
     out = []
-    for job in _host_scoped(raw.get("jobs", [])):
-        if job.get("status", "active") != "active":
-            continue
-        if "crontab" not in (job.get("planes") or []):
-            continue
+    for job in _active_crontab_jobs(raw.get("jobs", [])):
         out.append(f"{job.get('schedule', '')} {_expand_workspace(job.get('command', ''))}".strip())
     return out
 
