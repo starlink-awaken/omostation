@@ -3,7 +3,7 @@ id: bin/lib/cron_normalize.py
 name: Cron Normalize
 category: governance
 owner: governance-team
-description: "crontab 平面归一化的唯一实现（库模块, 无 CLI）：normalize_interpreter 按边界分段把绝对路径解释器归一化成裸 python3、expand_workspace 把 $HOME/Workspace 展开成绝对路径（cron 不做变量展开）、normalize_installed_line 把 harness-cron.sh 的重复登记折成规范形、comparison_key 产出归一化整行比较键。存在的理由是终结静默漂移：bin/scheduler-compile.py 与 bin/ops/install-cron-plane.py 各自维护一份、两边 docstring 都自称「与对方同口径」却无门禁盯着, 已经漂移三次（比较键 [:120] 截断 / 解释器归一化范围 / 末段 off-by-one）。护栏 tests/unit/test_cron_normalize.py。"
+description: "crontab 平面归一化的唯一实现（库模块, 无 CLI）：normalize_interpreter 按边界分段把绝对路径解释器归一化成裸 python3、expand_workspace 把 $HOME/Workspace 展开成绝对路径（cron 不做变量展开）、normalize_installed_line 把 harness-cron.sh 的重复登记折成规范形、comparison_key 产出归一化整行比较键、interpreter_candidates 列出本机可折回的候选解释器（仓内 .venv 优先）、third_party_imports 用 ast 取脚本顶层 import（含函数内的懒加载）、resolve_python_command / pick_interpreter 按**宿主**把登记面的裸 python3 解析成可证可用的绝对解释器（探测不执行目标脚本，解不出就原样返回，护栏 tests/test_scheduler_compile.py）。存在的理由是终结静默漂移：bin/scheduler-compile.py 与 bin/ops/install-cron-plane.py 各自维护一份、两边 docstring 都自称「与对方同口径」却无门禁盯着, 已经漂移三次（比较键 [:120] 截断 / 解释器归一化范围 / 末段 off-by-one）。护栏 tests/unit/test_cron_normalize.py。"
 inputs: []
 outputs:
   - type: library_api
@@ -14,5 +14,6 @@ related:
   - bin/scheduler-compile.py
   - bin/ops/install-cron-plane.py
   - tests/unit/test_cron_normalize.py
+  - tests/test_scheduler_compile.py
 maturity: draft
-last_reviewed: "2026-11-07"
+last_reviewed: "2026-11-09"

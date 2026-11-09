@@ -37,6 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "lib"))
 from cron_normalize import comparison_key as _key  # noqa: E402
 from cron_normalize import expand_workspace as _expand_workspace  # noqa: E402
 from cron_normalize import active_crontab_jobs as _active_crontab_jobs  # noqa: E402
+from cron_normalize import resolve_python_command as _resolve_python_command  # noqa: E402
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
@@ -58,11 +59,17 @@ def _compiled_lines() -> list[str]:
     (`cron_normalize.active_crontab_jobs`) —— 此前本函数自己过滤且漏掉主机维度,
     于是安装器把 mini 专用条目报成 `[MISSING]` 并装上, 让 check_drift 侧的修复被
     安装侧抵消 (CRON-REGISTRY-NO-HOST-SCOPE)。
+
+    解释器解析同口径 (`cron_normalize.resolve_python_command`): 安装才是机器相关的
+    一步, 登记面写裸 `python3` 而 cron 的 PATH 只有 `/usr/bin:/bin` ⇒ 解析到 Xcode
+    的 3.9, `from datetime import UTC` 直接 ImportError (CRON-BARE-PYTHON3-PY39-IMPORT-DEATH)。
+    与 `compile_crontab` 共用一份实现, 否则 `--generate` 与 `--install` 会装出两种内容。
     """
     raw = _load_raw()
     out = []
     for job in _active_crontab_jobs(raw.get("jobs", [])):
-        out.append(f"{job.get('schedule', '')} {_expand_workspace(job.get('command', ''))}".strip())
+        cmd, _reason = _resolve_python_command(_expand_workspace(job.get("command", "")))
+        out.append(f"{job.get('schedule', '')} {cmd}".strip())
     return out
 
 
