@@ -1878,10 +1878,20 @@ def collect_launchd_health() -> dict:
         })
 
     failed = [job for job in projections if job["verdict"] != "PASS"]
+    try:
+        registry_raw = (ROOT / ".omo/cron/registry.yaml").read_bytes()
+    except OSError:
+        registry_raw = b""
+    # `facet_state` / `registry_sha256` 是 `compact-observation.py::_valid_result`
+    # 要求的字段: 前者让面板能区分「全加载」与「部分加载」, 后者让读数能自证
+    # 「读的是哪份 registry」(与 gen-service-configs 的 measured_base 同思路)。
+    # 缺任一项会让 launchd_health facet 一直 invalid_payload (实测 last_success_at 恒 null)。
     return {
         "schema": "launchd-health-projection/v1",
         "available": True,
+        "facet_state": "LIVE" if projections and not failed else "PARTIAL",
         "verdict": "PASS" if projections and not failed else ("FAILED" if failed else "EMPTY"),
+        "registry_sha256": hashlib.sha256(registry_raw).hexdigest(),
         "loaded": sum(1 for job in projections if job["loaded"]),
         "failed": len(failed),
         "jobs": projections,
@@ -4253,11 +4263,21 @@ def collect_bos_verifier() -> dict:
 
 
 def collect_evolution() -> dict:
-    """进化提案。"""
+    """进化提案。
+
+    `proposal_paths` 是**全量**清单 (排序去重, 长度 == `total`) ——
+    `bin/panorama/compact-observation.py::_valid_result` 按它核对总数, 缺了会让
+    evolution facet 一直 invalid_payload (实测 last_success_at 恒 null)。
+    `recent_proposals` 仍是最近 15 条的短名, 供面板展示。
+    """
     from glob import glob
     files = sorted(glob(str(ROOT / ".omo/state/evolution-proposals/*")))
     proposals = [Path(f).stem[:50] for f in files[-15:]]
-    return {"total": len(files), "recent_proposals": proposals}
+    return {
+        "total": len(files),
+        "proposal_paths": [str(f) for f in files],
+        "recent_proposals": proposals,
+    }
 
 
 def collect_predictive() -> dict:
