@@ -280,11 +280,49 @@ warning_exceptions:
         ⇒ missing_frontmatter:project-entry 实测 71 条; 本预算 max_findings 取 80 (含 9 条余量,
         与 legacy-omo-knowledge-frontmatter 的 actual=117/max=120 同口径)。
 
-        stale_review:project-entry 实测 **0** 命中 —— 70 份里没有任何一份 last-reviewed
-        超过 90 天, 故本条只覆盖 missing_frontmatter 一个桶。
+        stale_review:project-entry 实测 **0** 命中 (2026-11-09 当天) —— 但那是**当天**的读数,
+        不是"不会到期": 56 份带 last-reviewed 的文档里, 2 份 (2026-08-26) 将在 **2026-11-25**
+        越界、1 份 (2026-09-04) 在 12-04、53 份 (2026-09-18) 在 **12-18 集体越界**。
+        故本条只覆盖 missing_frontmatter 一个桶, 陈旧的 freshness 桶由
+        legacy-project-entry-stale-review 单独覆盖。
 
         max_findings 是**界**不是豁免: 新增不合规的项目入口文档会当场把它顶穿。
         清偿路径 = 逐批修子模块文档 (每个仓 commit + push + 父仓 gitlink bump),
         修一批计数就降一批; 修完即可删本条 (shrink_only 方向)。
         expires 取 2027-03-31 而非其他 legacy 条的 2027-01-31, 因为清偿要跨 18 个
         独立子模块仓、每仓一次三步提交, 比仓内文档改动的窗口天然更长。
+    - id: legacy-project-entry-stale-review
+      rule: stale_review
+      surface: project-entry
+      max_findings: 60
+      expires: 2027-03-31
+      owner: governance-team
+      reason: |
+        project-entry 的 90 天 freshness SLA 自 2026-11-09 (#5187) 起才第一次被执行,
+        而这批文档**从未在该 SLA 下被真正复审过** —— 它们的 last-reviewed 是两次
+        批量盖章的产物, 不是逐份审查的结论。本条是为这段过渡期设的**界**。
+
+        实测 (2026-11-09, pin): 56 份文档带 last-reviewed, 取值只有 3 种 ——
+          2026-09-18  x53  (age 52d, 2026-12-18 越界)
+          2026-09-04  x 1  (age 66d, 2026-12-04 越界)
+          2026-08-26  x 2  (age 75d, 2026-11-25 越界)  ← 16 天后
+        另 14 份完全没有 last-reviewed, 按代码守卫 (`if reviewed:`) 不参与 stale 判定。
+        53 份共享同一日期, 正是 CLAUDE.md §6.6 点名的「日期农场」形态: 它们会在
+        2026-12-18 **同一天集体越界**, 那就是过期雷达反复警告的最危险形态。
+
+        预算 max_findings 取 60 = 当前可参与判定的 56 份 + 4 条余量。
+
+        **这不是对日期农场的追认。** 恰恰相反: 若不设本条, 2026-11-25 起每个 PR 都会
+        被一个从未被真正复审过的日历挡下来, 而那是本 surface 死声明期积累的后果。
+        设界是为了把「补日期」和「真复审」分开 —— 补日期只需改子模块文件, 真复审要
+        逐份读; 前者可以马上做, 后者必须逐批做。
+
+        清偿顺序建议: ① 先修 2026-08-26 那 2 份 (11-25 到期) 并**逐份真复审**,
+        用真实复审日替换批量盖章日; ② 再按子模块分批处理其余; ③ 修完删本条。
+        ⚠️ 若只做 ① 而不动 53 份那批, 12-18 会再集体越界一次 —— 别再批量盖章,
+        那只会把同一个农场续期, 下一轮还是集体越界。
+
+        当前子模块仓处于 detached HEAD + 并发 agent 未提交改动的状态 (实测
+        projects/cockpit 有 src/cockpit/commands/spine.py 改动, projects/ecos 有
+        5 个 MODEL-BREW-*.yaml 改动), 故清偿要等那些检出可安全提交后再排期 ——
+        本条到期日 2027-03-31 已按此留出窗口。
