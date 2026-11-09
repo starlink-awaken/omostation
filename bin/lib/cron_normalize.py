@@ -401,3 +401,60 @@ def active_crontab_jobs(jobs: list[dict]) -> list[dict]:
     """本机该编译成 crontab 的登记条目 (见 `active_plane_jobs`)。"""
     return active_plane_jobs(jobs, "crontab")
 
+
+# 形如解释器调用的 token (可无版本号)，与 INTERPRETER_RE 的区别正是后者只认 python3*。
+_PYTHON_LIKE_TOKEN_RE = re.compile(r"^(?:(?:\S*/)?)(?:python\d*)(?:\.\d+)?$")
+# 能被 comparison_key 折回裸 python3 的写法。
+_FOLDABLE_TOKEN_RE = re.compile(r"^(?:\S*/)?python3(?:\.\d+)?$")
+_SHELL_OPERATORS = frozenset({"&&", "||", ";", "|", "&"})
+
+
+def _command_start_tokens(cmd: str) -> list[tuple[int, str]]:
+    """返回处于**命令起始位**的 token 及其下标。
+
+    命令起始位 = 行首、紧跟 shell 运算符之后，或紧跟 `VAR=value` 环境变量赋值之后
+    (实测登记面有 `PATH=/opt/homebrew/bin:/usr/bin:/bin python3 bin/...` 这种写法)。
+    只在这些位置上把 token 当解释器，避免把参数里的 `python` 字样误判成解释器。
+    """
+    tokens = cmd.split()
+    out: list[tuple[int, str]] = []
+    for i, tok in enumerate(tokens):
+        if i == 0:
+            out.append((i, tok))
+            continue
+        prev = tokens[i - 1]
+        if prev in _SHELL_OPERATORS or ("=" in prev and not prev.startswith("-")):
+            out.append((i, tok))
+    return out
+
+
+def unfoldable_interpreter_tokens(cmd: str) -> list[str]:
+    """命令起始位上「像解释器但折不回裸 `python3`」的 token。
+
+    `comparison_key` 靠 `normalize_interpreter` 把解释器写法折成 `python3` 才可比
+    (`INTERPRETER_RE` 只认 `python3` / `python3.x`)。登记面若钉了 `/python`
+    这种**无版本号**写法，键就永远折不回 ⇒ 安装侧把已装的另一种写法当外部行保留，
+    再追加登记面那条 ⇒ 同一作业双跑 (2026-11-09 mini 实测 `local-ops-test-all`)。
+    """
+    bad = []
+    for _i, tok in _command_start_tokens(cmd):
+        if _PYTHON_LIKE_TOKEN_RE.match(tok) and not _FOLDABLE_TOKEN_RE.match(tok):
+            bad.append(tok)
+    return bad
+
+
+def unfoldable_interpreter_jobs(jobs: list[dict]) -> list[dict]:
+    """扫描本机 active crontab 条目, 列出钉了不可折回解释器的登记项。"""
+    out = []
+    for j in active_crontab_jobs(jobs):
+        tokens = unfoldable_interpreter_tokens(expand_workspace(j.get("command", "")))
+        if tokens:
+            out.append(
+                {
+                    "name": j.get("name"),
+                    "tokens": tokens,
+                    "reason": "comparison_key 折不回裸 python3 ⇒ 登记面与安装态永远不可比",
+                }
+            )
+    return out
+

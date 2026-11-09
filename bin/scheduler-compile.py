@@ -28,6 +28,9 @@ from cron_normalize import normalize_installed_line as _normalize_installed_line
 from cron_normalize import normalize_interpreter as _normalize_interpreter  # noqa: E402
 from cron_normalize import pick_interpreter as _pick_interpreter  # noqa: E402
 from cron_normalize import resolve_python_command as _resolve_python_command  # noqa: E402
+from cron_normalize import (  # noqa: E402
+    unfoldable_interpreter_jobs as _unfoldable_interpreter_jobs,
+)
 
 WORKSPACE = Path(__file__).resolve().parents[1]
 REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
@@ -317,6 +320,19 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
         res["launchd"] = check_launchd_plane(registered)
     except Exception as exc:  # noqa: BLE001 — shadow 段自身故障不得阻断 crontab 判定
         res["launchd"] = {"mode": "shadow", "blocks_gate": False, "error": str(exc)[:200]}
+    # shadow: 登记面钉了解释器但写法折不回裸 python3 ⇒ 该行与安装态永远不可比。
+    # 不参与 ok 判定 —— 现有 1 条 (`local-ops-test-all` 钉 dev-venv/bin/python) 是
+    # 刻意固定 venv, 翻成阻断会把「口径不可比」误报成「作业坏了」。
+    try:
+        fold = _unfoldable_interpreter_jobs(registered)
+        res["interpreter_fold"] = {
+            "mode": "shadow",
+            "blocks_gate": False,
+            "count": len(fold),
+            "entries": fold[:20],
+        }
+    except Exception as exc:  # noqa: BLE001 — 同上
+        res["interpreter_fold"] = {"mode": "shadow", "blocks_gate": False, "error": str(exc)[:200]}
     return res
 
 
