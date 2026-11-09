@@ -1,11 +1,6 @@
-activation: inactive
 activation_blockers: []
 admission_track: internal_evidence_based
-approval_state: pending
-lifecycle: draft
-scene_id: documents-cockpit-runtime
 scene_type: internal_pipeline
-schema: scene-card/v1
 ---
 
 ---
