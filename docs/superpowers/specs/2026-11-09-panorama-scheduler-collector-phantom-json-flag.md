@@ -3,6 +3,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 title: 修掉 Panorama scheduler 采集器传给 scheduler-compile.py 的不存在 flag（A9 永久 PARTIAL 的根因）
 bet_id: BET-Y2Q4-T10-343
+owner: governance-agent
 status: accepted
 lifecycle: contract
 last-reviewed: 2026-11-09

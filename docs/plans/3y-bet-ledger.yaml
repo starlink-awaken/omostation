@@ -47594,7 +47594,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-09-panorama-scheduler-collector-phantom-json-flag.md
     spec_version: 1.0.0
-    content_digest: sha256:905ba008f0f065f4afa9221aa9dc477893e2e9912195db31c2a23fb7afdcc480
+    content_digest: sha256:c08ff737f82ba5d22042cc1bc2d613328b0731b683f04d3a53bf42cfe1fd30bc
     decision_ref: decision://accepted/BET-Y2Q4-T10-343
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
