@@ -329,3 +329,35 @@ def test_script_entrypoint_is_still_resolved() -> None:
     assert argv[0] == "/bin/bash"
     assert argv[1].endswith("/scripts/run.sh")
     assert argv[1].startswith("/")
+
+
+def test_generated_plist_escapes_xml_special_chars() -> None:
+    """args 里的 & < > 必须转义, 否则 plist 非良构。
+
+    2026-11-10 实证: omo-debt-refresh 的注册表 args 含 `&&` 与 `$NOW`, 生成器逐字写入
+    <string> ⇒ plist 里是裸 `&&` ⇒ expat 报 "unknown ampersand-escape sequence",
+    `scheduler-compile.py --check` 把它列进 unparseable_plists (而 launchctl 容忍, 所以
+    作业照跑 —— 静默坏档)。
+    """
+    import xml.parsers.expat as expat
+
+    module = _module()
+    svc = {
+        "id": "omo.amp",
+        "enabled": True,
+        "scheduler": "launchd",
+        "generate": True,
+        "label": "com.omostation.amp",
+        "program": {
+            "interpreter": "/bin/bash",
+            "entrypoint": "-c",
+            "args": ["echo a && b | c < d"],
+        },
+    }
+
+    xml = module.gen_launchd_plist(svc)
+
+    assert "&amp;&amp;" in xml
+    assert "&&" not in xml.replace("&amp;&amp;", "")
+    parser = expat.ParserCreate()
+    parser.Parse(xml.encode(), True)
