@@ -362,6 +362,31 @@ def test_write_failure_returns_nonzero_and_prints_content(
 # ── scheduler-compile.py --diff: 整份替换的破坏面预览 ────────────────────────
 
 
+def test_diff_does_not_report_home_spelled_candidates_as_added() -> None:
+    """候选侧必须与 check_drift 同口径展开 `$HOME/Workspace`。
+
+    不展开时, 登记面里每个 `$HOME` 拼法的作业都会同时出现在 removed 与 added 里 ——
+    实测 23 条「added」**全部**含 `$HOME`, 而同期 `check_drift` 是 drift 0 / orphan 3
+    (两边对同一份登记面给出互相矛盾的读数)。
+    """
+    spec = importlib.util.spec_from_file_location(
+        "scheduler_compile_diff", ROOT / "bin" / "scheduler-compile.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    jobs = module._load_jobs()
+    candidate = [l for l in module.compile_crontab(jobs) if l.strip() and not l.startswith("#")]
+    assert candidate, "登记面应编译出条目, 否则本用例恒绿"
+    res = module.diff_installation(
+        installed_lines=[module._expand_workspace(l) for l in candidate]
+    )
+    assert res["added"] == [], f"$HOME 拼法的候选被当成「会加」: {res['added'][:3]}"
+    assert res["removed"] == [], f"展开后的候选被当成「会删」: {res['removed'][:3]}"
+
+
 def test_diff_installation_names_what_wholesale_replace_would_delete() -> None:
     """`scheduler-compile.py --diff` 必须点名「整份替换会删掉哪些已装条目」。
 

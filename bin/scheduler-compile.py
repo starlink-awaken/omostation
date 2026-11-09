@@ -197,6 +197,12 @@ def diff_installation(installed_lines: list[str] | None = None) -> dict:
 
     与 check_drift 的分工: check_drift 判「登记↔安装是否一致」(drift/orphan),
     本函数只回答「整份替换会改动什么」, 不做判定、不写盘。
+
+    **候选侧必须与 check_drift 同口径展开 `$HOME/Workspace`**: `compile_crontab`
+    产出的是登记面原文 (`cd "$HOME/Workspace" && ...`), 而 installed_lines 来自
+    crontab (绝对路径)。不展开的话, 每个 `$HOME` 拼法的登记作业都会同时出现在
+    removed 与 added 里 —— 实测 23 条「added」**全部**含 `$HOME`, 全是假报
+    (同期 check_drift: drift 0 / orphan 3)。
     """
     jobs = _load_jobs()
     candidate = [l for l in compile_crontab(jobs) if l.strip() and not l.startswith("#")]
@@ -206,7 +212,7 @@ def diff_installation(installed_lines: list[str] | None = None) -> dict:
             installed_lines = r.stdout.splitlines() if r.returncode == 0 else []
         except Exception:
             installed_lines = []
-    cand_set = {_normalize_interpreter(l) for l in candidate}
+    cand_set = {_normalize_interpreter(_expand_workspace(l)) for l in candidate}
     inst_set = set()
     for line in installed_lines:
         s = line.strip()
