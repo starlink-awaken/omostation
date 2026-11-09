@@ -61,16 +61,20 @@ def test_registry_no_duplicate_schedule_command_pairs() -> None:
     """同一 (schedule, 归一化 command) 不得有两条 active crontab 登记 —— 否则作业跑多遍.
 
     **为什么重名判据不够** (test_registry_no_duplicate_job_names): 重复登记往往
-    **名字不同**. 实测三例:
+    **名字不同**. 实测五例:
 
     - `l4-harness-6h` vs `l4-harness-6h-active` —— 同 schedule 同 command, 一个写
       `$HOME/Workspace`、一个写死本机用户根 (PR #5110 修);
     - `branch-prune-daily` vs `worktree-prune-daily` —— #3518 登记 vs #3658
       「补齐登记」, 名字不同、command 逐字相同;
-    - `weekly-hygiene-patrol` vs `hygiene-patrol-weekly` —— 同上.
+    - `weekly-hygiene-patrol` vs `hygiene-patrol-weekly` —— 同上;
+    - `ecos-kems-freshness-daily` vs `kems-freshness-daily`、
+      `mof-sla-m0-snapshot-daily` vs `mof-sla-snapshot-daily` —— 同 schedule,
+      command 只差 `$HOME/Workspace` vs 写死本机根 (PR #5136 修)。
 
-    判据用 `bin/lib/cron_normalize.py` 的 `comparison_key` (与生产同一份归一化),
-    而不是裸字符串: 裸字符串查不出「同一个根、两种写法」那一例。
+    **判据必须自己先展开 `$HOME`**: 只用 `comparison_key` 时, 后两例的两种写法
+    归一化后**仍不同** (`$HOME/Workspace` 不被展开), 于是漏网 —— 本用例的 docstring
+    一度声称「裸字符串查不出两种写法」, 实测那是**没有验证过的断言**。
     """
     jobs = _load_registry_jobs()
     seen: dict[str, str] = {}
@@ -80,7 +84,9 @@ def test_registry_no_duplicate_schedule_command_pairs() -> None:
             continue
         if "crontab" not in (j.get("planes") or []):
             continue
-        key = _comparison_key(f"{j.get('schedule', '')} {j.get('command', '')}")
+        key = _comparison_key(
+            _expand_workspace(f"{j.get('schedule', '')} {j.get('command', '')}")
+        )
         if not key:
             continue
         name = j.get("name", "")
@@ -185,23 +191,18 @@ def test_compile_crontab_output_matches_registry_command_with_schedule_prefix() 
 
 
 def test_scheduler_check_no_drift_after_dedup() -> None:
-    """dedup 后 scheduler-compile --check 仍应保持 0 drift.
+    """dedup 后, 登记面 vs 自身编译产物必须 0 drift —— 走注入缝, 不读本机 crontab.
 
-    已知: 1 个 orphan 是 ~/.local/share/zhixing-dashboard/panorama_cache.py
-    (本地运维 cron, 配置在 ~/.local 不在本仓, 不在本任务范围).
+    原实现直接跑 `scheduler-compile --check` 读**真机 crontab**: 那是 host 运行态,
+    不是被测性质 (AGENTS.md §7「用例断言 host 运行态 = 结构性失明」) —— 本机 crontab
+    一旦与登记面不同步 (装机失败 / 并发 agent 改行 / legacy 安装器), 本用例就红,
+    而它想量的其实是「登记 ↔ 编译产物」是否自洽。改用 `check_drift(injected)`
+    注入缝 (与 test_scheduler_compile_launchd_plane 同形)。
     """
-    r = subprocess.run(
-        ["python3", str(SCHEDULER_COMPILE), "--check"],
-        capture_output=True,
-        text=True,
-        timeout=30,
-        cwd=str(WORKSPACE),
-        check=False,
-    )
-    data = json.loads(r.stdout.strip())
-    assert data.get("drift_count", -1) == 0, (
-        f"dedup 引入 drift: {data}"
-    )
+    sc = _load_compile_module()
+    installed = [sc._expand_workspace(line) for line in sc.compile_crontab(sc._load_jobs())]
+    data = sc.check_drift(installed_lines=installed)
+    assert data.get("drift_count", -1) == 0, f"dedup 引入 drift: {data}"
 
 
 def test_compile_crontab_excludes_non_crontab_plane_jobs() -> None:
@@ -248,6 +249,16 @@ def _load_normalize_module():
 def _comparison_key(line: str) -> str:
     """与生产同一份比较键 (bin/lib/cron_normalize.comparison_key)。"""
     return _load_normalize_module().comparison_key(line)
+
+
+def _expand_workspace(line: str) -> str:
+    """与生产同一份 `$HOME/Workspace` 展开 (bin/lib/cron_normalize.expand_workspace)。
+
+    判据必须过这一层: 只过 `comparison_key` 时 `$HOME/Workspace` 不被展开,
+    「同一个根、两种写法」的重复登记会漏网 (实证见
+    test_registry_no_duplicate_schedule_command_pairs 的 docstring)。
+    """
+    return _load_normalize_module().expand_workspace(line)
 
 
 def _normalize(cmd: str) -> str:
