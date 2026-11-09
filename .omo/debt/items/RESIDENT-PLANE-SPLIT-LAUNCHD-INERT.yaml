@@ -75,4 +75,37 @@ history:
     对齐 ledger 路径 —— 还要决定用哪份事件源与哪个 checkpoint, 否则对齐路径后两边
     仍会从各自的水位继续, 处理重复或漏处理。
   actor: "governance-agent"
+- at: '2026-11-09T04:15:00+00:00'
+  action: evidence
+  note: >-
+    把上面 ① 的「两份文件内容不同」量化成**新鲜度差**, 并订正一处读法 (2026-11-09
+    12:11 实测, 本机 mbp):
+
+    | 事件源 | 行数 | mtime | 谁在读 |
+    |---|---|---|---|
+    | `<state_root>/.omo/_knowledge/workflow-mesh/events.jsonl` | **14** | 2026-11-09 **07:31** (4.5h 前) | launchd 侧 |
+    | `~/Workspace/.omo/_knowledge/workflow-mesh/events.jsonl` | **2625** | 2026-11-09 **12:00** (11min 前) | crontab 侧 |
+
+    ⇒ **live 事件源是检出那份**, state 根那份是**陈旧的** (4.5 小时无写入)。launchd
+    平面因此结构性地追一个没人写的文件 —— 这不是「处理慢」, 是**没有输入**。
+
+    **订正**: 上一轮把 `task_queue.skipped: true` 与「空转」并列读, 容易读成故障。
+    实测源码 `daemon.py:333-335`: `skipped: true` 只是**队列表不存在** (`db_path`
+    不存在即返回), 属正常空队列; 真正的读数是 `processed: 0` 且
+    `start_index == events_in_file` —— 字节水位已在 EOF, 无增量可读。
+
+    **checkpoint 尺度差**: 同一 role 两侧 ledger 的 `projection_checkpoint` ——
+    检出 `resident-execute: 8,826,634` / `resident-decision: 8,260,836`;
+    state 根 `resident-decision: 34,049` / `resident-execute: 36,506`。差 ~200 倍,
+    与上一轮「差三个数量级」一致但更精确 —— 两个 checkpoint 确实各自演进。
+
+    **手动复跑** (带 `OMOSTATION_STATE_ROOT`): `{"events_in_file": 34049, "processed": 0,
+    "start_index": 34049, "task_queue": {"completed": 0, "failed": 0, "picked": 0,
+    "skipped": true}}`; 对照 crontab 侧每次处理 143 条。
+
+    **修法方向 (供裁决)**: ① 让事件**生产方**也走 state 根 (补 ADR-0456 迁移的
+    最后一环), 两侧才可能同源; ② 或让 launchd 侧不声明 profile, 与 crontab 侧一起
+    落在检出 (等于债务 option (c) 的极端形式); ③ 或裁 crontab 侧为唯一平面 (option (b)),
+    停掉 6 个 `com.l4.resident.*`。**不要**只删/改一侧的 `OMOSTATION_STATE_ROOT` ——
+    事件源与 checkpoint 两处都同源才会收敛, 只对齐 ledger 路径会从各自水位继续跑。
   actor: "governance-agent"
