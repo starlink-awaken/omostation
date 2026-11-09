@@ -80,7 +80,7 @@ def _now() -> str:
 
 
 def _run_cmd(argv: list[str], timeout: int = 20, cwd: Path | None = None) -> str:
-    if len(argv) < 3 or Path(argv[-3]).name != "scheduler-compile.py" or argv[-2:] != ["--check", "--json"]:
+    if len(argv) < 2 or Path(argv[-2]).name != "scheduler-compile.py" or argv[-1:] != ["--check"]:
         raise CollectionError("scheduler", "unsupported diagnostic command")
     result = subprocess.run(
         argv,
@@ -133,7 +133,6 @@ class SchedulerCollector(DataCollector):
                     "--",
                     str(root / "bin/scheduler-compile.py"),
                     "--check",
-                    "--json",
                 ],
                 timeout=15,
                 cwd=root,

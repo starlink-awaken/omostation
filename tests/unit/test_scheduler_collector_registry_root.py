@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import importlib.machinery
 import importlib.util
+import json
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -105,10 +107,13 @@ def test_collect_actually_runs_against_the_resolved_root(monkeypatch, tmp_path):
     assert seen["argv"][0] == str(module.DEFAULT_WORKSPACE_ROOT / "bin/gac/managed-python"), (
         "运行时必须来自工作区 —— publisher 检出没有 .venv, managed-python 在那里解析不到解释器"
     )
-    assert seen["argv"][-3] == str(synthetic.resolve() / "bin/scheduler-compile.py"), (
+    assert seen["argv"][-2] == str(synthetic.resolve() / "bin/scheduler-compile.py"), (
         "被检查的脚本必须来自解析出的 registry 根"
     )
-    assert seen["argv"][-2:] == ["--check", "--json"]
+    # 真实契约（哪些 flag 被被调用方接受）由
+    # test_collector_flags_are_accepted_by_the_script_it_actually_invokes 跑真进程作证；
+    # 这里只断言 argv 形状，避免把 stub 的返回值当契约。
+    assert seen["argv"][-1:] == ["--check"]
 
 
 def test_stale_flag_is_observe_only_and_reports_the_roots_own_origin_main(monkeypatch, tmp_path):
@@ -124,3 +129,37 @@ def test_stale_flag_is_observe_only_and_reports_the_roots_own_origin_main(monkey
     assert state["registry_root_oid"] == "a" * 40
     # Observe-only: the flag must never reach the verdict.
     assert state["ok"] is True and state["state"] == "OBSERVED"
+
+
+def test_collector_flags_are_accepted_by_the_script_it_actually_invokes(monkeypatch, tmp_path):
+    """反 stub-自证: 采集器传的 flag 必须被真实 scheduler-compile.py 接受。
+
+    BET-Y2Q4-T10-343 —— 此前 `_stub_run_cmd` 返回一份手写 JSON，于是采集器传一个
+    被调用方根本不认识的 `--json`（argparse rc=2）也能让全部用例保持绿色，A9 永久
+    PARTIAL 无人发现。本用例把 stub 抓到的 argv 原样喂给仓内真脚本。
+    """
+    synthetic = tmp_path / "publisher"
+    (synthetic / "bin/gac").mkdir(parents=True)
+    (synthetic / "bin/scheduler-compile.py").write_text("#!/usr/bin/env python3\n", encoding="utf-8")
+    real_script = ROOT / "bin/scheduler-compile.py"
+
+    module = _load(monkeypatch, publisher=str(synthetic))
+    seen: dict = {}
+    _stub_run_cmd(monkeypatch, module, seen)
+    module.SchedulerCollector().collect()
+
+    script_arg = str(synthetic.resolve() / "bin/scheduler-compile.py")
+    flags = seen["argv"][seen["argv"].index(script_arg) + 1 :]
+
+    result = subprocess.run(
+        [sys.executable, str(real_script), *flags],
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    assert result.returncode in (0, 1), (
+        f"被调用方拒绝采集器传的 {flags}: rc={result.returncode} {result.stderr.strip()[:200]}"
+    )
+    payload = json.loads(result.stdout)
+    assert isinstance(payload.get("ok"), bool)
+    assert payload["ok"] == (result.returncode == 0)
