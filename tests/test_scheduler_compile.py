@@ -158,9 +158,10 @@ def test_compile_crontab_does_not_double_log_redirect() -> None:
         assert " 2>&1 >> " not in line, (
             f"compile_crontab 链式双重重定向 (旧 bug):\n  {line}"
         )
-    # 契约: 对每条 active crontab job, 输出行 = schedule + ' ' + command
+    # 契约: 对每条本机该编译的 active crontab job, 输出行 = schedule + ' ' + command
+    # (hosts 字段 scoping 到别机的条目合法缺席 —— CRON-REGISTRY-NO-HOST-SCOPE)
     active_cron = [
-        j for j in jobs
+        j for j in module._host_scoped(jobs)
         if j.get("status") == "active" and "crontab" in j.get("planes", [])
     ]
     for j in active_cron:
@@ -292,3 +293,61 @@ class InterpreterNormalizationTests(unittest.TestCase):
 
     def test_non_python_commands_untouched(self) -> None:
         self.assertEqual(_normalize("cd /x && bash bin/a.sh"), "cd /x && bash bin/a.sh")
+
+
+def _watchdog_job() -> dict:
+    for j in _load_registry_jobs():
+        if j.get("name") == "work-agent-respire-mbp-watchdog":
+            return j
+    raise AssertionError("registry 里找不到 work-agent-respire-mbp-watchdog")
+
+
+def test_host_scope_excludes_other_hosts_jobs(monkeypatch) -> None:
+    """`hosts` 维度: 别机的专用条目不得出现在本机产物里.
+
+    CRON-REGISTRY-NO-HOST-SCOPE 的结构性修法。实证: work-agent-respire-mbp-watchdog
+    的 reconciliation_note 明写 mini 专用, 没有主机维度时它在 mbp 上永远 drift=1
+    ⇒ 本机健康门禁 A4 常红。
+    """
+    sc = _load_compile_module()
+    jobs = _load_registry_jobs()
+    assert _watchdog_job().get("hosts") == ["mini"]
+
+    monkeypatch.setenv("CRON_HOST", "mbp")
+    out_mbp = sc.compile_crontab(jobs)
+    assert not any("respire_mbp_supervisor_watchdog" in line for line in out_mbp)
+
+    monkeypatch.setenv("CRON_HOST", "mini")
+    out_mini = sc.compile_crontab(jobs)
+    assert any("respire_mbp_supervisor_watchdog" in line for line in out_mini)
+
+
+def test_host_scope_keeps_unscoped_and_matching_jobs(monkeypatch) -> None:
+    """无 `hosts` 的条目永远保留; 列出本机的条目也保留 (不是只留 unscoped)."""
+    sc = _load_compile_module()
+    jobs = [
+        {"name": "always", "schedule": "1 * * * *", "command": "cmd-always",
+         "planes": ["crontab"], "status": "active"},
+        {"name": "here", "schedule": "2 * * * *", "command": "cmd-here",
+         "planes": ["crontab"], "status": "active", "hosts": ["mbp"]},
+        {"name": "there", "schedule": "3 * * * *", "command": "cmd-there",
+         "planes": ["crontab"], "status": "active", "hosts": ["mini"]},
+    ]
+    monkeypatch.setenv("CRON_HOST", "mbp")
+    out = "\n".join(sc.compile_crontab(jobs))
+    assert "cmd-always" in out
+    assert "cmd-here" in out
+    assert "cmd-there" not in out
+
+
+def test_check_drift_is_host_scoped_consistently(monkeypatch) -> None:
+    """check_drift 与 compile_crontab 同口径过滤 —— 自洽性 (drift=0) 不被破坏.
+
+    只过滤一侧会当场造出 drift: 登记侧留了别机条目而已装侧没有, 或反之。
+    """
+    sc = _load_compile_module()
+    monkeypatch.setenv("CRON_HOST", "mbp")
+    installed = [sc._expand_workspace(line) for line in sc.compile_crontab(sc._load_jobs())]
+    data = sc.check_drift(installed_lines=installed)
+    assert data.get("drift_count", -1) == 0, data
+
