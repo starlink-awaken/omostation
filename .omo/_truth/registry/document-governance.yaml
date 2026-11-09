@@ -326,3 +326,45 @@ warning_exceptions:
         projects/cockpit 有 src/cockpit/commands/spine.py 改动, projects/ecos 有
         5 个 MODEL-BREW-*.yaml 改动), 故清偿要等那些检出可安全提交后再排期 ——
         本条到期日 2027-03-31 已按此留出窗口。
+    - id: legacy-omo-knowledge-stale-review
+      rule: stale_review
+      surface: omo-knowledge
+      max_findings: 385
+      expires: 2027-01-31
+      owner: governance-team
+      reason: |
+        **保证发生的事故**: 2026-12-21 将有 **373 份** `.omo/_knowledge/` 文档集体越界
+        (omo-knowledge surface SLA 180d), 而 `stale_review:omo-knowledge` **没有预算**
+        ⇒ 该桶一旦出现即 unbaselined ⇒ error ⇒ **当天所有 PR 变红**。
+        本条把那次事故变成有界的、可见的债务。
+
+        **实测 (2026-11-10, origin/main 快照, 按 surface patterns/excludes 精确计算)**:
+        该 surface 覆盖 1418 份文档, 其中 1398 份带 last-reviewed, 取值高度集中 ——
+          2026-06-23  x371   → 2026-12-21 越界   ← 本条覆盖的主体
+          2026-09-25  x448   → 2027-03-25 越界
+          2026-08-18  x 69   → 2027-02-14 越界
+          2026-08-29  x 37   → 2027-02-25 越界
+          2026-08-28  x 32   → 2027-02-24 越界
+          2026-08-30  x 28   → 2027-02-26 越界
+          2026-08-24  x 24   → 2027-02-20 越界
+          2026-07-31  x 23   → 2027-01-27 越界
+          (其余为零星日期)
+        371 份共享同一日期, 正是 CLAUDE.md §6.6 点名的「日期农场」形态。
+
+        **预算只覆盖第一波**: max_findings 取 385 = 12-21 那批 373 + 12 条余量。
+        到 2027-03-25 累计会有约 1000 份越界, 本条**覆盖不到** —— 这是刻意的:
+        本条的作用是拆掉「保证发生的 12-21 红线」, 而不是给整个 surface 发永久豁免。
+        expires 取 2027-01-31, 迫使 owner 在下一波 (01-27 的 23 份) 之前给出
+        **结构性处置**。
+
+        **结构性处置需要 owner 裁定 (本条不代为决定)**:
+          现状是「180 天 SLA × 1398 份批量盖章的文档」⇒ 每批盖章日 +181 天
+          就有一次集体越界。可选方向:
+          (a) 承认这批文档从未被真正复审, 逐批真复审并**用真实复审日**替换盖章日
+              (工作量大, 但是唯一诚实的做法);
+          (b) 给 omo-knowledge 定一个与其文档量/性质相称的 SLA (历史文档是否真的
+              需要 180 天节奏?), 并同步调整 surface 声明;
+          (c) 把「历史文档」与「在维护文档」拆成两个 surface, 前者用更长 SLA 或
+              免 SLA (其内容变更本身会触发复审)。
+        **不可取**: 直接删本条 (12-21 立刻全红) 或把 max_findings 无限调大
+        (等于给整个 surface 发永久豁免, 门禁形同虚设)。
