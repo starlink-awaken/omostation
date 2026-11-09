@@ -239,3 +239,40 @@ def test_hook_runner_wires_lane_check_into_pre_commit(tmp_path):
     # 必须是 blocking (run_check 第 3 参 = true)
     assert 'run_check "change-lane-check"' in text
     assert '"$py run --profile pyyaml -- bin/change-lane-check.py --staged" true' in text
+
+
+
+def test_exclude_refs_skips_merged_squash_commits_but_keeps_new_ones(tmp_path):
+    """排除已合并 ref 可达的 commit, 但不放过**新的**混 lane commit。
+
+    实测 (2026-11-09): pre-push 范围取 `merge-base(origin/<branch>, local)..local`,
+    rebase 之后会纳入「本地新基于的 main commit」; 本仓全 squash 合并 ⇒ 那些 commit
+    个个混 lane, 于是 rebase 后的 force-push 被拦 (点名 dd8cd184d / 5b5b4934e /
+    6aa14fa8b —— 三条都已合并)。已合并的 commit 不是本次推送能改的。
+    """
+    repo = _make_repo(tmp_path)
+    base = _commit(repo, {"README.md": "base\n"}, "base")
+    merged = _commit(repo, {"bin/a.py": "x\n", "docs/a.md": "y\n"}, "squash merge")
+    _git(repo, "update-ref", "refs/remotes/origin/main", merged)
+    # 本地新增一条**单 lane** commit (docs)
+    _commit(repo, {"docs/b.md": "y\n"}, "docs only")
+    head = _git(repo, "rev-parse", "HEAD")
+
+    module = _load(LANE_SCRIPT, "lane_check_exclude")
+    module.WORKSPACE = repo
+    rng = f"{base}..{head}"
+
+    plain = module.check_range(rng)
+    assert not plain["ok"], "不排除时应被已合并的 squash commit 拦住"
+    assert len(plain["violations"]) == 1, plain
+
+    excluded = module.check_range(rng, exclude_refs=("origin/main",))
+    assert excluded["ok"], excluded
+    assert excluded["commits"] == 1, f"新 commit 必须仍被看见, 否则是空转假绿: {excluded}"
+
+    # 反证: 新 commit 自己混 lane 时, 排除已合并 commit **不会**救它
+    _commit(repo, {"bin/c.py": "x\n", "docs/c.md": "y\n"}, "new mixed")
+    head2 = _git(repo, "rev-parse", "HEAD")
+    still = module.check_range(f"{base}..{head2}", exclude_refs=("origin/main",))
+    assert not still["ok"], "新的混 lane commit 必须照样被拦"
+    assert len(still["violations"]) == 1, still

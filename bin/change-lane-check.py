@@ -83,6 +83,7 @@ def changed_paths(staged: bool, files: list[str] | None = None) -> list[str]:
 def commit_paths_in_range(
     git_range: str,
     cwd: Path | None = None,
+    exclude_refs: tuple[str, ...] = (),
 ) -> list[tuple[str, list[str]]]:
     """列出范围 (base..head) 内每个 commit 及其改动文件, 按时间正序。
 
@@ -101,17 +102,23 @@ def commit_paths_in_range(
 
     cwd 缺省为本仓 (WORKSPACE); 传入时在那个仓里查 git —— 测试用临时仓时
     必须显式传, 否则查的是本仓的 git (读到空范围, 判据静默失效)。
+
+    `exclude_refs`: 从范围里排除已被这些 ref 可达的 commit。用于推送判定 ——
+    见 `_merged_refs()`。
     """
+    cmd = [
+        "git",
+        "log",
+        "--reverse",
+        "--format=%H",
+        "--name-only",
+        "--no-merges",
+        git_range,
+    ]
+    for ref in exclude_refs:
+        cmd += ["--not", ref]
     result = subprocess.run(
-        [
-            "git",
-            "log",
-            "--reverse",
-            "--format=%H",
-            "--name-only",
-            "--no-merges",
-            git_range,
-        ],
+        cmd,
         cwd=str(cwd) if cwd is not None else str(WORKSPACE),
         capture_output=True,
         text=True,
@@ -345,9 +352,34 @@ def check(
     }
 
 
+def _merged_refs() -> tuple[str, ...]:
+    """推送范围判定应排除的「已合并」ref (当前只有 origin/main)。
+
+    **为什么**: 本仓全 squash 合并 ⇒ main 上每个 PR 都是**一个**混 lane 的 commit
+    (代码 + 文档 + 治理登记压成一条)。pre-push 的范围取
+    `merge-base(origin/<branch>, local)..local` —— rebase 之后, 这个范围会纳入
+    「本地新基于的 main commit」, 于是那些 squash commit 被逐 commit 判成「混 lane」
+    而拦住推送。实测 2026-11-09: rebase 后 force-push 被拦, 点名的
+    `dd8cd184d` / `5b5b4934e` / `6aa14fa8b` 三条**都已合并**。
+
+    已合并的 commit 不是本次推送能改的; 排除它们不放宽任何**新** commit 的判据
+    (新混 lane commit 仍不在 origin/main 上, 照样被拦)。
+    """
+    refs: list[str] = []
+    for ref in ("origin/main",):
+        r = subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", ref],
+            capture_output=True, text=True, check=False,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            refs.append(ref)
+    return tuple(refs)
+
+
 def check_range(
     git_range: str,
     allowed_lanes: set[str] | None = None,
+    exclude_refs: tuple[str, ...] = (),
 ) -> dict[str, object]:
     """按 commit 逐个判定 lane (per-commit 判据)。
 
@@ -358,7 +390,7 @@ def check_range(
     allowed_lane_set = allowed_lanes or set()
     per_commit: list[dict[str, object]] = []
     violations: list[dict[str, object]] = []
-    for sha, paths in commit_paths_in_range(git_range):
+    for sha, paths in commit_paths_in_range(git_range, exclude_refs=exclude_refs):
         by_lane: dict[str, list[str]] = {}
         for path in paths:
             by_lane.setdefault(classify(path, submodules), []).append(path)
@@ -469,7 +501,11 @@ def main() -> int:
     git_range = args.git_range or (push_range if ".." in push_range else "")
 
     if git_range:
-        range_report = check_range(git_range, allowed_lanes=allowed_lanes)
+        range_report = check_range(
+            git_range,
+            allowed_lanes=allowed_lanes,
+            exclude_refs=_merged_refs() if push_range else (),
+        )
         if args.json:
             print(json.dumps(range_report, ensure_ascii=False, indent=2))
         elif range_report["ok"]:
