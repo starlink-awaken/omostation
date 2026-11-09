@@ -106,3 +106,32 @@ def comparison_key(line: str) -> str:
     if not s or s.startswith("#"):
         return ""
     return normalize_interpreter(normalize_installed_line(s))
+
+
+def current_host() -> str:
+    """本机主机名 —— cron 作业 `hosts` 维度的判据.
+
+    可用 `CRON_HOST` 覆盖 (测试与 hostname 不合名的部署); 缺省取
+    `socket.gethostname()` (实测 mbp / mini / studio 与债务条目里的机器名一致)。
+    """
+    import os
+    import socket
+
+    return os.environ.get("CRON_HOST") or socket.gethostname()
+
+
+def host_scoped_jobs(jobs: list[dict]) -> list[dict]:
+    """按 `hosts` 字段过滤登记条目: 缺省 (无 `hosts`) = 全部机器; 有 `hosts` = 仅列出的机器.
+
+    CRON-REGISTRY-NO-HOST-SCOPE 的结构性修法: registry 是**跨机并集**, 而
+    `check_drift` 的 `ok` 是**机器相对**的 —— 没有主机维度时, 单机专用条目在别的
+    机器上永远算 drift (实证: `work-agent-respire-mbp-watchdog` 是 mini 专用, 在
+    mbp 上 drift=1 ⇒ 本机健康门禁 A4 常红)。
+
+    **为什么在归一化模块里**: `scheduler-compile` 与 `install-cron-plane` 各自
+    编译登记面, 而后者此前没有主机维度 —— 安装器会把 mini 专用条目报成 `[MISSING]`
+    并装上 (实测), 让 `check_drift` 的修复被安装侧抵消。同口径必须只有一份实现。
+    """
+    host = current_host()
+    return [j for j in jobs if not j.get("hosts") or host in j["hosts"]]
+
