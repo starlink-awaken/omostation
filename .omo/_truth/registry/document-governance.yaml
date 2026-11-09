@@ -371,3 +371,24 @@ warning_exceptions:
         注: 上一版曾有 `stale-omo-truth-docs-review` 预算 (max 4, expires 2026-11-30),
         2026-11-09 因那两条文档真复审并更新 last-reviewed 而删除 (#5181)。
         本条是**新一批**盖章文档造成的, 与那次删除无关。
+    - id: legacy-root-entry-stale-review
+      rule: stale_review
+      surface: root-entry
+      max_findings: 10
+      expires: 2027-06-30
+      owner: governance-team
+      reason: |
+        `root-entry` 的 5 份入口文档 (AGENTS / CLAUDE / README / ARCHITECTURE /
+        LAYER-INDEX) 在 #5180/#5181/#5185 里**真复审**过, last-reviewed 统一为
+        2026-11-09。30 天 SLA ⇒ **2026-12-10 五份同时满 31 天**, 而
+        `stale_review:root-entry` 无预算 ⇒ unbaselined ⇒ error ⇒ 当天所有 PR 变红。
+
+        **与日期农场的区别**: 这 5 份是逐份真复审的 (不是批量盖章), 所以它们的
+        30 天节奏是**真实的**; 问题是 5 份入口文档的复审日天然会聚簇 (同一批
+        PR 里一起复审), 聚簇就一定会有某一天 5 份一起满期。预算的作用是把这种
+        聚簇变成有界的, 而不是让入口文档的新鲜度门在每个聚簇日失效。
+
+        max_findings 取 10 = 5 份 + 5 条余量 (留给后续新增的 INDEX-* 等入口文档)。
+        expires 2027-06-30: 给「让 5 份复审日自然错开」留出时间 —— 若届时它们
+        仍总是同日满期, 应考虑把 root-entry 的 SLA 与「入口文档按批复审」的实际
+        节奏对齐 (例如 45 天), 而不是继续靠预算。
