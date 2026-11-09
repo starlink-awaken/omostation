@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin" / "lib"))
 from cron_normalize import current_host as _current_host  # noqa: E402
 from cron_normalize import active_crontab_jobs as _active_crontab_jobs  # noqa: E402
+from cron_normalize import active_plane_jobs as _active_plane_jobs  # noqa: E402
 from cron_normalize import expand_workspace as _expand_workspace  # noqa: E402
 from cron_normalize import host_scoped_jobs as _host_scoped  # noqa: E402
 from cron_normalize import normalize_installed_line as _normalize_installed_line  # noqa: E402
@@ -63,8 +64,15 @@ def compile_crontab(jobs: list[dict]) -> list[str]:
 
 
 def compile_launchd(jobs: list[dict]) -> dict:
+    """编译 launchd plist 骨架 —— 与 crontab 路径同一套过滤口径.
+
+    此前本函数**只过滤 planes**, 不过 `status` 也不过 `hosts` ⇒ 实测把 6 条
+    `proposed` 条目 (resident-launchd-sediment/monitor/heartbeat、
+    knowledge-foundry-6h、panorama-dashboard、panorama-refresh-guard) 也编译进产物,
+    而 `--generate crontab` 会排除它们。同一份登记面在两个平面上给出不同的活跃集。
+    """
     agents = {}
-    for j in jobs:
+    for j in _active_plane_jobs(jobs, "launchd"):
         if "launchd" not in j.get("planes", []):
             continue
         label = f"com.omostation.{j['name']}"
