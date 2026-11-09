@@ -5855,7 +5855,12 @@ services:
     本仓不生成 —— 与同批 T10-206 回填一致。
 - id: omostation.omo-debt-refresh
   enabled: true
-  generate: false
+  # 2026-11-09: generate false -> true。原值 (T10-206 observe-only 回填) 的前提是
+  # 「plist 由本机手写/外部工具安装」—— 但 B4b 改道时本机那份被手工重写, `$NOW` 在改写中
+  # 被展开成硬编码时间戳、`--now` 后的 `$NOW` 丢了, 于是每次运行都
+  # `omo-debt refresh: error: argument --now: expected one argument` (exit 2)。
+  # 一个无人复制的本机副本必然腐烂 —— 改回由本仓生成, 注册表成为唯一真源。
+  generate: true
   config_source: ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
   content_digest: sha256:bebd759d37895fdb4c990c8ec94fa231ffbd227ff711628ce56d53deb1b650eb
   scheduler: launchd
@@ -5870,7 +5875,7 @@ services:
   outputs:
     stdout: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
     stderr: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
-  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。'
+  notes: '2026-11-09 改回 generate: true (见上)。原 T10-206 observe-only 回填的理由是「plist 由本机手写」, 但本机副本在 B4b 改道中被手工重写并丢失 $NOW 展开, 导致 exit 2 持续失败 (LAUNCHD-PLIST-INSTALLED-DIVERGED)。现在由本仓按本条目渲染并安装, E1 判据 (注册表渲染 vs plist 文本) 恢复闭合。'
   depends_on: []
 - id: omostation.panorama-dashboard
   enabled: false

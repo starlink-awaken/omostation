@@ -283,7 +283,13 @@ def gen_launchd_plist(svc: dict) -> str:
     label = svc["label"]
     root = service_root(svc)
     interp = resolve_interpreter(svc["program"]["interpreter"])
-    entry = _resolve_path(svc["program"]["entrypoint"], root)
+    # entrypoint 是「解释器的第一个参数」, 可能是脚本路径, 也可能是 flag。
+    # 原实现无条件 `_resolve_path`, 于是 `-c` / `-B` 这类 flag 被拼成
+    # "<service_root>/-c" —— launchd 拿它当脚本执行, 当场 exit 127
+    # (`<cwd>/-c: No such file or directory`), 而 plist 看着生成成功。
+    # 影响: services.yaml 里 7 个 `entrypoint: -c` 的服务全部会渲染成坏 plist。
+    entry_spec = svc["program"]["entrypoint"]
+    entry = entry_spec if entry_spec.startswith("-") else _resolve_path(entry_spec, root)
     args = [interp, entry, *svc["program"].get("args", [])]
     prog_xml = "".join(f"        <string>{a}</string>\n" for a in args)
     watch = svc.get("watch_paths", [])
