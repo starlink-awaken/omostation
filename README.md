@@ -2,7 +2,7 @@
 type: ssot
 owner: governance-team
 last_updated: 2026-09-04
-last-reviewed: 2026-10-14
+last-reviewed: 2026-11-09
 lifecycle: entry
 status: active
 ---
@@ -32,12 +32,12 @@ It is organized as a **5+4+1+1 layered architecture**:
 |-------|------|----------|------|
 | **L0** | Protocol | `ecos` | SSB signature chain, MOF metamodel, L0 constraints |
 | **L1** | Runtime | `runtime` | Matrix/Scheduler/KEI sandbox |
-| **L2** | Engine | `kairon`, `gbrain`, `omo`, `metaos`, `omo-debt`, `family-hub` | Knowledge engine, governance kernel, knowledge store |
+| **L2** | Engine | `kairon`, `gbrain`, `omo`, `metaos`, `family-hub` | Knowledge engine, governance kernel, knowledge store |
 | **L3** | Entry | `cockpit`, `cockpit-ui` | Unified CLI/Web dashboard |
 | **L4** | Self | `l4-kernel` | Self-management domain |
 | **I0** | Weave | `agora` | MCP Hub, BOS URI routing mesh |
 | **M0** | Crosscut | `model-driven` | Lifecycle meta-framework |
-| **X** | Extension | `aetherforge`, `c2g`, `bus-foundation`, `observability` | Compute, strategy, bus, observability |
+| **X** | Extension | `aetherforge`, `bus-foundation`, `observability` | Compute, strategy, bus, observability |
 
 > Architecture contracts: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 > Project layer index: [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md)
@@ -125,12 +125,12 @@ MIT © [starlink-awaken](https://github.com/starlink-awaken)
 |----|------|------|------|
 | **L0** | 协议层 | `ecos` | SSB 签名链、MOF 元模型、L0 约束 |
 | **L1** | 运行时层 | `runtime` | Matrix/Scheduler/KEI 沙箱 |
-| **L2** | 引擎层 | `kairon`, `gbrain`, `omo`, `metaos`, `omo-debt`, `family-hub` | 知识引擎、治理中枢、知识库 |
+| **L2** | 引擎层 | `kairon`, `gbrain`, `omo`, `metaos`, `family-hub` | 知识引擎、治理中枢、知识库 |
 | **L3** | 入口层 | `cockpit`, `cockpit-ui` | 统一 CLI/Web 仪表盘 |
 | **L4** | 自我层 | `l4-kernel` | 自我管理面 |
 | **I0** | 织层 | `agora` | MCP Hub、BOS URI 路由网 |
 | **M0** | 横切框架 | `model-driven` | 生命周期元框架 |
-| **X** | 扩展层 | `aetherforge`, `c2g`, `bus-foundation`, `observability` | 算力、战略、总线、可观测性 |
+| **X** | 扩展层 | `aetherforge`, `bus-foundation`, `observability` | 算力、战略、总线、可观测性 |
 
 > 架构契约: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 > 项目分层索引: [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md)
