@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from xml.sax.saxutils import escape as _xml_escape
 
 import yaml
 
@@ -291,13 +292,16 @@ def gen_launchd_plist(svc: dict) -> str:
     entry_spec = svc["program"]["entrypoint"]
     entry = entry_spec if entry_spec.startswith("-") else _resolve_path(entry_spec, root)
     args = [interp, entry, *svc["program"].get("args", [])]
-    prog_xml = "".join(f"        <string>{a}</string>\n" for a in args)
+    prog_xml = "".join(f"        <string>{_xml_escape(a)}</string>\n" for a in args)
     watch = svc.get("watch_paths", [])
-    watch_xml = "".join(f"        <string>{root / w}</string>\n" for w in watch)
+    watch_xml = "".join(f"        <string>{_xml_escape(str(root / w))}</string>\n" for w in watch)
     env = svc.get("environment", {})
     env_xml = ""
     if env:
-        items = "".join(f"        <key>{k}</key>\n        <string>{v}</string>\n" for k, v in env.items())
+        items = "".join(
+            f"        <key>{_xml_escape(k)}</key>\n        <string>{_xml_escape(v)}</string>\n"
+            for k, v in env.items()
+        )
         env_xml = f"    <key>EnvironmentVariables</key>\n    <dict>\n{items}    </dict>\n"
     res = svc.get("resilience", {})
     keepalive_xml = ""
@@ -335,12 +339,12 @@ def gen_launchd_plist(svc: dict) -> str:
     # 拼成 "<workspace>/~/Library/Logs/x.log"(带字面量 ~ 的死路径)。
     # 2026-08-08 修 entrypoint 时漏了这里, 同一个 bug 换了个字段。
     stdout_xml = (
-        f"    <key>StandardOutPath</key>\n    <string>{_resolve_path(out['stdout'], root)}</string>\n"
+        f"    <key>StandardOutPath</key>\n    <string>{_xml_escape(_resolve_path(out['stdout'], root))}</string>\n"
         if out.get("stdout")
         else ""
     )
     stderr_xml = (
-        f"    <key>StandardErrorPath</key>\n    <string>{_resolve_path(out['stderr'], root)}</string>\n"
+        f"    <key>StandardErrorPath</key>\n    <string>{_xml_escape(_resolve_path(out['stderr'], root))}</string>\n"
         if out.get("stderr")
         else ""
     )
@@ -348,7 +352,7 @@ def gen_launchd_plist(svc: dict) -> str:
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
         '<plist version="1.0">\n<dict>\n'
-        f"    <key>Label</key>\n    <string>{label}</string>\n"
+        f"    <key>Label</key>\n    <string>{_xml_escape(label)}</string>\n"
         "    <key>ProgramArguments</key>\n    <array>\n"
         f"{prog_xml}    </array>\n"
         + (f"    <key>WatchPaths</key>\n    <array>\n{watch_xml}    </array>\n" if watch else "")
