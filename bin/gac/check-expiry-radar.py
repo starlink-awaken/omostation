@@ -214,11 +214,40 @@ def cluster_by_expiry(items: list[dict], today: date | None = None) -> list[dict
     ]
 
 
+def _stale_review_budgets(root: Path | None = None) -> dict[str, int]:
+    """surface -> stale_review 预算上限 (来自 registry 的 warning_exceptions)。
+
+    雷达原先对**所有**越界项都说「对应 gate 会当天对所有 PR 变红」, 但
+    `warning_exceptions` 里有预算的桶会被预算吸收、不会直接变红 —— 2026-11 起
+    多数 surface 已预算化, 那句话对它们已经是**错的**。本函数让雷达能标注
+    「这一项会不会真的把门禁弄红」。
+    """
+    root = root or _ROOT
+    for d in _load_docs(_doc_gov_path(root)):
+        entries = (d.get("warning_exceptions") or {}).get("entries") or []
+        out: dict[str, int] = {}
+        for e in entries:
+            if not isinstance(e, dict):
+                continue
+            if e.get("rule") == "stale_review" and e.get("surface"):
+                try:
+                    out[str(e["surface"])] = int(e.get("max_findings") or 0)
+                except (TypeError, ValueError):
+                    continue
+        if out:
+            return out
+    return {}
+
+
 def scan(horizon: int = 7, today: date | None = None) -> dict:
     today = today or date.today()
     docs = scan_doc_surfaces(horizon=horizon, today=today)
     x2 = scan_x2_rules(horizon=horizon, today=today)
     items = docs + x2
+    budgets = _stale_review_budgets()
+    for it in items:
+        # x2:* 规则的 surface 字段形如 "x2:X2-...", 不在 doc-governance 预算体系内。
+        it["budget_max_findings"] = budgets.get(it["surface"])
     expired = [i for i in items if i["state"] == "expired"]
     imminent = [i for i in items if i["state"] == "imminent"]
     clusters = [c for c in cluster_by_expiry(items, today=today) if c["count"] > 1]
@@ -262,20 +291,35 @@ def main(argv: list[str] | None = None) -> int:
             print(f"⚠️  过期雷达 ({r['today']}, 前瞻 {r['horizon_days']}d): "
                   f"已越界 {r['summary']['expired']} / 即将 {r['summary']['imminent']}")
             for c in r["mass_expiry_clusters"]:
+                covered = sorted({s for s in c["surfaces"]
+                                  if any(i.get("budget_max_findings")
+                                         for i in r["imminent"] + r["expired"]
+                                         if i["surface"] == s)})
+                tag = (f" (其中 {', '.join(covered)} 已有预算覆盖)" if covered
+                       else " (**无预算 → 当天全红**)")
                 print(f"   🔴 **集体越界** {c['expiry_date']}: {c['count']} 项 "
-                      f"(surfaces: {', '.join(c['surfaces'])})")
+                      f"(surfaces: {', '.join(c['surfaces'])}){tag}")
                 for p in c["paths"]:
                     print(f"      - {p}")
                 if c["truncated"]:
                     print(f"      … 另 {c['truncated']} 项")
             for i in r["imminent"]:
+                b = i.get("budget_max_findings")
+                tag = f" [预算 {b}]" if b else " [无预算]"
                 print(f"   ⏳ {i['remaining_days']}d 后越界: {i['path']} "
-                      f"(SLA {i['sla_days']}d, last-reviewed={i['reviewed']})")
+                      f"(SLA {i['sla_days']}d, last-reviewed={i['reviewed']}){tag}")
             for i in r["expired"][:10]:
+                b = i.get("budget_max_findings")
+                tag = f" [预算 {b}]" if b else " [无预算]"
                 print(f"   ❌ 已越界 {-i['remaining_days']}d: {i['path']} "
-                      f"(SLA {i['sla_days']}d, age={i['age_days']}d)")
-            print("\n   含义: 这些日期一到, 对应 gate 会**当天对所有 PR** 变红。"
-                  "\n   处置: 提前复审并更新 last-reviewed (真复审, 不是只改日期)。")
+                      f"(SLA {i['sla_days']}d, age={i['age_days']}d){tag}")
+            print("\n   含义: 这些日期一到, 对应 gate 的处理**取决于该桶有无预算**:")
+            print("        · 无预算 → unbaselined → error → **当天对所有 PR 变红**;")
+            print("        · 有预算 → 被 warning_exceptions 吸收, 不变红, 但债务在累积")
+            print("          (见 .omo/_truth/registry/document-governance.yaml 的")
+            print("           warning_exceptions, 每条都写明 max_findings 与 expires)。")
+            print("   处置: 提前复审并更新 last-reviewed (真复审, 不是只改日期);")
+            print("         有预算的桶也要看 expires —— 到期未清偿会重新变红。")
 
     if args.strict and r["total"]:
         return 1

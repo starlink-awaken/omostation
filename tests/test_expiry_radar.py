@@ -247,3 +247,40 @@ def test_real_repo_x2_rule_is_covered():
     assert "x2:X2-FRESH-OMO-GOVERNANCE-SURFACES" in ids, (
         f"真实 x2-freshness-rules.yaml 的嵌套阈值未被读到; 命中 {sorted(ids)}"
     )
+
+
+# ── 预算感知: 有预算的桶不会真的把门禁弄红 ────────────
+
+
+def test_stale_review_budgets_are_read_from_registry(tmp_path):
+    """雷达要能读出各 surface 的 stale_review 预算上限。
+
+    2026-11 起多数 surface 已预算化, 而雷达原来对**所有**越界项都说
+    「对应 gate 会当天对所有 PR 变红」—— 那句话对已预算的桶是错的。
+    """
+    reg_dir = tmp_path / ".omo" / "_truth" / "registry"
+    reg_dir.mkdir(parents=True)
+    (reg_dir / "document-governance.yaml").write_text(
+        "surfaces:\n"
+        "- id: budgeted\n  review_days: 90\n  patterns: ['docs/*.md']\n"
+        "warning_exceptions:\n"
+        "  entries:\n"
+        "  - id: legacy-budgeted\n    rule: stale_review\n"
+        "    surface: budgeted\n    max_findings: 65\n"
+        "    expires: 2027-06-30\n"
+        "  - id: other-rule\n    rule: missing_frontmatter\n"
+        "    surface: budgeted\n    max_findings: 99\n"
+        "    expires: 2027-06-30\n",
+        encoding="utf-8",
+    )
+    mod = _load()
+    budgets = mod._stale_review_budgets(root=tmp_path)
+    assert budgets == {"budgeted": 65}, budgets
+
+
+def test_real_repo_stale_budgets_are_non_empty():
+    """真实注册表里应读得出若干 stale_review 预算 (证明接线不是空转)。"""
+    mod = _load()
+    budgets = mod._stale_review_budgets()
+    assert budgets, "真实注册表应至少有一条 stale_review 预算"
+    assert all(isinstance(v, int) and v > 0 for v in budgets.values())
