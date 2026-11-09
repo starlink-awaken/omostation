@@ -137,6 +137,24 @@ def _missing_path_in_uninit_submodule(reason: str, uninit: list[str]) -> bool:
     return False
 
 
+def _module_in_uninit_submodule(reason: str, uninit: list[str]) -> bool:
+    """`No module named 'X'` 是否落在未初始化的子模块里。
+
+    子模块目录存在但内容为空 (未 init) 时, _classify 的「目录存在即仓内腐化」
+    判据会误判成 repo —— 开发者未必拉齐全部子模块, 不该因此被 gate 阻塞。
+    2026-11-09 实测: 未 init 子模块的 worktree 里 15 个 ModuleNotFoundError
+    全被标成 [仓内腐化], 而它们全是环境性的。
+    """
+    match = re.search(r"No module named '([^']+)'", reason)
+    if not match:
+        return False
+    top = match.group(1).split(".", 1)[0]
+    for rel in uninit:
+        if rel == top or rel == f"projects/{top}" or rel.split("/")[-1] == top:
+            return True
+    return False
+
+
 def _pytest_available() -> bool:
     """当前解释器是否可加载 pytest (守卫的硬依赖)。"""
     try:
@@ -254,7 +272,9 @@ def main() -> int:
     repo_errors: list[dict[str, str]] = []
     uninit = _uninitialized_submodules()
     for err in result["errors"]:
-        if _missing_path_in_uninit_submodule(err["reason"], uninit):
+        if _missing_path_in_uninit_submodule(err["reason"], uninit) or _module_in_uninit_submodule(
+            err["reason"], uninit
+        ):
             env_reasons.append(err)
         elif _classify(err["reason"]) == "env":
             env_reasons.append(err)
