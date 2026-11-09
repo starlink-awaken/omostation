@@ -1,0 +1,17 @@
+schema: agent-error/v1
+id: PITFALL-MEA-009
+category: measurement
+severity: medium
+title: str.find 返回 -1 时无断言地用 txt[j:] 拼接，等于把文件尾部整段截掉
+symptom: 台账 YAML 结构化改写后 yaml.safe_load 出来的 bets 从 591 变 594、engineering.evidence 键丢失；git
+  diff --stat 显示改动量与预期不符
+root_cause: ''
+solution: '定位块边界后必须 assert j > i（本例最后一条 bet 之后直接是顶层 campaigns: 键，find("\n- id: ")
+  返回 -1）；改写完成后校验三件事：条目总数不变、目标键可读回、以及每个 digest 与磁盘实况相等'
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-11-09'
+times_encountered: 1
+last_confirmed_at: '2026-11-09'
+status: active

@@ -47551,7 +47551,8 @@ bets:
     增一条**真跑被调用方**的契约回归：从采集器实际 拼出的 argv 取 flag，用真实解释器执行 `scheduler-compile.py`，断言 `rc
     in (0,1)` 且 stdout 解析出的 `ok` 是 bool —— 即 `parse_diagnostic()` 依赖的两条不变量。把 `--json`
     加回去该用例当场红。
-  status: in_progress
+  status: done
+  done_at: 2026-11-09
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -47600,15 +47601,24 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit: {ref: "git://origin/main@afbe32105225e28cc00767bdb39a0e487ad172f6"}
+          tests: {ref: "receipt://docs/reports/2026-11-09-panorama-a9-phantom-json-closeout.md", sha256: "sha256:2a1a0dca5762892a8d8628e9a83395d5d39fe6830e35eacc973facbba0ce5597"}
+          diff: {ref: "receipt://docs/reports/2026-11-09-panorama-a9-phantom-json-closeout.md", sha256: "sha256:2a1a0dca5762892a8d8628e9a83395d5d39fe6830e35eacc973facbba0ce5597"}
+          rollback: {ref: "receipt://docs/reports/2026-11-09-panorama-a9-phantom-json-closeout.md", sha256: "sha256:2a1a0dca5762892a8d8628e9a83395d5d39fe6830e35eacc973facbba0ce5597"}
       operational:
-        status: NOT_STARTED
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary: {ref: "receipt://docs/reports/2026-11-09-panorama-a9-phantom-json-closeout.md", sha256: "sha256:2a1a0dca5762892a8d8628e9a83395d5d39fe6830e35eacc973facbba0ce5597"}
+          fresh_receipt: {ref: "receipt://docs/reports/2026-11-09-panorama-a9-phantom-json-closeout.md", sha256: "sha256:2a1a0dca5762892a8d8628e9a83395d5d39fe6830e35eacc973facbba0ce5597"}
+          replay: {ref: "receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-343.md", sha256: "sha256:2ea8f5b455d0342684c7c98a5e636dd3289fca6d11ece2d69d6f3c7a0697dcc4"}
+          cleanup: {ref: "receipt://docs/reports/2026-11-09-panorama-a9-phantom-json-closeout.md", sha256: "sha256:2a1a0dca5762892a8d8628e9a83395d5d39fe6830e35eacc973facbba0ce5597"}
       value:
-        status: NOT_STARTED
-        evidence: {}
-    overall_state: not_started
+        status: NOT_PROVEN
+        evidence:
+          note: "价值面不是本轮领用条件：它消除的是一次可复现的观测失效（A9 detail 恒为 diagnostic command exit 2），但「A9 从此稳定 PASS」要由部署侧 asset 镜像/发布链路之后的多次采集计量，且该链路不在本 BET 写面内，故不预支价值结论（value_indicator_policy: false）。"
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
