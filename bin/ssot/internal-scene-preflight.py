@@ -188,6 +188,28 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
         missing.append("scene_type:must_be_internal_pipeline")
 
     # activation/lifecycle must stay locked (same fabric red line as external)
+    #
+    # ⚠️ 2026-11-09 契约缺口记录 (未改行为, 等 owner 裁定):
+    #   本锁是**有意的** —— c2681d028 (#1095) 的提交说明写明 internal 轨是
+    #   「proposal-only trial builder for internal pipeline scenes」, 即内部管线
+    #   场景只以提案形态存在, 不得激活。
+    #   但这条规则依赖的两个取值在仓内**处处不存在**:
+    #     · `proposal_only` 不在 .omo/standards/scene-card-lifecycle.yaml 的
+    #       lifecycle 枚举里 (只有 draft/shadow/assisted/supervised/routine);
+    #     · `forbidden` 不在任何 activation 枚举里;
+    #     · 全 70 张场景卡**没有一张**用这两个值 (实测取值分布:
+    #       lifecycle = supervised 53 / shadow 6 / None 6 / assisted 3 / draft 1 / routine 1;
+    #       activation = active 54 / None 9 / preview 6 / inactive 1)。
+    #   后果: 规则实际只对**显式写了** activation/lifecycle 的卡生效 —— 而写了
+    #   的就一定违反 (因为合法值不存在)。实测 3 张 internal_pipeline 卡
+    #   (meeting-supervision / periodic-reporting / project-supervision) 因此
+    #   preflight_pass=False, 且它们走的是通用生命周期 (supervised/active),
+    #   即绕过了内部轨的 proposal-only 约束。
+    #   两条路可选, 都需要 owner 裁定, 本注释不代为决定:
+    #     (a) 承认这 3 张卡是正式激活的内部场景 → 给标准补 proposal_only 枚举,
+    #         并把锁改成「二选一」(要么 locked, 要么显式记录豁免);
+    #     (b) 它们确实违反了 proposal-only → 把 3 张卡改回 locked。
+    #   在裁定前不要简单删掉这条锁 —— 那会抹掉内部轨唯一的 red line。
     if scene_card.get("activation") not in {None, "forbidden"}:
         missing.append("activation_must_be_forbidden")
     if scene_card.get("lifecycle") not in {None, "proposal_only"}:
