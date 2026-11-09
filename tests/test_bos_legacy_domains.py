@@ -49,3 +49,31 @@ def test_copies_and_caches_are_not_scanned(tmp_path: Path, monkeypatch: pytest.M
     (tmp_path / "docs" / "new.md").write_text("bos://zombie/new/uri\n", encoding="utf-8")
     issues, _ = mod.check_bos_uri_standard(tmp_path)
     assert len(issues) == 1 and "zombie" in issues[0]
+
+
+def test_done_plan_archive_is_not_scanned(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """`_done/` 计划归档不扫 —— 历史计划里引用的域可能从未落地.
+
+    实测: `bos://local-ai/` 全仓只出现在 `Plans/_done/*.md`; 它是「历史规划/设想”
+     (从未落地) 的域。本检查守的是**活** URI 面, 历史/遗留域归
+     `.omo/standards/bos-uri-domain-standard.md` 的「遗留域」一节 (该节明写「只减不增」,
+     不因扫描命中而扩)。
+    """
+    std = tmp_path / "standard.md"
+    std.write_text("`bos://memory/`\n", encoding="utf-8")
+    monkeypatch.setattr(mod, "BOS_STANDARD", std)
+    monkeypatch.setattr(mod, "VALID_DOMAINS", {"memory"})
+
+    done = tmp_path / "Plans" / "_done"
+    done.mkdir(parents=True)
+    (done / "old.md").write_text("bos://local-ai/models/\n", encoding="utf-8")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "live.md").write_text("bos://memory/kos/search\n", encoding="utf-8")
+
+    issues, seen = mod.check_bos_uri_standard(tmp_path)
+    assert issues == [] and seen == {"memory"}, "归档计划里的历史域不应被扫出"
+
+    # 正控制: 同一个域出现在**活**文档里必须照样被点名 (跳过不是「一律放过」)
+    (tmp_path / "docs" / "new.md").write_text("bos://local-ai/models/\n", encoding="utf-8")
+    issues, seen = mod.check_bos_uri_standard(tmp_path)
+    assert len(issues) == 1 and "local-ai" in issues[0], issues
