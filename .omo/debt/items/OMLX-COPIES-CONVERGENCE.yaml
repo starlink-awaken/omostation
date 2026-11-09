@@ -16,7 +16,7 @@ evidence_refs:
 - docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
 mitigation_refs: []
 opened_at: "2026-09-23"
-last_reviewed_at: '2026-11-06'
+last_reviewed_at: '2026-11-09'
 next_review_at: '2026-12-06'
 gate_level: none
 x1_policy_ref: ""
@@ -71,3 +71,17 @@ history:
     466M + models-active 28 软链指向 SHAREDMODEL); weights-local
     18G 移 MOVESPEED 冷层; Model/omlx 待观察期后删除。
   actor: "engineering-agent"
+- at: '2026-11-09T01:58:00+00:00'
+  action: review-measure
+  note: >-
+    复核第三轮（2026-11-09 09:56–09:58 CST，mbp + studio-01 只读实测；不改 decision_needed 文本、不改 severity / lifecycle_state / next_review_at、不改 blocker 正文）。本轮结论会改变删除动作的性质，原文照执行会造成数据丢失，故只登记、不代删。
+
+    (0) **blocker `OMLX-TARGET-VOLUME-MISSING` 的成因是主机归属，不是卷丢失**：mbp 侧 `diskutil info /Volumes/SHAREDMODEL` = `Could not find disk: /Volumes/SHAREDMODEL`，`mount` 表里没有任何 shared 卷，`/bin/ls /Volumes` = com.apple.TimeMachine.localsnapshots / Macintosh HD / Model / MODEL-STORE / Recovery / USBDISPLAY ⇒ 「不存在」在 mbp 上是**真的**。同一时刻 studio-01 上该卷健康：`/dev/disk4` = `DK5A1-4T Media`（USB, SMART Not Supported）→ 容器 disk6 → `disk6s2` 挂 `/Volumes/SHAREDMODEL`，`df -k` Used=889,756,920 KB。⇒ 与同日 HW-DISK8-4TB-FLAKY 第三轮记录的是同一件事：这块 4.1T 盘 2026-11-06 从 mini 搬到了家里 studio。后果：spec `docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md` §3.1 的迁移步骤**在 mbp 上无法照文执行**，要么在 studio 侧执行，要么先建立跨机挂载 —— 这是原 blocker 没写的那一层。
+    (1) **三副本实测（体积与内容都不同，且第一份的读数有陷阱）**：
+        - mbp 运行时副本：`~/omlx` 是**符号链接** → `~/.local/share/omlxc/releases/v3.0.14`（lrwxr-xr-x, mtime Aug 14 19:36）。`du -sh ~/omlx`（结尾无斜杠）报 **0B** —— 那是链接本身的大小，不是副本体积；解引用后实测 **38G**（其中 `weights-local` 38G 占绝大多数，src 820K / tests 844K / bin 152K）。`releases/` 下只有 v3.0.14 一份，无历史堆积。⇒ 仪器陷阱登记：读 `~/omlx` 大小必须显式解引用，否则会把 38G 读成 0B（上一轮我自己就差点这么读）。
+        - mbp `Model/omlx` = **19G**（weights-local 18G + gateway 466M + logs 17M + bin 648K + conf 124K + run 76K），所在卷 `/dev/disk7s1` 1.9Ti 已用 1.2Ti、可用 635Gi。
+        - studio `SHAREDMODEL/omlx` = **467M，且没有 `weights-local`**（`ls -1d` = No such file or directory）⇒ 落地副本不含权重，不能作为权重的那一份。
+    (2) **照 `decision_needed` 原文删除会删掉唯一一份模型权重 —— 本轮的决策级发现**：两份 `weights-local` 的模型集**不相交**。运行时副本（38G）里有 `chat/minicpm5-1b-8bit`、`vision/minicpm-v-4.6-4bit`、`reasoning/qwen3.6-35b-a3b-4bit`、`coding/qwen3-coder-30b-a3b-4bit`；`Model/omlx`（19G）里**只有** `vision/muse-glimmer-30b-4bit` = **18G**，4 个 safetensors 分片 5,310,085,129 / 5,366,299,665 / 5,343,216,475 / 3,395,202,844 B，mtime 2026-09-15，目录含 `.cache` 与 `.gitattributes`（HF 仓库布局 ⇒ 理论上可重下，代价 18G）。在 6 个根内查无第二份：`/Volumes/Model/LMStudio`、`/Volumes/Model/models`、`/Volumes/Model/pinokio`、`/Volumes/MODEL-STORE`、`~/.local/share/omlxc`（均 maxdepth 2–3 `-iname "*muse*glimmer*"`）与 studio `/Volumes/SHAREDMODEL`（maxdepth 4），全部零命中，且这些 ls/find 的 rc 与 stderr 都单独验过非静默（`ls -1 /Volumes/Model/LMStudio` rc=0 即时返回、`find` rc=0 无权限噪声）⇒ 「只有这一份」是可信阴性，不是 `2>/dev/null` 吞出来的假空。⇒ **「Model 副本是运行时副本的过期重复」这个前提被推翻**：它是含独有权重的第三份，「收敛到两份」需要先决定 `muse-glimmer-30b-4bit` 迁到哪里（或明确接受重下）。我没有执行任何删除。
+    (3) **删除对象的量级第一次有数**：`Model/LMStudio` = **497G**（decision_needed 只写「删除 LMStudio/ 源」，没写量级）。Model 卷 top-level 实测：LMStudio 497G / models 293G / pinokio 264G / hf-cache 127G / ollama 50G / omlx 19G / Backup 8.8G / DockerDesktop 8.3G（`du -sh /Volumes/Model/*`，6.5s 完成）。⇒ 两个删除对象合计 **516G**，约等于该卷已用 1.2Ti 的 42%；`Model/omlx` 只占其中 19G，回收收益主要来自 LMStudio。
+    (4) **上一轮 11-07 观察到的目录枚举挂死不成立为常设症状，登记为瞬态**：当时 `ls` 20s 无输出、`os.listdir('/Volumes/Model/omlx')` errno=4(EINTR) ~5s；本轮同路径复测全部正常 —— `os.listdir` 11 条 0.0s、`du -sh` 正常完成、LMStudio/MODEL-STORE 即时可列。⇒ 不据此新开磁盘债。同机同日另有 `docs/pitfalls.md:296`「本机 `crontab(1)` 写入持续 EINTR（系统级）、读正常（2026-11-07 实测）」的独立记录，两者同窗口共现，但**是否同一根因未证**，本轮不归因。附仪器纪律（对任何枚举类判据）：`os.walk`/`os.listdir` 若不显式捕获并上报 OSError，会把 EINTR 失败读成 `files=0` 的空目录假象；计数命令必须同时打 rc 与 stderr，`2>/dev/null` 只能用在已知非关键的通道上。
+  actor: "governance-agent"
