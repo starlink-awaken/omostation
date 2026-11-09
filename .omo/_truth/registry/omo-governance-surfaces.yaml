@@ -2,8 +2,37 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-05
+last-reviewed: 2026-11-09
 ---
+
+# 2026-11-09 复审 + X2-C05 拆墙决策 (governance-team)。
+#   前四次到期 (2026-09-21 / 10-06 / 10-21 / 11-05) 都只靠再提交一次戳记续命, 每轮都写下
+#   「不代 owner 拆这道墙」。本轮 owner 授权下拆墙, 决策与证据固化如下。
+#
+#   病根 (前轮已诊断, 本轮确认): X2-C05 是 required `gac-gate` (pull_request 事件) 上的
+#   墙钟硬失败项 —— `bin/gac/check-l0-constraints.py` 的 `check_x2_c05()` 在 age > 14 时
+#   return False ⇒ `main()` exit 1 ⇒ **每个 PR** 变红, 且红与 PR 内容无关 (main 的定时
+#   governance-check 不跑它 ⇒ main 恒绿、PR 恒红)。而本文件的复核是**逐条核对 46 项声明
+#   ref × 文件系统实况 × 写入方 × 消费者**的深度工作, 14 天周期 << 实际复核间隔, 于是
+#   日历到点就把计划内工作变成紧急红灯。引入当天 (12d53d4b5, 2026-08-22) 就得先盖一次戳
+#   才让新检查通过 —— 校准错误从第一天就在。
+#
+#   决策: **降级为 advisory (非阻塞)**。保留 14 天信号节奏, 但 `check_x2_c05()` 超期时
+#   打印 WARNING 行并返回 True, 不再参与 `all_pass` 判定。早期预警改由
+#   `bin/gac/check-expiry-radar.py` 承担 —— 它已把本文件列为 X2-C05 目标, 前瞻窗口默认
+#   7d, `--strict` 供 cron 报警, 是「何时该复审」的正确仪器。
+#
+#   **不涉及**注册表的内容正确性: CR-OMO-SURFACE-01 (顶层资产登记) 与 CR-OMO-SURFACE-02
+#   (.omo 角色标签) 仍是阻塞项, 本决策只拆「日历」这一条腿。
+#
+#   顺带修仪器缺陷: 原实现用 `datetime.now()` (本地时钟) 减 `str(lr)[:10]` 解析的当日 00:00
+#   再取 `.days`, 跨时区机器判定不一致; 已改为 UTC 日期相减。阈值边界 (age > 14) 未动。
+#
+#   回归守卫: `tests/test_l0_x2_c05_advisory.py` (5 条, 含端到端 exit 0 断言)。
+#   变异对照: 把 `check_x2_c05` 换回 return False 的旧实现 ⇒ 该文件 2 failed / exit 1。
+#
+#   前轮遗留 (本轮**未**处理, 仍待 owner): 3 条无写者声明 (LOCKS/TESTS/ingress_plane) 摘除
+#   还是改指; compass_radar 提示串指向未注册子模块 (两处); 4 条迁移遗留声明。
 
 # 2026-11-05 复审 (X2-C05 ≤14d; 上次 2026-10-21 => 今天 15d)。第四次到期: 2026-09-21
 #   (f035d1cfd/#4109) -> 2026-10-06 (#4652) -> 2026-10-21 (#4844 戳记 + #4848 写者读数收回) -> 今天。
