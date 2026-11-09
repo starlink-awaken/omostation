@@ -1253,6 +1253,12 @@ surfaces:
   gate: true
   triggers: []
   status: active
+- id: bin-ssot-scene-v3-guardrail
+  tool: bin/ssot/scene-v3-guardrail.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
 workflow_triggers:
 - workflow: hook-regression.yml
   # 2026-11-02 补登记（此前未登记 ⇒ check-ci-surfaces.py 报 trigger-drift）。
