@@ -105,6 +105,29 @@ def validate_quality(card: dict[str, Any]) -> list[str]:
     return errors
 
 
+_ALL_SCENE_IDS_CACHE: set[str] | None = None
+
+
+def all_scene_ids() -> set[str]:
+    """全量 scene_id 集合 —— 缓存。
+
+    原本在 `validate_scene_card` 内逐卡重建: 69 张卡 × 69 次 YAML 解析 = 4761 次
+    读盘。CI 的 gac-local-gate 把它与 ~88 道门并发跑, 实测在负载下超过 15s
+    默认超时 (2026-11-09 PR #5211 实证: 本地 4.5s / CI TIMEOUT)。集合内容与
+    检出绑定、进程内不变, 故算一次即可。
+    """
+    global _ALL_SCENE_IDS_CACHE
+    if _ALL_SCENE_IDS_CACHE is None:
+        ids: set[str] = set()
+        if SCENES_DIR.is_dir():
+            for p in SCENES_DIR.glob("*.yaml"):
+                c = _load_yaml(p)
+                if c.get("scene_id"):
+                    ids.add(str(c["scene_id"]))
+        _ALL_SCENE_IDS_CACHE = ids
+    return _ALL_SCENE_IDS_CACHE
+
+
 def validate_scene_card(path: Path) -> dict[str, Any]:
     """Full validation of a single scene card."""
     card = _load_yaml(path)
@@ -115,13 +138,7 @@ def validate_scene_card(path: Path) -> dict[str, Any]:
     all_errors.extend(validate_consistency(card))
     all_errors.extend(validate_capability_refs(card))
     all_errors.extend(validate_quality(card))
-    all_scene_ids = set()
-    if SCENES_DIR.is_dir():
-        for p in SCENES_DIR.glob("*.yaml"):
-            c = _load_yaml(p)
-            if c.get("scene_id"):
-                all_scene_ids.add(c["scene_id"])
-    all_errors.extend(validate_topology(card, all_scene_ids))
+    all_errors.extend(validate_topology(card, all_scene_ids()))
     return {
         "scene_id": scene_id,
         "path": str(path),
