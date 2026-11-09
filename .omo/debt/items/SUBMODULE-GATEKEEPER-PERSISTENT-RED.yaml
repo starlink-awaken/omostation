@@ -40,14 +40,39 @@ note: |
   **为什么现在立案**: 此前多轮 PR 都把它当作「子模块既有违规」(PITFALL-COO-004)
   放过, 但连续 12+ 次失败后它已经是**main 的常态**, 必须在债务台帐里留痕。
 
-  **两条修复路径 (需 owner 裁定)**:
-  (a) 改 aetherforge: 把 quota_ledger 的直写改为经 omo CLI / core 的受控入口。
-      属子模块改动 (三步提交流), 且该子模块当前停在 feature 分支
-      (`delivery/aetherforge-omlxc-tool-catalog-...`), 需先确认可安全提交。
-  (b) 改 gatekeeper 范围: 若认为根部门禁不该扫子模块自有代码, 则需要显式定义
-      「哪些子模块受本契约约束」, 而不是让它隐式扫全 workspace 后长期红。
+  **2026-11-10 精确根因 (已读到违规文件本体)**: 这是**检测器误报**, 不是真违规。
+  `quota_ledger.py:27` 写的是:
+      LEDGER_PATH = Path.home() / ".omo" / "state" / "llm_quota_ledger.jsonl"
+  即 **`~/.omo/state/` (家目录下的独立树)**, 不是工作区 `.omo/`。
+  实测 `~/.omo` 真实存在 (含 `_delivery/` `_knowledge/`), 且**全仓自身代码一律用
+  `WORKSPACE / ".omo"`** (bin/mesh / bin/ssot-watcher / bin/compass_radar 等),
+  **没有一处**用 `Path.home()/".omo"` —— 所以 `~/.omo` 不是本契约所指的 `.omo/`。
+
+  误报机制 (`.subtrees/cockpit/scripts/contract_gatekeeper.py` 与
+  `projects/ecos/scripts/contract_gatekeeper.py` 两份都有):
+  `_has_forbidden_prefix` 的判据含 `normalized == prefix.rstrip("/")`,
+  于是**裸组件 `".omo"` 也被当成 forbidden prefix**; 而 `_expr_is_forbidden_path`
+  对 `BinOp` 做 `left or right` 递归, 于是 `Path.home() / ".omo" / ...` 里的
+  `".omo"` 命中 → `LEDGER_PATH` 进 `forbidden_names` → 59/60 行 (`.mkdir()` /
+  `open(..., "a")`) 被追踪上报。
+
+  **CI 实际跑的是哪份**: `projects/omo/src/omo/omo_lint.py:119` 调
+  `projects/ecos/scripts/contract_gatekeeper.py` (ecos 副本)。
+
+  **修复位置 (需 owner 裁定, 本条不代为决定)**:
+  (a) 改检测器 (推荐): 让 `_has_forbidden_prefix` 不再把裸 `".omo"` 当命中,
+      并在 `_expr_is_forbidden_path` 里识别「表达式以 `Path.home()` /
+      `expanduser('~')` 为根」→ 直接返回 False。两份副本都要改
+      (ecos 是真身, cockpit 子树是同步副本)。
+  (b) 改 aetherforge: 把账本移到工作区 `.omo/state/` 并经理受控入口写
+      (与其自身 AGENTS.md 的 `../../.omo/state/system.yaml` 指针一致)。
   **注意**: 直接删 gatekeeper 或把它改成 continue-on-error 会抹掉唯一的
   `.omo/` 直写防线 —— 不可取。
 
-  **本地不可复现的原因**: `projects/aetherforge` 在本机未初始化 (子模块对象不可用),
-  违规文件内容无法本地核对, 需 CI 日志或完整检出。
+  **为何本轮没直接修**: `projects/ecos` 处于 detached HEAD 且有 5 个他人未提交
+  的 MODEL-BREW-*.yaml 改动, 不适合代为提交; aetherforge 同样停在 feature 分支。
+  故先把根因钉死在债务里。
+
+  **本地核对方式 (已用)**: `projects/aetherforge` 工作树未初始化, 但子模块仓对象可用 ——
+  `git -C projects/aetherforge fetch origin main && git show FETCH_HEAD:<path>` 即可读到
+  违规文件本体 (实测已据此定位根因, 见上)。
