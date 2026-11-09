@@ -40,7 +40,7 @@ FACET_COLLECTORS = {
     "bos_verifier": "collect_bos_verifier",
     "evolution": "collect_evolution",
     "workspace": "collect_workspace_hygiene",
-    "launchd_health": "collect_launchd_health_observation",
+    "launchd_health": "collect_launchd_health",
 }
 
 
