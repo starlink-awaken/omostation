@@ -2,8 +2,9 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-07-31
-review-state: metadata-only
+last-reviewed: 2026-11-09
+review-state: content-reviewed
+content-reviewed-at: 2026-11-09
 metadata-migrated-at: 2026-07-31
 type: ssot
 ---
@@ -16,11 +17,13 @@ type: ssot
 |---|---------|---------|-------------------|---------------|
 | 1 | `governance_check_lint()` | ruff check kairon packages, 统计 error 数 | X1-CROSS-PROJECT-LINT-ENFORCE-20260620 | lint_enforce (待注册) |
 | 2 | `governance_check_test_coverage()` | 每个非归档包至少 1 个 test_*.py | CR-X4-TEST-COVERAGE (Phase 4 补全) | test_coverage |
-| 3 | `governance_check_debt_integrity()` | .omo/debt/items/ 中 lifecycle_state=resolved 的项是否有 resolution_evidence | X1-DEBT-EVIDENCE-CLOSURE-20260620, CR-X3-DEBT-TIER | audit_chain, value_roi |
+| 3 | `governance_check_debt_integrity()` | .omo/debt/items/ 中 lifecycle_state=resolved 的项是否有 resolution_evidence | X1-DEBT-EVIDENCE-CLOSURE-20260620 (待注册), CR-X3-DEBT-TIER | audit_chain, value_roi |
 | 4 | `governance_check_adr_links()` | ADR INDEX.md 引用的所有 ADR 都存在 | CR-X4-ADR-LINKS (Phase 4 补全) | doc_lifecycle |
 | 5 | `governance_check_task_consistency()` | status=completed 的任务, deliverables 路径必须存在 | CR-L2-TASK-DELIVERABLE | task_field |
 | 6 | `governance_check_agora_health()` | agora 路由 → 服务真实可达率 (>=80% = 满分) | CR-L0-BOS-RESOLVE, CR-L1-RUNTIME-HEALTH | bos_resolve |
 | 7 | `governance_check_doc_lifecycle()` | .omo/ 文档生命周期健康度 (frontmatter + 分类 + 引用) | CR-X4-DOC-SSOT, CR-X4-HEALTH-SSOT | doc_lifecycle, ssot_pointer |
+
+> 2026-11-09 复审: 7 个 `governance_check_*()` 函数已迁至 [`omo_audit_checks.py`](../../../projects/omo/src/omo/omo_audit_checks.py)，`run_governance_audit()` 仍在 `omo_audit.py` 内 import 并调度它们（`omo_audit.py:49-54`, `:262-263`）。下表检查名与覆盖规则 ID 逐项核对未变。
 
 ## 孤儿检查补全 (Phase 4)
 
