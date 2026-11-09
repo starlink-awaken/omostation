@@ -1,7 +1,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-09-20
+last-reviewed: 2026-11-09
 version: 3
 # REMOVED (2026-09-20): dispatch_ref, campaign_ref, reporting_ref — gap management system never implemented
 #   these fields point to files that were never created; code already handles missing keys gracefully
@@ -39,3 +39,5 @@ seed_items:
 - .omo/debt/items/DEBT-20260803074344.yaml
 - .omo/debt/items/DEBT-20260803074748.yaml
 - .omo/debt/items/MDEAD-17-heartbeat-wrapper.yaml
+- .omo/debt/items/CRON-BARE-PYTHON3-PY39-IMPORT-DEATH.yaml
+- .omo/debt/items/DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL.yaml
