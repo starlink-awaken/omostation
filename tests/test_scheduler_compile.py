@@ -597,3 +597,82 @@ def test_compile_launchd_interpreter_matches_crontab_resolution(tmp_path) -> Non
     assert sc.compile_launchd(fake, resolve=False)[
         "com.omostation.fake-launchd-job"]["ProgramArguments"][0] == "/usr/bin/python3"
     assert sc.compile_crontab(fake, resolve=False)[-1] == f"0 3 * * * {cmd}"
+
+
+def test_unfoldable_interpreter_tokens_positive_and_negative() -> None:
+    """命令起始位的解释器写法, 只有「折不回裸 python3」的那类才被报出来。
+
+    `comparison_key` 靠 `normalize_interpreter` 折叠解释器写法才可比, 而它的正则只认
+    `python3` / `python3.x`。登记面钉 `/python` (无版本号) 时键折不回 ⇒ 安装侧把已装的
+    另一种写法当外部行保留, 再追加登记面那条 ⇒ 同一作业双跑 (2026-11-09 mini 实测)。
+    负例同样关键: `python3 -c 'import python'` 与 `bash run-python.sh` 里的 `python`
+    字样不在命令起始位, 不该被当解释器。
+    """
+    cn = _cron_normalize()
+    cases = {
+        "python3 bin/x.py": [],
+        "/opt/homebrew/bin/python3.13 bin/x.py": [],
+        "PATH=/usr/bin:/bin python3 bin/x.py": [],
+        "/Users/x/.local/share/local-ops/dev-venv/bin/python /Users/x/bin/test-all": [
+            "/Users/x/.local/share/local-ops/dev-venv/bin/python"
+        ],
+        "cd /Users/x/Workspace && /usr/bin/python scripts/a.py": ["/usr/bin/python"],
+        "python2 bin/legacy.py": ["python2"],
+        "python3 -c 'import python'": [],
+        "bash run-python.sh": [],
+    }
+    for cmd, expected in cases.items():
+        got = cn.unfoldable_interpreter_tokens(cmd)
+        assert got == expected, f"{cmd!r}: got={got} expected={expected}"
+
+
+def test_unfoldable_interpreter_jobs_scopes_to_active_crontab() -> None:
+    """只扫本机 active 且 planes 含 crontab 的条目 —— 与编译产物同一份口径。"""
+    cn = _cron_normalize()
+    jobs = [
+        {"name": "a", "status": "active", "planes": ["crontab"],
+         "command": "/v/bin/python /x/test-all"},
+        {"name": "b", "status": "proposed", "planes": ["crontab"],
+         "command": "/v/bin/python /x/proposed"},
+        {"name": "c", "status": "active", "planes": ["launchd"],
+         "command": "/v/bin/python /x/launchd-only"},
+    ]
+    names = [e["name"] for e in cn.unfoldable_interpreter_jobs(jobs)]
+    assert names == ["a"], names
+
+
+def test_check_drift_reports_interpreter_fold_as_shadow() -> None:
+    """`check_drift` 带出 shadow 段, 且它不参与 ok 判定。
+
+    固定 venv 解释器是合法写法 (`local-ops-test-all` 就靠它), 所以这里只披露不阻断。
+    断言的是「当前登记面至少有一条不可折回」+「ok 与该段无关」, 不是把条数钉死 ——
+    钉死会让新增 venv 钉定的 PR 被无关判据拦下。
+    """
+    sc = _load_compile_module()
+    installed = [line.split(" ", 5)[-1] for line in sc.compile_crontab(_load_registry_jobs())]
+    res = sc.check_drift(installed_lines=installed)
+    fold = res["interpreter_fold"]
+    assert fold["mode"] == "shadow", fold
+    assert fold["blocks_gate"] is False, fold
+    names = [e["name"] for e in fold["entries"]]
+    assert "local-ops-test-all" in names, names
+    assert fold["count"] == len(fold["entries"]) >= 1, fold
+
+
+def test_interpreter_fold_shadow_failure_keeps_verdict(tmp_path, monkeypatch) -> None:
+    """shadow 段自身抛异常时, `ok` 与不含该段时逐字相同 (与 launchd shadow 同形)。"""
+    sc = _load_compile_module()
+    jobs = _load_registry_jobs()
+    installed = [line.split(" ", 5)[-1] for line in sc.compile_crontab(jobs)]
+
+    def _boom(_jobs):
+        raise RuntimeError("detector blew up")
+
+    monkeypatch.setattr(sc, "_unfoldable_interpreter_jobs", _boom)
+    res = sc.check_drift(installed_lines=installed)
+    assert res["interpreter_fold"]["blocks_gate"] is False, res["interpreter_fold"]
+    assert "error" in res["interpreter_fold"], res["interpreter_fold"]
+    monkeypatch.undo()
+    baseline = sc.check_drift(installed_lines=installed)
+    for key in ("ok", "drift_count", "orphan_count"):
+        assert res[key] == baseline[key], (key, res[key], baseline[key])
