@@ -38,9 +38,18 @@ decision_needed: >-
 blockers:
 - id: INSTALL-ROOT-LOCAL-MODIFICATIONS
   since: "2026-11-09"
+  resolved: "2026-11-09"
   detail: >-
-    安装位有 14 项脏项, 其中 3 项直接阻塞 `git checkout --detach`。任何「自动重锚」
-    都必须先解决它们, 否则会静默失败 (本次实测)。
+    **已订正 (2026-11-09 同日)**: 那 14 项「本地改动」经查**全部是陈旧锚点的产物**,
+    不是别人在安装位上的工作 —— `scripts/tools/spine-daily-ingress.py` 的未提交修改
+    正是根仓**已合入**的新版 (旧版硬编码 `/Users/xiamingxing/Workspace` 兜底, 新版指向
+    `bin/lib` 并在缝不可达时失败即报错); 两个 untracked 文件
+    (`.omo/_truth/registry/personal-retrieval-domains.yaml` / `bin/gac/documents-personal-view.py`)
+    在根仓里都已 tracked。10 个 ` M projects/*` 也只是子模块停在新 pin 上。
+    ⇒ 先 `git stash push -u` (可逆) 再重锚**成功**: 安装位由 `3b85250d1` 前进到
+    `7b4a01e1c` / `8fb45cfb3`, 随后 `uv.lock` 的 uv 重解按 §6⑤ 还原, **0 脏项**。
+    阻塞已解除, 但「谁在安装位上直接改代码」这个**根因仍在** (本次只是恰好与根仓同向);
+    若哪天安装位上的改动与根仓不同向, 重锚仍会被挡。
 history:
 - at: '2026-11-09T08:05:00+00:00'
   action: identify
@@ -57,4 +66,28 @@ history:
     **重锚实测**: 目标 origin/main `7b4a01e1c`, 脚本走到 `git checkout --detach` 被
     本地改动挡住并 `Aborting` —— 不是脚本 bug, 是安装位上有未提交/未跟踪的文件。
     **未强行动作** (那会丢掉别人的本地工作)。
+  actor: "governance-agent"
+- at: '2026-11-09T08:50:00+00:00'
+  action: correct
+  note: >-
+    **阻塞已解除, 且「本地改动」是陈旧锚点产物** (同日续测)。
+
+    逐个核对那 3 个阻塞文件: ① `scripts/tools/spine-daily-ingress.py` 的未提交修改
+    = 根仓**已合入**的新版 (旧版 `_LIB_DIR = parents[1]/"lib"` + `ImportError` 时硬编码
+    `/Users/xiamingxing/Workspace` 兜底; 新版 `parents[2]/"bin"/"lib"` + 缝不可达即
+    `SystemExit`, 不再静默兜底机器路径); ② `.omo/_truth/registry/personal-retrieval-domains.yaml`
+    与 ③ `bin/gac/documents-personal-view.py` 在根仓里都已 tracked (安装位锚在旧 SHA 故显示
+    untracked)。10 个 ` M projects/*` 同理 —— 子模块停在新 pin。
+
+    **处置 (可逆)**: `git -C ~/.local/opt/omostation stash push -u -m "pre-reanchor-20261109"`,
+    再跑 `bin/ssot/anchor-install-root.sh <origin/main>` —— **成功** (stash 仍保留, 未 drop)。
+    重锚后: panorama compact observation 由 `partial / 2 UNKNOWN / rc=1` 变为
+    **`observed / 7 facet 全 OBSERVED / rc=0`**; tailscale 心跳 (经 #5176 同批修好并再次重锚)
+    由恒 `FAIL` 变为 **exit 0** 且产物落 state 根。
+
+    **遗留的真根因**: 「在发布产物 (detached on a recorded SHA) 上直接改代码」这个习惯仍在 ——
+    本次只是恰好与根仓同向, 若不同向, 重锚仍会 `Aborting`。`decision_needed` 的 (2)
+    「巡检是否要自愈」仍未做: `--check` 依旧只报不动, 可以加「仅在安装位干净时自动重锚」的守卫分支。
+    另: `workspace` facet 依赖 state 根的 delivery anchor, 而该 anchor 由 `ensure_delivery_anchor()`
+    按需创建 —— 本次是我手工建的 symlink, 若被清理该 facet 会再度 UNKNOWN (可加兜底)。
   actor: "governance-agent"
