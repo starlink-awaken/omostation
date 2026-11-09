@@ -351,3 +351,31 @@ def test_check_drift_is_host_scoped_consistently(monkeypatch) -> None:
     data = sc.check_drift(installed_lines=installed)
     assert data.get("drift_count", -1) == 0, data
 
+
+
+def test_compile_launchd_uses_same_active_filter_as_crontab() -> None:
+    """launchd 平面与 crontab 平面必须给出一致的「活跃集」口径.
+
+    此前 `compile_launchd` **只过滤 planes**, 不过 `status` 也不过 `hosts` ⇒ 实测把
+    6 条 `proposed` 条目 (resident-launchd-sediment/monitor/heartbeat、
+    knowledge-foundry-6h、panorama-dashboard、panorama-refresh-guard) 也编译进产物,
+    而 `--generate crontab` 会排除它们 —— 同一份登记面在两个平面上给出不同的活跃集。
+    """
+    sc = _load_compile_module()
+    jobs = _load_registry_jobs()
+    agents = sc.compile_launchd(jobs)
+    assert agents, "registry 应编译出 launchd agent, 否则本用例恒绿"
+    by_name = {j.get("name"): j for j in jobs}
+    for label in agents:
+        job = by_name.get(label.removeprefix("com.omostation."))
+        assert job is not None, f"编译产物里的 {label} 不在登记面"
+        assert job.get("status", "active") == "active", f"{label} 不是 active 却被编译"
+        assert "launchd" in (job.get("planes") or []), f"{label} 不含 launchd 平面"
+
+    proposed = [
+        j["name"] for j in jobs
+        if j.get("status") != "active" and "launchd" in (j.get("planes") or [])
+    ]
+    assert proposed, "registry 里应有 proposed 的 launchd 条目, 否则反证恒绿"
+    for name in proposed:
+        assert f"com.omostation.{name}" not in agents, f"proposed 条目 {name} 被编译进产物"

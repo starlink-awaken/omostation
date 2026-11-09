@@ -136,18 +136,24 @@ def host_scoped_jobs(jobs: list[dict]) -> list[dict]:
     return [j for j in jobs if not j.get("hosts") or host in j["hosts"]]
 
 
-def active_crontab_jobs(jobs: list[dict]) -> list[dict]:
-    """本机该编译成 crontab 的登记条目: `hosts` 作用域 + `status=active` + `planes` 含 crontab.
+def active_plane_jobs(jobs: list[dict], plane: str) -> list[dict]:
+    """本机该编译成指定平面的登记条目: `hosts` 作用域 + `status=active` + `planes` 含该平面.
 
-    **单点实现** —— `scheduler-compile.compile_crontab` 与
-    `bin/ops/install-cron-plane.py` 的 `_compiled_lines` 共用。此前两边各自过滤,
-    主机维度只在 scheduler-compile 侧生效, 于是 #5147 的修复被安装侧抵消
-    (mbp 上安装器仍把 mini 专用条目报成 `[MISSING]` 并装上)。口径类改动落在这里,
-    不要在任一消费方重写一遍。
+    **单点实现** —— `scheduler-compile` 的各 `compile_*` 与
+    `bin/ops/install-cron-plane.py` 的 `_compiled_lines` 共用。此前各方各自过滤,
+    主机维度只在 crontab 侧生效, 于是 #5147 的修复被安装侧抵消 (mbp 上安装器仍把
+    mini 专用条目报成 `[MISSING]` 并装上); `compile_launchd` 则**连 status 都不过**
+    —— 实测把 6 条 `proposed` 条目也编译进产物。口径类改动落在这里, 不要在任一消费方
+    重写一遍。
     """
     return [
         j
         for j in host_scoped_jobs(jobs)
-        if j.get("status", "active") == "active" and "crontab" in (j.get("planes") or [])
+        if j.get("status", "active") == "active" and plane in (j.get("planes") or [])
     ]
+
+
+def active_crontab_jobs(jobs: list[dict]) -> list[dict]:
+    """本机该编译成 crontab 的登记条目 (见 `active_plane_jobs`)。"""
+    return active_plane_jobs(jobs, "crontab")
 
