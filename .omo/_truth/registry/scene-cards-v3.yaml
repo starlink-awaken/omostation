@@ -1,5 +1,5 @@
 schema: scene-registry/v1
-generated_at: '2026-11-06T07:38:13.450833+00:00'
+generated_at: '2026-11-09T06:54:03.729432+00:00'
 total_scenes: 69
 domains:
   knowledge: 1
@@ -712,7 +712,7 @@ scenes:
   scene_type: inbound
   domain: governance
   lifecycle: supervised
-  activation: allowed
+  activation: active
   owner: xiamingxing
   capability_refs:
   - bos://governance/omo/audit
@@ -725,7 +725,7 @@ scenes:
   scene_type: inbound
   domain: governance
   lifecycle: supervised
-  activation: allowed
+  activation: active
   owner: xiamingxing
   capability_refs:
   - bos://governance/omo/audit
