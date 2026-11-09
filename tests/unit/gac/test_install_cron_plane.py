@@ -428,3 +428,39 @@ def test_diff_installation_names_what_wholesale_replace_would_delete() -> None:
     assert candidate, "登记面应编译出 crontab 行, 否则本用例恒绿"
     removed = {r.strip() for r in res["removed"]}
     assert not any(c in removed for c in candidate), "候选条目被误报为会删除"
+
+
+def test_compiled_lines_respect_host_scope(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`hosts` 字段: 别机专用条目不得出现在本机编译产物里.
+
+    CRON-REGISTRY-NO-HOST-SCOPE —— 安装器此前不过滤, 会把 mini 专用条目报成
+    `[MISSING]` 并装上 (实测 mbp: 登记面 44 条 / 缺 1), 让 check_drift 侧的修复被
+    安装侧抵消。同口径由 `cron_normalize.host_scoped_jobs` 单点提供。
+    """
+    module = _load()
+    jobs = module._load_raw().get("jobs", [])
+    watchdog = next(
+        (j for j in jobs if j.get("name") == "work-agent-respire-mbp-watchdog"), None
+    )
+    assert watchdog is not None, "registry 里应有 work-agent-respire-mbp-watchdog"
+    assert watchdog.get("hosts") == ["mini"]
+
+    monkeypatch.setenv("CRON_HOST", "mbp")
+    mbp = "\n".join(module._compiled_lines())
+    assert "respire_mbp_supervisor_watchdog" not in mbp
+
+    monkeypatch.setenv("CRON_HOST", "mini")
+    mini = "\n".join(module._compiled_lines())
+    assert "respire_mbp_supervisor_watchdog" in mini
+
+
+def test_status_missing_listing_is_host_relative(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`--status` 的 MISSING 清单与本机作用域一致 —— mini 多的那一条正是 watchdog."""
+    module = _load()
+    monkeypatch.setenv("CRON_HOST", "mbp")
+    mbp_lines = module._compiled_lines()
+    monkeypatch.setenv("CRON_HOST", "mini")
+    mini_lines = module._compiled_lines()
+    assert len(mini_lines) == len(mbp_lines) + 1
+    assert any("respire_mbp_supervisor_watchdog" in line for line in mini_lines)
+    assert not any("respire_mbp_supervisor_watchdog" in line for line in mbp_lines)
