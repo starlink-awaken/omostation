@@ -265,7 +265,7 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
 | **根与 profile** | 根目录是参数 · 根有四类落点 · 运行时安装位 · XDG 状态根 · 两个根的写面收敛 · 声明 profile 后跑真实 sync · 模块级常量 import 时冻结 | 「根有四类落点」 |
 | **git / 子模块 / worktree** | 并发 agent 分支隔离 · worktree 子模块与 remote 完整性 · 未初始化子模块 git -C 向上解析 · submodule-pointer 空转 · 扫描面 worktree 副本归一 · 规则接线检查对子模块检出敏感 · SKIP_SUBMODULE_INIT 仍跑 guard 全量对齐 | 「未初始化子模块 `git -C` 向上解析」 |
 | **交付与合并** | merge 脚本主区撞脏树 · mergeStateStatus（CLEAN/BLOCKED/DIRTY）· PR 工作流各条 | 「mergeStateStatus」 |
-| **工具链 / 环境** | Chrome GUI 自动化路线 · gbrain 只能用 bun run test · 生成物 CI 口径 ≠ 本地 · 本机代理造成 GitHub 读正常写失败 · macOS 27 缺 `/usr/bin/{rg,date,df,cat}` 与 `/bin/awk` · `log show` kernel 行的级别与开机会话可见性 · `du -sh` 量的是符号链接自身 | 「生成物 CI 口径 ≠ 本地」 |
+| **工具链 / 环境** | Chrome GUI 自动化路线 · gbrain 只能用 bun run test · 生成物 CI 口径 ≠ 本地 · 本机代理造成 GitHub 读正常写失败 · macOS 27 缺 `/usr/bin/{rg,date,df,cat}` 与 `/bin/awk` · `log show` kernel 行的级别与开机会话可见性 · `du -sh` 量的是符号链接自身 · cron 的最小 PATH 不含 `/opt/homebrew/bin` | 「生成物 CI 口径 ≠ 本地」·「cron 的最小 PATH 不含 `/opt/homebrew/bin`」 |
 | **跨机作用域 / 运行态平面** | `known_orphans` 是跨机并集（按本机删会回流）· registry 的主机维度（`hosts`，缺省=全部机器）· resident 两平面分裂（launchd 空转 + 双 ledger） | 「`known_orphans` 是跨机并集」·「registry 的主机维度」·「resident 两平面分裂」 |
 
 ### 当场会咬人的三条（进任何编辑会话前扫一眼）
