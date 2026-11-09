@@ -523,26 +523,6 @@ jobs:
     sfop_slot: S
     reconciliation_note: capability-registry 每日同步 (04:05)，已在 crontab -l 运行，补齐登记。
 
-  - name: kems-freshness-daily
-    schedule: "30 4 * * *"
-    command: 'cd /Users/xiamingxing/Workspace/projects/ecos && python3 src/ecos/ssot/tools/mof-kems-bridge.py --freshness >> /Users/xiamingxing/Workspace/runtime/cron/kems-freshness.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: KEMS 保鲜度日检 (04:30, ecos 子模块)，已在 crontab -l 运行，补齐登记。
-
-  - name: mof-sla-snapshot-daily
-    schedule: "35 4 * * *"
-    command: 'cd /Users/xiamingxing/Workspace/projects/ecos && python3 src/ecos/ssot/tools/mof-sla.py --snapshot-only >> /Users/xiamingxing/Workspace/runtime/cron/mof-sla-m0.log 2>&1'
-    planes: [crontab]
-    reality: installed
-    status: active
-    owner: governance-team
-    sfop_slot: S
-    reconciliation_note: MOF SLA M0 快照 (04:35, ecos 子模块)，已在 crontab -l 运行，补齐登记。
-
   - name: scene-calibration-weekly-active
     schedule: "0 6 * * 1"
     command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
