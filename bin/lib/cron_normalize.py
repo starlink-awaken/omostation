@@ -135,3 +135,19 @@ def host_scoped_jobs(jobs: list[dict]) -> list[dict]:
     host = current_host()
     return [j for j in jobs if not j.get("hosts") or host in j["hosts"]]
 
+
+def active_crontab_jobs(jobs: list[dict]) -> list[dict]:
+    """本机该编译成 crontab 的登记条目: `hosts` 作用域 + `status=active` + `planes` 含 crontab.
+
+    **单点实现** —— `scheduler-compile.compile_crontab` 与
+    `bin/ops/install-cron-plane.py` 的 `_compiled_lines` 共用。此前两边各自过滤,
+    主机维度只在 scheduler-compile 侧生效, 于是 #5147 的修复被安装侧抵消
+    (mbp 上安装器仍把 mini 专用条目报成 `[MISSING]` 并装上)。口径类改动落在这里,
+    不要在任一消费方重写一遍。
+    """
+    return [
+        j
+        for j in host_scoped_jobs(jobs)
+        if j.get("status", "active") == "active" and "crontab" in (j.get("planes") or [])
+    ]
+

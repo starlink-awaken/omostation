@@ -464,3 +464,40 @@ def test_status_missing_listing_is_host_relative(monkeypatch: pytest.MonkeyPatch
     assert len(mini_lines) == len(mbp_lines) + 1
     assert any("respire_mbp_supervisor_watchdog" in line for line in mini_lines)
     assert not any("respire_mbp_supervisor_watchdog" in line for line in mbp_lines)
+
+
+def _load_compile_module():
+    """按路径加载 scheduler-compile.py (文件名带连字符, 不能直接 import)."""
+    spec = importlib.util.spec_from_file_location(
+        "scheduler_compile_agree", ROOT / "bin" / "scheduler-compile.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_installer_and_compiler_agree_on_managed_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    """安装器与编译器对「哪些条目归登记面管」必须给出**同一个集合**.
+
+    这是「同口径必须单点」的门禁: #5147 给 `scheduler-compile` 加了 hosts 过滤而
+    安装器漏掉, 于是判据侧 `check_drift` 绿、安装侧仍把 mini 专用条目报成
+    `[MISSING]` 并装上 —— 两边对同一份 registry 给出不同的托管集合。
+    """
+    icp = _load()
+    sc = _load_compile_module()
+    monkeypatch.setenv("CRON_HOST", "mbp")
+
+    compiler_keys = {
+        icp._key(icp._expand_workspace(line))
+        for line in sc.compile_crontab(sc._load_jobs())
+        if line.strip() and not line.startswith("#")
+    }
+    installer_keys = {icp._key(line) for line in icp._compiled_lines()}
+    assert compiler_keys, "编译器应产出条目, 否则本用例恒绿"
+    assert installer_keys == compiler_keys, (
+        "安装器与编译器的托管集合不一致: "
+        f"only-installer={sorted(installer_keys - compiler_keys)[:2]} "
+        f"only-compiler={sorted(compiler_keys - installer_keys)[:2]}"
+    )
