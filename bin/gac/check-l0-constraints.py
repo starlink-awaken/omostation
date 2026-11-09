@@ -12,7 +12,7 @@
   X2-C01: port-registry 条目含 name
   X2-C03: CLAUDE.md 保鲜 ≤60 天
   X2-C04: 协议半衰期 (protocol.age_days ≤ half_life_days, W-L0-005)
-  X2-C05: omo-surfaces 复核 ≤14 天
+  X2-C05: omo-surfaces 复核 ≤14 天 (**advisory**, 2026-11-09 由阻塞降级; 见该函数 docstring)
   X3-C01: 功能域声明 value_tier (ecos governance/x3-value-stack.yaml)
   X3-C02: value_tier=1 的域必须有 cost_attribution != 'none'
   X3-C03: governance_stack 分层价值归因
@@ -220,22 +220,42 @@ def check_x4_c01() -> tuple[bool, str]:
 
 
 def check_x2_c05() -> tuple[bool, str]:
-    """X2-C05: omo-governance-surfaces registry ≤14 天复核"""
+    """X2-C05: omo-governance-surfaces registry ≤14 天复核 (**advisory**, 非阻塞)。
+
+    2026-11-09 governance-team 拆墙决策 (本函数此前是 required `gac-gate` 上的墙钟硬失败项):
+      - 事实: 2026-08-22 (12d53d4b5) 引入当天就得先盖一次戳才让它通过; 此后 2026-09-21 /
+        10-06 / 10-21 / 11-05 共四次到期, 四次都只靠再提交一次戳记续命。
+      - 病根: 14 天周期 << 人工深度复核的实际间隔。复核本身是**逐条核对 46 项声明 ref
+        × 文件系统实况 × 写入方 × 消费者**, 不是 14 天能重跑一遍的任务; 于是日历到点
+        就把计划内的复核工作变成**每个 PR 的紧急红灯**, 且红与 PR 内容无关。
+      - 处置: 保留 14 天**信号**节奏, 但降级为 warning —— 打印 WARNING 行、返回 True。
+        早期预警改由 `bin/gac/check-expiry-radar.py` 承担 (它已把本文件列为 X2-C05 目标,
+        前瞻窗口默认 7d, `--strict` 供 cron 报警)。注册表的**内容**正确性仍由
+        CR-OMO-SURFACE-01 (阻塞) 与 CR-OMO-SURFACE-02 (阻塞) 把守, 本次降级不涉及它们。
+      - 记录: 决策全文见 `.omo/_truth/registry/omo-governance-surfaces.yaml` 文末
+        「X2-C05 拆墙」节。
+
+    顺带修一个仪器缺陷: 原实现用 `datetime.now()` (本地时钟) 减 `str(lr)[:10]` 解析出的
+    当日 00:00 再取 `.days`, 跨时区机器判定不一致。改为 UTC 日期相减。
+    """
     if not OMO_SURFACES.is_file():
         return True, "omo-surfaces not found, skipped"
     try:
         import yaml
+        from datetime import UTC, datetime
         docs = list(yaml.safe_load_all(OMO_SURFACES.read_text()))
         front = docs[0] if docs else {}
         lr = front.get("last-reviewed", "")
         if not lr:
             return True, "omo-surfaces: no last-reviewed (advisory)"
-        from datetime import datetime
         try:
-            last = datetime.strptime(str(lr)[:10], "%Y-%m-%d")
-            age = (datetime.now() - last).days
+            last = datetime.strptime(str(lr)[:10], "%Y-%m-%d").date()
+            age = (datetime.now(UTC).date() - last).days
             if age > 14:
-                return False, f"omo-surfaces: last-reviewed {age}d ago (max 14)"
+                return True, (
+                    f"WARNING omo-surfaces: last-reviewed {age}d ago (advisory; "
+                    "was blocking before 2026-11-09 — see registry 文末拆墙节)"
+                )
             return True, f"omo-surfaces: reviewed {age}d ago (fresh)"
         except ValueError:
             return True, f"omo-surfaces: last-reviewed={lr}"
