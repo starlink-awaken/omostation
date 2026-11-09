@@ -1,7 +1,7 @@
 ---
 type: operations
 status: active
-lifecycle: workflow-requirement-iteration-waiver
+lifecycle: history
 owner: governance-team
 created: 2026-10-16
 last-reviewed: 2026-10-16

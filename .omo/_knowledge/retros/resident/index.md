@@ -1,3 +1,11 @@
+---
+schema: resident-retro-index/v1
+status: active
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-11-09
+---
+
 # resident retro 索引 (promote 自动生成)
 
 - generated_at: 2026-11-05T03:10:01Z
