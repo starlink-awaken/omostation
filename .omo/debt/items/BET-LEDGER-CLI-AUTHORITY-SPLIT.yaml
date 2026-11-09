@@ -32,17 +32,22 @@ gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: >-
-  三问分开裁决, 有顺序依赖。(1) **台账读数 (status / claim 前置校验等只读出口) 以哪棵树为准**:
-  现状是 `bet-ledger.py` 按当前检出树计数、按 `origin/main` 判证据可达性, `agent-workflow.py` 的
-  packet refresh 按 `origin/main` 比 ledger 字节 —— 三个出口三套口径才是问题本体, 不是"哪个错了"。
-  (2) **若裁 origin/main 为权威, 选哪种仪器行为**: 复用 `_assert_packet_sources_at_ref` 的失败即拦语义
-  (滞后树上的读数直接拒绝并提示另起 worktree), 还是只在输出头部声明 `root / HEAD / blob / 与 origin/main 是否一致`
-  (不拒绝, 让读者自己判断)。前者会把既有脚本与 CI 在滞后树上打成硬失败 (本仓主工作区常年落后且这是**常态**),
-  属行为变更; 后者只加声明, 不改判定。两者都需 principal 选定, 不要由 agent 试探。
-  (3) **`state_root` 是否也在权威面内**: 本项只涉及 `code_root` 侧的 git 树; 若裁定还要覆盖 profile /
-  `state_root()` 的运行时安装位, 要另写判据, 不与本项合并。
-  **裁决前不要给 CLI 加自动 `git fetch` / `reset`** —— 那会把"读数"变成"改树", 既越出只读出口的授权面,
-  又让同一命令在不同时刻给出不可复算的结果; 同理不要把 `sync-main.sh` 接进台账 CLI 作为"自动新鲜化"。
+  **已裁 (2026-11-09, principal 授权下由 governance-agent 决定)**: 采**declare-only** ——
+  只读出口 (`status` / `list` / `show` / `claim-check`) 在 **stderr** 打印
+  `root / HEAD / ledger blob / 与 origin/main 是否一致`, **不拒绝、不改判定** (实现见
+  `bin/plan/bet-ledger.py` 的 `authority_declaration_lines()`, PR #5145)。理由: 本仓主工作区
+  常年落后且这是**常态**, fail-closed 会把既有脚本与 CI 在滞后树上打成硬失败, 属行为变更。
+  声明走 stderr 是为了不动 stdout 的机器可读性 —— `maturity-align.py` / `strategy-check.py`
+  等下游用正则解析 stdout 的 `总 bet:` / `done N`。
+  仍未闭合的两问: (1) **fail-closed 语义未启用** —— 若 principal 要「滞后树上的读数直接拒绝」,
+  需另行裁决, 不要由 agent 试探; (2) **`state_root` 不在本项范围** —— 本项只涉及 `code_root`
+  侧的 git 树, 要覆盖 profile / 运行时安装位需另写判据。
+  **持续纪律**: 不给 CLI 加自动 `git fetch` / `reset` —— 那会把"读数"变成"改树", 既越出只读出口的
+  授权面, 又让同一命令在不同时刻给出不可复算的结果; 同理不要把 `sync-main.sh` 接进台账 CLI。
+  原三问 (2026-11-09 立案时): (1) 台账读数以哪棵树为准 —— 现状是 `bet-ledger.py` 按当前检出树计数、
+  按 `origin/main` 判证据可达性, `agent-workflow.py` 的 packet refresh 按 `origin/main` 比 ledger 字节,
+  三个出口三套口径才是问题本体; (2) 若裁 `origin/main` 为权威, 选失败即拦还是只声明 —— 已裁为后者;
+  (3) `state_root` 是否也在权威面内 —— 未纳入。
 history:
 - at: '2026-11-09T02:47:00+00:00'
   action: identify
@@ -76,4 +81,23 @@ history:
 
     (4) **不做的三件事**: 不给 CLI 加自动 fetch/reset (见 decision_needed 末段); 不改 `_ledger_for_workspace`
     的拼路径方式 (那是行为变更, 要先裁 (1)(2)); 不动 `agent-workflow.py` 那条已经正确的腿。
+  actor: "governance-agent"
+- at: '2026-11-09T03:30:00+00:00'
+  action: mitigate
+  note: >-
+    落地 declare-only 处置 (PR #5145): `bin/plan/bet-ledger.py` 新增
+    `authority_declaration_lines()`, 在 `status` / `list` / `show` / `claim-check`
+    四个只读出口把 `root / HEAD / ledger blob / origin/main 及其 ledger blob / 与
+    origin/main 是否一致` 打印到 **stderr**。**不拒绝、不改判定**; stdout 逐字节
+    不变 (下游 `maturity-align.py` / `strategy-check.py` 用正则解析 stdout 的
+    `总 bet:` / `done N`, 声明若进 stdout 会污染它们)。
+
+    选 declare-only 而非 fail-closed 的理由: 本仓主工作区常年落后且这是常态, 失败即拦
+    会把既有脚本与 CI 在滞后树上打成硬失败 —— 属行为变更, 需 principal 另行裁决。
+    fail-closed 与 `state_root` 侧判据**仍未闭合**, 已写回 `decision_needed`。
+
+    牙齿验过 (变异对照): 摘掉 `main()` 里的声明接线 ⇒
+    `tests/test_bet_ledger_authority_declaration.py::test_status_emits_declaration_on_stderr_not_stdout`
+    当场红; 恢复后 5 passed。判据覆盖正反两态 (blob 相等报「一致」、不等报「不一致」)
+    与缺读数态 (「无法比较」而非静默一致)。
   actor: "governance-agent"

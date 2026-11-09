@@ -51,6 +51,57 @@ RETRO_DIR = WS / ".omo" / "_knowledge" / "retros"
 _PORTFOLIO_VALIDATOR = None
 _PORTFOLIO_GRAPH = None
 
+# 读台账含量/状态的出口 —— 这些命令的读数来自当前检出树, 最容易被滞后树误导
+# (BET-LEDGER-CLI-AUTHORITY-SPLIT)。声明打印到 stderr, 不动 stdout 的机器可读性。
+AUTHORITY_DECLARING_COMMANDS = frozenset({"status", "list", "show", "claim-check"})
+
+
+def _git_probe(cwd: Path, *args: str) -> str | None:
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(cwd), *args],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except Exception:  # noqa: BLE001 — 探针失败不是错误, 只是没有读数
+        return None
+    out = r.stdout.strip()
+    return out or None
+
+
+def authority_declaration_lines() -> list[str]:
+    """读数来源面声明 —— BET-LEDGER-CLI-AUTHORITY-SPLIT 的 declare-only 处置.
+
+    本文件的只读出口按**当前检出树**计数 (`WS`/`LEDGER` 在 import 时由 `__file__`
+    反推), 而证据可达性按 `origin/main` 判 (`_validate_evidence_reference`) ——
+    同一文件两套权威面, 且输出从不声明读数来自哪棵树。这里把 root / HEAD /
+    ledger blob / 与 origin/main 是否一致打印出来, 让读者自己判断读数是否新鲜。
+
+    **不拒绝、不改判定**: fail-closed 语义 (滞后树上的读数直接拒绝并提示另起
+    worktree) 属行为变更, 会把既有脚本与 CI 在滞后树上打成硬失败 (本仓主工作区
+    常年落后且这是常态), 需 principal 另行裁决。
+    """
+    head = _git_probe(WS, "rev-parse", "HEAD")
+    blob = _git_probe(WS, "rev-parse", f"HEAD:{LEDGER_RELATIVE_PATH}")
+    om = _git_probe(WS, "rev-parse", "origin/main")
+    om_blob = _git_probe(WS, "rev-parse", f"origin/main:{LEDGER_RELATIVE_PATH}")
+    lines = [
+        "=== 权威面 (读数来源) ===",
+        f"root:        {WS}",
+        f"HEAD:        {head or 'unknown'}",
+        f"ledger:      {LEDGER_RELATIVE_PATH} (blob {blob or 'unknown'})",
+        f"origin/main: {om or 'unknown'} (ledger blob {om_blob or 'unknown'})",
+    ]
+    if blob and om_blob:
+        same = blob == om_blob
+        tail = "一致" if same else "不一致 —— 本读数来自滞后树, 别据此判断收口状态"
+        lines.append(f"与 origin/main: {tail}")
+    else:
+        lines.append("与 origin/main: 无法比较 (缺 blob 读数)")
+    return lines
+
+
 LEDGER_ROOT_SECTION_TYPES = {
     "bets": list,
     "campaigns": list,
@@ -3440,6 +3491,9 @@ def main() -> int:
 
     args = p.parse_args()
     data = load()
+    if args.cmd in AUTHORITY_DECLARING_COMMANDS:
+        for line in authority_declaration_lines():
+            print(line, file=sys.stderr)
     return {
         "list": cmd_list,
         "show": cmd_show,
