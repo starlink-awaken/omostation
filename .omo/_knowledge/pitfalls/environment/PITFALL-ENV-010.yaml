@@ -1,0 +1,19 @@
+schema: agent-error/v1
+id: PITFALL-ENV-010
+category: environment
+severity: medium
+title: git -C 对不存在的子模块目录会向上解析到根仓，checkout -f 于是 detach 主 worktree 并丢弃未提交修改
+symptom: 为补空检出的 projects/metaos 执行 git -C projects/metaos checkout -f -q --detach
+  <sha>，命令 rc=0；随后发现根仓 HEAD 被 detach 到子模块 commit、git ls-files 变成外来 171 条、3 个未提交文件的修改消失
+root_cause: ''
+solution: 对子模块做任何 git -C 写操作前先测 [ -e <path>/.git ]；缺失时先 git submodule update --init
+  --no-fetch 建指针，或从 canonical 检出按完整 sha 本地 fetch（短 sha 会被拒：couldn't find remote ref）。事故恢复：git
+  checkout -f <branch> + git ls-files -z 逐个 stat 证零跟踪文件缺失（git ls-files | while read
+  的缺失计数是引号假象），未提交修改从 /tmp 备份与 ledger-safe-insert 重放恢复，反证必须在新建内容上重跑
+prevention: ''
+tags: []
+discovered_by: unknown
+discovered_at: '2026-11-09'
+times_encountered: 1
+last_confirmed_at: '2026-11-09'
+status: active
