@@ -1,0 +1,31 @@
+schema: agent-error/v1
+id: PITFALL-SUB-007
+category: submodule
+severity: medium
+title: 共享主工作区的子模块检出漂移会让 agent-workflow verify 恒 FAIL，与交付内容无关
+symptom: 'closeout --status ok 报 ''agent-workflow: closeout blocked: verify failed''；verify --file 打出 [FAIL] ssot-guardian
+  :: bin/ssot/ssot-guardian.py 与 [FAIL] gac-local-gate :: make gac-local-gate；ssot-guardian 报 submodule_pointer_drift(high)
+  列 projects/cockpit、projects/knowledge/kairon、projects/metaos、projects/runtime。但交付工作树内门禁 PASS、CI 两个 run conclusion=success。'
+root_cause: verify 的 ssot-guardian / gac-local-gate 在共享主工作区(/Users/xiamingxing/Workspace)里执行，读的是该机当前检出状态，而不是本次交付工作树。并发
+  agent 在自己的 worktree 里 claim/release 会触发 post-checkout 守卫对子模块做 submodule update，主区 index pin 与子模块物理检出因此长期不一致；同时主区根
+  HEAD 可能落后 origin/main 数十提交。检查把这株环境噪声判成 pointer drift(high)，于是任何交付内容都得到同一个 FAIL —— 失败信号与 diff 无关，是宿主机状态泄漏进判定。
+solution: 先分诊再收尾，别用 --from-diff 绕：① 对每个被列子模块量三值 —— 本地检出 HEAD / 主仓 index pin(git ls-files -s) / origin/main pin(git
+  ls-tree)，若 index==main 而只有本地检出不同，漂移源是共享主工作区里他人检出，不是本次提交；② git diff --name-only <merge-sha> 确认本提交零 gitlink 变更；③
+  记住主工作区 HEAD 可能落后 origin/main 数十提交，检查读的是陈旧树。三条成立即按 bet-closeout-chain 步 6 用 --status blocked 如实入账 verify_ok=false，把失败项原文+判据命令+为何与本
+  diff 无关写进 --evidence；禁止在共享主工作区跑 submodule update/reset 去'修'别人的检出。
+prevention: ① closeout 前先量 host：对 ssot-guardian 点名的每个子模块跑三值比对(本地 HEAD / index pin / origin/main pin)，index==main
+  即预存，不与本次提交绑定；② 交付工作树内 make gac-local-gate 必须独立 PASS，门禁结论只以交付树为准；③ verify FAIL 时按 bet-closeout-chain 步 6 走 --status
+  blocked 入账，禁止在共享主工作区跑 submodule update --init/reset 修别人的检出，禁止用 --from-diff 冒充重算判定；④ 长期修法：让 verify 的子模块检查在读侧 pin
+  化(以 index/origin/main 为准)，不依赖物理检出。
+tags:
+- submodule
+- shared-host
+- verify-false-fail
+- ssot-guardian
+- agent-workflow
+- concurrent-agent
+discovered_by: governance-agent
+discovered_at: '2026-11-09'
+times_encountered: 1
+last_confirmed_at: '2026-11-09'
+status: active
