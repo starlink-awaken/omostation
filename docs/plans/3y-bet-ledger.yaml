@@ -47544,6 +47544,71 @@ bets:
           note: '价值面不构成本轮的领用条件：它消除的是一次真实发生的封锁（本机协调面 2026-11-07 实读 ABSENT=1，被锁的路径正是台账本身），但「以后不再因此停摆」要由后续真实接管事件计量，当前无指标对象（value_indicator_policy:
             false）。'
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-343
+  title: BET-Y2Q4-T10-343 修 Panorama scheduler 采集器传不存在 flag —— A9 因 `--json` 永久 PARTIAL，测试按构造就绿
+  goal: 把 `bin/panorama/assets/host/scheduler_collector.py.asset` 拼给 `bin/scheduler-compile.py`
+    的 argv 尾段从 `["--check", "--json"]` 改为 `["--check"]`（守卫同步改），并在 `tests/unit/test_scheduler_collector_registry_root.py`
+    增一条**真跑被调用方**的契约回归：从采集器实际 拼出的 argv 取 flag，用真实解释器执行 `scheduler-compile.py`，断言 `rc
+    in (0,1)` 且 stdout 解析出的 `ok` 是 bool —— 即 `parse_diagnostic()` 依赖的两条不变量。把 `--json`
+    加回去该用例当场红。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-09-panorama-scheduler-collector-phantom-json-flag.md
+  - bin/panorama/assets/host/scheduler_collector.py.asset
+  - tests/unit/test_scheduler_collector_registry_root.py
+  non_goals:
+  - 不改 `bin/scheduler-compile.py` 的参数面；不为迁就调用方新增一个什么都不做的 `--json` 兼容 flag —— 调用方才是错的一侧，`--check`
+    本身已经输出 JSON 并以 rc=1 表达 not-ok。
+  - 不动 A9 其余证据缺口（`documents`、`strategy`、`cockpit_sources` 各自的 PARTIAL），本 BET 只修 `scheduler`
+    这一条采集链路。
+  - 不改根解析语义：publisher 优先、缺编译器回落工作区、managed-python 运行时取自工作区这三条由既有 5 条用例继续作证，一字不动；只把 `:111`
+    那条把坏 flag 钉成绿的断言改成正值。
+  - 不手工改 `~/.local/opt/omostation` 下的已部署副本；部署生效由既有镜像/publish 通路负责，PR 里如实 写明「合入后由 publisher
+    同步，本机 A9 翻转以前只到仓侧」。
+  done_when:
+  - 反证成立——把 `--json` 重新塞回采集器 argv，新增的契约用例当场红（必须实测红，不接受口头推断）。
+  - 正证成立——修好后该文件由基线 `5 passed` 变 `6 passed`，且新增用例走的是真实子进程而不是 stub。
+  - 真实通路成立——`collect_gates()` 重跑后 A9 detail 不再包含 `diagnostic command exit 2` 这个短语 （其余
+    PARTIAL 项允许仍在，不作为本 BET 的完成条件）。
+  - 契约自证落位——采集器守卫与 argv 出自同一个常量形状，守卫不再能单独把坏 flag 判成合法。
+  verify:
+  - cmd: uv run --with pytest --with pytest-timeout --with pyyaml pytest tests/unit/test_scheduler_collector_registry_root.py
+      -q
+    expect: 6 passed；把 `--json` 加回 argv 时新增用例红。
+  - cmd: python3 -c "import subprocess,sys; r=subprocess.run(['python3','bin/scheduler-compile.py','--check','--json'],capture_output=True,text=True);
+      sys.exit(0 if r.returncode not in (0,1) else 1)"
+    expect: 退出 0 —— 证明 `--json` 仍被被调用方拒绝（rc=2），即这条契约缺陷确实存在、不是想象出来的。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-09-panorama-scheduler-collector-phantom-json-flag.md
+    spec_version: 1.0.0
+    content_digest: sha256:905ba008f0f065f4afa9221aa9dc477893e2e9912195db31c2a23fb7afdcc480
+    decision_ref: decision://accepted/BET-Y2Q4-T10-343
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_STARTED
+        evidence: {}
+      value:
+        status: NOT_STARTED
+        evidence: {}
+    overall_state: not_started
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47682,7 +47747,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 590
+  total_bets: 591
   windows:
   - Y1Q1
   - Y1Q2
