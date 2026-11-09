@@ -634,3 +634,23 @@ class TestSquashMergeAwareness:
 
         with mock.patch.object(wha, "_run", runner):
             assert wha._is_merged_to_origin_main("b" * 40, wt) is False
+
+
+class TestPrimaryWorktreeExclusion:
+    """主检出 (superproject 本体) 不是可清理的 worktree。
+
+    AGENTS.md 明确主工作区是**共享只读**的; 把它报成 `merged_with_dirty`
+    会让 `make worktree-hygiene` 在共享主工作区**必然失败** —— 那是误报。
+    """
+
+    def test_primary_is_first_entry_of_porcelain_list(self):
+        out = (
+            "worktree /srv/repo\nHEAD abc\nbranch refs/heads/main\n\n"
+            "worktree /srv/repo-ws\nHEAD def\nbranch refs/heads/work/x\n"
+        )
+        with mock.patch.object(wha, "_run", return_value=_completed(0, out)):
+            assert wha._primary_worktree_path() == Path("/srv/repo").resolve()
+
+    def test_primary_none_when_list_empty(self):
+        with mock.patch.object(wha, "_run", return_value=_completed(0, "")):
+            assert wha._primary_worktree_path() is None
