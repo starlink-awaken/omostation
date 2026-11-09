@@ -17,8 +17,11 @@ INDEX_FILE = WORKSPACE_ROOT / "docs" / "INDEX-KNOWLEDGE.md"
 
 TEMPLATE_HEADER = """---
 type: ssot
+status: active
+lifecycle: generated
 owner: governance-team
 last_updated: {last_updated}
+last-reviewed: {last_reviewed}
 ---
 
 # INDEX-KNOWLEDGE.md — 知识资产统一索引
@@ -243,6 +246,7 @@ def main():
     content = TEMPLATE_HEADER.format(
         generated_at=generated_at,
         last_updated=now.date().isoformat(),
+        last_reviewed=now.date().isoformat(),
     )
     content += generate_overview(categories)
     content += generate_adr_section(categories.get("adrs", []))

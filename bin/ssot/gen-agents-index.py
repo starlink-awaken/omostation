@@ -14,7 +14,14 @@ SCRIPT_DIR = Path(__file__).parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent.parent
 INDEX_FILE = WORKSPACE_ROOT / "docs" / "INDEX-AGENTS.md"
 
-TEMPLATE_HEADER = """# INDEX-AGENTS.md — Agent 能力索引
+TEMPLATE_HEADER = """---
+status: active
+lifecycle: generated
+owner: governance-team
+last-reviewed: {last_reviewed}
+---
+
+# INDEX-AGENTS.md — Agent 能力索引
 
 > **维护规则**
 > - owner: governance-team
@@ -172,7 +179,10 @@ def main():
 
     skills = scan_skills()
 
-    content = TEMPLATE_HEADER.format(generated_at=generated_at)
+    content = TEMPLATE_HEADER.format(
+        generated_at=generated_at,
+        last_reviewed=generated_at[:10],
+    )
     content += generate_cli_section()
     content += generate_skills_section(skills)
     content += generate_guide_section()
