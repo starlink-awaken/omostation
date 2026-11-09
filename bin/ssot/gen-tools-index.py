@@ -18,7 +18,7 @@ TEMPLATE_HEADER = """---
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-24
+last-reviewed: {last_reviewed}
 ---
 
 # INDEX-TOOLS.md — 治理工具统一目录
@@ -308,7 +308,10 @@ def main():
     skills = scan_skills()
     cockpit_cmds = scan_cockpit_commands()
 
-    content = TEMPLATE_HEADER.format(generated_at=generated_at)
+    content = TEMPLATE_HEADER.format(
+        generated_at=generated_at,
+        last_reviewed=generated_at[:10],
+    )
     content += generate_cockpit_section(cockpit_cmds)
     content += generate_gac_tools()
     content += generate_adr_tools()

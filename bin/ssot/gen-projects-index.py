@@ -19,7 +19,7 @@ TEMPLATE_HEADER = """---
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-09-24
+last-reviewed: {last_reviewed}
 ---
 
 # INDEX-PROJECTS.md — 项目索引
@@ -146,7 +146,10 @@ def main():
 
     registry = load_registry()
 
-    content = TEMPLATE_HEADER.format(generated_at=generated_at)
+    content = TEMPLATE_HEADER.format(
+        generated_at=generated_at,
+        last_reviewed=generated_at[:10],
+    )
     content += generate_layer_table(registry)
     content += generate_stack_table(registry)
     content += generate_project_list(registry)
