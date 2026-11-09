@@ -2,7 +2,10 @@
 schema: resident-retro-candidate/v1
 topic: external-adapter-sync
 generated_at: 2026-11-05T03:10:01Z
-status: candidate
+status: draft
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-11-09
 counts:
   runs: 4
   failures: 0
@@ -15,7 +18,7 @@ failure_breakdown:
 # external-adapter-sync 运行复盘聚合 (resident 事件驱动)
 
 - generated_at: 2026-11-05T03:10:01Z
-- status: candidate (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
+- status: draft (sediment 草稿聚合, 待运营 agent/人工完善为完整 retro)
 - sediment 覆盖: 4 成功运行 + 0 失败模式 = 4 草稿
 - 失败率: 0.00%
 

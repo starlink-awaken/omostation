@@ -1,7 +1,7 @@
 ---
 schema_version: specification/v1
 status: accepted
-lifecycle: engineering
+lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-10-21
 type: ephemeral

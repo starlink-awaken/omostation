@@ -1,7 +1,7 @@
 ---
 type: operations
 status: active
-lifecycle: ephemeral
+lifecycle: history
 owner: governance-agent
 created: 2026-10-31
 last-reviewed: 2026-10-31

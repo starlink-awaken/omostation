@@ -1,3 +1,12 @@
+---
+schema: md/v1
+status: archived
+lifecycle: history
+owner: governance-team
+last-reviewed: 2026-11-09
+type: plan-record
+---
+
 # 文档治理提炼与蒸馏（2026-10-14）
 
 ## 一、背景
