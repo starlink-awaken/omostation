@@ -1164,6 +1164,7 @@ jobs:
     command: >-
       /bin/bash $HOME/Project/work-agent/scripts/respire_mbp_supervisor_watchdog.sh >> $HOME/.local/log/respire-watchdog.log 2>&1
     planes: [crontab]
+    hosts: [mini]
     reality: installed
     status: active
     owner: work-agent
@@ -1173,6 +1174,8 @@ jobs:
       装不进任何新条目), 而兜底用的 gui 域 LaunchAgent 只在图形会话存在时才有
       ⇒ MBP 重启后若没有图形登录, 其 Respire supervisor 无人拉起。
       mini 从不睡眠 (pmset sleep=0) ⇒ 由 mini 侧每 5 分钟 SSH 检查并按需拉起。
+      `hosts: [mini]` 是 CRON-REGISTRY-NO-HOST-SCOPE 的结构性修法: 条目是 mini 专用,
+      没有主机维度时它在 mbp 上永远算 drift (实测 drift=1 ⇒ 健康门禁 A4 常红)。
       判据用 pidfile + `kill -0` (`pgrep -f` 会匹配到调用它的那条命令行本身);
       MBP 不可达时静默跳过、不判故障。脚本在本仓 `scripts/` 下, 改动走本仓治理流程。
 

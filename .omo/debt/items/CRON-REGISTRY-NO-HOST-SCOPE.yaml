@@ -21,7 +21,7 @@ next_review_at: '2026-11-16'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
-decision_needed: "给 registry 加机器维度（如 `hosts: [mini]`，缺省=全部）并在 check_drift / compile_crontab / diff_installation 三处按本机过滤；或学 known_orphans 加一个对称的 `known_drift` 兜底清单。**不要**靠把条目标 proposed 来绕 —— 那会让真正该装的机器也装不上。"
+decision_needed: "**已裁 (2026-11-09)**: 采**结构性修法** —— registry 加 `hosts` 字段 (缺省=全部机器), 并在 `compile_crontab` / `check_drift` 两处按本机过滤 (`_host_scoped()`, 主机名取自 `CRON_HOST` env 或 `socket.gethostname()`)。`diff_installation` 经 `compile_crontab` 自动跟随。`known_drift` 兜底清单**未采用** —— 它是全局清单, 会在 mini 上把「该装却没装」一起放过, 等于削弱 gate。**不要**靠把条目标 proposed 来绕 (那会让真正该装的机器也装不上)。"
 history:
 - at: '2026-11-09T10:20:00+00:00'
   action: identify
@@ -42,4 +42,29 @@ history:
 
     注: 该条目的登记发生在 MBP crontab 损坏期间, 当时**装不进去**是环境问题;
     现在写入恢复了, 但条目依然不该出现在 mbp 的 drift 里。
+  actor: "governance-agent"
+- at: '2026-11-09T03:50:00+00:00'
+  action: mitigate
+  note: >-
+    落地结构性修法 (PR #5146): `bin/scheduler-compile.py` 新增 `_current_host()`
+    (`CRON_HOST` env 覆盖, 缺省 `socket.gethostname()`) 与 `_host_scoped()`;
+    `compile_crontab` 与 `check_drift` 同口径过滤, `diff_installation` 经
+    `compile_crontab` 自动跟随。`.omo/cron/registry.yaml` 给
+    `work-agent-respire-mbp-watchdog` 加 `hosts: [mini]`。
+
+    **实测 (mbp)**: `_host_scoped` 87→86 条, watchdog 从编译产物消失,
+    `check_drift` 由 `{ok: False, drift: 1}` 变为 `{ok: True, drift: 0, orphan: 0}`;
+    `gate-health-check.py` 的 A4 Scheduler 由**本机六项里唯一常红**转为 ok。
+    **反面对照 (CRON_HOST=mini)**: 87 条全保留, 产物含 watchdog; 本机没装它
+    ⇒ drift=1 —— 说明过滤不是「永远放过」, 该装的机器仍然被检查。
+
+    未采用 `known_drift` 兜底清单: 它是**全局**清单, 会在 mini 上把「该装却没装」
+    一起放过, 等于削弱 gate; `hosts` 字段是精确到机器的。
+
+    牙齿验过 (变异对照): 摘掉 `compile_crontab` 的 `_host_scoped` ⇒
+    `test_host_scope_excludes_other_hosts_jobs` 与
+    `test_host_scope_keeps_unscoped_and_matching_jobs` 当场红 (2 failed / 13 passed),
+    恢复后 15 passed。`test_compile_crontab_does_not_double_log_redirect` 的期望集
+    同步改为 `_host_scoped(jobs)` —— 契约不变 (该编译的每条都编译), 只是不再要求
+    别机条目出现。
   actor: "governance-agent"
