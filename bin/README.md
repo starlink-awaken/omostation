@@ -2,7 +2,7 @@
 status: active
 lifecycle: index
 owner: governance-team
-last-reviewed: 2026-09-26
+last-reviewed: 2026-11-09
 ---
 
 # bin/ — 治理工具入口层
@@ -11,10 +11,15 @@ last-reviewed: 2026-09-26
 > 脚本数见 `docs/project-registry.yaml`.
 >
 > 设计原则: **入口稳定** (路径不变, 全 repo 引用固化) + **可发现** (按域找, 不 grep).
+>
+> **路径口径**: 本表用**裸脚本名**，实际位置按所在域的子目录解析（如 §1 的 `gac-drift.py` 在 `bin/gac/`）。
+> **2026-11-09 全量对拍**（105 个条目 vs 文件系统）：76 条 live；15 条已迁入 `bin/_archive/`；
+> 8 条已删除（§2 的 ADR drift 三步流水线、§6 的两个 dashboard 脚本、§15 的共享库声明）。
+> 归档/删除项在各自章节内联标注，不静默消失。
 
 ## 域归类 (14 域)
 
-### 1. GaC 治理即代码 (15) — 规则注册 / drift / gate / healthcheck
+### 1. GaC 治理即代码 (13) — 规则注册 / drift / gate / healthcheck
 规则声明式注册 + 执行器绑定 + drift 检测 + 元治理自检.
 
 | 脚本 | 功能 |
@@ -31,23 +36,22 @@ last-reviewed: 2026-09-26
 | `gac-mof-validate.py` | MOF 视角 GaC 校验 |
 | `gac-gc.py` | 规则垃圾回收 |
 | `gac-daemon.py` | 后台 drift 监控 |
-| `gac-dashboard.py` | GaC 仪表盘数据 |
 | `gac-hook-pre-edit.py` | 编辑前 hook |
-| `gac-ingest-legacy.py` | legacy 规则摄入 |
+| `gac-ingest-legacy.py` | ~~legacy 规则摄入~~ **已归档** (`bin/_archive/migrations/`) |
 
-### 2. ADR 治理 (8) — drift 流水线 + typo + coverage
-`check → classify → apply/auto-fix` 流水线 + trend + typo.
+### 2. ADR 治理 (3) — drift 流水线 + coverage
+`check → apply` 流水线 + coverage。**原三步流水线的后两步已删除**（见下）。
 
 | 脚本 | 功能 |
 |:-----|:-----|
 | `adr-coverage.py` | ADR 编号连续性 + INDEX 一致 |
 | `adr-drift-check.py` | P89 R2 drift 检测 (流水线第 1 步) |
-| `adr-drift-classify.py` | P90 R1 drift 归类 (第 2 步) |
-| `adr-drift-auto-fix.py` | P93 R1 自动修复建议 (第 3 步, Levenshtein) |
-| `adr-drift-apply.py` | P94 R1 touch SUBDIR_MISSING (应用) |
-| `adr-trend-insight.py` | drift 趋势洞察 |
-| `adr-typo-fix.py` | ⚠️ P95 占位 (27 行, YAGNI 待评) |
-| `adr-typo-real-fix.py` | ⚠️ P96 占位 (27 行, YAGNI 待评) |
+| `adr-drift-apply.py` | P94 R1 touch SUBDIR_MISSING (应用；自动修复步骤已移除) |
+
+> **2026-11-09 对拍**: `adr-drift-classify.py` / `adr-drift-auto-fix.py` / `adr-trend-insight.py`
+> 已不存在（全库无副本）。`adr-drift-apply.py:27-32` 仍引用 `adr-drift-auto-fix.py`，但以
+> `if auto_fix.exists()` 守卫 —— 脚本缺席时该步静默跳过，流水线退化为 check → apply。
+> `adr-typo-fix.py` / `adr-typo-real-fix.py`（P95/P96 占位）亦已删除。
 
 ### 3. SSOT 守护 (6) — 文档/边界/交叉引用一致性
 | 脚本 | 功能 |
@@ -89,7 +93,7 @@ last-reviewed: 2026-09-26
 | `owl_adapter.py` | L0 约束 → OWL-DL（HermiT/Pellet 标准化推理铺路） |
 | `governance_closed_loop.py` | 串联 5 阶段闭环端到端验证（真实数据） |
 
-### 6. 治理仪表盘 / 趋势 / 告警 (17) — 可视化 + history + alert + trend fusion + prediction
+### 6. 治理仪表盘 / 趋势 / 告警 (12) — 可视化 + history + alert + trend fusion + prediction
 | 脚本 | 功能 |
 |:-----|:-----|
 | `swarm-activity-dashboard.py` | 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
@@ -97,18 +101,16 @@ last-reviewed: 2026-09-26
 | `cross-domain-trend.py` | Phase 9 跨域趋势融合 (governance/code_quality/test_health/knowledge) |
 | `predictive-governance.py` | Phase 10 预测性治理 + 处方建议 (linear prediction + threshold simulation) |
 | `governance-readiness.py` | P60 治理就绪度 (5 维度) |
-| `governance-readiness-trend.py` | 就绪度趋势 |
+| `governance-readiness-trend.py` | ~~就绪度趋势~~ **已归档** (`bin/_archive/`) |
 | `governance-history-insight.py` | history 洞察 |
 | `governance-history-stats.py` | P91 R1 history 趋势深化 (ADR-0115 Phase 2 rename) |
 | `governance-trend-report.py` | 趋势报告 (ADR-0115 Phase 2 rename) |
-| `dashboard-readiness-summary.py` | 就绪度摘要 |
-| `dashboard-ui-render.py` | UI 渲染 |
 | `alert-aggregator.py` | 告警聚合 |
-| `alert-history.py` | 告警历史 |
-| `alert-mock-p0-notify.py` | P0 告警 mock |
+| `alert-history.py` | ~~告警历史~~ **已归档** (`bin/_archive/`) |
+| `alert-mock-p0-notify.py` | ~~P0 告警 mock~~ **已归档** (`bin/_archive/`) |
 | `drift-history-insight.py` | drift history 洞察 |
 | `rule-history-insight.py` | 规则 history 洞察 |
-| `status-distribution.py` / `dim-weight.py` | 状态分布 / 维度权重 |
+| `status-distribution.py` / `dim-weight.py` | ~~状态分布~~ **已归档** (`bin/_archive/migrated_low_value/`) / 维度权重 |
 
 > ⚠️ 前缀不一 (`governance-` vs `gov-` vs `dashboard-`), 同域历史碎片, 待渐进归并.
 
@@ -118,27 +120,33 @@ last-reviewed: 2026-09-26
 ### 8. MOF (1) — 模型覆盖
 `mof-m2-coverage.py` (M2 覆盖率; GaC 视角见 `gac-mof-validate.py`)
 
-### 9. Submodule 治理 (3)
-`submodule-reachability-gate.py` / `cross-submodule-check.py` / `cross-submodule-events.py`
+### 9. Submodule 治理 (1)
+`submodule-reachability-gate.py`
+
+> **2026-11-09 对拍**: `cross-submodule-check.py` / `cross-submodule-events.py` 已迁入
+> `bin/_archive/`（后者在 `migrated_low_value/`），不再列入本节。
 
 ### 10. Project / Registry 生成 (2)
-`gen-project-registry.py` (registry 派生) / `project-layer-index.py` (layer digest)
+`mof/gen-project-registry.py` (registry 派生) / `mof/project-layer-index.py` (layer digest)
 
-### 11. 入口 / framework (6) — 高频, 留 bin/ 根
+### 11. 入口 / framework (7) — 高频, 留 bin/ 根
 | 脚本 | 功能 | 调用方 |
 |:-----|:-----|:-------|
 | `agent-workflow.py` (1319L) | Agent Workflow Runner (framework 级) | CLAUDE/AGENTS §0 |
 | `omo-status` | Multi-Agent Swarm 全景秒级 Rich Panel 诊断快照 | 开发者/CI/开工自检 |
 | `omo-top` | Multi-Agent Swarm 4 象限实时互动大盘 (Textual 1.x) | 开发者/常驻监控 |
 | `compass_radar.py` | health radar 计算/兼容刷新 | `omo state sync` broker |
-| `state-stale-emit.py` | 发送 state_stale 事件 | post-commit / launchd WatchPaths |
+| `gac/state-stale-emit.py` | 发送 state_stale 事件 | post-commit / launchd WatchPaths |
 | `change-lane-check.py` | commit lane 校验 (pre-commit/gac-local-gate) | GaC gate |
-| `doc-ssot-lint.py` | 文档 SSOT 门禁 (CI) | gac-local-gate/CI |
+| `ssot/doc-ssot-lint.py` | 文档 SSOT 门禁 (CI) | gac-local-gate/CI |
 
-### 12. 杂项单例 (14) — 待归域或留根
-`cockpit-readiness.py` / `verify-spaces.py` / `venv-yaml-check.py` /
-`ts-file-analyze.py` / `register-mcp.py` / `graphify-local-extract.py` / `fix-debts.py` /
-`classify_planned.py` / `p0-event-listener.py` / `management-{categorize,cross-ref-check,migrate}.py`
+### 12. 杂项单例 (6) — 待归域或留根
+`cockpit-readiness.py` / `ssot/venv-yaml-check.py` / `ssot/ts-file-analyze.py` / `gac/p0-event-listener.py`
+
+> **2026-11-09 路径核对**: `verify-spaces.py` / `register-mcp.py` / `graphify-local-extract.py` /
+> `fix-debts.py` / `classify_planned.py` / `management-migrate.py` 已迁入 `bin/_archive/`
+> （多数在 `migrated_low_value/`），不再列入本节；`management-{categorize,cross-ref-check}.py`
+> 已迁至 `bin/ssot/`。
 
 | 脚本 | 功能 |
 |:-----|:-----|
@@ -194,7 +202,8 @@ SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin
 | `make capability-federation-audit` | 读取原生 registry 与能力投影，审计 provider/worker/workflow 的悬挂引用、重复权威、部分 clone 与准入矛盾 |
 | `python3 bin/capability-sync.py federation-audit --json` | 通过既有 capability 入口输出确定性、脱敏的 `capability-federation-audit/v1` 报告 |
 
-审计实现是 `lib/capability_federation_audit.py` 共享库，不新增活动脚本入口。
+审计实现是 `capability-sync.py` 内的 federation auditor 委托（`FEDERATION_AUDITOR` 常量，
+`bin/capability-sync.py:102`），不新增活动脚本入口。
 该工具不生成新的能力注册表，不执行 registry 中的 command/argv/entrypoint，
 也不把 discovery、`exists` 或 runtime online 推断为 admission/completion。
 架构合同见 [`../docs/architecture/capability-federation-contract-v1.md`](../docs/architecture/capability-federation-contract-v1.md)。
