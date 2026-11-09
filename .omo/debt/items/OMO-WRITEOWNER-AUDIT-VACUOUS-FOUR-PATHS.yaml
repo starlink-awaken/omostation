@@ -7,14 +7,14 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: scheduled
+lifecycle_state: identified
 owner: governance-team
 affected_roots:
 - .omo
 evidence_refs: []
 mitigation_refs: []
 opened_at: '2026-11-09T06:01:57.243743+00:00'
-last_reviewed_at: null
+last_reviewed_at: '2026-11-09T09:14:16+00:00'
 next_review_at: '2026-11-16'
 gate_level: none
 history:
@@ -121,6 +121,53 @@ history:
     移出 BROKEN_CHECKS 或给 gate 加一条不依赖 staged 的执行路径; b) 给脚本加 --range/--commit 采集模式; c)
     把身份豁免收窄 —— 至少要求 AGENT_WORKFLOW_RUN_ID 对应的 run 真的 claim 了该路径(现在有 registry 可查),
     而不是见到 env 变量就放行。''.'
+- at: '2026-11-09T09:14:16+00:00'
+  action: resolve_partial
+  actor: governance-agent/20261109T091132Z-governance-state-mutation-fe4a25a0
+  note: |-
+    复算推翻原判据 (a) 并定位单一真因, 同时交付范围面 (2026-11-09, run
+    20261109T091132Z-governance-state-mutation-fe4a25a0, 基线 origin/main 侧实测):
+    ① ⑦(a)「write-owner-audit 在 BROKEN_CHECKS 清单里(:955)」不成立 —— 运行时导入
+    gac-local-gate.py 实测 BROKEN_CHECKS 只有 6 个成员且不含本项 (该集合由 :355 GATES_LIST
+    的 broken:True 派生, 而本条目没有 broken 键); :955 实为 RISK_AWARE_CHECKS, 其用法在
+    :807 `if risk_profile == "medium" and name not in RISK_AWARE_CHECKS: continue`, 本条目
+    在其中 ⇒ medium 风险面照常执行。即「跳过」这条空转路径不存在。
+    ② 真因是单一的: 唯一采集面是 git 索引, 而运行门禁的每个场合索引都是空集 (CI 的
+    actions/checkout 不 stage / post-commit 时索引已清空 / 手工跑 make gac-local-gate 不
+    stage)。同区间对照实测: `--staged` → files_audited=0, ok=true; 新增 `--range
+    origin/main~8..origin/main` → files_audited=15, violations=2。
+    ③ 且 `.githooks/` 内没有任何 hook 调用 gac-local-gate (仅 .githooks/AGENTS.md 文档
+    提及), write-owners.yaml:4 声明的消费者「pre-commit G-CONV.5」是悬空声明。
+    ④ 活的门禁清单来源是 projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml
+    (实测 POLICY is DEFAULT_POLICY → False), DEFAULT_POLICY 只是降级兜底 ⇒ 只改
+    DEFAULT_POLICY 的接线不生效 (本轮抓到并已改为根侧覆盖; 子模块侧那条 `--staged` 仍在,
+    两份真相未收敛)。
+    ⑤ 阻断化的实测代价: 近 200 commits 触及规则面的 30 个 commit 中 27 个当时无覆盖性
+    claim, 且四种时间窗口口径 (claim≤commit≤close / 忽略 close / +72h / +24h) 读数同为
+    90% ⇒ 窗口口径不是原因; 其中 21 个是 broker 自身写入 (主题 governance_state:), 6 个是
+    手写 ⇒ 任何「必须有 claim」的阻断都会误拦 broker 自己。
+    ⑥ 「可核验 broker 出身」这条替代路径也不成立: 提交里 history.actor 形如
+    `governance-agent/20261109T060043Z-gsm-a4649e5a` (缩写 workflow 段), 而本地 registry 的
+    run_id 是 `...-governance-state-mutation-e21e5056` 全名 ⇒ 37 个文件条目 0 个可解析回溯。
+    ⑦ 原记「让 gac-gate.yml 的 --strict 真正覆盖它」这条修法方向不可执行: `.gitignore:12`
+    忽略 `.omo/_delivery/*`, 417 条 run 记录只存在于单机, CI checkout 里没有 claim 数据,
+    claim 核验在 CI 结构性不可判定。
+    本轮已交付: `--range <base>..<head>` (含 `auto`: PUSH_RANGE → origin/main...HEAD)、
+    范围面不套 env 豁免、`--advisory` 恒退 0 但仍报条数 (与 change-lane-check 同口径)、
+    同一文件命中 `.omo/debt/*` 与 `/**` 两条规则时按文件计不再翻倍、缺采集面 exit 2 不再
+    静默 ok=true、根侧把门禁接线覆盖成 `--range auto --advisory`;
+    tests/test_write_owner_audit_range.py 9 例。未做: 阻断化 (见⑤)、子模块侧 sgf-policy
+    同步 (见④)。另按判据⑥ 的群体词表实测把本条目 lifecycle_state 从 broker 自产的
+    `scheduled` 归一回 `identified` (实测 debt-review-scheduler.py:28 TERMINAL_STATES 不含
+    二者, 归一不改变扫描行为)。
+decision_needed: |-
+    只剩一问 (2026-11-09 复算后, 原三问的 (1)(2) 已被实测否证为不可执行/非本因):
+    **范围面何时从 advisory 升为阻断, 升在哪一层** —— ① 维持现状只报数 (CI 与本地都跑,
+    违规条数进日志, 不拦任何交付); ② 本地 pre-push 阻断 (唯一同时拿得到交付改动集与 claim
+    数据的场合, 但须先给 broker 自身写入一条可核验豁免口径, 否则按⑤ 会误拦 21/30);
+    ③ CI 阻断 (须先把 claim 数据请出 `.gitignore:12` —— 例如把 run 记录摘要纳入仓内,
+    否则按⑦ 无数据可判)。三选一, 且 ②③ 都需先解决追链问题 (⑥)。
+    裁决前不改任何 hook、不动 projects/ecos 的 sgf-policy.yaml、不把门禁接线改成阻断。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Principle
