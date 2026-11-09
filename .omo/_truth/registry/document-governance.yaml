@@ -13,6 +13,33 @@ metadata:
   valid_lifecycles: [ssot, entry, contract, pattern, plan, history, generated, spec]
   required_frontmatter: [status, lifecycle, owner, last-reviewed]
   date_format: YYYY-MM-DD
+  # ⚠️ `valid_review_states` **故意不声明** —— 不是漏了, 别「好心」补。
+  #
+  # `bin/ssot/doc-governance-check.py` 里有 review-state 校验机制
+  # (`valid_review_states` + review-state/metadata-migrated-at/content-reviewed-at 联动),
+  # 它读的正是本块的 `metadata.valid_review_states`。本块不声明 ⇒ 该机制整段不触发
+  # (代码守卫是 `if valid_review_states and review_state is not None:`)。
+  #
+  # 不声明的理由 (2026-11-09 全量普查, 排除 .worktrees/ 副本后的仓内实数):
+  # `review-state` 字段在 **90 份文档**里实际用到 **15 种取值**, 而代码只认其中 2 种:
+  #   metadata-only        67    ← 代码认, 要求 metadata-migrated-at
+  #   content-reviewed      5    ← 代码认, 要求 content-reviewed-at
+  #   user-authorized       4    content-reviewed-20260817   3
+  #   contract-reviewed     1    content-reviewed-20260917   1
+  #   plan-mainline-adr-0410 1   scenario-first-converged    1
+  #   draft-for-human-decision 1  evidence-refreshed         1
+  #   superseded-by-plan      1  verified-v3                 1
+  #   metadata-fresh          1  evidence-based-audit        1
+  #   reconciled              1
+  # 后面 13 种是一次性历史标记 (带日期/ADR 号/场景名/动作名), 不是可复用的审查态枚举。
+  # 把它声明成枚举会变成 whack-a-mole: 要么只列一部分 ⇒ 其余文档当场 invalid;
+  # 要么全列 ⇒ 把一次性标记固化成「标准」, 以后每加一个标记都要改注册表。
+  # 这与 orphan_document 退役 (2026-10-06, ADR-0464 R2) 是同一判断: 语义没有清晰的
+  # 机检定义前, 不重建规则。
+  #
+  # 若将来确实要启用: 先与 governance-team 敲定 review-state 的**封闭枚举**(而不是
+  # 把现存的 15 种抄进来), 再在本块声明, 并同步代码对每个状态要求的伴生日期字段。
+  # 在敲定之前, 现存文档的 review-state 值不受本机检约束 —— 这是**明知的**状态。
 
 surfaces:
   - id: root-entry
