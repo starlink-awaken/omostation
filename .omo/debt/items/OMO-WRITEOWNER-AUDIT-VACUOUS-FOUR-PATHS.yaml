@@ -71,16 +71,68 @@ history:
     (本次已手工恢复, 恢复后 diff 为恰好 +1 行); ⑥ schedule_item (omo_debt_lifecycle.py:76) 把 lifecycle_state
     一并改成 scheduled, 而 origin/main 全体 47 条 items 的取值只有 identified/in_progress/resolved/closed
     —— broker 自己产出的状态值不在群体词表内, 且没有任何子命令能把它改回 identified。''.'
+- at: '2026-11-09T06:49:47.376193+00:00'
+  action: update_description
+  note: 'Updated description from ''实测四层全部空转 (2026-11-09, run 20261109T060043Z-gsm-a4649e5a,
+    基线 origin/main): ① .githooks/ 内 0 处引用 write-owner-audit —— 提交时根本不调用; ② bin/gac/gac-local-gate.py:44-45
+    唯一调用形式是 ["bin/ssot/write-owner-audit.py", "--staged"], 而 post-commit 钩子里跑门禁时暂存区已空,
+    --staged 车道恒为空集; ③ bin/ssot/write-owner-audit.py:77 is_ci = os.environ.get("CI")=="true"
+    or os.environ.get("GITHUB_ACTIONS")=="true" —— CI 里整目录豁免, 尽管 .github/workflows/gac-gate.yml:209
+    明确以 --strict 跑 gac-local-gate; ④ 该脚本只有 --staged/--json 两个旗标, 没有任何 range/rev 模式,
+    bin/change-lane-check.py:208 只是把该文件分类为 governance_code, 并不调用它。后果: .omo/_truth/registry/write-owners.yaml:102
+    对 .omo/debt/ 声明的 _rule: no-direct-write 在任何一条 CI 路径上都不执行, 手写 script:omo-debt 拥有的状态文件不会被拦。本会话实证:
+    同一份 item 的计数单位与终态极性错误就是这样落了盘 (PR #5149, 后由 #5159 订正), 全程没有任何门禁报过 write_owner_violation。修法方向
+    (待裁): 给 write-owner-audit 增加 --range <base>..HEAD (或 --from-diff) 取改动清单的模式, 并取消
+    CI 整目录豁免, 让 gac-gate.yml 的 --strict 真正覆盖它; 同时把 close/register 之外的证据字段写入补齐 (omo_debt_cli
+    现有子命令 register/close/desc/schedule/revalidate 都不能写 evidence_refs 与 mitigation_refs,
+    这是 items 长期停在 identified 而闭环证据靠手写的结构性原因)。 追加实测 (同一次 broker 写入): ⑤ register 的 append_registry_ref
+    用 yaml load/dump 重写.omo/_truth/registry/debt.yaml, 静默删掉 version:3 之后 4 行 v3 理由注释
+    (本次已手工恢复, 恢复后 diff 为恰好 +1 行); ⑥ schedule_item (omo_debt_lifecycle.py:76) 把 lifecycle_state
+    一并改成 scheduled, 而 origin/main 全体 47 条 items 的取值只有 identified/in_progress/resolved/closed
+    —— broker 自己产出的状态值不在群体词表内, 且没有任何子命令能把它改回 identified。'' to ''实测四层全部空转 (2026-11-09,
+    run 20261109T060043Z-gsm-a4649e5a, 基线 origin/main): ① .githooks/ 内 0 处引用 write-owner-audit
+    —— 提交时根本不调用; ② bin/gac/gac-local-gate.py:44-45 唯一调用形式是 ["bin/ssot/write-owner-audit.py",
+    "--staged"], 而 post-commit 钩子里跑门禁时暂存区已空, --staged 车道恒为空集; ③ bin/ssot/write-owner-audit.py:77-81
+    —— is_system_committer = is_agent_run or is_ci or user_lc in AGENT_IDENTITIES,
+    而 audit_staged 对 script:/daemon: 拥有的文件只在 not is_system_committer 时报违规。豁免按**提交者身份**生效、不按目录:
+    CI 里 is_ci=true ⇒ 全部规则放行; 任何带 AGENT_WORKFLOW_RUN_ID 的合规 lane 提交同样放行;HUMAN_ALIASES
+    只影响 human 分支, 对 script: 分支无豁免。 ④ 该脚本只有 --staged/--json 两个旗标, 没有任何 range/rev 模式,
+    bin/change-lane-check.py:208 只是把该文件分类为 governance_code, 并不调用它。后果: .omo/_truth/registry/write-owners.yaml:102
+    对 .omo/debt/ 声明的 _rule: no-direct-write 在任何一条 CI 路径上都不执行, 手写 script:omo-debt 拥有的状态文件不会被拦。本会话实证:
+    同一份 item 的计数单位与终态极性错误就是这样落了盘 (PR #5149, 后由 #5159 订正), 全程没有任何门禁报过 write_owner_violation。修法方向
+    (待裁): 给 write-owner-audit 增加 --range <base>..HEAD (或 --from-diff) 取改动清单的模式, 并取消
+    CI 整目录豁免, 让 gac-gate.yml 的 --strict 真正覆盖它; 同时把 close/register 之外的证据字段写入补齐 (omo_debt_cli
+    现有子命令 register/close/desc/schedule/revalidate 都不能写 evidence_refs 与 mitigation_refs,
+    这是 items 长期停在 identified 而闭环证据靠手写的结构性原因)。 追加实测 (同一次 broker 写入): ⑤ register 的 append_registry_ref
+    用 yaml load/dump 重写.omo/_truth/registry/debt.yaml, 静默删掉 version:3 之后 4 行 v3 理由注释
+    (本次已手工恢复, 恢复后 diff 为恰好 +1 行); ⑥ schedule_item (omo_debt_lifecycle.py:76) 把 lifecycle_state
+    一并改成 scheduled, 而 origin/main 全体 47 条 items 的取值只有 identified/in_progress/resolved/closed
+    —— broker 自己产出的状态值不在群体词表内, 且没有任何子命令能把它改回 identified。
+
+    ⑦ 端到端实测(2026-11-09, 直接 import origin/main 的 write-owner-audit.py 调 audit_staged,
+    staged=[.omo/debt/items/FAKE-HANDWRITE.yaml], 规则加载 6 条, match_path 对 .omo/debt/*
+    与 .omo/debt/** 均 True): CI=true 或 GITHUB_ACTIONS=true ⇒ violations=0; 带 AGENT_WORKFLOW_RUN_ID
+    ⇒ violations=0; 无 run-id + 无 CI(xiamingxing / omo-agent / someone-else 三个身份) ⇒
+    violations=2。即规则**逻辑本身能命中**, 空转来自三个开关: (a) write-owner-audit 在 gac-local-gate.py
+    的 BROKEN_CHECKS 清单里(:955, 跳过逻辑 :796-797 "已知不可用, 仅 strict 模式下检查"), 所以本地/pre-commit
+    永不执行, 唯一执行处是 gac-gate.yml:209 的 --strict, 而那里 is_ci 已把它中和 —— **唯一能跑到它的模式恰好是豁免它的那个模式**;
+    (b) 只有 --staged 采集面(判据②④); (c) 身份豁免覆盖了一切自动化写入者, 而 .omo/debt/ 的写入 100% 是自动化写入。所以
+    #5149 那样的手写 broker 状态能落地, 靠的是 (a)+(b), 不是 (c); 三者不同时修, 规则在任何环境都无生效路径。修法要同时: a)
+    移出 BROKEN_CHECKS 或给 gate 加一条不依赖 staged 的执行路径; b) 给脚本加 --range/--commit 采集模式; c)
+    把身份豁免收窄 —— 至少要求 AGENT_WORKFLOW_RUN_ID 对应的 run 真的 claim 了该路径(现在有 registry 可查),
+    而不是见到 env 变量就放行。''.'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Principle
 description: '实测四层全部空转 (2026-11-09, run 20261109T060043Z-gsm-a4649e5a, 基线 origin/main):
   ① .githooks/ 内 0 处引用 write-owner-audit —— 提交时根本不调用; ② bin/gac/gac-local-gate.py:44-45
   唯一调用形式是 ["bin/ssot/write-owner-audit.py", "--staged"], 而 post-commit 钩子里跑门禁时暂存区已空,
-  --staged 车道恒为空集; ③ bin/ssot/write-owner-audit.py:77 is_ci = os.environ.get("CI")=="true"
-  or os.environ.get("GITHUB_ACTIONS")=="true" —— CI 里整目录豁免, 尽管 .github/workflows/gac-gate.yml:209
-  明确以 --strict 跑 gac-local-gate; ④ 该脚本只有 --staged/--json 两个旗标, 没有任何 range/rev 模式,
-  bin/change-lane-check.py:208 只是把该文件分类为 governance_code, 并不调用它。后果: .omo/_truth/registry/write-owners.yaml:102
+  --staged 车道恒为空集; ③ bin/ssot/write-owner-audit.py:77-81 —— is_system_committer =
+  is_agent_run or is_ci or user_lc in AGENT_IDENTITIES, 而 audit_staged 对 script:/daemon:
+  拥有的文件只在 not is_system_committer 时报违规。豁免按**提交者身份**生效、不按目录: CI 里 is_ci=true ⇒ 全部规则放行;
+  任何带 AGENT_WORKFLOW_RUN_ID 的合规 lane 提交同样放行;HUMAN_ALIASES 只影响 human 分支, 对 script:
+  分支无豁免。 ④ 该脚本只有 --staged/--json 两个旗标, 没有任何 range/rev 模式, bin/change-lane-check.py:208
+  只是把该文件分类为 governance_code, 并不调用它。后果: .omo/_truth/registry/write-owners.yaml:102
   对 .omo/debt/ 声明的 _rule: no-direct-write 在任何一条 CI 路径上都不执行, 手写 script:omo-debt 拥有的状态文件不会被拦。本会话实证:
   同一份 item 的计数单位与终态极性错误就是这样落了盘 (PR #5149, 后由 #5159 订正), 全程没有任何门禁报过 write_owner_violation。修法方向
   (待裁): 给 write-owner-audit 增加 --range <base>..HEAD (或 --from-diff) 取改动清单的模式, 并取消
@@ -90,4 +142,16 @@ description: '实测四层全部空转 (2026-11-09, run 20261109T060043Z-gsm-a46
   用 yaml load/dump 重写.omo/_truth/registry/debt.yaml, 静默删掉 version:3 之后 4 行 v3 理由注释
   (本次已手工恢复, 恢复后 diff 为恰好 +1 行); ⑥ schedule_item (omo_debt_lifecycle.py:76) 把 lifecycle_state
   一并改成 scheduled, 而 origin/main 全体 47 条 items 的取值只有 identified/in_progress/resolved/closed
-  —— broker 自己产出的状态值不在群体词表内, 且没有任何子命令能把它改回 identified。'
+  —— broker 自己产出的状态值不在群体词表内, 且没有任何子命令能把它改回 identified。
+
+  ⑦ 端到端实测(2026-11-09, 直接 import origin/main 的 write-owner-audit.py 调 audit_staged,
+  staged=[.omo/debt/items/FAKE-HANDWRITE.yaml], 规则加载 6 条, match_path 对 .omo/debt/*
+  与 .omo/debt/** 均 True): CI=true 或 GITHUB_ACTIONS=true ⇒ violations=0; 带 AGENT_WORKFLOW_RUN_ID
+  ⇒ violations=0; 无 run-id + 无 CI(xiamingxing / omo-agent / someone-else 三个身份) ⇒ violations=2。即规则**逻辑本身能命中**,
+  空转来自三个开关: (a) write-owner-audit 在 gac-local-gate.py 的 BROKEN_CHECKS 清单里(:955, 跳过逻辑
+  :796-797 "已知不可用, 仅 strict 模式下检查"), 所以本地/pre-commit 永不执行, 唯一执行处是 gac-gate.yml:209
+  的 --strict, 而那里 is_ci 已把它中和 —— **唯一能跑到它的模式恰好是豁免它的那个模式**; (b) 只有 --staged 采集面(判据②④);
+  (c) 身份豁免覆盖了一切自动化写入者, 而 .omo/debt/ 的写入 100% 是自动化写入。所以 #5149 那样的手写 broker 状态能落地, 靠的是
+  (a)+(b), 不是 (c); 三者不同时修, 规则在任何环境都无生效路径。修法要同时: a) 移出 BROKEN_CHECKS 或给 gate 加一条不依赖
+  staged 的执行路径; b) 给脚本加 --range/--commit 采集模式; c) 把身份豁免收窄 —— 至少要求 AGENT_WORKFLOW_RUN_ID
+  对应的 run 真的 claim 了该路径(现在有 registry 可查), 而不是见到 env 变量就放行。'
