@@ -2,7 +2,7 @@
 status: active
 lifecycle: generated
 owner: governance-team
-last-reviewed: 2026-11-03
+last-reviewed: 2026-11-09
 ---
 
 # INDEX-TOOLS.md — 治理工具统一目录
