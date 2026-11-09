@@ -126,3 +126,27 @@ def test_missing_path_in_uninit_submodule_is_env() -> None:
     # 不在子模块内 → 仍按仓内腐化
     other = "FileNotFoundError: [Errno 2] No such file or directory: '/ws/bin/gac/gone.py'"
     assert gate._missing_path_in_uninit_submodule(other, ["projects/omlxc"]) is False
+
+
+def test_module_in_uninit_submodule_is_env() -> None:
+    """`No module named 'omo'` 落在未 init 子模块里 = 环境性, 不是仓内腐化。
+
+    2026-11-10 实证: 未 init 子模块的 worktree 里 15 个 ModuleNotFoundError
+    (omo/cockpit/agora 等) 全被标成 [仓内腐化] —— _classify 只看「目录是否存在」,
+    而子模块目录存在但内容为空 (未 init)。
+    """
+    gate = _load()
+    assert gate._module_in_uninit_submodule(
+        "ModuleNotFoundError: No module named 'omo'", ["projects/omo"]
+    ) is True
+    assert gate._module_in_uninit_submodule(
+        "ModuleNotFoundError: No module named 'cockpit'", ["projects/cockpit"]
+    ) is True
+    # 第三方包不受子模块表影响
+    assert gate._module_in_uninit_submodule(
+        "ModuleNotFoundError: No module named 'yaml'", ["projects/omo"]
+    ) is False
+    # 子模块表为空 (= 全 init) → 仍按仓内腐化
+    assert gate._module_in_uninit_submodule(
+        "ModuleNotFoundError: No module named 'omo'", []
+    ) is False
