@@ -1,0 +1,45 @@
+id: "CRON-REGISTRY-NO-HOST-SCOPE"
+title: "cron registry 没有机器维度作用域 —— 单机专用条目在别的机器上算 drift"
+dimension: "governance"
+subdimension: "consistency"
+domain: "system"
+scope: "host"
+severity: "medium"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- ".omo/cron/registry.yaml (87 条 job，字段只有 name/schedule/command/planes/reality/status/owner/sfop_slot/reconciliation_note/label/ssot_conflict/note)"
+- "bin/scheduler-compile.py check_drift (拿**本机** installed 面比**全局** registry)"
+- "registry 条目 work-agent-respire-mbp-watchdog (reality=installed, status=active, owner=work-agent)"
+mitigation_refs: []
+opened_at: "2026-11-09"
+last_reviewed_at: '2026-11-09'
+next_review_at: '2026-11-16'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: "给 registry 加机器维度（如 `hosts: [mini]`，缺省=全部）并在 check_drift / compile_crontab / diff_installation 三处按本机过滤；或学 known_orphans 加一个对称的 `known_drift` 兜底清单。**不要**靠把条目标 proposed 来绕 —— 那会让真正该装的机器也装不上。"
+history:
+- at: '2026-11-09T10:20:00+00:00'
+  action: identify
+  note: >-
+    实例: `work-agent-respire-mbp-watchdog`（`*/5 * * * * /bin/bash
+    $HOME/Project/work-agent/scripts/respire_mbp_supervisor_watchdog.sh`）的
+    reconciliation_note 明写: 「MBP 的 crontab 写入已损坏 (Interrupted system call,
+    装不进任何新条目), 而兜底用的 gui 域 LaunchAgent 只在图形会话存在时才有 ⇒ MBP
+    重启后若没有图形登录, 其 Respire supervisor 无人拉起。mini 从不睡眠 (pmset sleep=0)
+    ⇒ **由 mini 侧**每 5 分钟 SSH 检查并按需拉起」。
+
+    即: 该条目是 **mini 专用** (watchdog 跑在 mini, SSH 到 mbp), 但 registry 是
+    **跨机并集**且没有机器维度字段 (87 条 job 的字段集里没有 hosts/machines/node
+    之类)。后果: mini 上 --check 绿, **mbp 上 drift=1** (登记了但没装)。
+
+    不对称: `known_orphans` 兜住了「装了但没登记」, 但**没有**对称机制兜
+    「登记了但这台机不该装」。check_drift 的 ok 是机器相对的, registry 不是。
+
+    注: 该条目的登记发生在 MBP crontab 损坏期间, 当时**装不进去**是环境问题;
+    现在写入恢复了, 但条目依然不该出现在 mbp 的 drift 里。
+  actor: "governance-agent"
