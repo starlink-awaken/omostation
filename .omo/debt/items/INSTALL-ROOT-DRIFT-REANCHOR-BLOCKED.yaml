@@ -1,0 +1,60 @@
+id: "INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED"
+title: "运行时安装位落后 142 commits / 11 天，而重锚被本地改动阻塞 —— 巡检只报不自愈"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "host"
+severity: "medium"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- "~/.local/opt/omostation"
+- "bin/ssot/anchor-install-root.sh"
+evidence_refs:
+- "~/.local/opt/omostation HEAD=3b85250d175988b47f36836d7f11935c11fce897 (2026-10-29 14:11:07 +0800) vs 检出根 db1b13813 / origin/main 7b4a01e1c"
+- "bin/ssot/anchor-install-root.sh --status 实测: 「锚点落后 142 个提交 (锚点距今 11 天)」"
+- "重锚实测报错: `error: Your local changes to the following files would be overwritten by checkout: scripts/tools/spine-daily-ingress.py` + 两个 untracked (.omo/_truth/registry/personal-retrieval-domains.yaml, bin/gac/documents-personal-view.py) ⇒ `Aborting`"
+- "git -C ~/.local/opt/omostation status --porcelain 共 14 项 (10 个 ` M projects/*` 子模块 + 上述 3 项 + 1)"
+- "crontab `37 8 * * * anchor-install-root.sh --check` 只写 ~/.local/log/anchor-install-root.log, 无自愈动作"
+- "~/Library/LaunchAgents/com.omostation.panorama-compact-observation.plist 跑的是安装位的 bin/panorama/compact-observation.py; launchctl list 末次退出码=1"
+- "根仓 #5172 修的正是该作业的 2 个 UNKNOWN facet, 但因安装位未更新而无法生效"
+mitigation_refs: []
+opened_at: "2026-11-09"
+last_reviewed_at: '2026-11-09'
+next_review_at: '2026-11-16'
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: >-
+  两问分开。(1) **安装位上的本地改动怎么处置**: `scripts/tools/spine-daily-ingress.py`
+  的未提交修改 + 两个 untracked 文件, 是「有人在安装位上直接改代码」——而安装位按
+  ADR-0456 是**发布产物**(detached 在记录在案的 SHA, 由 release 机制更新), 不是工作区。
+  要么把这些改动迁回根仓并合入, 要么确认是废弃改动后清理, 否则重锚永远 `Aborting`。
+  (2) **巡检是否要自愈**: `anchor-install-root.sh --check` 每天 08:37 报漂移并给出
+  重锚命令, 但没有任何自动动作, 于是一次漂移可以挂 11 天 (实测)。可以加一个
+  「仅在安装位干净时自动重锚」的守卫分支 —— 脏就不动并升级告警, 干净才重锚。
+blockers:
+- id: INSTALL-ROOT-LOCAL-MODIFICATIONS
+  since: "2026-11-09"
+  detail: >-
+    安装位有 14 项脏项, 其中 3 项直接阻塞 `git checkout --detach`。任何「自动重锚」
+    都必须先解决它们, 否则会静默失败 (本次实测)。
+history:
+- at: '2026-11-09T08:05:00+00:00'
+  action: identify
+  note: >-
+    排查 panorama compact-observation 的 launchd 作业 (末次退出码=1) 时顺带发现:
+    该作业跑的是**安装位**的 `bin/panorama/compact-observation.py`, 而安装位
+    `~/.local/opt/omostation` 已落后 142 commits / 11 天。
+
+    **为什么重要**: 根仓 #5172 修好了该作业的 2 个 UNKNOWN facet (evolution /
+    launchd_health, 此前 `last_success_at` 恒 null, 观测面一直 `partial`), 但改动只在
+    根仓 —— 不重锚就永远不生效。而 `anchor-install-root.sh --check` 每天报漂移却
+    没有任何自愈路径, 于是一次漂移挂了 11 天。
+
+    **重锚实测**: 目标 origin/main `7b4a01e1c`, 脚本走到 `git checkout --detach` 被
+    本地改动挡住并 `Aborting` —— 不是脚本 bug, 是安装位上有未提交/未跟踪的文件。
+    **未强行动作** (那会丢掉别人的本地工作)。
+  actor: "governance-agent"

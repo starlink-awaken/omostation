@@ -42,3 +42,4 @@ seed_items:
 - .omo/debt/items/CRON-BARE-PYTHON3-PY39-IMPORT-DEATH.yaml
 - .omo/debt/items/DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL.yaml
 - .omo/debt/items/OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS.yaml
+- .omo/debt/items/INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED.yaml
