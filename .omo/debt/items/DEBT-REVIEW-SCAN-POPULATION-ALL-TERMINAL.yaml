@@ -1,0 +1,41 @@
+id: DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL
+title: 债务复审调度器的扫描总体取 registry.seed_items (25 条, 实测 18 resolved + 7 closed = 非终态 0), 而 `.omo/debt/items/` 里 9 条非终态待办全部在面外; glob 回退分支在 seed_items 非空时不可达, 反向 (磁盘→登记) 无门禁 ⇒ 复审机制结构上永远报「无可办」
+dimension: governance
+subdimension: gate
+domain: infrastructure
+scope: workspace
+severity: high
+weight: 0.2
+entropy_class: medium
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/gac/debt-review-scheduler.py
+- .omo/_truth/registry/debt.yaml
+- bin/gac/debt-integrity-check.py
+evidence_refs:
+- '扫描总体定义: `bin/gac/debt-review-scheduler.py:48-56` `load_items` —— 总体 = `.omo/_truth/registry/debt.yaml` 的 `seed_items`; `:54-56` 的目录 glob 回退**只在 `paths` 为空**时触发。现 seed_items 有 25 条 (非空) ⇒ 回退分支不可达, 目录里的其余条目永不进入复审'
+- '总体组成 (origin/main 实测): seed_items = 25 条且 `seed_refs_not_on_disk = 0` (全部存在), 其 lifecycle 分布 = **18 resolved + 7 closed**, 即扫描面内非终态项 **0 条**'
+- '面外组成: `.omo/debt/items/` 在 origin/main 共 45 个条目 (44 yaml + 1 `README.md`), 未登记 20 条, lifecycle 分布 = 8 identified / 9 resolved / 1 closed / 1 in_progress (+1 非 YAML 文档) ⇒ **非终态且扫描面外 = 9 条**, 且 9/9 都带非空 `decision_needed` (逐条核对)'
+- '实跑读数 (2026-11-09, 用 `/opt/homebrew/bin/python3.13` 绕开同平面的解释器缺陷): rc=0, stderr 0 行, `--json` = `total_items: 25, needs_reassessment: [], overdue: []` ⇒ 「一切正常」来自总体选错, 不是债务健康; 上面 9 条待办中任一条都不出现在输出里'
+- '反向无门禁: `bin/gac/debt-integrity-check.py:25-43` 只验「seed_items 指向的文件是否存在」(单向, 空则报 empty), `bin/gac/gac-local-gate.py:217` 接的正是这条 ⇒ 「磁盘上有但登记面没有」结构上不可见。本地门禁 PASS 的同一时刻 (本 worktree 同日实测 69 checks executed / 2 SOFT WARN, 另一棵树同会话计 70), 9 条待办仍不在复审面'
+- '按调度器自己的口径这些项该被提示: 同文件 `:29` `INTERVAL_DAYS = critical 14 / high 30 / medium 60 / low 90`. 例: `STORAGE-MINI-INTERNAL-NO-RECURRING-BACKUP` sev=high, `last_reviewed_at=2026-10-12` ⇒ 2026-11-11 到期; 因未登记, 到期当天也不会产生任何提示'
+- '自我实证 (本项的成因链): 2026-11-09 立案 `BET-LEDGER-CLI-AUTHORITY-SPLIT` (PR #5142) 走的是**直接写 `.omo/debt/items/<ID>.yaml`**, 未登记, `make gac-local-gate` 与 PR CI 全程无异议 ⇒ 该项落在此刻的扫描面外。而 `.omo/_truth/x1-governance-policies.yaml:130` 与 `x4-consistency-rules.yaml:89,138` 明文要求债务修复路径走 `omo governance ingress-debt` broker (broker 会 upsert seed_items) ⇒ 政策存在但无执行面。本项与 `CRON-BARE-PYTHON3-PY39-IMPORT-DEATH` 立案后即同样在面外, 直到裁决落地'
+- '为什么会出现两条路径: broker 侧 `projects/omo/src/omo/omo_ingress_debt.py:66-67` `payload.update(debt_data)` 与 `:70` 注入 `source_ref`, `:71-81` setdefault 一批 schema 外键 (`description/source/registered_at/first_seen_at/last_seen_at/occurrence_count`) —— 走 broker 产出的条目形态与本仓 22 键文件 (`projects/omo/src/omo/omo_debt_registry.py:10-33` 为权威) 不一致, 这是「直接写文件」被反复选用的机制原因, 属同一缺陷的另一半, 不是单纯违规'
+- '去重: `DEBT-20260917021531-GAP-SEED-DISPATCH` (lifecycle resolved, 2026-09-20 闭环) 处理的是**反方向** —— `gap_seed_items` 27 条声明但物理不存在, 其 resolve_partial 明确记录「gap_seed_items 与 gap_items_dir 全仓无消费者」故移除零影响。本项讲的是有消费者的 live `seed_items` 覆盖不全, 两者不重叠; 该次工作把「声明→执行」补齐, 留下了「执行→登记」这一半'
+- '仪器自纠 (立案过程内两例, 均已复算): ① 首轮把 `git ls-tree --name-only` 的**全路径**再拼一次 `.omo/debt/items/` 前缀 ⇒ 集合差算成 45/45、`git show` 空返回被 `or {}` 洗成 None, 输出 45 行全 None (假结论); 修正为不拼接后得 25/20。② 未容错的 `yaml.safe_load` 撞上 `README.md` 抛 ScannerError 中断整轮, 一度误判「有一项 YAML 损坏」—— 逐份 try/except 后确认 README.md 是合法 Markdown 文档 (标题 `# \`.omo/debt/items/\` — Debt Canonical SSOT`), 损坏假设撤回, 44 yaml 全部可解析'
+mitigation_refs: []
+opened_at: '2026-11-09'
+last_reviewed_at: '2026-11-09'
+next_review_at: '2026-11-16'
+gate_level: none
+x1_policy_ref: ''
+x3_tier: Principle
+decision_needed: >-
+  三问分开裁决。(1) **复审总体以哪一面为准**: ① 目录为准 (`items/*.yaml` 全量 glob, registry 退化为元数据/加速索引) —— 一处改动即覆盖 9 条, 但要确认没有「故意不登记」的项 (实测面外 20 条里 9 条是终态, 说明历史上登记与落盘本就不同步); ② 登记面为准 + 立案入口唯一 (broker-only) —— 语义清楚但先要解决 broker 产出形态与 22 键权威不一致 (见 evidence 第 8 条), 否则「走 broker」等于「换一种文件形状」; ③ 两面取并集 + 反向门禁 (磁盘有而登记面无 = 失败) —— 最省改动, 但会让 `debt-integrity-check.py` 从单向变双向, 现有 20 条历史欠登记立刻成红。(2) **立案入口是否强制**: 若裁 broker-only, 需要同时给出 broker 的 22 键模式 (现实现会注入 schema 外键并追加 seen_again 历史), 否则合规的直写会持续发生。(3) **seed_items 里 25 条全终态是否清出**: 保留则扫描面恒为 0 可办项, `needs_reassessment=0 / overdue=0` 将永远是真但无意义的读数。**裁决前不要直写 registry/debt.yaml** —— 该文件由 broker 维护, 手工补登 20 条会与 broker 的 upsert 语义竞争。
+history:
+- at: '2026-11-09T03:26:00+00:00'
+  action: identify
+  note: >-
+    立案依据: `load_items` 的总体定义 (:48-56) + 两面组成的全量统计 (扫描面内非终态 0 / 扫描面外非终态 9) + python3.13 实跑读数 `total_items=25, needs_reassessment=0, overdue=0`。本轮不做直写 registry、不改 gate 方向、不把 9 条补登 —— 那三个动作正是待裁对象。自查记录: 首轮因路径重复拼接与未容错解析得出过两个错结论 (45/45 未登记、README.md 损坏), 均已在同一会话内复算撤回, 详见 evidence 第 10 条。
+  actor: governance-agent

@@ -1,0 +1,45 @@
+id: CRON-BARE-PYTHON3-PY39-IMPORT-DEATH
+title: cron 作业声明裸 `python3` = Xcode 3.9.6, 189 个裸 `from datetime import UTC` 脚本中 7 条在册作业 import 即死; 根因 2026-10-22 已知, 但补的是比较器 (判两种写法等价), 执行层与登记面至今未修, 也没有门禁断言可执行性
+dimension: governance
+subdimension: consistency
+domain: infrastructure
+scope: workspace
+severity: high
+weight: 0.2
+entropy_class: medium
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- crontab(已装面)
+- .omo/cron/registry.yaml
+- bin/scheduler-compile.py
+- bin/lib/cron_normalize.py
+evidence_refs:
+- '已装面与登记面都用裸 `python3`: `crontab -l` 60 条非注释行里 16 条声明裸 `python3`, 只有 1 条钉到 `python3.13`; `.omo/cron/registry.yaml:468` (debt-review) 同形。cron 风格最小 PATH 实测: `env -i PATH=/usr/bin:/bin /bin/sh -c ''command -v python3; python3 --version''` → `/usr/bin/python3` + `Python 3.9.6`'
+- '解释器实跑差分 (2026-11-09, cron 同款 env PATH=/usr/bin:/bin, 逐条 `<py> <script> --help`): 3.9 下 rc=1 且 stderr 含 `cannot import name ''UTC''` 的作业 7 条 —— scene-signal-poll / kems-freshness / execution-environment-steward / ops-signal-drift / scene-registry / debt-review / scene-calibration; 同一批在 `/opt/homebrew/bin/python3.13` 下全部 rc=0。对照组 zhixing-panel-sync / workspace-wip-guard / log-rotate 在 3.9 下也 rc=0 ⇒ 不是普遍假阳, 判据确实是 UTC 导入'
+- '各 log 的**最后一行**即该 ImportError, 且 mtime 距实测仅 0.2–6.9 小时 (scene-signal-poll 0.2h, 计划 `*/15 9-18 * * 1-5`): 抛错次数 scene-signal-poll 1142 / kems-freshness 48 / execution-environment-steward 45 / ops-signal-drift 41 / scene-registry 41 / debt-review 38 / scene-calibration 6 (周一起 06:00, 今天就是周一) ⇒ 失效状态是**当下**, 不是历史残留'
+- '逐 log 末次 traceback 的抛错文件: `bin/ssot/scene-signal-poller.py` / `projects/ecos/src/ecos/ssot/tools/mof-kems-bridge.py` / `bin/gac/gate-evidence-receipt.py` (被 execution-environment-steward 导入) / `bin/ops/cli.py` / `bin/ssot/scene-v3-registry.py` / `bin/gac/debt-review-scheduler.py` / `bin/ssot/calibration-engine.py` ⇒ 因果落在作业自己的模块顶层, 不是子进程'
+- '暴露面计量 (`git grep -l "from datetime import.*UTC" origin/main -- bin projects/omo/src projects/ecos/src`): 238 个文件使用该导入, 其中 `bin/_archive/` 35 个; 带 try/except 兼容垫片 14 个, **裸导入 189 个**'
+- '补救手段在仓内已存在但只逐脚本打过: `bin/ssot/scene-history.py:35-39` 与 `bin/gac/zhixing-panel-sync.py:37-39` 的垫片注释直写「cron 下 python3 可能是 3.9 (<3.11 无 datetime.UTC)」⇒ 同一修法在 14 个文件生效, 从未铺到 189 个, 也没有一致性断言'
+- '根因记录于 2026-10-22, 但补的是**检测层**: `bin/lib/cron_normalize.py:30-48` 的 `normalize_interpreter` docstring :33-35 明写「cron 环境里裸 `python3` 解析到 Xcode 的 3.9, 缺 `datetime.UTC`, 2026-10-22 有 4 条 cron 因此连续失败数周」, 结论是「两者语义相同, 不该算 drift」⇒ `scheduler-compile --check` 结构上不可能指出登记面声明了致命解释器; 而「语义相同」这个前提对 189 个裸导入文件不成立'
+- '同一缺陷被硬编进另一平面 codegen: `bin/scheduler-compile.py:71` `"ProgramArguments": ["/usr/bin/python3", j["command"]]` —— launchd 平面直接把 3.9.6 写死 (并把整条 shell 串当单参数)。`compile_crontab` (:59) 则原样透传 registry 的 `python3`'
+- '无门禁断言 cron 命令可执行性, 且此前无任何记录: `git grep -l "cannot import name" origin/main -- .omo/debt/items docs/pitfalls.md` rc=1 / 0 files; 正对照 (同一 git grep 换 `datetime` 限 `bin/gac`) rc=0 / 121 files ⇒ 仪器工作正常, 零命中是真阴性'
+- '收敛另受一条已知缺陷阻塞, 不是改文件就能生效: `docs/pitfalls.md:301` 本机 `crontab(1)` 写入持续 EINTR (2026-11-07 实测, `crontab -l` 正常) ⇒ `install-cron-plane.py --install/--remove` 全失败, 而 `scheduler-compile --check` 因 `normalize_installed_line` 折叠仍报 ok ⇒ 登记面改了也收敛不了已装面'
+- '交叉项 (不重叠但同平面): `CRON-INSTALLERS-OUTSIDE-SSOT` 讲登记面外的 3 个安装器; `CRON-REGISTRY-NO-HOST-SCOPE` 讲哪台宿主跑哪条 —— 本项是该裁决的直接输入 (解释器可用性就是宿主差异); `RESIDENT-PLANE-SPLIT-LAUNCHD-INERT` 讲 launchd 平面 inert, 与 :71 的硬编码相关'
+- '失效不限于 cron (2026-11-09 本会话内另两处现场): ① 交互式 `/usr/bin/python3 bin/gac/debt-review-scheduler.py --json` → ImportError, 同一条命令 python3.13 下 rc=0; ② `/usr/bin/python3 <含长行非 ASCII 的 .py>` → Apple 3.9.6 的 PEP263 分块假错 `Non-UTF-8 code starting with ''\xe7''` (短行正常, 单行 ~5KB 中文即触发; 3.13 同文件无错) ⇒ 本仓 python 工具链的事实基线已高于宿主 `/usr/bin/python3` 提供的 3.9.6, 不只 cron 受影响'
+- '取证局限 (如实): 对 debt-review 做过真实子命令实跑 (python3.13 下 rc=0 / stderr 0 行 / 合法 JSON), 其余 6 条只证**导入阶段**在 3.13 下可加载, 未实跑其真实子命令; 3.9 侧的 rc=1 是模块顶层失败, 与子命令无关'
+mitigation_refs: []
+opened_at: '2026-11-09'
+last_reviewed_at: '2026-11-09'
+next_review_at: '2026-11-16'
+gate_level: none
+x1_policy_ref: ''
+x3_tier: Principle
+decision_needed: >-
+  三问分开裁决, 有顺序依赖。(1) **计划任务的解释器口径三选一**: ① 登记面写各宿主都存在的绝对路径 — 依赖 `CRON-REGISTRY-NO-HOST-SCOPE` 先裁, 否则 mini 侧路径可能不存在, 把一个死因换成另一个; ② 要求所有 cron 可达脚本自带 3.9 兼容垫片 (把 189 处裸导入收敛到 14 处已有写法) — 纯代码、不依赖宿主, 但覆盖面大且对未来新脚本无自动约束; ③ 由 `scheduler-compile` 在生成/安装时按宿主解析并替换解释器 (把 `normalize_interpreter` 反向用作 codegen, 登记面保持中性) — 一处改动收全部, 需同时修 :71 的 launchd 硬编码。(2) **`normalize_interpreter` 的等价是否收窄**: 它现在同时承担「比较用等价」与「事实上的许可」两件事; 若保留比较用途, 需要另一个独立断言「声明的解释器能 import 目标脚本」, 否则任何解释器缺陷都会被折叠掉。(3) **新增可执行性门禁的起法**: 7 条现在就是死的, fail-closed 会让本地门禁立刻红并阻塞无关交付 —— 先 warn 限期收敛, 还是先把 7 条修绿再翻门禁。**裁决前不要动手**: 逐个脚本改 import 会把 189 处碎片化; 手写 crontab 会撞上 EINTR 与 pitfalls:301 的登记面/已装面分裂; 两者都会留下「--check 绿但仍在死」的第三条通路。
+history:
+- at: '2026-11-09T03:26:00+00:00'
+  action: identify
+  note: >-
+    立案依据是一次性差分实测: cron 同款 PATH 下 7 条作业 `--help` 即 rc=1 (ImportError: cannot import name 'UTC'), 换 python3.13 全部 rc=0; traceback 末态与 mtime (0.2–6.9h) 证明失效在当下; 抛错文件逐条归属到作业自己的模块。同时立案的扫描面缺陷 (`DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL`) 是本条的下游后果之一 —— debt-review 既跑不起来, 跑起来也只会扫 25 条终态。根因自 2026-10-22 已写在 `cron_normalize.normalize_interpreter` docstring 里, 当时的处置是让比较器无视解释器差异, 执行层因此无人负责; 本次不改动 crontab / registry / 脚本导入, 只登记事实并请求解释器口径裁决。
+  actor: governance-agent
