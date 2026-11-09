@@ -1,103 +1,122 @@
-id: "BET-LEDGER-CLI-AUTHORITY-SPLIT"
-title: "台账读数按工作树、证据判定按 origin/main —— 同一条 bet-ledger.py status 在两棵树给出相反结论 (588/2 对 589/1), 仪器零提示; 仓内已有的权威面比对只覆盖 agent-workflow packet refresh 一条腿"
-dimension: "governance"
-subdimension: "consistency"
-domain: "infrastructure"
-scope: "workspace"
-severity: "high"
+id: BET-LEDGER-CLI-AUTHORITY-SPLIT
+title: 台账读数按工作树、证据判定按 origin/main —— 同一条 bet-ledger.py status 在两棵树给出相反结论 (588/2 对
+  589/1), 仪器零提示; 仓内已有的权威面比对只覆盖 agent-workflow packet refresh 一条腿
+dimension: governance
+subdimension: consistency
+domain: infrastructure
+scope: workspace
+severity: high
 weight: 0.2
-entropy_class: "medium"
-lifecycle_state: "identified"
-owner: "governance-team"
+entropy_class: medium
+lifecycle_state: closed
+owner: governance-team
 affected_roots:
-- "bin/plan/bet-ledger.py"
-- "bin/agent-workflow.py"
+- bin/plan/bet-ledger.py
+- bin/agent-workflow.py
 evidence_refs:
-- "bin/plan/bet-ledger.py:47-49 (origin/main `f232e2762`) —— `WS = Path(__file__).resolve().parents[2]` / `LEDGER_RELATIVE_PATH = \"docs/plans/3y-bet-ledger.yaml\"` / `LEDGER = WS / LEDGER_RELATIVE_PATH`: import 时冻结, 读的是**当前检出树**, 输出不带 root 声明"
-- "同文件 :1257-1268 `cmd_status` —— 打印 `=== 台账总览 ===` / `总 bet: {len(bets)}` / 每个 status 计数, 全程不打印 HEAD、ledger blob 或权威 ref ⇒ 读数无来源面"
-- "同文件 :2100-2103 `_ledger_for_workspace` —— `ledger = workspace / \"docs/plans/3y-bet-ledger.yaml\"`, 同样按工作树拼路径 (不是按 ref)"
-- "同文件 :1651 `_validate_evidence_reference` 内 :1686 `git -C <workspace> merge-base --is-ancestor <commit> origin/main`, :1700-1704 不通过时只打 `WARN ... not ancestor of origin/main (squash-merge 语义, 接受)` —— 一个文件里两种权威面并存: 计数按树, 可达性按 origin/main"
-- "bin/agent-workflow.py:738-773 `_assert_packet_sources_at_ref` —— :744-745 把 ledger 列为比对源, :755 读工作树字节, :759-763 `git show {authoritative_ref}:{relative}`, :770-773 字节不同即 raise `WORK_PACKET_REFRESH_SOURCE_UNMERGED: {label} differs from {authoritative_ref}` ⇒ **失败即拦的权威面比对在仓内已存在**"
-- "同文件 :278 `WORKSPACE = Path(__file__).resolve().parents[1]`; :814-819 `_refresh_packet_run(..., authoritative_ref: str | None = \"origin/main\")` 默认开启, :824-828 与 :843 / :888 两处调用受 `authoritative_revision is not None` 控制"
-- "差分实测 (2026-11-09, 同一条 `/usr/bin/python3 bin/plan/bet-ledger.py status`, 两边 stderr 均 0 行且退出码均 0): root=`/Users/xiamingxing/Workspace` HEAD=`db1b13813` ledgerBlob=`3371b47cfc97` → `总 bet: 590 / done 588 / in_progress 2`; root=`/Users/xiamingxing/ws-governance-cli-root-declaration` HEAD=`8b51792c6` ledgerBlob=`bf43ab67a72d` (与 origin/main `f232e2762` 的 ledger blob 同一对象) → `done 589 / in_progress 1`。blob 复算: `/usr/bin/git rev-parse HEAD:docs/plans/3y-bet-ledger.yaml`"
-- "实际后果 (2026-11-09 会话): 在滞后主区读到 `in_progress 2`, T10-342 因此看起来尚未收口, 差点为其重开 PR 重做 #5121 已并入的 closeout; 纠正手段是**另起 worktree 到 origin/main** 并直读 `git show origin/main:docs/plans/3y-bet-ledger.yaml`, 而不是工具本身报警"
-- "本项立案过程里同类假阴性两例 (同根因, 现场复现): ① `/usr/bin/ls` 在本机不存在 (macOS 27 缺 `/usr/bin/{ls,cat,date,df,rg}`, 5/5 探测全缺), `ls -d <存在的 worktree> || echo 不存在` 把 rc=127 洗成『路径不存在』; ② 主区 `/bin/ls .omo/debt/items/` 计 40 项、`grep -ic direct` = 0 (DIRECT-IO-GATE-TWO-TREES-TWO-COPIES 不在滞后树里), 而 origin/main `git ls-tree` 为 43 项 —— 去重检查若跑在滞后树上会**漏掉真实存在的同类项**"
-- "docs/pitfalls.md:265 —— 现有条款只给操作者协议 (『需要新鲜基线就另起 worktree 到 origin/main, 绝不用 bin/gac/sync-main.sh 快进共享主区』), 未覆盖仪器侧 (读数自带权威面声明 / 分歧即拒), 本项补的是那一半"
-- "去重: 唯一同名族项 `DEBT-20260927-KOS-HOME-DUAL-AUTHORITY` 讲的是 KOS 索引两份**物理库** (`~/.kos` vs `data/kos`), `lifecycle_state: resolved` (2026-09-28 按 ADR-0460 执行), 与本项的 git 树权威面无重叠"
+- 'bin/plan/bet-ledger.py:47-49 (origin/main `f232e2762`) —— `WS = Path(__file__).resolve().parents[2]`
+  / `LEDGER_RELATIVE_PATH = "docs/plans/3y-bet-ledger.yaml"` / `LEDGER = WS / LEDGER_RELATIVE_PATH`:
+  import 时冻结, 读的是**当前检出树**, 输出不带 root 声明'
+- '同文件 :1257-1268 `cmd_status` —— 打印 `=== 台账总览 ===` / `总 bet: {len(bets)}` / 每个 status
+  计数, 全程不打印 HEAD、ledger blob 或权威 ref ⇒ 读数无来源面'
+- 同文件 :2100-2103 `_ledger_for_workspace` —— `ledger = workspace / "docs/plans/3y-bet-ledger.yaml"`,
+  同样按工作树拼路径 (不是按 ref)
+- '同文件 :1651 `_validate_evidence_reference` 内 :1686 `git -C <workspace> merge-base
+  --is-ancestor <commit> origin/main`, :1700-1704 不通过时只打 `WARN ... not ancestor of
+  origin/main (squash-merge 语义, 接受)` —— 一个文件里两种权威面并存: 计数按树, 可达性按 origin/main'
+- 'bin/agent-workflow.py:738-773 `_assert_packet_sources_at_ref` —— :744-745 把 ledger
+  列为比对源, :755 读工作树字节, :759-763 `git show {authoritative_ref}:{relative}`, :770-773
+  字节不同即 raise `WORK_PACKET_REFRESH_SOURCE_UNMERGED: {label} differs from {authoritative_ref}`
+  ⇒ **失败即拦的权威面比对在仓内已存在**'
+- '同文件 :278 `WORKSPACE = Path(__file__).resolve().parents[1]`; :814-819 `_refresh_packet_run(...,
+  authoritative_ref: str | None = "origin/main")` 默认开启, :824-828 与 :843 / :888 两处调用受
+  `authoritative_revision is not None` 控制'
+- '差分实测 (2026-11-09, 同一条 `/usr/bin/python3 bin/plan/bet-ledger.py status`, 两边 stderr
+  均 0 行且退出码均 0): root=`/Users/xiamingxing/Workspace` HEAD=`db1b13813` ledgerBlob=`3371b47cfc97`
+  → `总 bet: 590 / done 588 / in_progress 2`; root=`/Users/xiamingxing/ws-governance-cli-root-declaration`
+  HEAD=`8b51792c6` ledgerBlob=`bf43ab67a72d` (与 origin/main `f232e2762` 的 ledger blob
+  同一对象) → `done 589 / in_progress 1`。blob 复算: `/usr/bin/git rev-parse HEAD:docs/plans/3y-bet-ledger.yaml`'
+- '实际后果 (2026-11-09 会话): 在滞后主区读到 `in_progress 2`, T10-342 因此看起来尚未收口, 差点为其重开 PR 重做
+  #5121 已并入的 closeout; 纠正手段是**另起 worktree 到 origin/main** 并直读 `git show origin/main:docs/plans/3y-bet-ledger.yaml`,
+  而不是工具本身报警'
+- '本项立案过程里同类假阴性两例 (同根因, 现场复现): ① `/usr/bin/ls` 在本机不存在 (macOS 27 缺 `/usr/bin/{ls,cat,date,df,rg}`,
+  5/5 探测全缺), `ls -d <存在的 worktree> || echo 不存在` 把 rc=127 洗成『路径不存在』; ② 主区 `/bin/ls
+  .omo/debt/items/` 计 40 项、`grep -ic direct` = 0 (DIRECT-IO-GATE-TWO-TREES-TWO-COPIES
+  不在滞后树里), 而 origin/main `git ls-tree` 为 43 项 —— 去重检查若跑在滞后树上会**漏掉真实存在的同类项**'
+- docs/pitfalls.md:265 —— 现有条款只给操作者协议 (『需要新鲜基线就另起 worktree 到 origin/main, 绝不用 bin/gac/sync-main.sh
+  快进共享主区』), 未覆盖仪器侧 (读数自带权威面声明 / 分歧即拒), 本项补的是那一半
+- '去重: 唯一同名族项 `DEBT-20260927-KOS-HOME-DUAL-AUTHORITY` 讲的是 KOS 索引两份**物理库** (`~/.kos`
+  vs `data/kos`), `lifecycle_state: resolved` (2026-09-28 按 ADR-0460 执行), 与本项的 git
+  树权威面无重叠'
 mitigation_refs: []
-opened_at: "2026-11-09"
+opened_at: '2026-11-09'
 last_reviewed_at: '2026-11-09'
 next_review_at: '2026-11-16'
 gate_level: none
-x1_policy_ref: ""
-x3_tier: "Principle"
-decision_needed: >-
-  **已裁 (2026-11-09, principal 授权下由 governance-agent 决定)**: 采**declare-only** ——
-  只读出口 (`status` / `list` / `show` / `claim-check`) 在 **stderr** 打印
-  `root / HEAD / ledger blob / 与 origin/main 是否一致`, **不拒绝、不改判定** (实现见
-  `bin/plan/bet-ledger.py` 的 `authority_declaration_lines()`, PR #5145)。理由: 本仓主工作区
-  常年落后且这是**常态**, fail-closed 会把既有脚本与 CI 在滞后树上打成硬失败, 属行为变更。
-  声明走 stderr 是为了不动 stdout 的机器可读性 —— `maturity-align.py` / `strategy-check.py`
-  等下游用正则解析 stdout 的 `总 bet:` / `done N`。
-  仍未闭合的两问: (1) **fail-closed 语义未启用** —— 若 principal 要「滞后树上的读数直接拒绝」,
-  需另行裁决, 不要由 agent 试探; (2) **`state_root` 不在本项范围** —— 本项只涉及 `code_root`
-  侧的 git 树, 要覆盖 profile / 运行时安装位需另写判据。
-  **持续纪律**: 不给 CLI 加自动 `git fetch` / `reset` —— 那会把"读数"变成"改树", 既越出只读出口的
-  授权面, 又让同一命令在不同时刻给出不可复算的结果; 同理不要把 `sync-main.sh` 接进台账 CLI。
-  原三问 (2026-11-09 立案时): (1) 台账读数以哪棵树为准 —— 现状是 `bet-ledger.py` 按当前检出树计数、
-  按 `origin/main` 判证据可达性, `agent-workflow.py` 的 packet refresh 按 `origin/main` 比 ledger 字节,
-  三个出口三套口径才是问题本体; (2) 若裁 `origin/main` 为权威, 选失败即拦还是只声明 —— 已裁为后者;
-  (3) `state_root` 是否也在权威面内 —— 未纳入。
+x1_policy_ref: ''
+x3_tier: Principle
+decision_needed: '**已裁 (2026-11-09, principal 授权下由 governance-agent 决定)**: 采**declare-only**
+  —— 只读出口 (`status` / `list` / `show` / `claim-check`) 在 **stderr** 打印 `root / HEAD
+  / ledger blob / 与 origin/main 是否一致`, **不拒绝、不改判定** (实现见 `bin/plan/bet-ledger.py`
+  的 `authority_declaration_lines()`, PR #5145)。理由: 本仓主工作区 常年落后且这是**常态**, fail-closed
+  会把既有脚本与 CI 在滞后树上打成硬失败, 属行为变更。 声明走 stderr 是为了不动 stdout 的机器可读性 —— `maturity-align.py`
+  / `strategy-check.py` 等下游用正则解析 stdout 的 `总 bet:` / `done N`。 仍未闭合的两问: (1) **fail-closed
+  语义未启用** —— 若 principal 要「滞后树上的读数直接拒绝」, 需另行裁决, 不要由 agent 试探; (2) **`state_root` 不在本项范围**
+  —— 本项只涉及 `code_root` 侧的 git 树, 要覆盖 profile / 运行时安装位需另写判据。 **持续纪律**: 不给 CLI 加自动 `git
+  fetch` / `reset` —— 那会把"读数"变成"改树", 既越出只读出口的 授权面, 又让同一命令在不同时刻给出不可复算的结果; 同理不要把 `sync-main.sh`
+  接进台账 CLI。 原三问 (2026-11-09 立案时): (1) 台账读数以哪棵树为准 —— 现状是 `bet-ledger.py` 按当前检出树计数、
+  按 `origin/main` 判证据可达性, `agent-workflow.py` 的 packet refresh 按 `origin/main` 比 ledger
+  字节, 三个出口三套口径才是问题本体; (2) 若裁 `origin/main` 为权威, 选失败即拦还是只声明 —— 已裁为后者; (3) `state_root`
+  是否也在权威面内 —— 未纳入。'
 history:
 - at: '2026-11-09T02:47:00+00:00'
   action: identify
-  note: >-
-    一处实测分裂 + 两处当场复现的同类假阴性。零代码改动, 零门禁改动。
+  note: '一处实测分裂 + 两处当场复现的同类假阴性。零代码改动, 零门禁改动。
 
 
-    | 出口 | 读哪棵树 | 分歧时是否报警 | 本次读数 |
-    |---|---|---|---|
-    | bet-ledger.py status (:49 / :1257-1268) | 当前检出工作树 | 否 (stderr 0 行, rc=0) | 主区 588 done / 2 in_progress |
-    | bet-ledger.py status (同一命令, 另一 root) | 新 claim 的 worktree | 否 | 589 done / 1 in_progress |
-    | bet-ledger.py 证据校验 (:1686) | `origin/main` | 仅 WARN (:1702) 且随即判"接受" | 与计数不同源 |
-    | agent-workflow packet refresh (:744-745, :770-773) | `origin/main` (默认 :819) | **是, raise UNMERGED** | 唯一自带权威面的腿 |
+    | 出口 | 读哪棵树 | 分歧时是否报警 | 本次读数 | |---|---|---|---| | bet-ledger.py status (:49 /
+    :1257-1268) | 当前检出工作树 | 否 (stderr 0 行, rc=0) | 主区 588 done / 2 in_progress | |
+    bet-ledger.py status (同一命令, 另一 root) | 新 claim 的 worktree | 否 | 589 done / 1 in_progress
+    | | bet-ledger.py 证据校验 (:1686) | `origin/main` | 仅 WARN (:1702) 且随即判"接受" | 与计数不同源
+    | | agent-workflow packet refresh (:744-745, :770-773) | `origin/main` (默认 :819)
+    | **是, raise UNMERGED** | 唯一自带权威面的腿 |
 
 
-    (1) **主要结论不是"读数会旧", 而是"同一仓内已有正解却只用在一处"**: `_assert_packet_sources_at_ref`
-    已经把 ledger 当比对源、默认 `origin/main`、字节不一致即 raise —— 机制齐备, 只是没下传到读数出口。
-    因此裁决点落在"要不要复用这套语义 / 复用到哪一层", 而不是"要不要新造一个权威面概念"。
+    (1) **主要结论不是"读数会旧", 而是"同一仓内已有正解却只用在一处"**: `_assert_packet_sources_at_ref` 已经把
+    ledger 当比对源、默认 `origin/main`、字节不一致即 raise —— 机制齐备, 只是没下传到读数出口。 因此裁决点落在"要不要复用这套语义
+    / 复用到哪一层", 而不是"要不要新造一个权威面概念"。
 
 
-    (2) **触发场景是差一点做出重复交付**: 主区 HEAD `db1b13813` 的 ledger blob `3371b47cfc97` 里 T10-342 仍是
-    `in_progress`, 而 origin/main 早已是 `status: done / overall=delivery_accepted` (#5121 已 squash 并入)。
-    按主区读数就会为已收口的 BET 重开 closeout PR。纠正靠的是 `git show origin/main:<path>` 直读, 属操作者侧
-    自救, 不是仪器保护 —— 与 docs/pitfalls.md:265 那条协议同源, 该协议管住了"人", 没管住"CLI 读数"。
+    (2) **触发场景是差一点做出重复交付**: 主区 HEAD `db1b13813` 的 ledger blob `3371b47cfc97` 里 T10-342
+    仍是 `in_progress`, 而 origin/main 早已是 `status: done / overall=delivery_accepted`
+    (#5121 已 squash 并入)。 按主区读数就会为已收口的 BET 重开 closeout PR。纠正靠的是 `git show origin/main:<path>`
+    直读, 属操作者侧 自救, 不是仪器保护 —— 与 docs/pitfalls.md:265 那条协议同源, 该协议管住了"人", 没管住"CLI 读数"。
 
 
-    (3) **立案过程里同一根因咬到两次** (都已带阳性对照复算): `/usr/bin/ls` 在本机缺失, 使 `ls -d <存在的路径>`
-    报"不存在"; 主区 `.omo/debt/items/` 只有 40 项且搜不到 DIRECT-IO 项, 而 origin/main `git ls-tree` 是 43 项。
-    第二次的危害更直接: **去重检查跑在滞后树上会漏报同类项**, 于是"确认没有重复"这个前置动作本身就是假的。
+    (3) **立案过程里同一根因咬到两次** (都已带阳性对照复算): `/usr/bin/ls` 在本机缺失, 使 `ls -d <存在的路径>` 报"不存在";
+    主区 `.omo/debt/items/` 只有 40 项且搜不到 DIRECT-IO 项, 而 origin/main `git ls-tree` 是 43
+    项。 第二次的危害更直接: **去重检查跑在滞后树上会漏报同类项**, 于是"确认没有重复"这个前置动作本身就是假的。
 
 
     (4) **不做的三件事**: 不给 CLI 加自动 fetch/reset (见 decision_needed 末段); 不改 `_ledger_for_workspace`
-    的拼路径方式 (那是行为变更, 要先裁 (1)(2)); 不动 `agent-workflow.py` 那条已经正确的腿。
-  actor: "governance-agent"
+    的拼路径方式 (那是行为变更, 要先裁 (1)(2)); 不动 `agent-workflow.py` 那条已经正确的腿。'
+  actor: governance-agent
 - at: '2026-11-09T03:30:00+00:00'
   action: mitigate
-  note: >-
-    落地 declare-only 处置 (PR #5145): `bin/plan/bet-ledger.py` 新增
-    `authority_declaration_lines()`, 在 `status` / `list` / `show` / `claim-check`
-    四个只读出口把 `root / HEAD / ledger blob / origin/main 及其 ledger blob / 与
-    origin/main 是否一致` 打印到 **stderr**。**不拒绝、不改判定**; stdout 逐字节
-    不变 (下游 `maturity-align.py` / `strategy-check.py` 用正则解析 stdout 的
-    `总 bet:` / `done N`, 声明若进 stdout 会污染它们)。
+  note: '落地 declare-only 处置 (PR #5145): `bin/plan/bet-ledger.py` 新增 `authority_declaration_lines()`,
+    在 `status` / `list` / `show` / `claim-check` 四个只读出口把 `root / HEAD / ledger blob
+    / origin/main 及其 ledger blob / 与 origin/main 是否一致` 打印到 **stderr**。**不拒绝、不改判定**;
+    stdout 逐字节 不变 (下游 `maturity-align.py` / `strategy-check.py` 用正则解析 stdout 的 `总
+    bet:` / `done N`, 声明若进 stdout 会污染它们)。
 
-    选 declare-only 而非 fail-closed 的理由: 本仓主工作区常年落后且这是常态, 失败即拦
-    会把既有脚本与 CI 在滞后树上打成硬失败 —— 属行为变更, 需 principal 另行裁决。
-    fail-closed 与 `state_root` 侧判据**仍未闭合**, 已写回 `decision_needed`。
+    选 declare-only 而非 fail-closed 的理由: 本仓主工作区常年落后且这是常态, 失败即拦 会把既有脚本与 CI 在滞后树上打成硬失败
+    —— 属行为变更, 需 principal 另行裁决。 fail-closed 与 `state_root` 侧判据**仍未闭合**, 已写回 `decision_needed`。
 
-    牙齿验过 (变异对照): 摘掉 `main()` 里的声明接线 ⇒
-    `tests/test_bet_ledger_authority_declaration.py::test_status_emits_declaration_on_stderr_not_stdout`
-    当场红; 恢复后 5 passed。判据覆盖正反两态 (blob 相等报「一致」、不等报「不一致」)
-    与缺读数态 (「无法比较」而非静默一致)。
-  actor: "governance-agent"
+    牙齿验过 (变异对照): 摘掉 `main()` 里的声明接线 ⇒ `tests/test_bet_ledger_authority_declaration.py::test_status_emits_declaration_on_stderr_not_stdout`
+    当场红; 恢复后 5 passed。判据覆盖正反两态 (blob 相等报「一致」、不等报「不一致」) 与缺读数态 (「无法比较」而非静默一致)。'
+  actor: governance-agent
+- at: '2026-11-09T06:01:48.080835+00:00'
+  action: close
+  note: Closed debt item.
+  actor: governance-agent/20261109T060043Z-gsm-a4649e5a
+closed_at: '2026-11-09T06:01:48.080682+00:00'

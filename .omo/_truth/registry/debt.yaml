@@ -41,3 +41,4 @@ seed_items:
 - .omo/debt/items/MDEAD-17-heartbeat-wrapper.yaml
 - .omo/debt/items/CRON-BARE-PYTHON3-PY39-IMPORT-DEATH.yaml
 - .omo/debt/items/DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL.yaml
+- .omo/debt/items/OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS.yaml
