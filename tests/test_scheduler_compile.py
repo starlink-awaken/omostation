@@ -468,6 +468,47 @@ def test_resolve_does_not_mistake_repo_local_modules_for_missing_deps(tmp_path) 
     assert str(shim) in new
 
 
+def test_resolve_substitutes_every_invocation_in_compound_command(tmp_path) -> None:
+    """`A && python3 B` 里第二、第三个调用点同样要换：登记面有 5 条作业长这样。
+
+    首版 (#5171) 只换第一个，后面的脚本一旦依赖 3.11+ 就继续留在 3.9 上，而 drift
+    检查按折叠口径比较（解释器路径本就被折掉）看不见这种残留 ⇒ 死作业隐身。
+    """
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "from datetime import UTC\n")
+    (root / "bin" / "second.py").write_text("import rich\n", encoding="utf-8")
+    shim = _make_shim(tmp_path / "both" / "bin", reject=[])
+    cmd = f"cd {root} && python3 bin/job.py && python3 bin/second.py --apply"
+    new, reason = cn.resolve_python_command(cmd, candidates=[str(shim)])
+    assert reason is None, reason
+    assert new.count(str(shim)) == 2, new
+    assert " python3 " not in new, new
+
+
+def test_resolve_reports_only_the_invocation_it_cannot_verify(tmp_path) -> None:
+    """逐点判定：一个调用点解不出，不连带放弃另一个已经证得起的替换。"""
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "from datetime import UTC\n")
+    (root / "bin" / "broken.py").write_text("this is not python (\n", encoding="utf-8")
+    shim = _make_shim(tmp_path / "part" / "bin", reject=[])
+    cmd = f"cd {root} && python3 bin/job.py && python3 bin/broken.py"
+    new, reason = cn.resolve_python_command(cmd, candidates=[str(shim)])
+    assert new.startswith(f"cd {root} && {shim} bin/job.py"), new
+    assert " && python3 bin/broken.py" in new, new
+    assert reason is not None and "unparseable" in reason, reason
+
+
+def test_pick_interpreter_is_not_poisoned_by_a_later_invocation(tmp_path) -> None:
+    """launchd 面只取第一个调用点的解释器；后面解不出不该把它一起抹成 None。"""
+    cn = _cron_normalize()
+    root = _fake_root(tmp_path, "from datetime import UTC\n")
+    (root / "bin" / "gone.py").write_text("x\n", encoding="utf-8")
+    (root / "bin" / "gone.py").unlink()
+    shim = _make_shim(tmp_path / "first" / "bin", reject=[])
+    cmd = f"cd {root} && python3 bin/job.py && python3 bin/gone.py"
+    assert cn.pick_interpreter(cmd, candidates=[str(shim)]) == str(shim)
+
+
 def test_resolve_skips_unfoldable_candidates(tmp_path) -> None:
     """basename 不是 python3[.N] 的候选会被拒绝 —— 否则替换读起来是永久假 drift。"""
     cn = _cron_normalize()
