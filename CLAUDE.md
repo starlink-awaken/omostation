@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-26
-last-reviewed: 2026-10-14
+last_updated: 2026-11-09
+last-reviewed: 2026-11-09
 lifecycle: entry
 status: active
 ---
@@ -23,7 +23,7 @@ status: active
 - **Architecture skeleton** (concepts only — full contracts in [`ARCHITECTURE.md`](ARCHITECTURE.md)): the `5+4+1+1` layering (L0 protocol → L1 runtime → L2 kernel → L3 entry → L4 docs), the `X1-X4` governance axes, and BOS URI domain routing. Binding runtime grammar is **道法术器 (DFSQ)** nested on MOF plus **脊面运行模式 (SFOP)** slots — [`docs/architecture/dao-fa-shu-qi.md`](docs/architecture/dao-fa-shu-qi.md) and [`docs/architecture/os-operating-pattern-v1.md`](docs/architecture/os-operating-pattern-v1.md). Agents must obey slot grammar (unique Mesh dispatcher, no parallel OS) rather than adding AGE-v2/resident/BCOS as a second control plane. Layer/project placement → [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md); BOS domains → ARCHITECTURE.md §4; entry surfaces → ARCHITECTURE.md §3.
 - **Document division of labor** (orthogonal SSOT — each doc owns one dimension):
 
-  - runtime facts → machine-readable SSOT (`.omo/state/system.yaml`, `docs/project-registry.yaml`, `protocols/*-registry.yaml`)
+  - runtime facts → machine-readable SSOT (`.omo/state/system.yaml` — untracked generated file, materialize with `python3 bin/gac/materialize-system-state.py`; `docs/project-registry.yaml`, `protocols/*-registry.yaml`)
   - stable architecture → [`ARCHITECTURE.md`](ARCHITECTURE.md) / [`LAYER-INDEX.md`](LAYER-INDEX.md)
   - operating rules → [`AGENTS.md`](AGENTS.md) + this file
   - front-door entry → [`README.md`](README.md)
@@ -81,8 +81,8 @@ make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
 
 **Agent Session Dashboard（ASD）**：会话冷启动信息聚合规格见
 [`docs/plans/2026-09-06-agent-session-dashboard-spec.md`](docs/plans/2026-09-06-agent-session-dashboard-spec.md)
-（`BET-Y1Q4-T9-03`）。MVP CLI（`bin/agent-session-dashboard.py`）由后续 `T9-04` 交付；在此之前用
-`omo-status` + `bet-ledger status` + bootstrap 组合代替。
+（`BET-Y1Q4-T9-03`，已 done）。MVP CLI（`bin/agent-session-dashboard.py`）当时列为后续 `T9-04`
+交付，但该 BET 未立项、脚本也未落地 —— 现状用 `omo-status` + `bet-ledger status` + bootstrap 组合代替。
 
 ### Step B.0.5 · 架构约束检查 (每次编辑会话)
 
@@ -95,15 +95,15 @@ make omo-top           # 或 bin/omo-top：Textual 实时 4 象限互动大盘
 
 ### Step B.1 · 需求迭代强制 Workflow（ADR-0203）
 
-所有需求迭代必须先 `start` 再改文件。详见 [`AGENTS.md` §1.1](AGENTS.md)。
+所有需求迭代必须先 `start` 再改文件。详见 [`AGENTS.md` §1](AGENTS.md)（第 4 条 · 需求迭代强制 Workflow）。
 
 ### Step B.2 · 三年规划执行台账
 
-不确定当前该做哪件事时，读台账，不要自行拟定任务。详见 [`AGENTS.md` §1.4](AGENTS.md)。
+不确定当前该做哪件事时，读台账，不要自行拟定任务。详见 [`AGENTS.md` §1](AGENTS.md)（Panorama Agent Brief）与 [`docs/plans/3y-bet-ledger.yaml`](docs/plans/3y-bet-ledger.yaml)。
 
 ### Step B.3 · 多 Agent 并行的 Git 纪律
 
-共享主树上并行的 agent 会互相删除产物。详见 [`AGENTS.md` §1.3](AGENTS.md) · skill `git-discipline`。
+共享主树上并行的 agent 会互相删除产物。详见 [`AGENTS.md` §6](AGENTS.md#6-git-and-submodules)（并发 agent 分支隔离）· skill `git-discipline`。
 
 ## 1.5 P74 Workflow Solidification Check (ADR-0130)
 
@@ -228,7 +228,7 @@ Rules carry lifecycles (`added_at`/`review_before`/`justification` in `governanc
 3. **从候选到门禁 (owner 决策)**
    rule-wiring-coverage 本可成为门禁, 前提是把三个注册表的 id 建立**别名映射
    (governance-checks↔L0-constraints↔bin executors↔hook-manifest)**。这是
-   **语义判定, 不是工具可自动完成** —— 见 `DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP.md`。
+   **语义判定, 不是工具可自动完成** —— 见 `.omo/debt/items/DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP.yaml`。
 
 4. **反模式勿碰**
    - 日期农场 (bulk bump `last-reviewed`) → 视为证据伪造, 回退。

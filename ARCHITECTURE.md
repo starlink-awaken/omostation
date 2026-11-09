@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-26
-last-reviewed: 2026-10-14
+last_updated: 2026-11-09
+last-reviewed: 2026-11-09
 lifecycle: entry
 status: active
 ---
@@ -21,7 +21,7 @@ status: active
 | State root (write plane, `$OMOSTATION_STATE_ROOT`) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `state_root()` / `event_ledger_path()` |
 | Runtime code install root (`$OMOSTATION_INSTALL_ROOT`) | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `install_root()` — locate the independent runtime clone; the accepted [dev/runtime root decision](.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md) records the historical cutover. Verify each service’s effective code and dependencies separately · `make runtime-install-root` |
 | Profile ledger stores (`~/.local/state/omostation/{prod,dev}`) | Resolve the active ledger with `event_ledger_path()` in the relevant process environment; distinguish the active store from explicitly non-authoritative snapshots by their provenance and the [dev/runtime root decision](.omo/_knowledge/decisions/0456-dev-runtime-profile-root.md). A directory name alone does not establish authority. |
-| Runtime state, health, active tasks | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `state_file_read()` for `.omo/state/system.yaml` · [runtime projection registry](.omo/_truth/registry/runtime-projections.yaml); generated files may be absent until materialized |
+| Runtime state, health, active tasks | [`bin/lib/repo_root.py`](bin/lib/repo_root.py) → `state_file_read()` for `.omo/state/system.yaml` (untracked generated file — materialize with `python3 bin/gac/materialize-system-state.py` on a clean checkout) · [runtime projection registry](.omo/_truth/registry/runtime-projections.yaml); generated files may be absent until materialized |
 | Current goals | [`.omo/goals/current.yaml`](.omo/goals/current.yaml) |
 | Project metadata | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | BOS services | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
@@ -49,7 +49,7 @@ status: active
 | 外部连接织层运行时边界 (ADR-0298) | [`.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md`](.omo/_knowledge/decisions/0298-external-connection-fabric-runtime-boundary.md) |
 | Workflow Mesh worker 租约与接管 (ADR-0299) | [`.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md`](.omo/_knowledge/decisions/0299-workflow-mesh-worker-lease-and-reclaim.md) |
 | Scene cards (9 cards, dual-track admission) | [`docs/scene-cards/`](docs/scene-cards/) · validate: `make scene-card-check` |
-| Journey specs (state machines) | [`docs/journey-specs/`](docs/journey-specs/) · validate: `make journey-check` |
+| Journey specs (state machines) | [`docs/journey-specs/`](docs/journey-specs/) · validate: `make journey-validate` |
 | Dual-track scene admission (ADR-0387) | [`.omo/_knowledge/decisions/0387-dual-track-scene-admission.md`](.omo/_knowledge/decisions/0387-dual-track-scene-admission.md) |
 | Scene execution engine | `bin/ssot/journey-runner.py` (rebuild) · `signal-poller.py` (感知面) · `scene-outcome-recorder.py` (结果面) |
 | Permission scope vocabulary | [`.omo/standards/permission-scope-vocabulary.yaml`](.omo/standards/permission-scope-vocabulary.yaml) |
@@ -191,6 +191,8 @@ external resource -> descriptor -> scene-bound admission -> capability route -> 
 ## 8. Recent Architecture Decisions
 
 > 2026-09-04 → 2026-09-12 新增。详见 [`.omo/_knowledge/decisions/INDEX.md`](.omo/_knowledge/decisions/INDEX.md) 完整 ADR 索引。
+>
+> 本表**冻结在该窗口**，不随新增决策滚动；此后的架构决策一律以 ADR 索引为准。
 
 | 决策 | 状态 | 详情 |
 |---|---|---|

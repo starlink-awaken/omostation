@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-06
-last-reviewed: 2026-10-14
+last_updated: 2026-11-09
+last-reviewed: 2026-11-09
 lifecycle: entry
 status: active
 ---
@@ -15,7 +15,7 @@ status: active
 
 | Need | Read |
 |------|------|
-| Current phase, health, active tasks | [`.omo/state/system.yaml`](.omo/state/system.yaml) |
+| Current phase, health, active tasks | [`.omo/state/system.yaml`](.omo/state/system.yaml) (untracked generated file — materialize with `python3 bin/gac/materialize-system-state.py` on a clean checkout) |
 | Project metadata and counts | [`docs/project-registry.yaml`](docs/project-registry.yaml) |
 | Full architecture contracts | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | BOS routes | [`projects/agora/etc/bos-services.yaml`](projects/agora/etc/bos-services.yaml) |
@@ -26,7 +26,7 @@ status: active
 The machine-derived layer table is [`docs/generated/project-layer-index.md`](docs/generated/project-layer-index.md). It is generated from [`docs/project-registry.yaml`](docs/project-registry.yaml) with:
 
 ```bash
-python3 "bin/project-layer-index.py" --write
+python3 "bin/mof/project-layer-index.py" --write
 ```
 
 ## BOS Domains
