@@ -47,19 +47,6 @@ DAEMON_TICKED_ROLES = frozenset(
 )
 
 
-def enabled_resident_roles() -> set[str] | None:
-    """从 services.yaml 取 enabled=True 的 resident 角色名集合。
-
-    返回 None 表示「读不到注册表」(缺文件/解析失败), 此时调用方应退回
-    「全部水位都算在役」的旧行为, 而不是静默把全部角色豁免。
-
-    角色 id 形如 `resident.decision`, 水位文件形如 `resident-decision.json`,
-    故比对前把 `.` 换成 `-`。
-    """
-    roles = {role for role, _root in resident_role_state_roots().items()}
-    return roles or None
-
-
 def resident_role_state_roots() -> dict[str, Path | None]:
     """enabled 的 resident 角色 → 该服务声明的状态根 (未声明则 None = 检出根)。
 
