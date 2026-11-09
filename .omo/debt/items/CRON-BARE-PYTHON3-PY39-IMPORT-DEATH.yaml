@@ -8,7 +8,7 @@ scope: workspace
 severity: high
 weight: 0.2
 entropy_class: medium
-lifecycle_state: identified
+lifecycle_state: in_progress
 owner: governance-team
 affected_roots:
 - crontab(已装面)
@@ -66,7 +66,9 @@ evidence_refs:
   加载 `bin/gac/gate-evidence-receipt.py:21`、`panorama_cache.py:18-20` 加载 `bin/panorama/panorama-collect.py:32` ——
   二者入口文件自身都不含裸导入. ⇒ 以「数登记面 command 指向的文件」为口径的补计或门禁必然低报; 本项的 8 条以**解释器实跑差分 + 日志末行 ImportError** 为准, 不以静态扫描为准. 对决策(1)②
   的直接影响: 收敛单元是导入闭包, 不是入口清单, 且闭包可跨出版本控制目录.'
-mitigation_refs: []
+mitigation_refs:
+  - "PR #5171 (origin/main@be298ba44) —— scheduler-compile / install-cron-plane 两个发射点共用按宿主解析的解释器口径, 登记面保持中性"
+  - "PR #5174 (origin/main@dabd44465) —— 解析改逐调用点判定, 收掉复合命令第二个之后的裸 python3"
 opened_at: '2026-11-09'
 last_reviewed_at: '2026-11-09'
 next_review_at: '2026-11-16T00:00:00+00:00'
@@ -93,4 +95,16 @@ history:
   note: '为 A 项裁决补三项读数, 不改三问: ① 跨宿主解释器 (mini 仅 python3.15 ⇒ 决策(1)① 只剩一条无契约保证的候选); ② 第 8 条死作业 panorama-cache-5min
     (288 次/日, 登记面内、入口与日志都在仓外, 静态按 command 分类必漏); ③ 静态 6/3/6/1 与实测 7+1 的传递导入差额 ⇒ 补计口径应是导入闭包. 未触碰 crontab / registry
     / 任何 import 语句, 三问仍待 owner 裁决.'
+  actor: governance-agent
+- at: '2026-11-09T08:24:00+00:00'
+  action: resolve_partial
+  note: '决策(1) 由 owner 2026-11-09 选定 ③ 并授权实施, 两处合入 main: #5171 把解释器解析收进 `cron_normalize.resolve_python_command`/`pick_interpreter`, 由 `scheduler-compile.compile_crontab` 与 `install-cron-plane._compiled_lines` 两个发射点共用 (登记面仍写裸 `python3`, 靠 `normalize_interpreter` 的折叠保证 drift 干净); #5174 修掉 #5171 只换复合命令**第一个** python3 的漏形状 —— 登记面 87 条里 5 条是 `A && python3 B && python3 C`, 而折叠口径的比较键看不见解释器差异, 这类残留对 `--check` 永远隐形。'
+  actor: governance-agent
+- at: '2026-11-09T08:24:30+00:00'
+  action: evidence
+  note: '本机 (mbp) 实装读数: `crontab -l` 有效行 67 → 67 (作业零增删), 裸 `python3` 调用点 18 → 0 (单位是调用点不是行: 15 行里含 18 个调用点), `/usr/bin/python3` 调用点 4 → 0; 落地解释器分布 Workspace/.venv(3.13.13) 19 / homebrew python3(3.15.2) 12 / homebrew python3.13(3.13.18) 10 / projects/ecos/.venv 3 / zhixing-dashboard/.venv 1。 `scheduler-compile --check` drift_count=0 / orphan_count=0。金丝雀 scene-signal-poller 先单条装载, 由 cron 自身 15:45:02 触发, 日志 11825→11859 行且无 ImportError, 随后全量。回滚件 /tmp/crontab-backup-*。'
+  actor: governance-agent
+- at: '2026-11-09T08:24:40+00:00'
+  action: correct
+  note: '两条立案前提被今天的数据推翻, 记下来以免后续按旧事实裁决: ① `docs/pitfalls.md:301` 的 crontab 写入 EINTR 今天未复现 —— `install-cron-plane.py --install` 两次全程 rc=0 并落盘 68 行, 因此「登记面改了也收敛不了 已装面」这条阻塞解除; ② 死作业计数存在未归一的口径差: 本项按「解释器实跑差分 + 日志末行 ImportError」记 8 条 (7 仓内 + 1 panorama), 今日安装前按模块顶层 ImportError 探测给 9 (单位是作业行, 15 行裸 python3 中的 9 行)。9 vs 7 的差额 1 未在今天的测量中定位, 复核时按本项原口径 (实跑 rc + 日志末行) 重跑即可, 不要各自另起计数单位。 未覆盖面也照记: `compile_launchd` 的 `ProgramArguments[1]` 仍把整条 shell 串当单参数 (#5171 只修了其中的硬编码 解释器), mini 侧 36 行裸 `python3` 未实装。决策(2) `normalize_interpreter` 等价是否收窄、决策(3) 可执行性门禁 起法, 两项仍待 owner 裁决。'
   actor: governance-agent
