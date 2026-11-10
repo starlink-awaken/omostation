@@ -98,6 +98,30 @@ def _base_clock(value: str) -> datetime:
     return clock
 
 
+def _panorama_base_candidates() -> list[dict]:
+    """读侧与写侧的候选路径 —— 两者不同根时让错位自描述, 不必重新发现。
+
+    实测 (2026-11-10, PANORAMA-GATE-DETAIL-UNRELIABLE)：读侧是
+    `state_root()/runtime/dashboard/data.json`，而生产者写
+    `PANORAMA_ROOT/runtime/dashboard/data.json`；本机两者不同根 ⇒ 读侧
+    `FileNotFoundError` ⇒ 门禁 cohort 冻结 13 天。旧实现只报
+    `error: FileNotFoundError` 与上一份读到的 source，下一个诊断者得重新推
+    一遍写侧在哪（本轮实际花掉十余个回合）。
+    """
+    out: list[dict] = []
+    try:
+        from repo_root import state_root
+        reader = Path(state_root()) / "runtime/dashboard/data.json"
+        out.append({"role": "reader", "path": str(reader), "exists": reader.is_file()})
+    except Exception:  # noqa: BLE001 — 诊断本身不得影响主流程
+        pass
+    producer_root = os.environ.get("PANORAMA_ROOT")
+    if producer_root:
+        writer = Path(producer_root).expanduser() / "runtime/dashboard/data.json"
+        out.append({"role": "writer", "path": str(writer), "exists": writer.is_file()})
+    return out
+
+
 def _read_panorama_base() -> tuple[dict, bytes, Path]:
     # The explicit runtime profile is required: a unit test or ad-hoc import
     # must not silently read the operator's canonical workspace.
@@ -186,7 +210,8 @@ def merge_panorama_base(data: dict, previous: dict, attempted_at: str) -> None:
             status="STALE_UNAVAILABLE" if bound else "UNAVAILABLE", available=False,
             observed_at=prior.get("observed_at") if bound else None,
             last_attempt_at=attempted_at, last_success_at=prior.get("last_success_at") if bound else None,
-            error=reason, base_sha256=_base_digest(data))
+            error=reason, base_sha256=_base_digest(data),
+            candidates=_panorama_base_candidates())
 
 
 
