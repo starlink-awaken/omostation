@@ -168,3 +168,23 @@ history:
     该单明确把改 plist / launchctl 列为不做），本条余下未决项应改为「base 生产者 code root 与 base 落根
     的裁定 + 根错位修复」，而不是继续在资产发布面上找原因。
   actor: "governance-agent"
+- at: "2026-11-10T08:50:00+00:00"
+  action: review
+  note: >-
+    **同一根因的第二个冻结 cohort（实测补记）**：`current.json` 的 `source_states` 里
+    `personal_value_truth` 亦为 `UNAVAILABLE`，`last_success_at: 2026-10-28T08:18:27Z` —— 与
+    `panorama_base` 的 `2026-10-28T07:27:34Z` **同一天**，即 2026-10-28 那次根切换一次性冻住了两个 cohort。
+    机制与 base 不同：`orchestrator.py:509-516` 对 `personal_value_truth` 采集器断言
+    `PANORAMA_ROOT == state_root()`（不等即 `raise ValueError("managed_state_root_mismatch")`），
+    而本机作业 env 是 `PANORAMA_ROOT=/Users/xiamingxing/.local/opt/omostation` +
+    `OMOSTATION_STATE_ROOT=/Users/xiamingxing/.local/state/omostation/prod` —— **恰好违反**；
+    异常被 `orchestrator.py:558-585` 的 collector 分支吞掉，转成
+    `personal_value.unavailable_projection(reason)` 并**保留** 2026-10-28 的 `value_truth`
+    （`value_truth_state: STALE_UNAVAILABLE`、`retained_value_truth: true`），
+    故面板看着「有历史值」，实际 13 天没有新观测。
+    **影响**：驾驶舱的 value-proof（价值证据）与门禁 cohort 双双停在 2026-10-28 ——
+    这已不是「detail 字段不可信」，而是**聚合平面的两块 truth 停止更新**。
+    **与 base 的关系**：两者同源于「`PANORAMA_ROOT` / `state_root()` / 作业 env 三者不一致」，
+    但一个走 FileNotFoundError、一个走 managed_state_root_mismatch，**两条独立的失败路径**，
+    修复时不能用同一处改动覆盖。
+  actor: "governance-agent"
