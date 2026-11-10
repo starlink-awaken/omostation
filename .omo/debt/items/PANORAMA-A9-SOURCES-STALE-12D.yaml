@@ -1,0 +1,40 @@
+id: "PANORAMA-A9-SOURCES-STALE-12D"
+title: "A9 的两个证据源 12 天无成功观测，PARTIAL 永不被判据接受导致 A9 长期不可闭合"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "high"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- ~/.local/share/zhixing-dashboard/current.json
+- ~/.local/share/zhixing-dashboard/revisions/
+- bin/panorama/panorama-collect.py
+mitigation_refs: []
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-11-13"
+gate_level: watchlist
+x1_policy_ref: ""
+x3_tier: "Operational"
+decision_needed: >-
+  先定性质再决定修哪一侧：① 查 strategy 采集器自 2026-10-28T08:18Z、documents 采集器自
+  2026-10-29T03:22Z 之后为什么再无成功观测（进程通路失败，还是这两源在本机已无数据源）；
+  ② 若属"结构性不可得"，则 A9 应把它们移出 required_sources 或给出显式 NOT_APPLICABLE 出口，
+  而不是让 A9 永远 PARTIAL；③ 若属"应当可得但坏了"，则修采集，并给 PARTIAL 加与
+  STALE_UNAVAILABLE/FAIL 同族的年龄界（现状是 PARTIAL 任何年龄都不接受，见
+  PANORAMA-A9-DEFERRED-UNBOUNDED）。判据复算：
+  python3 -c "import json;d=json.load(open('/Users/xiamingxing/.local/share/zhixing-dashboard/current.json'));print({k:(v.get('status'),v.get('last_success_at')) for k,v in d['source_states'].items() if k in ('strategy','documents')})"
+history:
+- at: "2026-11-10T02:39:00+00:00"
+  action: identify
+  note: >-
+    BET-Y2Q4-T10-343 发布收尾时顺带浮出：scheduler 的幻影 --json 消除后，A9 仍报
+    PARTIAL，剩余缺失证据是 strategy/documents 两项，陈旧时长分别约 306h 与 287h
+    （2026-11-10 02:36Z 快照实测）。此前这两项被 scheduler 的 exit 2 排在同一条
+    detail 里而不显眼，不是本次发布引入的回归。
+  actor: "governance-agent"

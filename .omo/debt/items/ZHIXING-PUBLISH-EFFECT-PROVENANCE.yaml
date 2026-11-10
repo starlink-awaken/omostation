@@ -1,0 +1,50 @@
+id: "ZHIXING-PUBLISH-EFFECT-PROVENANCE"
+title: "判断「host 发布到底改变了哪一字节」没有可靠通路：运行时身份字段与常驻进程归属都读不出来"
+dimension: "governance"
+subdimension: "tooling"
+domain: "tooling"
+scope: "host"
+severity: "medium"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- bin/gac/zhixing-host-sync.py
+- ~/.local/share/zhixing-dashboard/releases/
+- ~/.local/share/zhixing-dashboard/revisions/
+- docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
+mitigation_refs:
+- ~/Library/LaunchAgents/com.omostation.zhixing-dashboard-refresh.plist
+- ~/Library/LaunchAgents/com.omostation.zhixing-dashboard.plist
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-11-13"
+gate_level: watchlist
+x1_policy_ref: ""
+x3_tier: "Operational"
+decision_needed: >-
+  2026-11-10 发布 BET-Y2Q4-T10-343 时，我为了回答"线上生效了没有"连续误判四次，根因是缺一条
+  可直接判定的通路。三个实测障碍：
+  ① `zhixing-host-sync.py` 的 `check`/`plan` 拿**运行它的树**当源真值，用落后 main 的共享主树跑
+  就报 `in_sync`（假安心）；② `revisions/*/manifest.json` 的 `producer.root_oid` 与
+  `collector_sha256` 读起来像"哪份代码在执行"，实际在我发布前 2.5h 就已是目标值
+  （48 份 revision 恒 `f891ad40…`），采集侧 `panorama-collect.py` 有清单路径（`:571-582`）与
+  现场 git 根路径（`:585-588`）两条，走哪条、`ZHIXING_DASHBOARD_CODE_ROOT` 指向何处未查；
+  ③ `current` 符号链接翻转后，300s 刷新任务自动吃新代码，但常驻 `live_server.py`（pid 50155）
+  的 cwd 仍停在发布前 release，publish 不换它。
+  要决定的是：给 publish 加一个"发布后自证"步骤（读运行时产物与发布前后指纹做定向 diff 并写进
+  退出结果，替我现在手写 `--json` 计数的土办法），或至少让 `check` 明确报告它比对的是哪棵树、
+  以及常驻进程当前归属哪个 release。单文件发布继承同目录其他文件的漂移
+  （`panorama-collect-main.py` 仍 `fa7eb9c1…`，其内 15 处 `--json` 是各自 CLI 正常用法）
+  也应在自证输出里显式列出，而不是要人自己去比哈希。
+history:
+- at: "2026-11-10T02:41:00+00:00"
+  action: identify
+  note: >-
+    本次发布的效应最终只能靠两处独立实测钉住：`collectors/scheduler.py` 内容哈希
+    28ad3162…（含 `--json` 2 处）→ 51f2b281…（0 处），以及线上快照里
+    `diagnostic command exit 2` 由 1 次归零、`scheduler.status` 转 OK。
+    过程性教训已入 docs/pitfalls.md（「发布通道的 in_sync 读数在陈旧树上等于两边同为旧版」条）。
+  actor: "governance-agent"
