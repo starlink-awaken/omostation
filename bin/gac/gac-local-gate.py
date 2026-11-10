@@ -1267,6 +1267,20 @@ def run_gate(
     return report
 
 
+def _print_broken_skips(checks_list: list[dict]) -> None:
+    """只报**实际被跳过**的 broken 检查。
+
+    旧实现无条件打印 `len(BROKEN_CHECKS)` —— 于是 `--strict` 下这 6 项明明
+    已经执行 (实测 69 → 87 项), 提示却仍说它们被跳过, 且附一句
+    「use --strict to include」(此时 --strict 已给)。读数与实现不符。
+    改为拿实际执行的 check 名做差集, 并把名字列出来。
+    """
+    ran = {c.get("name") for c in checks_list}
+    skipped = sorted(BROKEN_CHECKS - ran)
+    if skipped:
+        print(f"  ⚠️  {len(skipped)} broken/known-unavailable checks skipped (use --strict to include): {', '.join(skipped)}")
+
+
 def print_human(
     report: dict[str, object],
     verbose: bool = False,
@@ -1297,8 +1311,7 @@ def print_human(
         else:
             tail = "ALL GREEN"
         print(f"GaC local gate: PASS ({checks_count} checks executed, {tail})")
-        if BROKEN_CHECKS:
-            print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
+        _print_broken_skips(checks_list)
         if emit_events:
             _emit_gate_events(is_ok, report.get("hard_fails"), report.get("soft_warns"))
         return
@@ -1327,8 +1340,7 @@ def print_human(
         for topic in topics:
             t = topic if isinstance(topic, dict) else {}
             print(f"  [{str(t.get('severity', 'info')).upper()}] {t.get('topic')}: {t.get('summary')}")
-    if BROKEN_CHECKS:
-        print(f"  ⚠️  {len(BROKEN_CHECKS)} broken/known-unavailable checks skipped (use --strict to include)")
+    _print_broken_skips(checks_list)
     hard_raw = report.get("hard_fails")
     hard_count = len(hard_raw) if isinstance(hard_raw, list) else 0
     soft_raw = report.get("soft_warns")
