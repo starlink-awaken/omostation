@@ -1,5 +1,5 @@
 id: "BOS-KEMS-STATUS-DIVERGENT"
-title: "kems 的 4 条 BOS URI 在 bos-services.yaml 标 active、在 services.yaml 标 enabled=false/manual —— 两个登记面互相矛盾, bos-uri-verify 因此恒报不可达"
+title: "bos-uri-verify 会去探手动能力 (scheduler=manual) 的 HTTP 端点 —— kems 4 条恒报不可达 (订正: 不是两面矛盾, 是探针缺手动能力概念)"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -31,10 +31,16 @@ decision_needed: >-
     而 `bin/ssot/bos-uri-verify.py:174` 只跳过 `deprecated/unimplemented/planned`
     —— 于是这 4 条 (`bos://memory/kems/{status,graph,ocr-queue,forecast}`)
     每次都被当活跃 HTTP 服务去探, 恒报 `unreachable` (localhost:8090 无监听)。
-  要决定的是: BOS 登记是否需要补 `scheduler: manual`/`trigger: on_demand` 词汇
-  (现有 active/deprecated/unimplemented/planned 四值表达不了「手动能力」),
-  以及 `bos-uri-verify` 是否据此跳过。另一条路是把 4 条直接标 `deprecated`
-  —— 但语义不对 (它们不是被废弃, 而是从未作为守护进程实现)。
+  **订正 (2026-11-10 复算)**: 此前把本条框成「两个登记面互相矛盾」是**不准确的**。
+  复算 `services.yaml` 全体: 318 条带 `disabled_reason`, 其中 **264 条是
+  `scheduler: manual`**, 且 `enabled: false` 共 324 条 —— 即「手动能力 =
+  services 面 enabled:false」是**常态**, 不是 kems 独有; BOS 面的 `status: active`
+  表达的是「URI 有效」, 与 services 面的「是否受管守护进程」**不同维**, 两者并不矛盾。
+  真正的缺陷只有一个: **`bos-uri-verify` 缺「手动能力」概念** —— 它按 `transport: http`
+  就去探活, 而手动能力根本没有常驻端点。
+  要决定的是: 探针该不该跳过 `scheduler: manual` 的服务 (需要让它读到 services.yaml,
+  或让 BOS 登记补 `scheduler`/`trigger` 词汇), 以及这种「URI 有效但无守护进程」的
+  条目在 BOS 面该用什么状态表达。
   附带: `bos-uri-verify` 本身**未接线** (不在任何 workflow / sgf-policy /
   Makefile / gac-local-gate), exit 0, 属建议性检查。
 history:
@@ -46,4 +52,19 @@ history:
     全仓无 kems 退役 ADR, 也没有 kems 服务端 (projects/runtime/scripts/kems-v2/
     只有 check 脚本)。两处登记的状态分歧是确定的, 缺的是「该信哪一边 + 探针该不该
     跳过手动能力」这个裁决。
+  actor: "governance-agent"
+- at: "2026-11-10T07:10:00+00:00"
+  action: review
+  note: >-
+    **订正本条自身的框定** (复算 `services.yaml` 全体后): 此前写「两个登记面互相
+    矛盾」是错的。实测 383 条服务里 318 条带 `disabled_reason`, 其中 264 条是
+    `scheduler: manual`; `enabled` 取值分布 false=324 / true=57。也就是
+    「手动能力 ⇒ services 面 enabled:false」是**常态而非分歧**; BOS 面的
+    `status: active` 表达「URI 有效」, 与服务面的「是否受管守护进程」**不同维**,
+    两者并不矛盾 (把 233 条有 uri 的服务全比一遍, 233/233 都是
+    「bos=active / services=disabled」——即这是全局形态, 不是 kems 的特例)。
+    本条真正要修的是: **探针缺「手动能力」概念** —— `bos-uri-verify` 按
+    `transport: http` 就去探活, 而手动能力根本没有常驻端点 (kems 只是碰巧
+    最明显的一例)。裁决项因此收窄为一个: 探针该不该跳过手动能力, 以及这种
+    「URI 有效但无守护进程」的条目在 BOS 面该用什么状态表达。
   actor: "governance-agent"
