@@ -320,6 +320,145 @@ def test_missing_registry_is_exit_two(tmp_path: Path) -> None:
     assert gate.main(["--registry", str(tmp_path / "nope.yaml")]) == 2
 
 
+# ── 形状 4：已装面（决策(2) 改判 B′）─────────────────────────────────────
+# 登记面判的是「声明的解释器能不能跑」，已装面判的是「cron 实际执行的那一行里的解释器
+# 还在不在」。安装侧按宿主重写解释器，所以两者不是同一个对象：venv 被删、homebrew 换了
+# 版本号、手工 crontab -e 钉一个不存在的路径，整行折回比较(--check)一律判 ok。
+def _plane_repo(tmp_path: Path, interp_in_registry: str = "python3") -> Path:
+    return _repo(
+        tmp_path,
+        {
+            ".omo/cron/registry.yaml": yaml.safe_dump(
+                {
+                    "jobs": [
+                        {
+                            "name": "plane-job",
+                            "schedule": "17 3 * * *",
+                            "command": f"cd {tmp_path} && {interp_in_registry} bin/plain.py",
+                            "owner": "platform-team",
+                            "status": "active",
+                            "planes": ["crontab"],
+                        }
+                    ]
+                },
+                allow_unicode=True,
+            ),
+            "bin/plain.py": "import os  # noqa\n",
+        },
+    )
+
+
+def _plane_jobs(root: Path) -> list[dict]:
+    return yaml.safe_load((root / ".omo/cron/registry.yaml").read_text(encoding="utf-8"))["jobs"]
+
+
+def test_dead_interpreter_in_installed_line_is_a_plane_gap(tmp_path: Path) -> None:
+    """已装行钉了不存在的解释器 ⇒ 缺口，即使登记面一个字没改、写法被折成同一个键。
+
+    配对用 `normalize_interpreter` 的整行折回 —— 那正是它本来的用途，不另发明匹配：
+    登记面 `python3` 与已装行 `/no-such-venv/bin/python3` 折回后同键 ⇒ 认定同一个作业。
+    """
+    root = _plane_repo(tmp_path)
+    jobs = _plane_jobs(root)
+    dead = f"17 3 * * * cd {tmp_path} && {tmp_path}/no-such-venv/bin/python3 bin/plain.py"
+    res = gate.evaluate(jobs, registry=root / ".omo/cron/registry.yaml", repo_root=root,
+                        now=datetime.date(2026, 12, 1), installed_plane=[dead])
+    # 配对非零才证明判据真跑了：配不上也会得到 0 缺口，那是恒真绿
+    assert (res["plane_lines_scanned"], res["plane_paired_lines"]) == (1, 1)
+    assert (res["plane_gaps"], res["verdict"]) == (1, "FAIL")
+    assert res["blocking_gaps"] == res["registry_gaps"] + res["plane_gaps"]
+    assert "已不存在" in res["plane_gap_details"][0]["reason"]
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="正控制需要一个过版本下限的真解释器")
+def test_same_installed_line_with_live_interpreter_is_not_a_gap(tmp_path: Path) -> None:
+    """正控制：只把解释器换成真的，其余一字不动 ⇒ 0 缺口（上面那条红不是恒真）。"""
+    root = _plane_repo(tmp_path, interp_in_registry=sys.executable)
+    jobs = _plane_jobs(root)
+    live = f"17 3 * * * cd {tmp_path} && {sys.executable} bin/plain.py"
+    res = gate.evaluate(jobs, registry=root / ".omo/cron/registry.yaml", repo_root=root,
+                        now=datetime.date(2026, 12, 1), installed_plane=[live])
+    assert (res["plane_paired_lines"], res["plane_gaps"], res["verdict"]) == (1, 0, "OK")
+
+
+def test_unregistered_installed_line_is_counted_not_gapped(tmp_path: Path) -> None:
+    """未登记的已装行（手工装的、known_orphans 那类）坏掉照记，不计入本仓缺口。
+
+    把「未登记」报成「跑不了」是把归属问题读成健康问题；但悄悄丢掉这条信息就又回到
+    「--check 绿而作业死」。
+    """
+    root = _plane_repo(tmp_path)
+    jobs = _plane_jobs(root)
+    foreign = f"5 6 * * * {tmp_path}/who-put-this-here/bin/python3 bin/plain.py"
+    res = gate.evaluate(jobs, registry=root / ".omo/cron/registry.yaml", repo_root=root,
+                        now=datetime.date(2026, 12, 1), installed_plane=[foreign])
+    # 配不上任何登记条目时，自证标记一起亮 —— 已装面看得见调用点却认不出归属，
+    # 这时「0 缺口」不能算干净的绿（WARN 级，不翻退出码）。
+    assert (res["plane_paired_lines"], res["plane_gaps"], res["plane_pairing_suspicious"]) == (0, 0, 1)
+    assert res["verdict"] == "WARN"
+    assert res["plane_unregistered_broken"] == 1
+    assert "who-put-this-here" in res["plane_unregistered_details"][0]["interpreter"]
+
+
+def test_bare_python3_in_installed_plane_is_counted_not_judged(tmp_path: Path) -> None:
+    """裸 `python3` 写法只计数不判定 —— 判它要建模 cron 的 PATH，本判据不假装能做到。"""
+    root = _plane_repo(tmp_path)
+    jobs = _plane_jobs(root)
+    bare = f"17 3 * * * cd {tmp_path} && python3 bin/plain.py"
+    res = gate.evaluate(jobs, registry=root / ".omo/cron/registry.yaml", repo_root=root,
+                        now=datetime.date(2026, 12, 1), installed_plane=[bare])
+    assert (res["plane_paired_lines"], res["plane_bare_tokens"], res["plane_gaps"]) == (1, 1, 0)
+
+
+def test_plane_gap_also_waits_for_the_deadline(tmp_path: Path) -> None:
+    """已装面缺口与登记面缺口共用同一条限期，不另开第二个日子。"""
+    root = _plane_repo(tmp_path)
+    jobs = _plane_jobs(root)
+    dead = f"17 3 * * * cd {tmp_path} && {tmp_path}/no-such-venv/bin/python3 bin/plain.py"
+    kw = dict(registry=root / ".omo/cron/registry.yaml", repo_root=root, installed_plane=[dead])
+    warn = gate.evaluate(jobs, now=datetime.date(2026, 11, 11), **kw)
+    hard = gate.evaluate(jobs, now=datetime.date(2026, 12, 1), **kw)
+    assert (warn["verdict"], warn["plane_gaps"]) == ("WARN", 1)
+    assert (hard["verdict"], hard["plane_gaps"]) == ("FAIL", 1)
+
+
+def test_no_cron_plane_host_scans_no_installed_lines(tmp_path: Path) -> None:
+    """没装 cron 平面的宿主(CI)：已装面 0 行、0 配对、0 缺口 —— 宿主差异不是缺陷。"""
+    root = _plane_repo(tmp_path)
+    jobs = _plane_jobs(root)
+    res = gate.evaluate(jobs, registry=root / ".omo/cron/registry.yaml", repo_root=root,
+                        now=datetime.date(2026, 12, 1), installed_plane=[])
+    assert (res["plane"], res["plane_lines_scanned"], res["plane_paired_lines"], res["blocking_gaps"]) == (
+        "absent", 0, 0, 0,
+    )
+
+
+def test_plane_pairing_failure_is_reported_not_silently_green(tmp_path: Path) -> None:
+    """已装面有 python 调用点却一行都配不上 ⇒ 报「配对全空」，而不是 0 缺口的绿。
+
+    钉的是判据自己的失效形状：折回口径一改（或登记面的 schedule/command 写法漂移），
+    整条已装面扫描会静默空转 —— 那种绿比红更危险，因为它长得和「本机干净」一模一样。
+    """
+    root = _plane_repo(tmp_path)
+    jobs = _plane_jobs(root)
+    orphanish = f"17 3 * * * cd {tmp_path} && {tmp_path}/no-such-venv/bin/python3 bin/plain.py"
+    # 把登记条目的 schedule 改掉 ⇒ 已装行再也配不上，但调用点还在
+    reg = root / ".omo/cron/registry.yaml"
+    data = yaml.safe_load(reg.read_text(encoding="utf-8"))
+    data["jobs"][0]["schedule"] = "1 1 2 3 *"
+    reg.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    res = gate.evaluate(_plane_jobs(root), registry=reg, repo_root=root,
+                        now=datetime.date(2026, 12, 1), installed_plane=[orphanish])
+    assert (res["plane_python_sites"], res["plane_paired_lines"], res["plane_pairing_suspicious"]) == (1, 0, 1)
+    assert res["verdict"] == "WARN"  # advisory 级：不翻退出码，但不静默
+    # 正控制：schedule 改回去 ⇒ 配对恢复，可疑标记消失
+    data["jobs"][0]["schedule"] = "17 3 * * *"
+    reg.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    res = gate.evaluate(_plane_jobs(root), registry=reg, repo_root=root,
+                        now=datetime.date(2026, 12, 1), installed_plane=[orphanish])
+    assert (res["plane_paired_lines"], res["plane_pairing_suspicious"], res["plane_gaps"]) == (1, 0, 1)
+
+
 # ── 同源约束：限期不能有两份值 ─────────────────────────────────────────────
 def test_deadline_matches_governance_rule():
     checks = yaml.safe_load((_ROOT / ".omo/_truth/registry/governance-checks.yaml").read_text(encoding="utf-8"))
@@ -366,6 +505,9 @@ def test_real_registry_is_assessable() -> None:
     # 本机不是 cron 宿主时作业会整批落到 jobs_off_host（CI 的形状）；两个数之和才证明
     # 「调用点看得见」，只扫 jobs_scanned 会让这台机器上的绿依赖宿主身份。
     assert res["jobs_scanned"] + res["jobs_off_host"] > 0
+    # 已装面的非空转由 test_plane_pairing_failure_is_reported 钉；这里注入的是玩具 plane，
+    # 拿它断言配对非零会红，所以只断言计数之间的关系：有调用点就必须给出配对数或可疑标记。
+    assert res["plane_python_sites"] >= res["plane_paired_lines"]
     assert set(res) >= {
         "verdict",
         "blocking_gaps",
@@ -373,6 +515,13 @@ def test_real_registry_is_assessable() -> None:
         "undetermined_edges",
         "jobs_off_host",
         "plane",
+        "plane_lines_scanned",
+        "plane_paired_lines",
+        "plane_gaps",
+        "plane_unregistered_broken",
+        "plane_bare_tokens",
+        "plane_python_sites",
+        "plane_pairing_suspicious",
         "gaps",
         "advisories",
     }
