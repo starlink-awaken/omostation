@@ -8,7 +8,7 @@
 4. 提示 commit / push / gh pr 步骤 (不自动执行, 因风险)
 
 用法:
-  python3 bin/plan/bet-closeout-auto.py <bet-id> [--evidence-file PATH] [--dry-run]
+  python3 bin/plan/bet-closeout-auto.py <bet-id> [--dry-run]
 
 依赖:
   bin/plan/bet-ledger.py  (status / lint / complete)

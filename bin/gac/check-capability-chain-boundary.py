@@ -13,7 +13,6 @@ rule_id: CR-X4-CAPABILITY-CHAIN-BOUNDARY
 用法:
     python3 bin/gac/check-capability-chain-boundary.py        # 全量扫
     python3 bin/gac/check-capability-chain-boundary.py --json  # JSON 输出
-    python3 bin/gac/check-capability-chain-boundary.py --ci    # CI 模式 (需要 MCP server)
 """
 
 from __future__ import annotations

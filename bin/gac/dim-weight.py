@@ -12,7 +12,7 @@
 
 使用:
   python3 bin/gac/dim-weight.py
-  python3 bin/gac/dim-weight.py --json
+  python3 bin/gac/dim-weight.py --format json
   python3 bin/gac/dim-weight.py --reset  # 强制使用默认权重
 """
 

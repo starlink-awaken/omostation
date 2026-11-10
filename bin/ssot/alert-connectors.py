@@ -10,7 +10,7 @@
 用法 (由 observability-events.py notify 调用, 或独立):
   python3 bin/ssot/alert-connectors.py list          # 列出已配置 channel
   python3 bin/ssot/alert-connectors.py health        # 探活所有 channel
-  python3 bin/ssot/alert-connectors.py send --provider slack --severity critical --title X --body Y
+  python3 bin/ssot/alert-connectors.py send --channel slack --severity critical --title X --body Y
 """
 
 from __future__ import annotations

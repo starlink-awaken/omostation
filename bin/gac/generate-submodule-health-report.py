@@ -4,7 +4,6 @@
 
 使用:
   python bin/gac/generate-submodule-health-report.py           # 生成报告
-  python bin/gac/generate-submodule-health-report.py --json    # JSON 输出
 """
 import json
 import subprocess

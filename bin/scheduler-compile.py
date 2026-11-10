@@ -2,9 +2,8 @@
 """scheduler-compile.py — 调度编译器 v1: 登记源 → 编译三格式产出 (ADR-A 生成模式).
 
 从 .omo/cron/registry.yaml 单一登记源编译:
-  --format crontab   输出标准 crontab 格式行
-  --format launchd   输出 launchd plist 骨架
-  --format github    输出 GitHub Actions schedule YAML 片段
+  --generate crontab   输出标准 crontab 格式行
+  --generate launchd   输出 launchd plist 骨架
 
 用法:
   python3 bin/scheduler-compile.py --check     # 校验登记↔安装一致性

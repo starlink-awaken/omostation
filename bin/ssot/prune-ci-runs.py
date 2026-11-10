@@ -12,7 +12,6 @@ GitHub repo 达到 40000 runs 保留上限后, check-suite 计算 (cursor queue)
   python3 bin/ssot/prune-ci-runs.py --dry-run          # 预览将删除的 runs
   python3 bin/ssot/prune-ci-runs.py --before 2026-08-01  # 删除指定日期前 completed runs
   python3 bin/ssot/prune-ci-runs.py --keep 5000          # 保留最近 5000 个 runs, 删除更旧的
-  python3 bin/ssot/prune-ci-runs.py --status 40000        # 目标: 删到剩余 ~40000-keep
 
 安全: 仅删除 status=completed 的 runs; --dry-run 默认开; 真实删除需 --apply.
 """

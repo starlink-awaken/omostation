@@ -6,7 +6,8 @@
 
 用法:
   python3 bin/gac/session-handoff.py --session <id> --agent <name> \
-    --summary "one-line" --files f1 f2 --verify-cmd "pytest -q"
+    --summary "one-line" --verify-cmd "pytest -q"
+  (changed_files 由 git 自动采集, 无需传 --files)
 
 也可由 agent-workflow closeout 自动调用.
 """

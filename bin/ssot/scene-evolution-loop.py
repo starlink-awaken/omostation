@@ -9,7 +9,6 @@ Reads calibration results and generates evolution proposals:
 Usage:
   python3 bin/ssot/scene-evolution-loop.py check
   python3 bin/ssot/scene-evolution-loop.py proposals [--limit N]
-  python3 bin/ssot/scene-evolution-loop.py execute --proposal-id <id>
 """
 
 from __future__ import annotations
