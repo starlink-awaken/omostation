@@ -48,9 +48,11 @@ history:
     `template.html:3110` 的 `dt(D.observed_at)` **无兜底** ⇒ 页脚「本地时间」渲染成
     `Invalid Date`；`template.html:3161` 的 `Date.parse(R.observed_at||D.observed_at)` 两侧皆空 ⇒
     `age=NaN`，运行新鲜度文案失真。
-    **来源判定**：`/data.json` 的体积（15,256,802）与 `revisions/<id>/data.json` 逐字节同量级，
-    与 `current.json`（23,239,792）不同 ⇒ 服务端喂给模板的是**发布器 payload**（revision 面），
-    不是 orchestrator 的 current.json。故缺口在发布器 payload，不在编排层。
+    **来源判定（sha256 逐字节实证）**：`/tmp/served-data.json`（`curl` 实取）与当时最新
+    `revisions/bf7af24dd…/data.json` 的 sha256 **完全相同**（`9b5fe7163bbc4a41a793…`，
+    两边均 15,256,802 字节），而与 `current.json`（23,239,792 字节）不同 ⇒ 服务端喂给模板的
+    是**发布器 payload**（revision 面），不是 orchestrator 的 current.json。故缺口在发布器
+    payload，不在编排层。
     **回归定位**：`current/orchestrator.py` 文件头自述 "replaces the monolithic refresh.py"，
     且只从 refresh 导入 `HEALTH_SEMANTICS` / `source_health` / `prior_healthy_success` /
     `integrate_gantt` / `integrate_strategy` / `publish_strategy_artifacts` 六个 helper ——
