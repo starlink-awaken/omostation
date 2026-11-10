@@ -552,6 +552,94 @@ def unfoldable_interpreter_jobs(jobs: list[dict]) -> list[dict]:
     return out
 
 
+def installed_interpreter_gaps(
+    jobs: list[dict],
+    *,
+    installed_lines: list[str] | None | Any = ...,
+    repo_root: Path | str | None = None,
+) -> dict:
+    """cron 真正执行的那一行里，解释器能不能跑它指向的脚本（决策(2) 改判 B′）。
+
+    为什么读登记面还不够：cron 执行的字符串是**已装行**，不是登记条目。安装侧会按宿主
+    重写解释器 —— 实测 `resolve_python_command("/usr/bin/python3 …observer-daily.py")`
+    输出 `/opt/homebrew/bin/python3.13 …`，且 `_resolve_invocation` 只接受可折回的候选
+    (`_FOLDABLE_INTERPRETER_RE`)。于是「登记面声明的解释器」与「实际被执行的解释器」是
+    两个对象：前者由 `interpreter_executability_jobs` 判，后者此前**没有任何判据** ——
+    venv 被删、homebrew 换了版本号、手工 `crontab -e` 钉一个不存在的路径，`--check` 都
+    会因为 `normalize_interpreter` 把写法折成同一个键而判 ok（实测已装面 6 种解释器写法、
+    33 个 python 调用点，全部是带目录的绝对路径，0 条裸写法）。
+
+    范围与不判的东西（同一条判据不能顺手扩）：
+      · 只判能与登记面**配对**上的已装行，配对键 = 整行折回 —— 那正是
+        `normalize_interpreter` 的本职，不另发明一套模糊匹配；
+      · 未登记的行（`known_orphans` 那类手工装的东西）不计入缺口：把「未登记」报成
+        「跑不了」是把归属问题读成健康问题；但它们坏没坏要照记，单列
+        `unregistered_broken`；
+      · 裸 `python3` 写法不在这里判：判它要建模 cron 的 PATH（与执行本函数的 PATH 不同），
+        而实测今天已装面 0 条裸写法 —— 计数进 `bare_tokens`，把形状留下、不假装判过；
+      · 依赖口径用**发射侧** `third_party_imports`（与 `install_reason` 同一口径），
+        所以这里的缺口与登记面缺口同级、可比；闭包口径仍只在 advisory 通道。
+    """
+    lines = installed_crontab_lines() if installed_lines is ... else installed_lines
+    root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[2]
+    paired: dict[str, dict] = {}
+    for j in active_crontab_jobs(jobs):
+        key = normalize_interpreter(
+            normalize_installed_line(f"{j.get('schedule', '')} {expand_workspace(j.get('command', ''))}".strip())
+        )
+        paired.setdefault(key, j)
+    gaps: list[dict] = []
+    unregistered: list[dict] = []
+    bare = 0
+    paired_lines = 0
+    sites = 0
+    for s in lines or []:
+        t = s.strip()
+        if not t or t.startswith("#"):
+            continue
+        job = paired.get(normalize_interpreter(normalize_installed_line(t)))
+        if job is not None:
+            paired_lines += 1
+        for site in python_call_sites(t, repo_root=repo_root):
+            sites += 1
+            interp = site["declared"]
+            if "/" not in interp:
+                bare += 1
+                continue
+            script = Path(site["script"])
+            rec = {
+                "name": (job or {}).get("name"),
+                "schedule": (job or {}).get("schedule") or " ".join(t.split()[:5]),
+                "interpreter": interp,
+                "script": str(script),
+            }
+            if not script.is_file():
+                rec["reason"] = f"已装行指向的脚本不存在: {script}"
+            elif not Path(interp).is_file():
+                rec["reason"] = f"已装行的解释器路径已不存在: {interp}"
+            else:
+                deps = third_party_imports(script)
+                if deps is None:
+                    rec["reason"] = f"目标脚本不可解析: {script}"
+                else:
+                    external = [d for d in deps if d not in _local_index_cached(root)]
+                    if not _interpreter_ok(interp, script.parent, external):
+                        rec["reason"] = (
+                            f"已装行的解释器跑不动 {script.name}（需要 3.11+ 与 {external or '无第三方包'}）"
+                        )
+            if "reason" not in rec:
+                continue
+            (gaps if job is not None else unregistered).append(rec)
+    return {
+        "gaps": gaps,
+        "unregistered_broken": unregistered,
+        "bare_tokens": bare,
+        "paired_lines": paired_lines,
+        "python_sites": sites,
+        "lines_scanned": len([1 for s in lines or [] if s.strip() and not s.strip().startswith("#")]),
+    }
+
+
 def python_call_sites(cmd: str, *, repo_root: Path | str | None = None) -> list[dict]:
     """一条 command 里的每个 `python3 <script>.py` 调用点 → 声明写法 + 目标脚本.
 

@@ -2593,16 +2593,19 @@ gac:
       未收敛即由脚本自身退出码转阻断 —— 不给静默窗口, 也不在限期内把本机搞红 (实测本机 0/30 缺口,
       只有 3.9 的宿主 30/30 缺口, 直接 fail-closed 等于把 mini 门禁钉死)。判据是可执行性而非
       静态扫描: 按入口文件名数只覆盖 8/87, 真实死法 45 条; 与 scheduler-compile /
-      install-cron-plane 共用 bin/lib/cron_normalize 一份实现, 门禁与安装器分叉正是本债成因之一。'
+      install-cron-plane 共用 bin/lib/cron_normalize 一份实现, 门禁与安装器分叉正是本债成因之一。2026-11-10 决策(2) 改判 B′ 后判据扩到「已装面」: 除登记面声明的解释器, 还判已装 crontab 行里 cron 实际
+      执行的解释器在不在、跑不跑得动目标脚本 —— 安装侧按宿主重写解释器 (实测 /usr/bin/python3 的登记命令装上去是
+      /opt/homebrew/bin/python3.13), 两面不是同一个对象, 只判登记面时 venv 被删或版本号漂移对 --check 完全隐形
+      (本机实测 扫 60 行 / 配对 43 / python 调用点 33 / 已装面缺口 0)。'
     check_type: consistency_drift
-    target: .omo/cron/registry.yaml::jobs[].command 的每个 python3 调用点
+    target: .omo/cron/registry.yaml::jobs[].command 与本机已装 crontab 行的每个 python3 调用点
     executor:
     - ci_gate
     - gac_local_gate
     source_ref: bin/gac/check-cron-interpreter-executability.py
     enforcement: advisory
     owner: platform-team
-    expected: 本机 active crontab 作业的发射侧缺口为 0 (闭包提醒与静态判不出只 advisory, 但必须在输出可见)
+    expected: 本机 active crontab 作业与已装行的发射侧缺口为 0 (闭包提醒、静态判不出与配对自证失败只 advisory, 但必须在输出可见)
     remediation: 本机装一个 3.11+ 且 basename 可折回裸 python3 的解释器, 或设 CRON_INTERPRETER 指向它; 装不上就把该作业标 inactive
     related_runbooks: []
     adr: ADR-0457
