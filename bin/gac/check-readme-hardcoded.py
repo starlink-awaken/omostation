@@ -29,7 +29,12 @@ WS_ROOT = Path(__file__).resolve().parents[2]
 HEALTH_MD = WS_ROOT / "docs/operations/repository-health.md"
 
 PORT_RE = re.compile(r"(?:port\s*:?\s*|:)(\d{4,5})\b", re.I)
-COUNT_RE = re.compile(r"(\d+)\s*(个|条|项|个 ?BET|agents?|projects?|PRs?|条规则)")
+# 计数断言 (doc-ssot-contract: README/CLAUDE.md 是导航层, 不写运行时事实)。
+# 负面先行: `第 N 条` 是**序数** (章节号), `≥N 条` / `>N 个` 是**阈值** —— 两者都不是
+# 「此处有多少个」的断言, 报它们等于把导航层的正常措辞当成缺陷 (2026-11-10 实测:
+# CLAUDE.md L54「命中 ≥1 条相关记录」与 L98「第 4 条 · 需求迭代强制 Workflow」
+# 两条都是误报)。
+COUNT_RE = re.compile(r"(?<![第≥≤<>=])(?<![第≥≤<>=]\s)(\d+)\s*(个|条|项|个 ?BET|agents?|projects?|PRs?|条规则)")
 
 
 def _git(*args: str) -> str:
