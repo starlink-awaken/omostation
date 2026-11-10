@@ -47737,7 +47737,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: in_progress
+  status: done
+  done_at: 2026-11-10
   title: BET-Y2Q4-T10-345 常驻自愈派发按 objective 折叠重复建档 —— 止住 task-center dispatches 无界增长
   track: T10-TOOLING
   underlying_workflow: governance-state-mutation
