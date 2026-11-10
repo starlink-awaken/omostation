@@ -4,7 +4,7 @@
 将 20 条 advisory 规则接入 CI/hook/cron 执行链。
 
 Usage:
-    python3 bin/gac/advisory-checks-upgrade.py [--check] [--apply] [--json]
+    python3 bin/gac/advisory-checks-upgrade.py [--json]
 """
 from __future__ import annotations
 

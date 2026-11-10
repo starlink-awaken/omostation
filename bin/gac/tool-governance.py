@@ -10,7 +10,6 @@
 用法:
     python3 tool-governance.py              # 分级报告
     python3 tool-governance.py --json       # JSON
-    python3 tool-governance.py --archive    # 归档 P3 工具
 """
 
 import json
