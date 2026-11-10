@@ -25,6 +25,14 @@ gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
 decision_needed: >-
+  **2026-11-10 更正（见同日 history）**：①② 的产物平面不是资产发布面，而是
+  `orchestrator.py` 读 `state_root()/runtime/dashboard/data.json` 的 base 链 —— 该路径在本机**不存在**
+  （`FileNotFoundError`），门禁 cohort 自 2026-10-28 起被冻结；base 实际由
+  `panorama-dashboard-refresh` 用**陈旧 code root**（`code-main`, 2026-09-26）产出，`_diagnostic()`
+  修复只在 origin/main 上。故未决项收敛为：**base 落根与 code root 的裁定**（BET-Y2Q4-T16-03 决策矩阵
+  A/B/C/D）+ **三向根错位修复**（生产者 `PANORAMA_ROOT` / 消费者 `state_root()` / registry 声明）。
+  余下只是「detail 跨平面契约」的裁决项：
+
   两个形状（同一条 detail 通路，各自独立复现）：
   ① A9 —— 判据把原因串作为 `missing` 的第二个元素带出
   （`_cockpit_source_reasons`），revision 平面 `revisions/*/data.json` 里完整可见
@@ -127,4 +135,36 @@ history:
     All checks passed；`panorama-collect.py` 改动前后 ruff 违规计数相同（未新增）。**边界要说清**：无平面宿主（CI）
     上两个平面都读不出 ⇒ 本门禁不判、如实报 `plane=absent`，真实约束发生在 `gac_local_gate`（本机）与有平面的宿主，
     不能声称 CI 覆盖了它；`parse_suspicious` 自证只防「平面装着却一条 A 门都没解析出来」的空转绿。
+  actor: "governance-agent"
+- at: "2026-11-10T08:20:00+00:00"
+  action: review
+  note: >-
+    **根因更正**：①/② 的 detail 不是「发布链资产偏斜」造成的，资产发布只修好了 release 平面
+    （`zhixing-host-sync.py check` 的口径），发布面 current.json 的 gates 走的是另一条链。实测链条：
+    (a) `orchestrator.py::merge_panorama_base` / `_read_panorama_base` 从
+    `state_root()/runtime/dashboard/data.json` 读 base；(b) 本机作业 env 声明
+    `OMOSTATION_STATE_ROOT=/Users/xiamingxing/.local/state/omostation/prod`，该路径下**该文件不存在**
+    ⇒ `FileNotFoundError` ⇒ `_unknown_base_gates()`：verdict 一律压成 `UNKNOWN`、`live=false`，
+    但**保留上一次成功读到的原始诊断**；(c) current.json 实测
+    `source_states.panorama_base = {status: STALE_UNAVAILABLE, error: FileNotFoundError,
+    last_success_at: 2026-10-28T07:27:34Z, source: /Users/xiamingxing/Workspace/runtime/dashboard/data.json}`
+    —— 即门禁 cohort 自 **2026-10-28** 起被冻结 13 天，A1 `detail='}'` / A9 截断都是那份陈旧 base 的残留。
+    (d) base 的真正生产者是 `com.omostation.panorama-dashboard-refresh`（StartInterval 240s）→
+    `~/.local/share/zhixing-dashboard/panorama-collect.py`（**2026-09-22**，`_cockpit_source_reasons`
+    命中 0）+ env `PANORAMA_ROOT=/Users/xiamingxing/.local/opt/omostation` ⇒ 落在
+    `~/.local/opt/omostation/runtime/dashboard/data.json`（实测 generated_at 2026-11-10T08:04:55Z，是新的），
+    **但其 A1/A9 detail 仍是坏的**。
+    **同一 workspace、三把 code-root 尺的实测对照**（`gate-health-check.py --json` 的 A1 `output`）：
+    publisher 检出 `~/.local/opt/omostation-publisher`（origin/main 新鲜克隆）→ `'ok warnings=3'` ✓；
+    安装位 `~/.local/opt/omostation`（HEAD 5cec6612a）→ `'}'` ✗；
+    `code-main`（2026-09-26）→ `'}'` ✗。
+    即 `_diagnostic()` 修复（#5220）**只在 origin/main 上**，base 生产者能触及的两个 code root 都没有它。
+    **三向根错位**（同一文件三个落点）：生产者写 `PANORAMA_ROOT`(=安装位) / 消费者读
+    `state_root()`(=state 根) / `.omo/cron/registry.yaml` 声明 `PANORAMA_ROOT`=canonical Workspace；
+    而 `orchestrator.py:514-516` 对 `personal_value_truth` 采集器断言 `PANORAMA_ROOT == state_root()`，
+    本机 env 恰好违反这条自带不变量。revision 平面正确而 base 错误的原因也在此：full-refresh 用
+    `PANORAMA_CODE_ROOT=CHECKOUT`（新鲜克隆）跑 publisher，base 生产者用陈旧 `code-main`。
+    **结论**：①② 属 BET-Y2Q4-T16-03 已分诊的「code root 陈旧」症状（决策矩阵 A/B/C/D 待 principal 裁定，
+    该单明确把改 plist / launchctl 列为不做），本条余下未决项应改为「base 生产者 code root 与 base 落根
+    的裁定 + 根错位修复」，而不是继续在资产发布面上找原因。
   actor: "governance-agent"
