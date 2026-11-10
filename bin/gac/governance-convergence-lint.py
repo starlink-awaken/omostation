@@ -240,17 +240,25 @@ def check_feedback_loop() -> tuple[list[str], list[str]]:
 
 
 def check_rules_count() -> tuple[list[str], list[str]]:
-    """R-GOV-5: AGENTS.md gac.rules_count matches actual count."""
+    """R-GOV-5: 生成文档里的规则计数 == governance-checks.yaml 实际条数.
+
+    匹配口径必须跟生成器实际写出的文本一致 —— `gac-export-agents.py` 写的是
+    `### GaC 规则速览 (N 条)` 与 `(... (N rules))`。旧正则 `(\\d+)\\s+条规则`
+    三者都不匹配 ⇒ 这条判据**从未真正命中过** (2026-11-10 实证: 文档写 136 条
+    而注册表只有 87 条, 判据照样绿)。
+    """
     errors, warnings = [], []
     # Count actual rules in governance-checks.yaml
     registered = _extract_registered_cr_ids()
     actual_count = len(registered)
-    # Find gac.rules_count in AGENTS.md or generated docs
     try:
         gen_path = WORKSPACE / "docs/generated/agent-gac-rules.md"
         if gen_path.exists():
             text = gen_path.read_text(encoding="utf-8")
-            match = re.search(r"(\d+)\s+条规则", text)
+            match = (
+                re.search(r"GaC 规则速览\s*\((\d+)\s*条\)", text)
+                or re.search(r"\((\d+)\s+rules\)", text)
+            )
             if match:
                 doc_count = int(match.group(1))
                 if doc_count != actual_count:
