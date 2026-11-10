@@ -116,3 +116,40 @@ def test_markdown_surfaces_unavailable_anticorrosion(monkeypatch):
 
     assert "不可用" in md
     assert "drift=None" not in md
+
+
+def _report(**overrides):
+    base = {
+        "scene": {"total": 0, "by_lifecycle": {}},
+        "architecture": {"sfop_ok": True, "chain_ok": True},
+        "evolution": {"done": 1, "total": 2, "ratio": 0.5, "done_30d": 0},
+        "operations": {"online": 0, "total": 0, "ratio": 0.0, "error": None},
+        "anti_corrosion": {"meta_doctor_drift_count": 0,
+                           "meta_doctor_available": True,
+                           "ssot_guardian_clean": True},
+        "perception": {"skill_count": 0, "workflow_count": 0, "silent_workflows": 0},
+    }
+    base.update(overrides)
+    return base
+
+
+def test_markdown_surfaces_absent_scene_cards(monkeypatch):
+    module = _load(monkeypatch)
+    report = _report(scene={"total": 0, "by_lifecycle": {},
+                            "error": "docs/scene-cards/ missing"})
+
+    md = module.to_markdown(report)
+
+    assert "docs/scene-cards/ missing" in md, "缺席被渲染成 0 cards —— 读起来像一张都没有"
+    assert "0 cards" not in md
+
+
+def test_markdown_surfaces_missing_ledger(monkeypatch):
+    module = _load(monkeypatch)
+    report = _report(evolution={"total": 0, "done": 0, "ratio": 0.0,
+                                "done_30d": 0, "error": "ledger missing"})
+
+    md = module.to_markdown(report)
+
+    assert "ledger missing" in md, "台账缺席被渲染成 0/0 —— 读起来像没有 BET"
+    assert "0/0 bet done" not in md
