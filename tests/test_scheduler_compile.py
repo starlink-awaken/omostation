@@ -308,31 +308,29 @@ class InterpreterNormalizationTests(unittest.TestCase):
         self.assertEqual(_normalize("cd /x && bash bin/a.sh"), "cd /x && bash bin/a.sh")
 
 
-def _watchdog_job() -> dict:
-    for j in _load_registry_jobs():
-        if j.get("name") == "work-agent-respire-mbp-watchdog":
-            return j
-    raise AssertionError("registry 里找不到 work-agent-respire-mbp-watchdog")
-
-
 def test_host_scope_excludes_other_hosts_jobs(monkeypatch) -> None:
-    """`hosts` 维度: 别机的专用条目不得出现在本机产物里.
-
-    CRON-REGISTRY-NO-HOST-SCOPE 的结构性修法。实证: work-agent-respire-mbp-watchdog
-    的 reconciliation_note 明写 mini 专用, 没有主机维度时它在 mbp 上永远 drift=1
-    ⇒ 本机健康门禁 A4 常红。
-    """
+    """登记中的 mini 看护作业须匹配现场主机名并保持主机作用域。"""
     sc = _load_compile_module()
     jobs = _load_registry_jobs()
-    assert _watchdog_job().get("hosts") == ["mini"]
+    cases = (
+        ("Mac-mini", None, 1),
+        ("mini", None, 1),
+        ("mbp", None, 0),
+        ("unregistered-host", None, 0),
+        ("Mac-mini", "mbp", 0),
+        ("unregistered-host", "mini", 1),
+    )
+    for hostname, override, expected in cases:
+        monkeypatch.setattr("socket.gethostname", lambda hostname=hostname: hostname)
+        monkeypatch.delenv("CRON_HOST", raising=False)
+        if override is not None:
+            monkeypatch.setenv("CRON_HOST", override)
 
-    monkeypatch.setenv("CRON_HOST", "mbp")
-    out_mbp = sc.compile_crontab(jobs)
-    assert not any("respire_mbp_supervisor_watchdog" in line for line in out_mbp)
-
-    monkeypatch.setenv("CRON_HOST", "mini")
-    out_mini = sc.compile_crontab(jobs)
-    assert any("respire_mbp_supervisor_watchdog" in line for line in out_mini)
+        watchdog_count = sum(
+            "respire_mbp_supervisor_watchdog" in line
+            for line in sc.compile_crontab(jobs)
+        )
+        assert watchdog_count == expected, (hostname, override)
 
 
 def test_host_scope_keeps_unscoped_and_matching_jobs(monkeypatch) -> None:
