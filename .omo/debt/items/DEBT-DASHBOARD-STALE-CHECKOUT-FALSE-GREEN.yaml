@@ -58,3 +58,21 @@ history:
     **同类风险面**：任何「读 canonical 派生治理读数」的定时作业都有同一形状 ——
     本条只登记已确认的这一实例，不主张已穷举。
   actor: "governance-agent"
+- at: "2026-11-10T13:35:00+00:00"
+  action: review
+  note: >-
+    **补全风险面清单（把「不主张已穷举」变成穷举）**：判据 = 定时作业命令里同时含
+    `Workspace`（读 canonical）与 `.omo/`（写治理面）。结果 **15 条**：
+    **launchd 3 条** —— `omo-debt-refresh`（:05/:35 每小时 → `.omo/debt/**`，即本条实例）、
+    `omo-health-refresh`（每小时 :17 → `omo state refresh`）、`omo-state-sync`（每小时 :27 → `omo state sync`）。
+    **crontab 12 条** —— 5×`*/2` → `.omo/_delivery/resident-orchestrator/cron-{sediment,decision,execute,monitor,heartbeat}.log`；
+    3×`*/5` → `.omo/_delivery/{event-ingest,personal-signals,perception-inbox}/cron.log`；
+    1×`*/10` → `.omo/_delivery/resident-orchestrator/promote.log`；
+    1×`0 1` → `proposal-to-adr.log`；1×`10 2` → `health.log`；
+    1×`45 5` → `bin/ssot/check-mcptool-impl-drift.py` → **`.omo/_truth/registry/mcptool-drift-report.yaml`**
+    （唯一直接写 `_truth/registry/` 的一条 —— canonical 落后时该漂移报告即陈旧）。
+    **共性**：全部 `cd` 到硬编码的 `/Users/xiamingxing/Workspace`，无一条带「检出新鲜度」守卫。
+    **含义**：本条不是孤例，而是**一类**（读共享 canonical → 派生治理读数/写治理面）；
+    canonical 在多 agent 并发下落后是常态，故这 15 条的产物**在任何时刻都可能整体偏旧**。
+    裁决时建议按「是否写 `_truth/registry/` 或派生全局读数」分档：写 SSOT 的那些优先。
+  actor: "governance-agent"
