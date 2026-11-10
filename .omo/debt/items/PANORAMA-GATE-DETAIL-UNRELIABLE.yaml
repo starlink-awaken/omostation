@@ -188,3 +188,24 @@ history:
     但一个走 FileNotFoundError、一个走 managed_state_root_mismatch，**两条独立的失败路径**，
     修复时不能用同一处改动覆盖。
   actor: "governance-agent"
+- at: "2026-11-10T09:05:00+00:00"
+  action: review
+  note: >-
+    **冻结是设计矛盾，不是 env 写错**（上一证的机制再深一层）：`PANORAMA_ROOT` 在本机被
+    **同时**当作两个用途，而 orchestrator 的断言只允许其中一种取值。
+    ① **输出根**：`panorama-collect.py:75` `ROOT = PANORAMA_ROOT` → `:81` `OUT_DIR = ROOT/"runtime"/"dashboard"`
+    —— base 的落点由它决定。
+    ② **代码支持根**：`panorama-collect.py:40-56` `_host_support_dir(name)` 先试
+    `Path(__file__).resolve().parents[1]/name`（dashboard 根下的 `ssot/`、`lib/`，**实测 ABSENT**），
+    失败则回落 `PANORAMA_ROOT/bin/<name>`；而 `~/.local/opt/omostation/bin/{ssot,lib}` **实测存在**。
+    即本机采集器**靠 `PANORAMA_ROOT`=安装位才 import 得动** `_principal_id.py` 与 `repo_root`。
+    而 `orchestrator.py.asset:514-516` 要求 `PANORAMA_ROOT == state_root()`，
+    且 `state_root()/bin/{ssot,lib}` **实测 ABSENT** ⇒ **把 `PANORAMA_ROOT` 改成 state 根会让采集器
+    当场 import 失败**。两个要求在当前布局下**互相排斥**，这就是 env「看起来违反断言」的真正原因 ——
+    env 是被布局逼成的，不是手滑。
+    **修法因此不是改一个 env**，而是先分离关注点（三选一，均需 principal 裁定）：
+    (a) 给输出根单列一个变量（如 `PANORAMA_OUTPUT_ROOT`），`OUT_DIR` 改读它，`PANORAMA_ROOT` 回归代码根；
+    (b) 把 `bin/ssot` + `bin/lib` 从「跟随代码根」改为可从 state 根解析（不推荐：把代码放进 state 根）；
+    (c) 放宽 `:514-516` 的断言（不推荐：它存在的理由写在同段注释里 —— 防止 ad-hoc import 静默读操作者工作区）。
+    本条**不代决**，只把矛盾钉住，避免后续再按「env 写错」去改而去。
+  actor: "governance-agent"
