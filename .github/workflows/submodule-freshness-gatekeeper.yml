@@ -64,8 +64,23 @@ jobs:
         run: |
           # 假设这是全局 CI 验证宏入口
           # 如果子模块更新破坏了架构，这里会 fail
-          make governance-verify
-          # 暂时允许通过，后续由真实的单测取代
+          #
+          # 本步失败**不得**阻断后面的提案腿: 本 job 的目的就是「检测到漂移 -> 发提案」,
+          # 而 verify 红会把 Emit proposal / Upload / fail-closed 全部 skip 掉
+          # (2026-11-10 实测 run 42744636941: verify 红 -> 后三步 skipped,
+          #  于是「有漂移的运行反而发不出提案」)。
+          #
+          # push 腿按本 workflow 末尾的既定口径保持 soft (「push runs are soft;
+          # hard signal stays on the daily schedule + manual dispatch」);
+          # schedule / workflow_dispatch 腿仍在此处 fail, 硬信号不丢。
+          if make governance-verify; then
+            echo "governance-verify: PASS"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "::warning::governance-verify 未过 (push 腿 soft; 硬信号见每日 schedule run)"
+          else
+            echo "::error::governance-verify 未过"
+            exit 1
+          fi
 
       - name: Emit publication proposal artifact
         run: |
