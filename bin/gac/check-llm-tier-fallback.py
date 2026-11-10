@@ -6,8 +6,55 @@ LLM provider 必须配置优雅降级: aetherforge 网关(网关内部自带跨�
 脚本自己再直连 Ollama(如 `ollama run`)属于绕过网关, 由 CR-LLM-GATEWAY-ONLY 拦截。
 """
 
+import ast
+import re
 import sys
 from pathlib import Path
+
+
+def _code_only(path: Path) -> str:
+    """只保留代码：抹掉 docstring、所有字符串常量与注释。
+
+    「有没有 LLM 调用」是代码属性; 注释/docstring 里出现 `import openai` /
+    `from openai import ...` 只是文字。旧实现注释自称「排除正则/注释/子模块
+    列表误匹配」但实际对全文跑正则 —— 实测：注释里写 `import openai` 或
+    docstring 里写 `from openai import Client` 的文件会被判成「使用 LLM」，
+    在没有 fallback 时误报（2026-11-11 自证）。
+    """
+    src = path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return re.sub(r"#.*", "", src)
+    lines = src.splitlines(keepends=True)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            for i in range(node.lineno - 1, node.end_lineno):
+                if 0 <= i < len(lines):
+                    lines[i] = ""
+
+    return re.sub(r"#.*", "", "".join(lines))
+
+
+LLM_CALL_PATTERNS = [
+    r"llm\.(complete|generate|chat|predict)",
+    r"(?:client|chat|llm)\.(?:chat\.)?(?:completions|messages)\.create",
+    r"(?:openai|anthropic|aetherforge|ollama)[\._](?:client|chat|llm|gateway)",
+    r"from (?:llm_gateway|openai|anthropic|aetherforge) import",
+    r"import (?:openai|anthropic)",
+    r"aetherforge[._](?:infer|gateway|generate|complete)",
+    r"ollama(?:\.chat|\.generate|_client)",
+]
+
+
+def _has_llm(path: Path) -> bool:
+    """「有没有 LLM 调用」只由代码决定 —— 注释/docstring/字符串里的 import 不算。
+
+    必须与 `_code_only` 一起用：`has_fallback` 那侧仍须扫全文（argparse 选项
+    `--no-llm` 是字符串字面量，抹掉会漏）。
+    """
+    return any(re.search(p, _code_only(path).lower()) for p in LLM_CALL_PATTERNS)
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -74,20 +121,7 @@ def main() -> int:
             except Exception:
                 continue
 
-            # 跳过不使用 LLM 的脚本 — 精确检测 API 调用模式, 排除正则/注释/子模块列表的误匹配
-            import re as _re
-            llm_call_patterns = [
-                r"llm\.(complete|generate|chat|predict)",
-                r"(?:client|chat|llm)\.(?:chat\.)?(?:completions|messages)\.create",
-                r"(?:openai|anthropic|aetherforge|ollama)[\._](?:client|chat|llm|gateway)",
-                r"from (?:llm_gateway|openai|anthropic|aetherforge) import",
-                r"import (?:openai|anthropic)",
-                r"aetherforge[._](?:infer|gateway|generate|complete)",
-                r"ollama(?:\.chat|\.generate|_client)",
-            ]
-            text_lower = text.lower()
-            has_llm = any(_re.search(p, text_lower) for p in llm_call_patterns)
-            if not has_llm:
+            if not _has_llm(f):
                 continue
 
             tiers = count_tiers(text)
