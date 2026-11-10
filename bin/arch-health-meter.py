@@ -266,7 +266,11 @@ def to_markdown(report: dict, week: bool = False) -> str:
     out.append("|------|------|-------------|------|")
 
     s = report["scene"]
-    out.append(f"| 场景 | {s['total']} cards ({', '.join(f'{k}={v}' for k, v in s.get('by_lifecycle', {}).items())}) | — | — |")
+    if s.get("error"):
+        # 缺席不是 0: docs/scene-cards/ 不存在时报「0 cards」会被读成「一张都没有」
+        out.append(f"| 场景 | 不可用（{s['error']}） | — | — |")
+    else:
+        out.append(f"| 场景 | {s['total']} cards ({', '.join(f'{k}={v}' for k, v in s.get('by_lifecycle', {}).items())}) | — | — |")
 
     a = report["architecture"]
     sfop = "OK" if a["sfop_ok"] else "FAIL"
@@ -274,7 +278,11 @@ def to_markdown(report: dict, week: bool = False) -> str:
     out.append(f"| 架构 | SFOP {sfop} + DFSQ {chain} | — | — |")
 
     e = report["evolution"]
-    out.append(f"| 进化 | {e['done']}/{e['total']} bet done ({e['ratio']*100:.1f}%, 30d +{e['done_30d']}) | — | — |")
+    if e.get("error"):
+        # 台账缺席/解析失败不是 0/0: 那会被读成「一个 BET 都没有」
+        out.append(f"| 进化 | 不可用（{e['error']}） | — | — |")
+    else:
+        out.append(f"| 进化 | {e['done']}/{e['total']} bet done ({e['ratio']*100:.1f}%, 30d +{e['done_30d']}) | — | — |")
 
     o = report["operations"]
     if o.get("error"):
