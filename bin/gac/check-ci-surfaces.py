@@ -88,6 +88,40 @@ def _workflow_triggers(text: str) -> list[str]:
 WIRED_COMMAND_RE = re.compile(r"(python3|python|uv run[^|\n]*?|bash)[ \t]+((?:bin|scripts)/[\w./-]+\.(?:py|sh))")
 
 
+def _sgf_policy_present() -> bool:
+    """ecos 侧 sgf-policy 是否在本检出里 —— 它贡献了本地门禁的相当一部分工具集。"""
+    return (WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof"
+            / "m1" / "governance" / "sgf-policy.yaml").is_file()
+
+
+def _local_gate_tools() -> set[str]:
+    """gac-local-gate.py 实际会执行的检查工具。
+
+    `gac-gate.yml:203-209` 以 `--strict` 调它；它再按：
+      ① ecos policy（`projects/ecos/.../sgf-policy.yaml`，与 _discover_wiring 同源）
+      ② 文件内 DEFAULT_POLICY / root gates 字面量
+    执行。只读 gac-local-gate.py 文本会漏掉 ① —— 子模块未初始化的检出里
+    那份文件不存在，那条路径整块消失。
+    """
+    tools: set[str] = set()
+    policy = WORKSPACE / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "sgf-policy.yaml"
+    if policy.is_file():
+        try:
+            data = _load_yaml(policy) or {}
+        except Exception:  # noqa: BLE001 — 解析失败按缺省策略处理
+            data = {}
+        for gate in data.get("gates") or []:
+            for part in (gate.get("command") or []):
+                if isinstance(part, str) and part.endswith(".py"):
+                    tools.add(part)
+    path = WORKSPACE / "bin" / "gac" / "gac-local-gate.py"
+    if not path.is_file():
+        return tools
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    tools |= set(re.findall(r'["\'](bin/[A-Za-z0-9_./-]+\.py)["\']', text))
+    return tools
+
+
 def _discover_wiring() -> dict[str, dict]:
     """扫描 workflows + sgf-policy, 返回 tool -> {workflows, gate}."""
     tools: dict[str, dict] = {}
@@ -191,6 +225,42 @@ def check_ci_surfaces() -> dict:
             )
 
     wiring = _discover_wiring()
+
+    # 2.4 声明了 workflow 的 surface 必须真的被那条 workflow 执行。
+    # _discover_wiring() 只认 workflow 文本与 sgf-policy，不认 gac-local-gate.py
+    # 这个聚合器（gac-gate.yml:203-209 以 --strict 调它），于是本地门禁工具在
+    # wired_tools 计数里被系统性少算；更要命的是「声明了 workflow 却无人执行」
+    # 这一形状在旧实现里**完全不体现** —— 实测 perception-coverage 声明
+    # workflow: gac-gate.yml 却从未被执行（CI-SURFACE-FALSE-WIRING-PERCEPTION-COVERAGE）。
+    local_gate_tools = _local_gate_tools()
+    for tool, entry in sorted(registered_tools.items()):
+        declared = str(entry.get("workflow") or "")
+        if not declared or declared == "(none)":
+            continue
+        wf_path = WORKFLOWS_DIR / declared
+        if not wf_path.is_file():
+            warnings.append(
+                f"false-wiring: {tool} 声明的 workflow {declared} 不存在 (CR-CI-SURFACE-SSOT)"
+            )
+            continue
+        text = wf_path.read_text(encoding="utf-8", errors="ignore")
+        via_local_gate = "gac-local-gate.py" in text and tool in local_gate_tools
+        if not via_local_gate and "gac-local-gate.py" in text and not _sgf_policy_present():
+            # 判不了：gac-local-gate 的门禁集有相当一部分来自 ecos 子模块的
+            # sgf-policy；子模块未初始化的检出里那份文件不存在，此时对它下
+            # 「无人执行」的结论就是按装置缺席报假警（实测 script-registry 如此）。
+            continue
+        executed = (
+            tool in text
+            or ("ci-check-runner.py" in text and f"--workflow {declared}" in text)
+            or via_local_gate
+        )
+        if not executed:
+            warnings.append(
+                f"false-wiring: {tool} 声明由 {declared} 执行, 但该 workflow 既不含此工具、"
+                f"也不以 --workflow {declared} 调 ci-check-runner.py、也不经 gac-local-gate.py 执行它"
+                f" (接线或改声明, CR-CI-SURFACE-SSOT)"
+            )
 
     # 1/2. unregistered + gate-parity: wiring 中 check 工具不在 SSOT
     for tool, meta in sorted(wiring.items()):
