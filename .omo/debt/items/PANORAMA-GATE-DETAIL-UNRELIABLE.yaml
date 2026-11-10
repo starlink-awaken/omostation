@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.1
 entropy_class: "low"
-lifecycle_state: "identified"
+lifecycle_state: "in_progress"
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
@@ -16,6 +16,7 @@ evidence_refs:
 - bin/panorama/panorama-collect.py
 mitigation_refs:
 - docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
+- bin/panorama/assets/host/panorama-collect-main.py.asset —— 发布链冻结副本的版本化恢复件（恢复到 ~/.local/share/zhixing-dashboard/ 属部署面写操作，待 principal 授权）
 opened_at: "2026-11-10"
 last_reviewed_at: "2026-11-10"
 next_review_at: "2026-11-17"
@@ -35,6 +36,7 @@ decision_needed: >-
   要决定的是：detail/原因这类诊断串在跨平面传递时应保持何种契约（原样透传或显式丢弃并留痕），
   并给 A 系门禁的 detail 加一条"不得为空/不得短于阈值且须与 verdict 同源"的一致性检查。
   复算：python3 -c "import json;d=json.load(open('/Users/xiamingxing/.local/share/zhixing-dashboard/current.json'));print([(g.get('id'),g.get('verdict'),g.get('source_verdict'),g.get('detail')) for g in d['gates'] if g.get('id') in ('A1','A9')])"
+  （2026-11-10 06:33 补：② 已定论为**发布链代码版本偏斜**，同 instant 双平面对照见 history 同日 review 条，不要再按「聚合截断」重做；③ 仍未做，且新增「detail 顺序需先 sorted 才能逐字比」一条判据。）
 history:
 - at: "2026-11-10T02:40:00+00:00"
   action: identify
@@ -61,4 +63,41 @@ history:
     均为空 —— 原因串来源未能定位。要定论须取**同一时点**的发布者 payload 快照,
     否则「聚合丢内容」与「上游投影随时间变化」无法区分。
     ③ 本条 decision_needed 里的第三条 (给 A 系门禁 detail 加一致性检查) 仍未做。
+  actor: "governance-agent"
+- at: "2026-11-10T06:33:00+00:00"
+  action: review
+  note: >-
+    ② **定论：两个平面的 detail 差异是代码版本偏斜，不是聚合截断**；判据是同一台机器上相隔 21 秒的两份快照。
+    `revisions/2d6f68f31aeb…/data.json`（`generated_at=2026-11-10T06:24:34Z`）里 A1 `'ok warnings=3'`、
+    A9 `'A9 evidence incomplete: cockpit_sources, strategy=PARTIAL'`；同一时刻的发布面
+    `~/.local/share/zhixing-dashboard/current.json`（`generated_at=2026-11-10T06:24:13Z`）里同两条门是
+    A1 `'}'`、A9 `'A9 evidence incomplete: cockpit_sources'`。同输入同宿主 ⇒ 只可能是产出方代码不同，
+    原来「聚合侧丢内容」与「上游投影随时间变化」两种解释都被这份对照排除。
+    发布链跑的是 2026-09 的冻结副本，这些副本里 #4870（原因串）与 #5220（`_diagnostic`）都不存在：
+    `APP/panorama-collect.py` mtime 2026-09-22、`APP/panorama-collect-main.py` 2026-09-30、
+    `APP/panorama-collect-legacy-pending.py` 2026-09-19 —— 三个都 `def _cockpit_source_reasons` 命中 0
+    （`APP/panorama-collect-main.py:608` 只 `missing.append("cockpit_sources")`，`:604` 的 bad_sources 判据仍是
+    10-23 之前的旧形状 `status=="OK" or (status=="STALE_UNAVAILABLE" and age<=21600)`，无 DEFERRED、无界内 FAIL）；
+    第四个候选 `APP/code-main` 是 2026-09-26 的整仓检出（HEAD 3b55e3ca7、落后 origin/main **279** 个 commit），
+    其 `bin/panorama/panorama-collect.py` 同样无原因串、其 `bin/gac/gate-health-check.py` 无 `_diagnostic`。
+    调用侧 `APP/refresh.py:1628` 以**绝对路径** importlib 加载 `APP/panorama-collect-main.py`，
+    `:1690` 另指 legacy-pending 副本；A1 的 ghc 子进程路径是 `CODE_ROOT/bin/gac/gate-health-check.py`，
+    而 LaunchAgents 里两个刷新任务的 `PANORAMA_CODE_ROOT` 分别是
+    `~/.local/opt/omostation`（ghc mtime 2026-09-27、无 `_diagnostic`）与 `APP/code-main`（同上，无 `_diagnostic`）。
+    ⇒ **诚实边界**：能定论「发布链的产出方代码停在 2026-09」，但四个冻结副本中具体哪一个写当前这份
+    current.json 未唯一归一（要从任务真实 env 复算才能钉死），修复动作不受此影响。
+    顺带订正本条此前的两处口径：(a) 原措辞暗示聚合侧做了长度截断 —— 实测采集侧与副本都是
+    `", ".join(missing)`（仓内 `bin/panorama/panorama-collect.py:1526`），**没有任何截断**，39 字符只是旧代码的短输出；
+    (b) 顶层 `~/Workspace/runtime/dashboard/data.json` 不能当「仓内代码读数」—— 它
+    `generated_at=2026-10-28T08:13:22Z` / mtime 10-28 16:15，13 天未再生成，形状与旧副本一致。
+    ① A1 的 `'}'` 之所以在 #5220 已合入后仍在发布面可见，是同一条偏斜的第二条通路；**不是**「canonical
+    `~/Workspace` 落后 104 个 commit」—— 该假设今天被实测否掉：发布任务的 `PANORAMA_CODE_ROOT`
+    指向 `~/.local/opt/omostation-publisher`，其 HEAD=64051541（= 当时 origin/main tip）、
+    `gate-health-check.py` 含 `_diagnostic`（mtime 2026-11-10T11:48 本地），而 canonical `~/Workspace` 根本没被这条链读到。
+    收敛动作 = 把发布链的冻结副本推进/恢复到版本化恢复件（`bin/panorama/assets/host/panorama-collect-main.py.asset`
+    6192 行、`:1518-1519` 已含原因串；与 `APP/panorama-collect-main.py` 的 diff = +2046/−194；同目录另有
+    `runtime_paths.py.asset`）—— 属**部署面写操作**，未做，需 principal 授权。
+    新增一条与 ③ 同族的判据：`required_sources`（`:1484-1489`）是 **set 字面量**，`bad_sources` 按集合顺序迭代生成，
+    多源同时降级时原因串顺序随进程字符串哈希随机化而变 ⇒ 对 detail 做任何逐字比对/幂等校验都会假漂移，
+    一致性检查应先固定顺序（`sorted`）再比。③（A 系门禁 detail 非空/长度阈值/与 verdict 同源的稳定性检查）仍未做。
   actor: "governance-agent"
