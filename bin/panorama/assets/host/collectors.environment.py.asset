@@ -48,6 +48,7 @@ class EnvironmentEvidenceCollector(DataCollector):
             except Exception:
                 pass
 
+        reason = None
         try:
             env = {**os.environ, "PATH": _SUBPROCESS_PATH + ":" + os.environ.get("PATH", "")}
             proc = subprocess.run(
@@ -55,19 +56,25 @@ class EnvironmentEvidenceCollector(DataCollector):
                 capture_output=True, text=True, timeout=25, env=env,
             )
             ok = proc.returncode == 0
+            if not ok:
+                # 非零退出时输出才是原因 —— 丢掉它, 板板上只剩一句 FAIL。
+                # 与 ruflo/reference_cell 采集器同口径。
+                reason = (proc.stderr or proc.stdout).strip()[:300] or None
             try:
                 live = json.loads(proc.stdout) if ok else {}
             except Exception:
                 live = {}
-        except Exception:
+        except Exception as exc:
             ok = False
             live = {}
+            reason = str(exc)
 
         return {
             "status": "OK" if ok else "FAIL",
             "live": live if isinstance(live, dict) else {},
             "cached": cached if isinstance(cached, dict) else {},
             "workspace_exists": WORKSPACE.exists(),
+            "error": reason,
             "observed_at": _now(),
         }
 
