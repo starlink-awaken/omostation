@@ -5862,7 +5862,7 @@ services:
   # 一个无人复制的本机副本必然腐烂 —— 改回由本仓生成, 注册表成为唯一真源。
   generate: true
   config_source: ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
-  content_digest: sha256:bebd759d37895fdb4c990c8ec94fa231ffbd227ff711628ce56d53deb1b650eb
+  content_digest: sha256:fd140b8bec4dd752f84f3af51102e5c72586abae7c2a75e0e3be0099d3356fb8
   scheduler: launchd
   trigger: calendar
   label: com.omostation.omo-debt-refresh
@@ -5875,7 +5875,7 @@ services:
   outputs:
     stdout: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
     stderr: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
-  notes: '2026-11-09 改回 generate: true (见上)。原 T10-206 observe-only 回填的理由是「plist 由本机手写」, 但本机副本在 B4b 改道中被手工重写并丢失 $NOW 展开, 导致 exit 2 持续失败 (LAUNCHD-PLIST-INSTALLED-DIVERGED)。现在由本仓按本条目渲染并安装, E1 判据 (注册表渲染 vs plist 文本) 恢复闭合。'
+  notes: '2026-11-09 改回 generate: true (见上)。原 T10-206 observe-only 回填的理由是「plist 由本机手写」, 但本机副本在 B4b 改道中被手工重写并丢失 $NOW 展开, 导致 exit 2 持续失败 (LAUNCHD-PLIST-INSTALLED-DIVERGED)。现在由本仓按本条目渲染并安装, E1 判据 (注册表渲染 vs plist 文本) 恢复闭合。2026-11-10: 解释器由 python3 改为 .venv/bin/python —— launchd 默认 PATH 下 python3=/usr/bin/python3(3.9.6), 而 omo_debt_cli.py:15 `from datetime import UTC` 是 3.11+ 才有的 (实跑 ImportError); 同轮发现已安装 plist 被手工削掉 WorkingDirectory/PATH/StartCalendarInterval, 已整份覆盖重装 (launchctl bootout+bootstrap, last exit code=0), content_digest 同步为 fd140b8b… (旧值 bebd759d… 与 repo/已装两边都不匹配, 属陈旧登记)。'
   depends_on: []
 - id: omostation.panorama-dashboard
   enabled: false
