@@ -37,16 +37,18 @@ schema_version: closeout-receipt/v1
 
 ## 2 发布前后读数（线上通路，非仓内模拟）
 
-证据文件：`~/.local/share/zhixing-dashboard/current.json`（由 `current/orchestrator.py`
-每 300s 新起进程写出的运行时快照，即 A9 判据的实际输入面）。
+证据文件（两个平面各按自己的 `generated_at` 轮次读数，不跨平面混比）：
+`~/.local/share/zhixing-dashboard/current.json`（聚合平面，`current/orchestrator.py` 每 300s
+新起进程写出的运行时快照）与 `revisions/*/data.json`（生产者平面）。
 
-| 读数 | 发布前（09:44:10 快照） | 发布后（09:49:24 快照） |
+| 读数 | 发布前 | 发布后 |
 |---|---|---|
 | `"diagnostic command exit 2"` 全份出现次数 | **1** | **0** |
 | `source_states.scheduler.status` | `STALE_UNAVAILABLE` | `OK` |
 | `source_states.scheduler.error` | `Collection failed for 'scheduler': diagnostic command exit 2` | 键不存在 |
 | `source_states.scheduler.last_success_at` | `2026-11-07T00:04:27Z` | `2026-11-10T01:49:14Z` |
-| A9 `detail` | 含 `diagnostic command exit 2` | `A9 evidence incomplete: cockpit_sources` |
+| A9 `detail`（revision 平面 `data.json`，带原因串） | `…cockpit_sources, strategy=PARTIAL; documents=PARTIAL; scheduler=STALE_UNAVAILABLE(Collection failed for 'scheduler': diagnostic command exit 2)` | `…cockpit_sources, strategy=PARTIAL; documents=PARTIAL` —— **`scheduler` 项消失** |
+| A9 `detail`（聚合平面 `current.json`） | 同上短语可见 | `A9 evidence incomplete: cockpit_sources`（**原因串在此平面被截断**，见 §5.3） |
 
 接管方式：无人工重启。两个 launchd job（`…zhixing-dashboard`、`…-refresh`）的
 `ProgramArguments`/`WorkingDirectory` 都经 `current/` 符号链接解析，`current` 原子翻转后
@@ -100,59 +102,70 @@ schema_version: closeout-receipt/v1
 而既有平面上只有一处 (`​.omo/state/runtime/governance-dashboard.json`) 含 `duration_ms`，
 此时另起一个新面属于扩面而非补缺。
 
-## 5 发布后再测 A9：三条已核实事实 + 两条未决
+## 5 发布后再测 A9：已核实事实与未决项
 
-**先记一次自我更正**：本节初稿把 A9 仍 PARTIAL 归因于「部署判定器旧于仓内 ⇒ 用旧判据」，
-并写 `documents`/`strategy` 状态为 `PARTIAL`。复查后两处都不成立，已按下面的实测替换。
-原因值得单独记：`current.json` 每 300s 被整体重写，**状态标签是瞬时量**，
-把一次读数当定论就会错。
+**两次自我更正都记在这里**（各由一次重新测量推翻上一版结论）：初稿把 A9 仍 PARTIAL 归因于
+「部署判定器旧于仓内 ⇒ 用旧判据」；二稿据 `current.json` 单平面读数断言「同轮内 `gates[]` 与
+`source_states` 矛盾」。两者都不成立，成因见 §5.4。当前版本只保留可复现的读数。
 
-### 5.1 漂移的实际内容是事件台账根解析（与 A9 判据无关）
+### 5.1 修复在线上生效的最强证据：原因串里 `scheduler` 项消失
 
-- 部署副本 `panorama-collect-main.py` sha 前缀 `fa7eb9c1…`，与 `origin/main` 的 `f891ad40…`、
-  主工作区的 `e7f6a4b6…` **三方互异**（这是原 §5 里唯一站得住的部分）。
-- 逐段比对（`difflib` n=0，共 66 行差异）后，差异**全部**集中在事件台账路径：
-  `origin/main` 用 `from repo_root import …, event_ledger_path, …` 并在缺省时调
-  `event_ledger_path()`；部署副本没有该导入，改由模块级常量
-  `EVENT_LEDGER = os.environ.get("OMO_EVENT_LEDGER_DB", ROOT / "runtime/omo/event-ledger.sqlite3")`
-  硬解析。⇒ 线上副本缺的是**事件台账根解析**那笔重构，属 ADR-0456 三根口径问题。
-- **A9 判据不受此漂移影响**（已双检）：两副本的 `required_sources` 都是同一组 14 项
-  （集合差为空）、准入标签判据行一致（`OK` / `DEFERRED` / 有界的 `STALE_UNAVAILABLE`,`FAIL`）、
-  `_cockpit_source_reasons` 都存在、`cockpit_path` 同一表达式。
-- 处置仍属运维裁决：有意保留 → `capture` 入仓；应更新 → 由 `publish` 带上该文件。本回执不代判。
+按轮次读 `revisions/*/data.json` 的 A9 `detail`（该平面带 `_cockpit_source_reasons` 全文）：
 
-### 5.2 同一轮内 `gates[]` 与 `source_states` 给出矛盾读数（未决）
-
-对 `generated_at = 2026-11-10T02:15:25Z` **同一个文件同一轮**读数：
-
-| 读数方式 | 结果 |
+| 轮次（本地时钟） | A9 detail 的原因部分 |
 |---|---|
-| 按 `panorama-collect.py:1504-1511` 判据复算 14 个必需源 | **不合格源 = 无** |
-| 同轮 `gates[]` 里 A9 | `verdict=UNKNOWN`、`source_verdict=PARTIAL`、`detail="A9 evidence incomplete: cockpit_sources"` |
+| 09:48:18（发布前最后一轮） | `strategy=PARTIAL; documents=PARTIAL; scheduler=STALE_UNAVAILABLE(Collection failed for 'scheduler': diagnostic command exit 2)` |
+| 09:52:04（发布后第一轮） | `strategy=PARTIAL; documents=PARTIAL` —— **`scheduler` 不再出现** |
 
-`verdict=UNKNOWN` 而 `source_verdict=PASS` 是 cockpit 适配层的**设计**而非缺陷
-（`tests/test_zhixing_wrapper_base_source.py:87-88` 就是这么断言的；本轮 11/11 门都是 `UNKNOWN`，
-其 `source_verdict` 分布为 PASS 5 / FAIL 3 / PARTIAL 1 / NOT_ADMITTED 2）。
-但「复算无不合格源」与「A9 仍报 `cockpit_sources`」不能同时为真，且该 detail **没有带原因串**
-（判据 `:1519` 会把 `_cockpit_source_reasons(...)` 一并接上），所以疑点在
-`gates[]` 这一层的写入者与其取数轮次，不在准入标签集。**未决，建议立案。**
+与 §2 的 `source_states.scheduler`（`STALE_UNAVAILABLE` → `OK`、`last_success_at`
+2026-11-07 → 2026-11-10）互相独立地指向同一结论：`exit 2` 在线上通路已消除。
 
-### 5.3 两个源的 `last_success_at` 已 12 天（durable 事实）
+### 5.2 A9 仍 PARTIAL 的原因是两个源 12 天没有成功观测（durable）
 
-`documents` 286.9h、`strategy` 306.0h（约 12 天）没有成功观测。它们的 `status` 标签在不同轮次间
-在 `PARTIAL` 与 `DEFERRED` 之间摆动（01:50 轮读到 `PARTIAL`、10:15 轮读到 `DEFERRED`
-+ `error="Deferred: host load above budget"`）；`DEFERRED` 被 `:1508` **无条件接受**（不看年龄），
-`PARTIAL` 则**任何年龄都不被接受**。⇒ 同一判据对同一对源可给出相反结论，
-负载高的轮次反而让 A9 在这两项上通过。这与 `:1498-1503` 注释自陈的设计意图
-（「真正的信号是年龄而不是状态标签」）方向相反，属门语义问题，同样**不在本 BET 范围**。
+02:21:04 轮 `current.json` 与 01:58:14 轮 `data.json` 对这两项读数一致：
+`strategy.status=PARTIAL`、`last_success_at=2026-10-28T08:18Z`（约 306h）；
+`documents.status=PARTIAL`、`last_success_at=2026-10-29T03:22Z`（约 287h）。
+判据 `panorama-collect.py:1504-1511` 接受 `OK`/`DEFERRED`/有界的 `STALE_UNAVAILABLE`,`FAIL`，
+**`PARTIAL` 任何年龄都不被接受** ⇒ 这两项独立于本次修复，是 A9 现存的真实缺失证据，
+此前被 `scheduler` 的 `exit 2` 排在同一 detail 里而不显眼。
 
-### 5.4 我这次发布对 A9 的实际效果边界
+### 5.3 聚合平面丢失诊断信息（未决，值得立案）
 
-可归因于本次发布的只有：`"diagnostic command exit 2"` 从线上产物消失（1→0），
-且 `scheduler` 的 `last_success_at` 从 2026-11-07T00:04Z 变为 2026-11-10T01:49Z。
-10:15 轮 `scheduler.status` 又显示 `DEFERRED`（负载让步，`observed_at=01:59:42`），
-这**不是**回归——它的上次成功仍在界内，判据照样接受。
-A9 整体是否转 PASS 不由本 BET 决定，见 §5.2 / §5.3 两条未决。
+同一轮同一底层判定，两个平面写出的 A9 记录不同：
+
+| 平面 | `verdict` | `detail` |
+|---|---|---|
+| `revisions/*/data.json`（生产者产物） | `PARTIAL` | 带完整原因串 |
+| `current.json`（聚合产物） | `UNKNOWN` + `source_verdict=PARTIAL` | 在 `cockpit_sources` 处**截断**，原因串丢失 |
+
+`verdict=UNKNOWN` 而 `source_verdict=PASS/FAIL/PARTIAL` 是 cockpit 适配层的设计，不是缺陷
+（`tests/test_zhixing_wrapper_base_source.py:87-88` 直接断言此形状；本轮 11/11 门都是 `UNKNOWN`，
+`source_verdict` 分布 PASS 5 / FAIL 3 / PARTIAL 1 / NOT_ADMITTED 2）。
+但 `detail` 在聚合时被截掉原因，**正好重新造出** `panorama-collect.py:1513-1516` 注释里
+2026-10-23 那次要消灭的现象（「只看得到 `cockpit_sources` 时无法分辨原因，得人工翻 cockpit current.json」）。
+截断点在哪一层未查，属新缺陷。
+
+### 5.4 我自己的两次误读，以及为什么值得写下来
+
+- 二稿的「矛盾」来自**跨平面 + 跨轮次**比较：拿 `current.json` 的 02:15 轮去比 `data.json` 的 01:58 轮
+  （相差 17 分钟），期间 `strategy`/`documents` 的标签在高负载轮显示为 `DEFERRED`
+  （判据接受），于是复算得「0 不合格」，而另一平面同分钟的历史值仍是 `PARTIAL`。
+  同一目录下的 `current.json` 与 `revisions/*/data.json` 是**两个写入者、两条节奏**的产物，
+  任何比较都必须先对齐 `generated_at`。
+- 一稿的「旧判据」假设被两处读数否证：① 逐段比对显示两副本的 `required_sources`（同 14 项）、
+  准入标签判据行、`_cockpit_source_reasons` 都在，差异全部落在事件台账根解析
+  （main 用 `repo_root.event_ledger_path()`，release 副本硬编码 `EVENT_LEDGER`）；
+  ② 更关键的是 `manifest.json` 的 `producer.collector_sha256 = f891ad40dbbacc12…`
+  **等于 `origin/main` 的哈希**，而发布继承的 release 目录副本是 `fa7eb9c1…`
+  ⇒ 实际产出这些 revision 的采集器不是 release 目录里那份（`~/.local/share/zhixing-dashboard/`
+  下另有 `code-main` 等平面）。**因此那条漂移在这份产物上没有可证的因果**，
+  它是否仍在别的路径上被执行，属未决。
+
+### 5.5 发布继承漂移这一条仍然成立（代码事实）
+
+`_prepare_version` 从 base release 整树复制再叠加所选文件（`zhixing-host-sync.py:313-332`），
+实测发布后新 release 的 `panorama-collect-main.py` 仍为 `fa7eb9c1…`（与 base 相同）。
+⇒ 单文件发布既不修正也不掩盖同目录其他文件的漂移。
 
 ## 6 台账为什么不改
 
