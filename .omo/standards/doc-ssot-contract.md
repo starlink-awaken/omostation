@@ -155,7 +155,7 @@ python3 bin/ssot/doc-ssot-lint.py --json       # 机器可读 JSON (gac-healthch
 3. **归档执行**: `python3 bin/ssot/doc-lifecycle.py archive`（按 frontmatter 判定，非 mtime）
 4. **反向指针 (circuit_breaker)**: 归档后原位置写指针文件（`<!-- 已归档 → <dest> -->` + 新路径说明），防止死链；指针文件由 doc-lifecycle 扫描豁免
 5. **引用指针化**: 其他文档引用同步改为归档路径（不指向顶层原路径）
-6. **生成文档豁免**: `docs/generated/*`、`docs/reports/*`（生成报告）、`docs/repository-health.md` 是派生产物，**不手改 frontmatter**，由生成器管理
+6. **生成文档豁免**: `docs/generated/*`、`docs/reports/*`（生成报告）、`docs/operations/repository-health.md` 是派生产物，**不手改 frontmatter**，由生成器管理
 7. **子模块豁免**: `projects/*/` 下文档归各子仓维护，主仓 doc-lifecycle 不修改
 
 执行工具: `bin/ssot/doc-lifecycle.py`（audit / archive / lint 三子命令，与 doc-ssot-lint 共用扫描范围）
