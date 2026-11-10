@@ -100,23 +100,59 @@ schema_version: closeout-receipt/v1
 而既有平面上只有一处 (`​.omo/state/runtime/governance-dashboard.json`) 含 `duration_ms`，
 此时另起一个新面属于扩面而非补缺。
 
-## 5 新暴露的三条事实
+## 5 发布后再测 A9：三条已核实事实 + 两条未决
 
-1. **线上 A9 判定器旧于仓内**。部署 release 的 `panorama-collect-main.py`
-   sha256 前缀 `fa7eb9c1…`，与 `origin/main` 的 `f891ad40…` 和主工作区的 `e7f6a4b6…`
-   **三方互不相同**。后果实测：部署 detail 只有 `cockpit_sources`，而 `panorama-collect.py:1519`
-   会把 `_cockpit_source_reasons(...)` 一并带出 —— 2026-10-23 那次「降级必须带原因」的修复
-   没上线。**publish 不会修正它**：`_prepare_version` 从 base release 整体复制再叠加所选文件
-   （`:313-332`），漂移内容被继承。按 runbook 该行属于运维裁决：有意热修 → `capture` 入仓，
-   意外覆盖 → `restore`。本回执不代为判定。
-2. **A9 仍 PARTIAL，原因换成了两个源真坏了 12 天**。按 `:1484-1512` 同口径复算
-   `current.json`：14 个必需源 12 合格、2 不合格 —— `documents`（`PARTIAL`，
-   上次成功距今 286.5h）、`strategy`（`PARTIAL`，305.5h）。原故障遮蔽了它们：
-   修好 `scheduler` 之前，A9 的 detail 只显示 `diagnostic command exit 2` 那条路径。
-3. **`PARTIAL` 不在 A9 的准入标签集内**。`:1504-1511` 接受 `OK`/`DEFERRED`，
-   以及 6h 界内的 `STALE_UNAVAILABLE`/`FAIL`；`PARTIAL`（部分成功）**任何年龄都不被接受**。
-   这与同处注释「标签会因采集器而异……却只有一个被接受」是自同一类问题，
-   但放宽准入集是门语义裁决，不由本次部署顺带完成 —— 记为待裁决，不在本 BET 范围。
+**先记一次自我更正**：本节初稿把 A9 仍 PARTIAL 归因于「部署判定器旧于仓内 ⇒ 用旧判据」，
+并写 `documents`/`strategy` 状态为 `PARTIAL`。复查后两处都不成立，已按下面的实测替换。
+原因值得单独记：`current.json` 每 300s 被整体重写，**状态标签是瞬时量**，
+把一次读数当定论就会错。
+
+### 5.1 漂移的实际内容是事件台账根解析（与 A9 判据无关）
+
+- 部署副本 `panorama-collect-main.py` sha 前缀 `fa7eb9c1…`，与 `origin/main` 的 `f891ad40…`、
+  主工作区的 `e7f6a4b6…` **三方互异**（这是原 §5 里唯一站得住的部分）。
+- 逐段比对（`difflib` n=0，共 66 行差异）后，差异**全部**集中在事件台账路径：
+  `origin/main` 用 `from repo_root import …, event_ledger_path, …` 并在缺省时调
+  `event_ledger_path()`；部署副本没有该导入，改由模块级常量
+  `EVENT_LEDGER = os.environ.get("OMO_EVENT_LEDGER_DB", ROOT / "runtime/omo/event-ledger.sqlite3")`
+  硬解析。⇒ 线上副本缺的是**事件台账根解析**那笔重构，属 ADR-0456 三根口径问题。
+- **A9 判据不受此漂移影响**（已双检）：两副本的 `required_sources` 都是同一组 14 项
+  （集合差为空）、准入标签判据行一致（`OK` / `DEFERRED` / 有界的 `STALE_UNAVAILABLE`,`FAIL`）、
+  `_cockpit_source_reasons` 都存在、`cockpit_path` 同一表达式。
+- 处置仍属运维裁决：有意保留 → `capture` 入仓；应更新 → 由 `publish` 带上该文件。本回执不代判。
+
+### 5.2 同一轮内 `gates[]` 与 `source_states` 给出矛盾读数（未决）
+
+对 `generated_at = 2026-11-10T02:15:25Z` **同一个文件同一轮**读数：
+
+| 读数方式 | 结果 |
+|---|---|
+| 按 `panorama-collect.py:1504-1511` 判据复算 14 个必需源 | **不合格源 = 无** |
+| 同轮 `gates[]` 里 A9 | `verdict=UNKNOWN`、`source_verdict=PARTIAL`、`detail="A9 evidence incomplete: cockpit_sources"` |
+
+`verdict=UNKNOWN` 而 `source_verdict=PASS` 是 cockpit 适配层的**设计**而非缺陷
+（`tests/test_zhixing_wrapper_base_source.py:87-88` 就是这么断言的；本轮 11/11 门都是 `UNKNOWN`，
+其 `source_verdict` 分布为 PASS 5 / FAIL 3 / PARTIAL 1 / NOT_ADMITTED 2）。
+但「复算无不合格源」与「A9 仍报 `cockpit_sources`」不能同时为真，且该 detail **没有带原因串**
+（判据 `:1519` 会把 `_cockpit_source_reasons(...)` 一并接上），所以疑点在
+`gates[]` 这一层的写入者与其取数轮次，不在准入标签集。**未决，建议立案。**
+
+### 5.3 两个源的 `last_success_at` 已 12 天（durable 事实）
+
+`documents` 286.9h、`strategy` 306.0h（约 12 天）没有成功观测。它们的 `status` 标签在不同轮次间
+在 `PARTIAL` 与 `DEFERRED` 之间摆动（01:50 轮读到 `PARTIAL`、10:15 轮读到 `DEFERRED`
++ `error="Deferred: host load above budget"`）；`DEFERRED` 被 `:1508` **无条件接受**（不看年龄），
+`PARTIAL` 则**任何年龄都不被接受**。⇒ 同一判据对同一对源可给出相反结论，
+负载高的轮次反而让 A9 在这两项上通过。这与 `:1498-1503` 注释自陈的设计意图
+（「真正的信号是年龄而不是状态标签」）方向相反，属门语义问题，同样**不在本 BET 范围**。
+
+### 5.4 我这次发布对 A9 的实际效果边界
+
+可归因于本次发布的只有：`"diagnostic command exit 2"` 从线上产物消失（1→0），
+且 `scheduler` 的 `last_success_at` 从 2026-11-07T00:04Z 变为 2026-11-10T01:49Z。
+10:15 轮 `scheduler.status` 又显示 `DEFERRED`（负载让步，`observed_at=01:59:42`），
+这**不是**回归——它的上次成功仍在界内，判据照样接受。
+A9 整体是否转 PASS 不由本 BET 决定，见 §5.2 / §5.3 两条未决。
 
 ## 6 台账为什么不改
 
