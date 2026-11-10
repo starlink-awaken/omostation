@@ -1,5 +1,5 @@
 id: "DASHBOARD-TEMPLATE-CONTRACT-GAP"
-title: "驾驶舱模板声明的 9 个字段在发布 payload 里全部缺席 —— 页面多项渲染为空/Invalid Date"
+title: "驾驶舱模板声明的 9 个字段在发布 payload 里全部缺席 —— 页面多项渲染为空、运行新鲜度显示 NaN 分钟"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -63,4 +63,27 @@ history:
     跑的是 `current/orchestrator.py`），即这次迁移把这些字段静默丢了。
     **跨仓边界**：template.html 属部署仓 `starlink-awaken/zhixing-dashboard`，不在本仓 ——
     契约的两端分属两个仓，任何单侧修改都要走对应仓的交付流程。
+  actor: "governance-agent"
+- at: "2026-11-10T09:40:00+00:00"
+  action: review
+  note: >-
+    **更正上一条的两处后果判定**（同一条目内自纠，避免错误结论继续传播）：
+    ① **`:3110` 那条是错的**。`template.html:3011` 的 `dt` 定义自带兜底 ——
+    `const dt=x=>x?new Date(x).toLocaleString(...):'未观测'` —— 故 `dt(D.observed_at)`
+    缺字段时渲染成 **`未观测`**，**不是** `Invalid Date`。本条标题里的 "Invalid Date" 已一并订正。
+    ② **`:3161` 那条是对的，且比原描述更具体**。`R` 的定义是
+    `template.html:3013` `const p=D.portfolio, R=D.runtime||{};`，而实测
+    `current.json` 与 `/data.json` 的 `runtime.observed_at` **均为 `None`** ⇒
+    `R.observed_at||D.observed_at` 求值为 `undefined` ⇒ `Date.parse(undefined)` = `NaN`
+    ⇒ `Math.max(0, Math.floor(NaN))` = `NaN` ⇒ 页面 `ageLabel()` 每 30 秒刷新出
+    **「运行观测距今 NaN 分钟。」**，且 `NaN > freshThreshold` 恒 false ⇒ 永远走
+    「此时间仅说明快照年龄」那句，**新鲜度过期提示永不触发**。
+    **修法已定且属「补事实」而非「扩范围」**：`collect_runtime()` 实测不产出
+    `observed_at`（`bin/panorama/panorama-collect.py:1776-1806`），而它跑的那几项
+    （meta-doctor / launchctl / crontab / scheduler-compile）就是本轮观测本身 ⇒
+    在该函数末尾补 `rt["observed_at"] = datetime.now(UTC).isoformat()` 即可，
+    语义即「这批探针的观测时刻」。已随本条交付。
+    **其余 8 个字段仍待裁定**（pending_publications / reconciliation_candidates /
+    current_findings / value_loop / anomaly_events / library / refresh 与顶层 observed_at）——
+    它们要么是 refresh.py 时代产物、要么需要跨仓（模板属部署仓）协同，不在本条自行处理。
   actor: "governance-agent"
