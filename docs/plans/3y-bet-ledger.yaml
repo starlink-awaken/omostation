@@ -47668,6 +47668,79 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: evaluating
+- accepted_specifications:
+  - content_digest: sha256:34b8a821763780225653271d48509c7f2e65930bd0b7c43ee6a25082d4bc80f3
+    decision_ref: decision://accepted/BET-Y2Q4-T10-345
+    spec_ref: repo://docs/superpowers/specs/2026-11-10-resident-dispatch-objective-dedupe.md
+    spec_version: 1.0.0
+  appetite: 1 day
+  circuit_breaker: 若去重开始吞掉不同 objective、或改为改写既有派单 JSON（与执行侧按 ADR-0466 手写的 status 撞车）、或为了让用例绿而放宽
+    dry_run 契约，停止并返回主协调。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_PROVEN
+      value:
+        evidence:
+          note: 本轮为派发生成侧的重复折叠修复，不设价值指标。
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
+  done_when:
+  - 正例成立——同一 objective 连续两次 `dispatch_task` 只留下 1 份任务 JSON 与 1 张卡片，第二次返回 `deduplicated=True`
+    且 `task_id` 与第一次相同；把去重分支摘掉，该用例当场红。
+  - 反例配平成立——不同 objective 各自建档（2 份）；`created_at` 早于 TTL 的同 objective 允许再建档；损坏 JSON 不参与判定、不吞新派发。
+  - 消费面不破——`interact.py:501` 直接下标读取的 `task_id` / `target_agent` / `session_id` / `worktree.message`
+    四个键在去重分支全部存在；`test_resident_dispatch.py` 与 `test_resident_worker.py` 既有用例零回归。
+  - 诚实面成立——去重分支的 `worktree.ok` 只在既有 `worktree_path` 真存在于盘上时为 True，不因折叠虚报已建隔离工作树。
+  goal: 给 `projects/omo/src/omo/resident/dispatch.py::dispatch_task` 加一道按 objective
+    新鲜度的去重：同一 objective 在 TTL 窗口内已有记录时复用既有 task_id，不新建 TaskObject JSON、不新建 Action Desk
+    卡片、不 claim 隔离工作树，返回值补 `deduplicated=True` 并保住 `interact.py:501` 直接下标读取的四个键。判据不能是状态：task-object-v1
+    未定义状态枚举，已提交 33 份里 30 份的状态由 worker.py 或执行侧按 ADR-0466 手写，没有任何写入方会把任务标成已了结。
+  human_gate: false
+  id: BET-Y2Q4-T10-345
+  non_goals:
+  - 不改 `.omo/_truth/task-center/dispatches` 的跟踪性与落位——BET-Y2Q4-T10-289 已把这条 trackedness
+    分叉登记为未裁，改 `.gitignore` 或摘库须 principal 另行授权。
+  - 不删除、不改写任何既有派单 JSON 与台账行；存量残留清理属 principal 权限，本轮只堵住新增。
+  - 不改 `dry_run` 语义——`test_dispatch_task_dry_run` 的「dry-run 仍落 1 份任务 + 1 张卡片」是既有契约。
+  - 命中时不做 read-modify-write 更新既有记录：这些记录会被执行侧按 ADR-0466 手写 status，改写会撞车。
+  - 不新增状态枚举、registry、dispatcher 或第二控制面；不新增 CLI flag（只有一个既有风格的 env 覆盖）。
+  objective_ref: OBJ-HOLDABILITY
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L2
+  status: in_progress
+  title: BET-Y2Q4-T10-345 常驻自愈派发按 objective 折叠重复建档 —— 止住 task-center dispatches 无界增长
+  track: T10-TOOLING
+  underlying_workflow: governance-state-mutation
+  value_indicator_policy: false
+  verify:
+  - cmd: cd projects/omo && env HOME=$(mktemp -d) UV_CACHE_DIR=$(mktemp -d) PYTHONPATH=src
+      uv run --no-project --with pytest --with pyyaml python -m pytest tests/unit/test_resident_dispatch.py
+      -q -p no:randomly -o addopts=""
+    expect: 改动前基线 5 passed；改动后 9 passed（新增 4 条：正例、不同 objective 反例、TTL 过期反例、损坏 JSON 反例）；摘掉去重分支时恰
+      2 条红（折叠正例 + 消费面四键）。
+  - cmd: 'python3 -c "import sys,json,time; sys.path.insert(0,''projects/omo/src'');
+      from pathlib import Path; from omo.resident.dispatch import _find_recent_dispatch;
+      d=Path(''/tmp/gdc/dedupe-probe''); d.mkdir(parents=True,exist_ok=True); (d/''TSK-A.json'').write_text(json.dumps({''task_id'':''TSK-A'',''objective'':''自愈修复:
+      dashboard_projection'',''created_at'':__import__(''datetime'').datetime.utcnow().isoformat()+''+00:00''}));
+      print(''HIT'', bool(_find_recent_dispatch(''自愈修复:  dashboard_projection'', 259200,
+      d)))"'
+    expect: 实机 canary，读数 `HIT True` 与 `MISS_OTHER None`（归一化空白后命中同一档、别的条件不误吞）；HIT 转 False 说明判据没接上写者同一个目录。
+  window: Y2Q4
+  workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-10-resident-dispatch-objective-dedupe.md
+  - projects/omo
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-345.md
+  - docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47806,7 +47879,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 592
+  total_bets: 593
   windows:
   - Y1Q1
   - Y1Q2
