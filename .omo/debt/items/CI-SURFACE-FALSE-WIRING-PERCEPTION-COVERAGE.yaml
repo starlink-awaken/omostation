@@ -55,3 +55,23 @@ history:
     这一形状在`wired_tools` 计数里也**不体现**。
     **同一盲点的第二半**：`wired_tools` 的 146/151 差额正是这个聚合器盲点造成的, 属计数失真而非漏报。
   actor: "governance-agent"
+- at: "2026-11-10T14:40:00+00:00"
+  action: review
+  note: >-
+    **补全为完整清单（共 4 条，全部经 `check-ci-surfaces.py` 的 false-wiring 检查在
+    **子模块齐全的检出**里实测输出）**：
+    ① `bin/gac/perception-coverage.py` → 声明 `gac-gate.yml`（report generator，无任何执行面）；
+    ② `bin/gac/gac-worktree.sh` → 声明 `reusable-submodule-bump-pr.yml`（该 workflow 跑在
+    GitHub runner 上、自包含 shell，**无法**调用本地工具；声明为假）；
+    ③ `bin/ops/lighthouse-stub.py` → 声明 `gac-gate.yml`（note 自述 "pending real integration"）；
+    ④ `bin/ops/nfr-stub.py` → 声明 `gac-gate.yml`（同上）。
+    **两种性质不同**：① ② 是**纯粹的假声明**（工具本身完整、只是没人执行）；
+    ③ ④ 是**占位声明**（工具本身是 stub，声明表达的是「待接入」的意图）——
+    对后者，更合适的表达是 `workflow: "(none)"` + note 说明待接入，而不是挂一个不执行的
+    workflow 名。**这属于表达约定问题，仍待 principal 裁定**。
+    **扫描器口径（供复核）**：对每条 `surfaces` 条目，取其 `workflow` 声明的文件，判定它能否执行
+    该工具 —— 文本含该工具 / 该文件以 `--workflow <自己>` 调 `ci-check-runner.py` / 该文件调
+    `gac-local-gate.py` 且工具在其门禁集（sgf-policy gate command + gac-local-gate.py 文件内字面量）。
+    三条都不成立即告警。**子模块未初始化的检出**里 sgf-policy 缺席，此时对 gac-local-gate
+    下单**保守跳过**（否则会把 `script-registry` 这类真 gate 误报成无人执行）。
+  actor: "governance-agent"
