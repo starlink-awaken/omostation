@@ -178,9 +178,34 @@ def check_file(file: Path, root: Path) -> list[tuple[str, str]]:
                 candidate_md = candidate.with_suffix(".md")
                 if candidate_md.exists():
                     continue
+            # 生成物在干净检出里不存在, 运行期才有 —— 不是悬空引用
+            if _is_gitignored(candidate, root):
+                continue
             issues.append((link, f"target not found: {candidate.relative_to(root)}"))
 
     return issues
+
+
+def _is_gitignored(path: Path, root: Path) -> bool:
+    """`path` 是否被 .gitignore 覆盖 (即「运行期生成物, 干净检出里没有」)。
+
+    这类目标在干净检出里不存在、运行期才由生成器产出 (如 `.omo/state/*.yaml`、
+    `.omo/_control/*.json`), 引用它们不是悬空链接。判据只看文件系统就会
+    「干净检出不报、本机报」—— 与 #5224 修的 CR-OMO-SURFACE-01 同一类盲点。
+    探测失败一律返回 False (不豁免), 保持判据偏严。
+    """
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return False
+    try:
+        proc = subprocess.run(
+            ["git", "check-ignore", "-q", "--", relative.as_posix()],
+            cwd=root, capture_output=True, text=True, timeout=10,
+        )
+    except Exception:  # noqa: BLE001
+        return False
+    return proc.returncode == 0
 
 
 def _is_scan_candidate(file: Path, root: Path) -> bool:
