@@ -7,7 +7,7 @@ import importlib.util
 import subprocess
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 GUARDIAN = REPO_ROOT / "bin" / "ssot" / "ssot-guardian.py"
 DRIFT_SCRIPT = REPO_ROOT / "bin" / "gac" / "check-submodule-pointer-drift.py"
 
