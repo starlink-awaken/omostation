@@ -169,22 +169,32 @@ def dim_operations() -> dict:
 # ---------------------------------------------------------------------------
 def dim_anticorrosion() -> dict:
     """GaC drift 项数 + 治理 SSOT 漂移告警."""
-    meta = _run_check("bin/gac/meta-doctor.py --workspace . --json", default={})
+    # meta-doctor.py 没有 --json（只有 --workspace/--reference-root/--refs-only），
+    # 多传一个会让它直接 argparse 报错、_run_check 折叠成 default —— 于是这一维
+    # 恒报 drift=0。它的默认输出本身就是 JSON。
+    meta = _run_check("bin/gac/meta-doctor.py --workspace .", default=None)
     guardian = _run_check("bin/ssot/ssot-guardian.py", default="")
-    meta_drift = 0
-    if isinstance(meta, dict):
-        # 各种可能字段
+    meta_available = isinstance(meta, dict) and bool(meta)
+    meta_drift = None
+    if meta_available:
+        summary = meta.get("summary") if isinstance(meta.get("summary"), dict) else {}
         meta_drift = (
-            meta.get("drift_count", 0)
-            or meta.get("drifts", 0)
-            or len(meta.get("findings", []))
-            or len(meta.get("drifts_list", []))
+            meta.get("drift_count")
+            or meta.get("drifts")
+            or len(meta.get("findings") or [])
+            or len(meta.get("drifts_list") or [])
+            # meta-doctor 实际产出的字段（summary 里）
+            or summary.get("stale_beats", 0)
+            or summary.get("absent_beats", 0)
+            or summary.get("dead_refs", 0)
             or 0
         )
     # ssot-guardian 返回 exit 0/1 + 文本; 用 stderr/stdout 简单判断
     guardian_clean = "PASS" in str(guardian) and "FAIL" not in str(guardian).split("\n")[0]
     return {
         "meta_doctor_drift_count": meta_drift,
+        "meta_doctor_available": meta_available,
+        "meta_doctor_error": None if meta_available else "meta-doctor 未产出 JSON（命令失败或超时）",
         "ssot_guardian_clean": guardian_clean,
     }
 
@@ -267,10 +277,17 @@ def to_markdown(report: dict, week: bool = False) -> str:
     out.append(f"| 进化 | {e['done']}/{e['total']} bet done ({e['ratio']*100:.1f}%, 30d +{e['done_30d']}) | — | — |")
 
     o = report["operations"]
-    out.append(f"| 运维 | {o['online']}/{o['total']} 在线 ({o['ratio']*100:.0f}%) | — | — |")
+    if o.get("error"):
+        # 缺席不是 0%: system.yaml 没物化时报 0/0 在线会被读成「所有 daemon 都挂了」
+        out.append(f"| 运维 | 不可用（{o['error']}） | — | — |")
+    else:
+        out.append(f"| 运维 | {o['online']}/{o['total']} 在线 ({o['ratio']*100:.0f}%) | — | — |")
 
     c = report["anti_corrosion"]
-    drft = c.get("meta_doctor_drift_count", "?")
+    if not c.get("meta_doctor_available", True):
+        drft = f"不可用（{c.get('meta_doctor_error') or 'meta-doctor 无输出'}）"
+    else:
+        drft = c.get("meta_doctor_drift_count", "?")
     ssg = "clean" if c.get("ssot_guardian_clean") else "warnings"
     out.append(f"| 防腐 | drift={drft}, ssot-guardian={ssg} | — | — |")
 
