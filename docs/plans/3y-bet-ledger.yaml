@@ -47669,7 +47669,7 @@ bets:
         evidence: {}
     overall_state: evaluating
 - accepted_specifications:
-  - content_digest: sha256:faeaf08bdc7a3cf7562609083d1d0ba1727a232b7619de93205c79a8f1c282e6
+    content_digest: sha256:34b8a821763780225653271d48509c7f2e65930bd0b7c43ee6a25082d4bc80f3
     decision_ref: decision://accepted/BET-Y2Q4-T10-345
     spec_ref: repo://docs/superpowers/specs/2026-11-10-resident-dispatch-objective-dedupe.md
     spec_version: 1.0.0

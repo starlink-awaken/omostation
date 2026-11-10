@@ -3,6 +3,7 @@ schema_version: specification/v1
 spec_version: 1.0.0
 title: 常驻自愈派发按 objective 折叠重复建档
 bet_id: BET-Y2Q4-T10-345
+owner: governance-agent
 status: accepted
 lifecycle: contract
 last-reviewed: 2026-11-10
