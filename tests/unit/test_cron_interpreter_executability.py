@@ -21,8 +21,9 @@ _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "bin" / "lib"))
 sys.path.insert(0, str(_ROOT / "bin" / "gac"))
 
-import cron_normalize as cn  # noqa: E402
 import importlib  # noqa: E402
+
+import cron_normalize as cn  # noqa: E402
 
 gate = importlib.import_module("check-cron-interpreter-executability")
 
