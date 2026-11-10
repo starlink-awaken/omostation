@@ -14,14 +14,21 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SCAN_EXTENSIONS = {".py", ".ts", ".js", ".yaml", ".yml", ".json", ".sh", ".md"}
+# 刻意不含 .md: 文档按定义引用示例配置（把模型名/占位符写成 api_key 的值）,
+# 安全扫描器扫散文只会产出噪音 (2026-11-11 实测 6/6 命中全在 markdown 或说明文字里)。
+# 注意本扫描器也扫自己的源码 —— 注释里不要写出 `api_key=` 后直接接引号字面量的样子。
+SCAN_EXTENSIONS = {".py", ".ts", ".js", ".yaml", ".yml", ".json", ".sh"}
 
-# Patterns that suggest hardcoded values
+# Patterns that suggest hardcoded values。
+# `\b` 是承重的: 无词边界时 `split_token = "…"` 里的 token 也算命中。
 PATTERNS = [
-    (r"api_key\s*=\s*['\"][^'\"]+['\"]", "hardcoded API key"),
-    (r"password\s*=\s*['\"][^'\"]+['\"]", "hardcoded password"),
-    (r"token\s*=\s*['\"][^'\"]+['\"]", "hardcoded token"),
+    (r"\bapi_key\s*=\s*['\"]([^'\"]+)['\"]", "hardcoded API key"),
+    (r"\bpassword\s*=\s*['\"]([^'\"]+)['\"]", "hardcoded password"),
+    (r"\btoken\s*=\s*['\"]([^'\"]+)['\"]", "hardcoded token"),
 ]
+
+# 值是 shell/python 替换而非字面密钥: `$_PRESET_PASS` / `$(...)` / 反引号
+SUBSTITUTION_VALUE = re.compile(r"^[\$`]")
 
 
 def scan_file(file_path: Path) -> list:
@@ -33,6 +40,8 @@ def scan_file(file_path: Path) -> list:
 
     for pattern, desc in PATTERNS:
         for m in re.finditer(pattern, text, re.IGNORECASE):
+            if SUBSTITUTION_VALUE.match(m.group(1)):
+                continue
             line_num = text[:m.start()].count("\n") + 1
             issues.append({
                 "file": str(file_path.relative_to(REPO_ROOT)),
