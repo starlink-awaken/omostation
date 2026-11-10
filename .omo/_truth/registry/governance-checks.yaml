@@ -179,7 +179,7 @@ gac:
   subtraction_quota:
     check_type: advisory
     rule_baseline: 180
-    script_baseline: 739 # 2026-11-07 740->739: 退役 bin/meta/compass_radar.py (compass_radar 的**死副本**, 无调用者; 活副本是 bin/compass_radar.py, services.yaml entrypoint 指向它) + 同步删登记条目 bin/_registry/scripts/state/compass_radar.yaml (BET-Y2Q4-T10-220 D6) # 2026-11-07 739->740: 新登记 bin/lib/cron_normalize.py (crontab 归一化唯一实现 —— 终结 scheduler-compile 与 install-cron-plane 的两次静默漂移; 纯抽取+并轨, 无新能力) # 2026-11-06 738->739: 新登记 bin/gac/documents-personal-view.py (个人检索层域视图生成器 —— §5.166 承诺「单位域/家庭域不进个人检索层」的落地工具; 单个前缀根无法只排掉两个同级兄弟域, 用视图而不是假排除) # 2026-11-03 737->738: 新登记 bin/ops/install-cron-plane.py (crontab 平面安装器 —— scheduler-compile 只产内容不装机, mbp 登记面 48 条只装了 5 条) # 2026-10-28 732->733: 新登记 bin/ssot/check-interfaces.py (接口契约表结构检查 —— 补上自 2026-06-06 起断掉的执行面)
+    script_baseline: 740 # 2026-11-10 739->740: 新登记 bin/gac/check-cron-interpreter-executability.py (cron 解释器可执行性门禁 —— CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3); 2026-11-10 principal 裁决「先 warn + 限期收敛」; 判据复用 bin/lib/cron_normalize 不另造口径) # 2026-11-07 740->739: 退役 bin/meta/compass_radar.py (compass_radar 的**死副本**, 无调用者; 活副本是 bin/compass_radar.py, services.yaml entrypoint 指向它) + 同步删登记条目 bin/_registry/scripts/state/compass_radar.yaml (BET-Y2Q4-T10-220 D6) # 2026-11-07 739->740: 新登记 bin/lib/cron_normalize.py (crontab 归一化唯一实现 —— 终结 scheduler-compile 与 install-cron-plane 的两次静默漂移; 纯抽取+并轨, 无新能力) # 2026-11-06 738->739: 新登记 bin/gac/documents-personal-view.py (个人检索层域视图生成器 —— §5.166 承诺「单位域/家庭域不进个人检索层」的落地工具; 单个前缀根无法只排掉两个同级兄弟域, 用视图而不是假排除) # 2026-11-03 737->738: 新登记 bin/ops/install-cron-plane.py (crontab 平面安装器 —— scheduler-compile 只产内容不装机, mbp 登记面 48 条只装了 5 条) # 2026-10-28 732->733: 新登记 bin/ssot/check-interfaces.py (接口契约表结构检查 —— 补上自 2026-06-06 起断掉的执行面)
       # 2026-10-27 731->732: 新登记 CR-CI-RUNNER-COST 守门 bin/gac/check-runner-cost.py (macOS 10x/Windows 2x runner 成本) # 2026-10-26 730->731: 新登记 bin/panorama/materialize-agent-brief.py (BET-Y2Q4-T1-05 入口层真数据物化) #  2026-10-24 727->730: 新登记 bin/ssot/anchor-install-root.sh (ADR-0456 B4b 安装位重锚) # 2026-10-26 728->730: 新登记 ADR-0466 三层防线的两个工具 (bin/gac/check-test-host-hygiene.py 第二道防线 / bin/ops/purge-test-archive-7d.py 第三道防线)
       # (治 A2/A5 stale_beats —— .omo/_control/debt-dashboard/current.yaml 是 git-tracked 镜像,
       # 由 omo post-hook 刷新但无人提交; origin/main 上那份 817h 未更新 (SLA 336h), 于是每个
@@ -2582,6 +2582,33 @@ gac:
     created_at: '2026-10-30'
     added_at: '2026-11-09'
     review_before: '2027-02-09'
+    version: 1.0.0
+    lifecycle: active
+  - id: CR-X2-CRON-INTERP-EXECUTABILITY
+    dimension: X2
+    layer: L2
+    name: cron 解释器可执行性
+    description: 'CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3) 的门禁接线。2026-11-10 principal
+      裁决「先 warn + 限期收敛」: 以 enforcement=advisory 上线, 到 review_before (2026-11-24)
+      未收敛即由脚本自身退出码转阻断 —— 不给静默窗口, 也不在限期内把本机搞红 (实测本机 0/30 缺口,
+      只有 3.9 的宿主 30/30 缺口, 直接 fail-closed 等于把 mini 门禁钉死)。判据是可执行性而非
+      静态扫描: 按入口文件名数只覆盖 8/87, 真实死法 45 条; 与 scheduler-compile /
+      install-cron-plane 共用 bin/lib/cron_normalize 一份实现, 门禁与安装器分叉正是本债成因之一。'
+    check_type: consistency_drift
+    target: .omo/cron/registry.yaml::jobs[].command 的每个 python3 调用点
+    executor:
+    - ci_gate
+    - gac_local_gate
+    source_ref: bin/gac/check-cron-interpreter-executability.py
+    enforcement: advisory
+    owner: platform-team
+    expected: 本机 active crontab 作业的发射侧缺口为 0 (闭包提醒与静态判不出只 advisory, 但必须在输出可见)
+    remediation: 本机装一个 3.11+ 且 basename 可折回裸 python3 的解释器, 或设 CRON_INTERPRETER 指向它; 装不上就把该作业标 inactive
+    related_runbooks: []
+    adr: ADR-0457
+    created_at: '2026-11-10'
+    added_at: '2026-11-10'
+    review_before: '2026-11-24'
     version: 1.0.0
     lifecycle: active
   drift:
