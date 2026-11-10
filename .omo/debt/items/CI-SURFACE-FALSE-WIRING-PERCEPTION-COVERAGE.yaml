@@ -1,0 +1,57 @@
+id: "CI-SURFACE-FALSE-WIRING-PERCEPTION-COVERAGE"
+title: "ci-surfaces 给 perception-coverage 声明了 gac-gate.yml + per_pr/push 触发，但它没有任何执行面"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/_truth/registry/ci-surfaces.yaml
+- bin/gac/check-ci-surfaces.py
+- .github/workflows/gac-gate.yml
+mitigation_refs:
+- 本条 history 第一条（扫描口径与实证）
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/_truth/registry/ci-surfaces.yaml` 的 `bin-gac-perception-coverage-py` 条目声明
+  `workflow: gac-gate.yml` + `triggers: [per_pr, push]`, 但实测该工具**在任何地方都没有执行面**:
+  全仓 workflows 无引用、`ci-check-runner.py` 只被以 `--workflow governance-check.yml` 调用过一次、
+  `gac-local-gate.py` 的门禁清单里也没有它。而 `check-ci-surfaces.py --check` 报
+  `ok: True / errors: 0 / warnings: 0`。
+decision_needed: >-
+  要裁决的是：这条目该**接线**（加进 `gac-local-gate.py` 的 root gates, 让 `gac-gate.yml --strict`
+  真的跑它）还是**改成 `(none)`**（与另外 8 条手工工具同形）。注意它是 report generator
+  （`--report/--json/--status`）而非 gate —— 接进 blocking gate 需要它先有退出码语义。
+  本条不代决。
+history:
+- at: "2026-11-10T13:55:00+00:00"
+  action: identify
+  note: >-
+    **扫描口径**：对每条 `surfaces` 条目, 取其 `workflow` 声明的 workflow 文件, 判定该文件
+    **能否执行**它 —— 要么文件文本里出现该工具路径, 要么该文件调 `ci-check-runner.py --workflow <自己>`
+    （runner 读同一份 ci-surfaces 并按 `workflow` 字段分派）。结果 **9 条**声明了不能执行它们的 workflow。
+    **逐条复核后 8 条是误报** —— 它们声明 `gac-gate.yml`, 而 `gac-gate.yml:203-209` 跑
+    `gac-local-gate.py --strict`, 后者经 ecos policy + 文件内 root gates 执行了这些工具
+    （`check-sfop-slots` / `check-execution-chain` / `root-directory-governance-scan` /
+    `bin-scripts-convergence-audit` 等实测在本地门禁输出里）。**剩下 1 条是真的**：
+    `perception-coverage` 声明 `gac-gate.yml`, 但 `gac-local-gate.py` 的门禁清单（含 ecos policy
+    与 root gates）里**没有它**, 全仓 workflows 亦无引用。
+    **交叉验证**：`ci-check-runner.py` 在 workflows 里只被调用一次, 参数恒为
+    `--workflow governance-check.yml` ⇒ runner 只会执行 `workflow: governance-check.yml` 的条目;
+    `perception-coverage` 声明的是 `gac-gate.yml` ⇒ 即便走 runner 也不会执行。
+    **门禁为何看不见**：`check-ci-surfaces.py::_discover_wiring()` 只扫 workflow 文本 +
+    `sgf-policy.yaml` 的 gate command, **不认** `gac-local-gate.py` 这个聚合器 ⇒ 所有本地门禁工具
+    都被算成「未接线」（实测 `wired_tools: 146 / registered: 151`）, 于是「声明了 workflow 却无人执行」
+    这一形状在`wired_tools` 计数里也**不体现**。
+    **同一盲点的第二半**：`wired_tools` 的 146/151 差额正是这个聚合器盲点造成的, 属计数失真而非漏报。
+  actor: "governance-agent"

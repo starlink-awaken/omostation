@@ -48,6 +48,7 @@ seed_items:
 - .omo/debt/items/BET-LEDGER-CLI-AUTHORITY-SPLIT.yaml
 - .omo/debt/items/CRON-INSTALLERS-OUTSIDE-SSOT.yaml
 - .omo/debt/items/CRON-REGISTRY-NO-HOST-SCOPE.yaml
+- .omo/debt/items/CI-SURFACE-FALSE-WIRING-PERCEPTION-COVERAGE.yaml
 - .omo/debt/items/CRON-REGISTRY-ENV-GAP.yaml
 - .omo/debt/items/DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP.yaml
 - .omo/debt/items/DEBT-20260921-X2-UNIMPLEMENTED-LEDGER.yaml
