@@ -431,27 +431,16 @@ def test_diff_installation_names_what_wholesale_replace_would_delete() -> None:
 
 
 def test_compiled_lines_respect_host_scope(monkeypatch: pytest.MonkeyPatch) -> None:
-    """`hosts` 字段: 别机专用条目不得出现在本机编译产物里.
-
-    CRON-REGISTRY-NO-HOST-SCOPE —— 安装器此前不过滤, 会把 mini 专用条目报成
-    `[MISSING]` 并装上 (实测 mbp: 登记面 44 条 / 缺 1), 让 check_drift 侧的修复被
-    安装侧抵消。同口径由 `cron_normalize.host_scoped_jobs` 单点提供。
-    """
+    """安装预览识别 mini 的现场主机名，MBP 与未知主机不选中看护作业。"""
     module = _load()
-    jobs = module._load_raw().get("jobs", [])
-    watchdog = next(
-        (j for j in jobs if j.get("name") == "work-agent-respire-mbp-watchdog"), None
-    )
-    assert watchdog is not None, "registry 里应有 work-agent-respire-mbp-watchdog"
-    assert watchdog.get("hosts") == ["mini"]
-
-    monkeypatch.setenv("CRON_HOST", "mbp")
-    mbp = "\n".join(module._compiled_lines())
-    assert "respire_mbp_supervisor_watchdog" not in mbp
-
-    monkeypatch.setenv("CRON_HOST", "mini")
-    mini = "\n".join(module._compiled_lines())
-    assert "respire_mbp_supervisor_watchdog" in mini
+    monkeypatch.delenv("CRON_HOST", raising=False)
+    cases = (("Mac-mini", 1), ("mini", 1), ("mbp", 0), ("unregistered-host", 0))
+    for hostname, expected in cases:
+        monkeypatch.setattr("socket.gethostname", lambda hostname=hostname: hostname)
+        watchdog_count = sum(
+            "respire_mbp_supervisor_watchdog" in line for line in module._compiled_lines()
+        )
+        assert watchdog_count == expected, hostname
 
 
 def test_status_missing_listing_is_host_relative(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -478,7 +467,10 @@ def _load_compile_module():
     return module
 
 
-def test_installer_and_compiler_agree_on_managed_set(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("hostname", ("mbp", "Mac-mini"))
+def test_installer_and_compiler_agree_on_managed_set(
+    monkeypatch: pytest.MonkeyPatch, hostname: str
+) -> None:
     """安装器与编译器对「哪些条目归登记面管」必须给出**同一个集合**.
 
     这是「同口径必须单点」的门禁: #5147 给 `scheduler-compile` 加了 hosts 过滤而
@@ -487,7 +479,8 @@ def test_installer_and_compiler_agree_on_managed_set(monkeypatch: pytest.MonkeyP
     """
     icp = _load()
     sc = _load_compile_module()
-    monkeypatch.setenv("CRON_HOST", "mbp")
+    monkeypatch.delenv("CRON_HOST", raising=False)
+    monkeypatch.setattr("socket.gethostname", lambda: hostname)
 
     compiler_keys = {
         icp._key(icp._expand_workspace(line))
