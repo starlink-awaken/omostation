@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -198,6 +199,35 @@ def check_launchd_plane(registered):
     missing_installed = sorted(reg_labels - installed)
     undeclared_installed = sorted(installed - reg_labels)
 
+    # C4 env 单向差集 (2026-11-10, CRON-REGISTRY-ENV-GAP): registry 只在 `command`
+    # 前缀里声明部分 env, 而 plist 的 EnvironmentVariables 可能还有未声明的 ——
+    # 实测 15 个作业、24 个变量, 含决定写面的 OMOSTATION_STATE_ROOT / PANORAMA_ROOT。
+    # 反向 (声明了却与 plist 不符) 实测为 0, 但仍一并报告, 否则口径只覆盖一半。
+    # 仍是 shadow: 只报告, 不进 ok 判定 (ADR-0457 三段式)。
+    env_only_in_plist: list[dict] = []
+    env_mismatch: list[dict] = []
+    for j in reg_entries:
+        explicit = j.get("label")
+        label = str(explicit) if explicit else f"com.omostation.{j['name']}"
+        plist_path = la / f"{label}.plist"
+        if not plist_path.is_file():
+            continue
+        try:
+            data = plistlib.loads(plist_path.read_bytes())
+        except Exception:  # noqa: BLE001 — 不可解析已由 C2 报告, 这里跳过
+            continue
+        declared = {
+            k: v.strip('"')
+            for k, v in re.findall(r'([A-Z][A-Z0-9_]{2,})=("[^"]*"|\S+)', j.get("command", ""))
+        }
+        installed_env = data.get("EnvironmentVariables") or {}
+        extra = sorted(k for k in installed_env if k not in declared)
+        wrong = sorted(k for k, v in declared.items() if k in installed_env and installed_env[k] != v)
+        if extra:
+            env_only_in_plist.append({"label": label, "vars": extra})
+        if wrong:
+            env_mismatch.append({"label": label, "vars": wrong})
+
     return {
         "mode": "shadow",
         "blocks_gate": False,
@@ -207,6 +237,10 @@ def check_launchd_plane(registered):
         "missing_installed": missing_installed,
         "undeclared_installed_count": len(undeclared_installed),
         "undeclared_installed_sample": undeclared_installed[:15],
+        "env_only_in_plist_count": len(env_only_in_plist),
+        "env_only_in_plist": env_only_in_plist,
+        "env_mismatch_count": len(env_mismatch),
+        "env_mismatch": env_mismatch,
         "label_match": {
             "matched": len(matched),
             "registered": len(reg_labels),
