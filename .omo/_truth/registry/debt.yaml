@@ -1,7 +1,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-10
+last-reviewed: 2026-11-11
 version: 3
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml
@@ -74,3 +74,4 @@ seed_items:
 - .omo/debt/items/ZHIXING-PUBLISH-EFFECT-PROVENANCE.yaml
 - .omo/debt/items/BOS-KEMS-STATUS-DIVERGENT.yaml
 - .omo/debt/items/LLM-ADVISORY-ONLY-STRING-AND-SH-COVERAGE.yaml
+- .omo/debt/items/DEAD-PATH-TOOL-FALLBACK-STRUCTURAL-NOOP.yaml
