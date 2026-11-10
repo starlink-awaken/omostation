@@ -250,7 +250,7 @@ SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin
 
 | 工具 | 职责 | 用法 |
 |------|------|------|
-| `gac/meta-doctor.py` | 治理机制活性巡检 (M1 心跳 SLA + M2 引用活性 + scheduler-drift) | `python3 bin/gac/meta-doctor.py --workspace . --json` |
+| `gac/meta-doctor.py` | 治理机制活性巡检 (M1 心跳 SLA + M2 引用活性 + scheduler-drift) | `python3 bin/gac/meta-doctor.py --workspace .` |
 | `scheduler-compile.py` | 调度编译器: 登记↔安装一致性校验 (ADR-A) | `python3 bin/scheduler-compile.py --check` |
 | `session-handoff.py` | 会话交接协议: 机器可读 handoff.json (R6) | `python3 bin/gac/session-handoff.py --session <id> --agent <name> --summary "..."` |
 | `heartbeat-wrapper.sh` | cron job 心跳包装器: 运行后写 heartbeats/<job>.json (ADR-D) | `bash bin/gac/heartbeat-wrapper.sh <job_name> <command...>` |
