@@ -31,7 +31,13 @@ class RufloCollector(DataCollector):
                 capture_output=True, text=True, timeout=25,
             )
             ok = proc.returncode == 0
-            output = proc.stdout.strip() if ok else proc.stderr.strip()
+            if not ok:
+                # 非零退出时 verifier 的输出才是原因 —— 只读 stderr 会把它丢掉。
+                # ruflo-rf0-verify.py 的 --json 分支把报告(含失败项)打在 stdout，
+                # stderr 为空，于是板板上只剩一句 FAIL 而没有原因。
+                output = (proc.stderr or proc.stdout).strip()
+            else:
+                output = proc.stdout.strip()
         except Exception as exc:
             return {"status": "UNAVAILABLE", "error": str(exc), "observed_at": _now()}
 
