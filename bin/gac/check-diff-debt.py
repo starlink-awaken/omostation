@@ -20,13 +20,15 @@ from pathlib import Path
 from typing import Dict, List
 
 
+# \b 是承重的: 无词边界时 `whack-a-mole` 里的 hack、标识符的 `_xxx` 后缀、
+# 二进制内容都会命中（2026-11-11 实测全仓 3626 条垃圾子串 vs 382 条真标记）。
 DEBT_PATTERN = re.compile(
-    r'(FIXME|HACK|TODO|XXX)[\s:]*([^\n]*)',
+    r'\b(FIXME|HACK|TODO|XXX)\b[\s:]*([^\n]*)',
     re.IGNORECASE,
 )
 
-# 排除注释行（Python # 注释）
-COMMENT_PREFIXES = ("#", "//", "/*", "*")
+# 债务标记 (FIXME/HACK/TODO/XXX) 按定义就住在注释里，故扫全部新增行、不做注释过滤。
+# 不要把「排除注释」加回来 —— 那会让本工具失明。
 
 
 def get_workspace() -> Path:
