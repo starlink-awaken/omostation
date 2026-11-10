@@ -104,9 +104,9 @@ schema_version: closeout-receipt/v1
 
 ## 5 发布后再测 A9：已核实事实与未决项
 
-**两次自我更正都记在这里**（各由一次重新测量推翻上一版结论）：初稿把 A9 仍 PARTIAL 归因于
-「部署判定器旧于仓内 ⇒ 用旧判据」；二稿据 `current.json` 单平面读数断言「同轮内 `gates[]` 与
-`source_states` 矛盾」。两者都不成立，成因见 §5.4。当前版本只保留可复现的读数。
+**本节被重新测量推翻过四次**，错在哪、被什么否证都留在 §5.4/§5.4b 与提交历史里，不再重述推理：
+只保留可复现的读数与代码出处。这一节因此比初稿长，但它是我能给出的最强形态——每条都能被
+第三方用同样的命令复算。
 
 ### 5.1 修复在线上生效的最强证据：原因串里 `scheduler` 项消失
 
@@ -145,21 +145,31 @@ schema_version: closeout-receipt/v1
 2026-10-23 那次要消灭的现象（「只看得到 `cockpit_sources` 时无法分辨原因，得人工翻 cockpit current.json」）。
 截断点在哪一层未查，属新缺陷。
 
-### 5.4 我自己的两次误读，以及为什么值得写下来
+### 5.4 生产者身份字段与我这次发布无关（两次误判的根源，附代码出处）
 
-- 二稿的「矛盾」来自**跨平面 + 跨轮次**比较：拿 `current.json` 的 02:15 轮去比 `data.json` 的 01:58 轮
-  （相差 17 分钟），期间 `strategy`/`documents` 的标签在高负载轮显示为 `DEFERRED`
-  （判据接受），于是复算得「0 不合格」，而另一平面同分钟的历史值仍是 `PARTIAL`。
-  同一目录下的 `current.json` 与 `revisions/*/data.json` 是**两个写入者、两条节奏**的产物，
-  任何比较都必须先对齐 `generated_at`。
-- 一稿的「旧判据」假设被两处读数否证：① 逐段比对显示两副本的 `required_sources`（同 14 项）、
-  准入标签判据行、`_cockpit_source_reasons` 都在，差异全部落在事件台账根解析
-  （main 用 `repo_root.event_ledger_path()`，release 副本硬编码 `EVENT_LEDGER`）；
-  ② 更关键的是 `manifest.json` 的 `producer.collector_sha256 = f891ad40dbbacc12…`
-  **等于 `origin/main` 的哈希**，而发布继承的 release 目录副本是 `fa7eb9c1…`
-  ⇒ 实际产出这些 revision 的采集器不是 release 目录里那份（`~/.local/share/zhixing-dashboard/`
-  下另有 `code-main` 等平面）。**因此那条漂移在这份产物上没有可证的因果**，
-  它是否仍在别的路径上被执行，属未决。
+`revisions/*/manifest.json` 的 `producer.collector_sha256` 在保留窗口内的 **48 份** revision 中
+恒为 `f891ad40…`（= `origin/main` 修复后的 `bin/panorama/panorama-collect.py` 内容），
+`root_oid` 在 11-09 23:28Z 由 `afcee8ef2…` 跳到 `697151a9…` —— 这两件事都发生在我 11-10 01:48Z
+发布**之前**。取法有两条路：
+
+- `panorama-collect.py:508-513`：`executing_collector != bound_collector` 直接
+  `raise projection_collector_not_at_bound_commit`；
+- `:571-582`：release 目录里有 `.zhixing-host-release.json` 时，身份改由
+  `release_identity.py::managed_release_identity(root)` 给出，而不是现场 git 根。
+
+⇒ 能持续产出 revision 这件事，证明**执行中的判定器内容等于 main 的修复版**（否则守卫早就 raise），
+但**不能**证明是我这次 publish 让它变成这样的——它在发布前 3 小时已经成立。
+我前两版把 `collector_sha256` 读成"另一平面在执行/发布继承的旧判定器没被执行"的因果证据，方向都是错的：
+该字段反映的是绑定身份平面，与 release 目录里那份 `panorama-collect-main.py`（`fa7eb9c1…`）不是同一条通路。
+保留窗口只有约 8h/48 份，更早的状态无法从磁盘断言。
+
+### 5.4b 常驻进程仍指向发布前的 release（运维事实，非缺陷断言）
+
+`live_server.py`（pid 50155）的 cwd 仍是发布前的
+`releases/17afa5408a…--pub-0c898071…`，而 `current` 已指向 `releases/697151a9…`。
+publish 只翻转符号链接，300s 刷新任务是每次新起 `current/orchestrator.py` 进程才吃到新代码，
+常驻服务进程不换。⇒ 本次修复生效的是**刷新/投影通路**；服务进程内旧代码的影响面未测，
+是否重启 `com.omostation.zhixing-dashboard` 属运维决定，我没有动它。
 
 ### 5.5 发布继承漂移这一条仍然成立（代码事实）
 
