@@ -1,0 +1,66 @@
+id: "DASHBOARD-TEMPLATE-CONTRACT-GAP"
+title: "驾驶舱模板声明的 9 个字段在发布 payload 里全部缺席 —— 页面多项渲染为空/Invalid Date"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- ~/.local/share/zhixing-dashboard/template.html
+- ~/.local/share/zhixing-dashboard/current/orchestrator.py
+- bin/panorama/panorama-collect.py
+mitigation_refs:
+- bin/panorama/panorama-collect.py::_check_template_data_consistency —— 发布器自带的契约守卫，
+  每次发布都打同一句告警但不阻断（"It does NOT block publication — it only warns"）
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  织星驾驶舱的 template.html 以 `D.<field>` 形式声明了 9 个顶层字段，而发布器产出并被
+  `/data.json` 服务的 payload 里这 9 个**全部缺席**。发布器自带的
+  `_check_template_data_consistency()` 每次发布都打出同一句告警（"It does NOT block
+  publication — it only warns"），即该缺口长期可见但无人处理。
+decision_needed: >-
+  要裁决的是：这 9 个字段里哪些应由发布器 payload 补上（observed_at / refresh 属发布器自身
+  即可算出的事实），哪些是 refresh.py 时代产物、应随模板一并退役（pending_publications /
+  reconciliation_candidates / current_findings / value_loop / anomaly_events / library）。
+  在裁定前不动模板也不动 payload —— 两边都改会制造新的不一致。
+history:
+- at: "2026-11-10T08:30:00+00:00"
+  action: identify
+  note: >-
+    实测（2026-11-10）：`curl -s http://127.0.0.1:43191/data.json` → HTTP 200，15,256,802 字节 /
+    111 键，**9 个字段全部 ABSENT**（observed_at、generated_at 之外无一命中）：
+    observed_at、refresh、pending_publications、reconciliation_candidates、current_findings、
+    value_loop、anomaly_events、library、live_sources。
+    模板侧引用计数（`template.html`）：`D.observed_at` 11 处、`D.refresh` 6 处、`D.library` 3 处、
+    `D.live_sources` 2 处，其余各 1 处。
+    **并非全部静默降级**：多数引用带 `||` 兜底（如 `D.observed_at||D.generated_at`、
+    `D.current_findings||[]`、`D.refresh=D.refresh||{failed_sources:[]}`），但
+    `template.html:3110` 的 `dt(D.observed_at)` **无兜底** ⇒ 页脚「本地时间」渲染成
+    `Invalid Date`；`template.html:3161` 的 `Date.parse(R.observed_at||D.observed_at)` 两侧皆空 ⇒
+    `age=NaN`，运行新鲜度文案失真。
+    **来源判定（sha256 逐字节实证）**：`/tmp/served-data.json`（`curl` 实取）与当时最新
+    `revisions/bf7af24dd…/data.json` 的 sha256 **完全相同**（`9b5fe7163bbc4a41a793…`，
+    两边均 15,256,802 字节），而与 `current.json`（23,239,792 字节）不同 ⇒ 服务端喂给模板的
+    是**发布器 payload**（revision 面），不是 orchestrator 的 current.json。故缺口在发布器
+    payload，不在编排层。
+    **回归定位**：`current/orchestrator.py` 文件头自述 "replaces the monolithic refresh.py"，
+    且只从 refresh 导入 `HEALTH_SEMANTICS` / `source_health` / `prior_healthy_success` /
+    `integrate_gantt` / `integrate_strategy` / `publish_strategy_artifacts` 六个 helper ——
+    对 `pending_publications` / `reconciliation_candidates` / `current_findings` /
+    `value_loop` / `anomaly_events` / `library` **零命中**。而 refresh.py 原本会写
+    `data["refresh"]`（:1148）、`data["pending_publications"]`、`data["reconciliation_candidates"]`。
+    全量核对 LaunchAgents：**没有任何 plist 执行 refresh.py**（`com.omostation.zhixing-dashboard-refresh`
+    跑的是 `current/orchestrator.py`），即这次迁移把这些字段静默丢了。
+    **跨仓边界**：template.html 属部署仓 `starlink-awaken/zhixing-dashboard`，不在本仓 ——
+    契约的两端分属两个仓，任何单侧修改都要走对应仓的交付流程。
+  actor: "governance-agent"

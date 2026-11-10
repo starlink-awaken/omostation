@@ -28,6 +28,7 @@ seed_items:
 - .omo/debt/items/DEBT-20260917021531-GAP-SEED-DISPATCH.yaml
 - .omo/debt/items/ATTIC_ORPHAN_GITLINK.yaml
 - .omo/debt/items/D-8.yaml
+- .omo/debt/items/DASHBOARD-TEMPLATE-CONTRACT-GAP.yaml
 - .omo/debt/items/DEBT-20260723142431.yaml
 - .omo/debt/items/DEBT-20260728070416.yaml
 - .omo/debt/items/DEBT-20260803073759.yaml
