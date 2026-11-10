@@ -38,3 +38,35 @@ history:
     （2026-11-10 02:36Z 快照实测）。此前这两项被 scheduler 的 exit 2 排在同一条
     detail 里而不显眼，不是本次发布引入的回归。
   actor: "governance-agent"
+- at: "2026-11-10T04:30:00+00:00"
+  action: review
+  note: >-
+    decision_needed ① 的答案：**进程通路失败**, 不是「本己无数据源」。
+    实测链（2026-11-10T04:2xZ, 复算命令见下）:
+      `strategy_sources.py:536` `_collect_runs` 走
+      `reader.discover("state", ".omo/_delivery/agent-workflows/runs", "*.yaml", required=True)`
+      —— 而 `~/.local/state/omostation/prod/.omo/_delivery/agent-workflows`
+      是一条**符号链接**指向 `/Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows`
+      （state 面的镜像桥, 与 AGENTS.md 记录的 delivery anchor symlink 桥同族）。
+      `discover()` 第 418 行 `(root/relative).resolve()` 跟着链跑出 state 根,
+      第 419 行 `is_relative_to(root)` 判 false ⇒ 报 `outside_allowlisted_root`。
+      即便放行, 实际读取用的 `os.open(..., dir_fd=...)` 对**每个组件**都带
+      `O_NOFOLLOW`（第 108-115 行）, 符号链接目录会直接 ELOOP —— 即该 reader
+      的结构性设计就是「不可穿过软链」, 与状态面的镜像桥拓扑不兼容。
+    同文件第 572 行读 `.omo/_knowledge/retros` 用的是 **workspace** 根（真目录,
+    可读）—— 同一文件里两种口径并存, 536 用 `state` 是笔误/历史遗留。
+    复算:
+      python3 -c "import repo_root;from pathlib import Path;r=Path(repo_root.state_root()).resolve();p=(r/'.omo/_delivery/agent-workflows/runs').resolve();print(r,p,p.is_relative_to(r))"
+      → /Users/xiamingxing/.local/state/omostation/prod /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows False
+      ls -ld ~/.local/state/omostation/prod/.omo/_delivery/agent-workflows  → lrwxrwxr-x（指向 Workspace）
+      ls /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/runs | wc -l → 422（数据在, 且当天在写）
+    **修法两条, 均需 owner 定调**（本条不擅改）:
+      ① 采集侧: 536/540 改用 `workspace` 根（与 572 行口径一致, 真目录可读）
+         —— 改动最小, 但要确认 runs 的权威面是检出还是 state 根;
+      ② 读取侧: 让 reader 支持「根内软链指向另一许可根」——需重审
+         `discover`/`read` 的 no-follow 穿越面, 属安全边界改动。
+    另: `probe_strategy` 还依赖 PYTHONPATH 上有 `repo_root`（`refresh.py --probe strategy`
+    子进程不自带）——生产由 launchd `com.omostation.zhixing-dashboard-refresh`
+    的 EnvironmentVariables.PYTHONPATH 提供, 但手工/其它入口直接跑会
+    `ModuleNotFoundError: No module named 'repo_root'`（同一族的脆弱点）。
+  actor: "governance-agent"
