@@ -1488,7 +1488,7 @@ def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None 
     }
     bad_sources = []
     source_ages = []
-    for name in required_sources:
+    for name in sorted(required_sources):  # set 迭代序随进程 hash 盐变 → detail 逐字比对会假漂移
         state = source_states.get(name) if isinstance(source_states.get(name), dict) else {}
         status = state.get("status")
         last_success = state.get("last_success_at")

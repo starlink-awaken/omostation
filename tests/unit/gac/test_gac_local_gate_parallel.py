@@ -80,7 +80,10 @@ CENSUS_SERIAL = CENSUS_WRITE_WORKSPACE | CENSUS_NETWORK | CENSUS_EXCLUSIVE
 # cron-interpreter-executability gate 加入 gac-local-gate.py GATES_LIST)。
 # 该 gate 只读 .omo/cron/registry.yaml 并对候选解释器跑 find_spec 探测子进程，
 # 不写工作区 / .omo/state / 子模块指针，不走网络，不占独占本机资源 ⇒ A 类，可并行。
-CENSUS_TOTAL_GATES = 96
+# 2026-11-10: 96 -> 97 (PANORAMA-GATE-DETAIL-UNRELIABLE ③ 的
+# gate-detail-contract 加入 GATES_LIST)。该 gate 只读 ~/.local/share/zhixing-dashboard/
+# 的两份 JSON 平面，不写盘、不起子进程、不走网络、无独占资源 ⇒ A 类，可并行。
+CENSUS_TOTAL_GATES = 97
 
 # ── ② 全量分类账：普查中的 A 类（纯读/verification）逐一复审为「可并行」─────────
 # 维护约定：新增 gate 必须显式加入本账（或 SERIAL_ONLY），否则本文件失败。
@@ -122,6 +125,7 @@ PARALLEL_REVIEWED = frozenset(
     bdsk-shadow-sandbox debt-integrity-check error-knowledge-check
     submodule-ancestry-gate sweep-index-check test-coverage-check
     cron-interpreter-executability
+    gate-detail-contract
     """.split()
 )
 

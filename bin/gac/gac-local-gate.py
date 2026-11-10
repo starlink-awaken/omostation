@@ -243,6 +243,14 @@ DEFAULT_POLICY = {
             "command": ["bin/gac/check-cron-interpreter-executability.py", "--json"],
             "timeout": 60,
         },
+        # PANORAMA-GATE-DETAIL-UNRELIABLE ③: A 系门禁 detail 一致性。
+        # 不进 SOFT_CHECKS —— 阻断与否由脚本自己的限期 (ENFORCE_AFTER) 决定,
+        # warn 期恒 exit 0; 跨平面偏斜与仪器自证失败只 advisory。
+        {
+            "id": "gate-detail-contract",
+            "command": ["bin/gac/check-gate-detail-contract.py", "--json"],
+            "timeout": 60,
+        },
         {
             "id": "check-submodule-rewind",
             "command": ["bin/gac/check-submodule-rewind.py"],
