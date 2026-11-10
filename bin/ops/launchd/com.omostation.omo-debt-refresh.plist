@@ -22,6 +22,15 @@
   写 gitignored .omo/debt/*)。no_proxy 设为 loopback/github, 避免作 ClashX
   127.0.0.1:7890 代理超时 (详见 zhixing-host-drift.plist 同款環境)。
 
+  NOTE (2026-11-10): 解释器从 `python3` 改为 `.venv/bin/python`。
+  launchd 默认 PATH 下 `python3` = /usr/bin/python3 (3.9.6), 而
+  omo_debt_cli.py:15 `from datetime import UTC` 是 3.11+ 才有的 ——
+  实跑 ImportError (LAUNCHD-PLIST-INSTALLED-DIVERGED 记录的硬伤之一)。
+  改用项目 venv (3.14) 后与解释器版本解耦, 不再依赖 PATH 顺序。
+  同轮发现已安装 plist 被手工削掉 WorkingDirectory / PATH /
+  StartCalendarInterval (只留 RunAtLoad) ——  install 时须整份覆盖,
+  别只抄 command 行。
+
   安装 / 卸载 / 手動觸發 (同 zhixing-host-drift):
     cp bin/ops/launchd/com.omostation.omo-debt-refresh.plist ~/Library/LaunchAgents/
     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
@@ -37,7 +46,7 @@
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>cd /Users/xiamingxing/Workspace/projects/omo &amp;&amp; NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ) &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli refresh --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli dispatch --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli campaign --omo-dir /Users/xiamingxing/Workspace/.omo &amp;&amp; PYTHONPATH=src python3 -m omo.omo_debt_cli report --omo-dir /Users/xiamingxing/Workspace/.omo</string>
+        <string>cd /Users/xiamingxing/Workspace/projects/omo &amp;&amp; NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ) &amp;&amp; PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli refresh --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW &amp;&amp; PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli dispatch --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW &amp;&amp; PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli campaign --omo-dir /Users/xiamingxing/Workspace/.omo &amp;&amp; PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli report --omo-dir /Users/xiamingxing/Workspace/.omo</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/Users/xiamingxing/Workspace/projects/omo</string>
