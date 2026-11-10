@@ -642,6 +642,8 @@ diff_checks:
   - pyyaml
   - --with
   - pytest
+  - --with
+  - pytest-timeout
   - python
   - -m
   - pytest
@@ -739,6 +741,8 @@ diff_checks:
   - pyyaml
   - --with
   - pytest
+  - --with
+  - pytest-timeout
   - python
   - -m
   - pytest
@@ -774,6 +778,10 @@ diff_checks:
   command:
   - uv
   - run
+  - --with
+  - pyyaml
+  - --with
+  - pytest-timeout
   - pytest
   - tests/test_governance_evolution.py
   - -q
@@ -806,6 +814,8 @@ diff_checks:
   - pyyaml
   - --with
   - pytest
+  - --with
+  - pytest-timeout
   - python
   - -m
   - pytest
@@ -842,6 +852,8 @@ diff_checks:
   - pyyaml
   - --with
   - pytest
+  - --with
+  - pytest-timeout
   - python
   - -m
   - pytest
