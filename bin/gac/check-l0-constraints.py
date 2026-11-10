@@ -23,6 +23,7 @@
 """
 
 import re
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -263,6 +264,30 @@ def check_x2_c05() -> tuple[bool, str]:
         return True, f"omo-surfaces parse error: {e}"
 
 
+def _git_ignored(root: Path, names: set[str]) -> set[str]:
+    """`names` 里被 .gitignore 覆盖的条目 (相对 `root` 的路径传给 git)。
+
+    `git check-ignore --stdin` 对未被忽略的路径返回非零, 属正常; 被忽略的
+    才会打印出来。任何异常都退回空集 (即不豁免), 保持判据偏严。
+    """
+    if not names:
+        return set()
+    prefix = root.relative_to(REPO).as_posix()
+    payload = "\n".join(f"{prefix}/{n}" for n in sorted(names))
+    try:
+        proc = subprocess.run(
+            ["git", "check-ignore", "--stdin"],
+            cwd=REPO, input=payload, capture_output=True, text=True, timeout=15,
+        )
+    except Exception:  # noqa: BLE001 — 探测失败不豁免, 保持偏严
+        return set()
+    return {
+        line[len(prefix) + 1:]
+        for line in proc.stdout.splitlines()
+        if line.startswith(prefix + "/")
+    }
+
+
 def check_omo_surface_registration() -> tuple[bool, str]:
     """CR-OMO-SURFACE-01: `.omo` 顶层治理资产已登记到 omo governance surfaces registry.
 
@@ -291,6 +316,11 @@ def check_omo_surface_registration() -> tuple[bool, str]:
         if not omo_root.is_dir():
             return False, ".omo/ 目录不存在"
         actual = {p.name for p in omo_root.iterdir()}
+        # .gitignore 覆盖的本地产物 (.DS_Store / .omo/_inbox / .omo/reports 等)
+        # 不是治理资产, 不该要求登记 —— 旧实现把它们算进去, 于是「干净检出不报、
+        # 本机报」, 判据与检出形态不兼容 (bin/AGENTS.md: 不在无效目录扫描里
+        # 误杀未追踪运行目录)。
+        actual -= _git_ignored(omo_root, actual)
         missing = sorted(actual - registered)
         if missing:
             return False, (
