@@ -30,15 +30,17 @@ SKIP_DIRS = {
     "kos",
     ".worktrees",
 }
-# 治理代码路径 — 这些路径中的 TODO/FIXME 需要被标记
+# 治理代码路径 — 这些路径中的 TODO/FIXME 需要被标记。
+# `^` 是承重的: 治理代码只在仓根, 而子串匹配会把 `.codebase-memory/<id>/ws/bin/gac/…`
+# 这类缓存副本算成治理代码 (2026-11-11 实测 1322 条匹配里 752 条来自该缓存)。
 GOVERNED_PATTERNS = [
-    re.compile(r"bin/gac/"),
-    re.compile(r"bin/ssot/"),
-    re.compile(r"bin/mof/"),
-    re.compile(r"\.omo/_truth/"),
-    re.compile(r"\.omo/standards/"),
-    re.compile(r"\.omo/_knowledge/"),
-    re.compile(r"\.github/workflows/"),
+    re.compile(r"^bin/gac/"),
+    re.compile(r"^bin/ssot/"),
+    re.compile(r"^bin/mof/"),
+    re.compile(r"^\.omo/_truth/"),
+    re.compile(r"^\.omo/standards/"),
+    re.compile(r"^\.omo/_knowledge/"),
+    re.compile(r"^\.github/workflows/"),
 ]
 
 # 需要检查的 stub 模式
