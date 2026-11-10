@@ -44,7 +44,7 @@ last-reviewed: 2026-09-24
 ## C 波 · 物理恢复预备包（机器仍挂起, 全部"预备不宣称", ~3 天)
 
 ### C1 · 一键恢复脚本
-- `bin/delivery/physical-recovery.sh`: 机器恢复后一条命令完成 探测→注册回填→G-DEL.3 两机测量→G-DEL.1 四机预检, 全程 evidence 自动落 audits
+- `bin/_archive/2026-09-25-sh1-quota/physical-recovery.sh`（已归档）: 机器恢复后一条命令完成 探测→注册回填→G-DEL.3 两机测量→G-DEL.1 四机预检, 全程 evidence 自动落 audits
 - **验收**: dry-run 通过; 文档一页; **不产生任何 meets_physical_gate=true**
 
 ### C2 · 恢复后验收清单卡

@@ -11,7 +11,7 @@ type: ssot
 # OPC Phase/Sub-gate Review Template (8 段硬结构)
 
 > 状态: active | 版本: v1.0 | 引入: 2026-06-13
-> 关联: `.omo/_control/evolution/config.yaml`, `feedback_8field_review_template_20260612.md`, `feedback_opc_closeout_reviewer_acceptable_20260613.md`
+> 关联: `feedback_8field_review_template_20260612.md`, `feedback_opc_closeout_reviewer_acceptable_20260613.md`
 > 适用范围: 所有 OPC Phase / Sub-gate / Self-correction 收口报告
 
 ---
@@ -101,7 +101,6 @@ type: ssot
 - **reviewer-acceptable 模板**: `feedback_opc_closeout_reviewer_acceptable_20260613.md`
 - **8 字段 review template 强制标准**: `feedback_8field_review_template_20260612.md`
 - **release notes 三件套**: `feedback_release_notes_three_piece_20260612.md`
-- **drift 闭环配置**: `.omo/_control/evolution/config.yaml`
 - **L0 约束 7 条新规**: `projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml:opc_cadence_constraints`
 - **X4 一致性 3 新规**: `projects/ecos/src/ecos/ssot/mof/m1/governance/GOV-X4-CONSISTENCY.yaml:rules`
 
