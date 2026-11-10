@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -40,7 +41,7 @@ class ReferenceCellCollector(DataCollector):
         verifier_error = None
         try:
             proc = subprocess.run(
-                ["python3", "-B", script, "--json"],
+                [sys.executable, "-B", script, "--json"],
                 capture_output=True, text=True, timeout=25,
             )
             ok = proc.returncode == 0

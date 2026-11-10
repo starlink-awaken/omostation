@@ -1775,7 +1775,7 @@ def collect_agents() -> list[dict]:
 
 def collect_runtime() -> dict:
     rt: dict = {}
-    code, out = run(["python3", "bin/gac/meta-doctor.py", "--workspace", "."])
+    code, out = run([sys.executable, "bin/gac/meta-doctor.py", "--workspace", "."])
     if code == 0 or out.startswith("{"):
         try:
             d = json.loads(out[out.index("{"):])
@@ -1789,7 +1789,7 @@ def collect_runtime() -> dict:
         rt["crontab_lines"] = int(out.strip() or 0)
     except ValueError:
         rt["crontab_lines"] = 0
-    code, out = run(["python3", "bin/scheduler-compile.py", "--check"])
+    code, out = run([sys.executable, "bin/scheduler-compile.py", "--check"])
     try:
         rt["scheduler"] = json.loads(out)
     except Exception:  # noqa: BLE001

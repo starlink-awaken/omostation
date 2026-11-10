@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 from datetime import datetime, timezone
 
 from collectors._script_paths import resolve_script
@@ -26,7 +27,7 @@ class RufloCollector(DataCollector):
         )
         try:
             proc = subprocess.run(
-                ["python3", "-B", script, "--json"],
+                [sys.executable, "-B", script, "--json"],
                 capture_output=True, text=True, timeout=25,
             )
             ok = proc.returncode == 0
