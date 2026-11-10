@@ -56,7 +56,7 @@ history:
     `integrate_gantt` / `integrate_strategy` / `publish_strategy_artifacts` 六个 helper ——
     对 `pending_publications` / `reconciliation_candidates` / `current_findings` /
     `value_loop` / `anomaly_events` / `library` **零命中**。而 refresh.py 原本会写
-    `data["refresh"]`（:1149）、`data["pending_publications"]`、`data["reconciliation_candidates"]`。
+    `data["refresh"]`（:1148）、`data["pending_publications"]`、`data["reconciliation_candidates"]`。
     全量核对 LaunchAgents：**没有任何 plist 执行 refresh.py**（`com.omostation.zhixing-dashboard-refresh`
     跑的是 `current/orchestrator.py`），即这次迁移把这些字段静默丢了。
     **跨仓边界**：template.html 属部署仓 `starlink-awaken/zhixing-dashboard`，不在本仓 ——
