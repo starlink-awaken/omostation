@@ -1800,6 +1800,11 @@ def collect_runtime() -> dict:
     # whenever the shared main workspace lags (BET-Y2Q4-T10-269).
     if isinstance(rt["scheduler"], dict):
         rt["scheduler"]["registry_root"] = str(ROOT)
+    # This dict *is* the runtime observation, so its own collection clock is the
+    # observation time the dashboard template reads as `R.observed_at`
+    # (template.html:3013). Without it `Date.parse(undefined)` yields NaN and the
+    # freshness line reads "运行观测距今 NaN 分钟" (DASHBOARD-TEMPLATE-CONTRACT-GAP).
+    rt["observed_at"] = datetime.now(UTC).isoformat()
     return rt
 
 
