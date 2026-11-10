@@ -1,0 +1,22 @@
+schema: script-registry/v1
+id: bin/gac/check-gate-detail-contract.py
+name: Check Gate Detail Contract
+category: governance
+owner: platform-team
+description: "Panorama A 系门禁 detail 的一致性门禁（PANORAMA-GATE-DETAIL-UNRELIABLE ③，2026-11-10 principal 授权全面推进，沿用 ADR-0457 三段式：warn 起、限期 `ENFORCE_AFTER=2026-12-01` 后由退出码自动转阻断，与 governance-checks.yaml 同名规则的 review_before 同值，由 tests/unit/test_gate_detail_contract.py 钉住）。判的是**两平面**里每条 A 系门禁的 detail 本身而不是它的内容真假：已发布面 `~/.local/share/zhixing-dashboard/current.json`（发布链写）与修订面 `revisions/*/data.json`（仓库 `bin/panorama/panorama-collect.py` 写）—— 四种违规 `shape`（空 / 纯括号残片如 A1 实测的 `'}'` / 过短）、`coherence`（verdict=PASS 却带 failure marker）、`reason_missing`（提到 cockpit_sources 却无 `k=v`）、`order`（reason 名未 sorted，set 迭代序随进程 hash 盐变会让逐字比对假漂移）。跨平面 detail 偏斜 (`skew`) 永久只 advisory、不参与退出码：② 已定论差异根因是发布链跑 2026-09 冻结副本的代码版本偏斜，清它需要部署面写（把 `bin/panorama/assets/host/*.asset` 恢复到宿主），那属 principal 授权，把授权决定做成常红灯是错的。仪器自证：平面装着却解析不出任何 A 系门禁时报 `parse_suspicious`，无平面的宿主（CI）不判、如实报 plane=absent。只读，不写任何文件；`--json` 的产物就是本次运行的六字段记录（AGENTS.md §14.2）。"
+inputs:
+  - ~/.local/share/zhixing-dashboard/current.json
+  - ~/.local/share/zhixing-dashboard/revisions
+outputs:
+  - type: exit_code
+  - type: json
+dependencies:
+  - bin/gac/gate-health-check.py
+  - bin/panorama/panorama-collect.py
+triggers:
+  - gac-local-gate
+  - ci_gate
+related:
+  - .omo/debt/items/PANORAMA-GATE-DETAIL-UNRELIABLE.yaml
+maturity: draft
+last_reviewed: "2026-11-10"
