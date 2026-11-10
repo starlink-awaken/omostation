@@ -44,3 +44,21 @@ history:
     （tests/test_zhixing_wrapper_base_source.py:87-88 直接断言），不是本条要报的缺陷；
     本条只针对 detail 内容的丢失与退化。
   actor: "governance-agent"
+- at: "2026-11-10T03:45:00+00:00"
+  action: review
+  note: >-
+    ① 已修 (PR #5220): A1/A4 的 detail 退化成单字符 '}' —— 根因是
+    `bin/gac/gate-health-check.py` 的 `check()` 裸取 `stdout.split("\n")[-1]`
+    当诊断, 而 A1 跑的是 `check-sfop-slots.py --json`, 美化 JSON 的末行正是 '}'。
+    改为 `_diagnostic()`: JSON 对象读 ok/errors/warnings 摘要, 非 JSON 仍取末行,
+    空输出兜底 `exit=<code>`。实测 A1 '}' -> 'ok warnings=1'、A4 '}' -> 'ok'、
+    失败的 A1.3 '' -> 'exit=1'。
+    ② A9 那一半**对比口径可能不成立**, 需要重做: 实测 `revisions/*/data.json`
+    与 `dist/current.json` 是**两条不同管线**的产物 (键集不同: revision 有
+    `assembled_at`/`envelope`/`roadmap` 等, current 有 `environment_evidence`/
+    `live_sources`/`strategy` 等), 且 current (03:31) 比两份 revision (03:19/03:23)
+    都新而 detail 更短, 两平面的 `cockpit` source_state 与 cockpit projection
+    均为空 —— 原因串来源未能定位。要定论须取**同一时点**的发布者 payload 快照,
+    否则「聚合丢内容」与「上游投影随时间变化」无法区分。
+    ③ 本条 decision_needed 里的第三条 (给 A 系门禁 detail 加一致性检查) 仍未做。
+  actor: "governance-agent"
