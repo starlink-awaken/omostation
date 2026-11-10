@@ -1,0 +1,60 @@
+id: "DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN"
+title: "债务仪表盘每小时由硬编码 canonical 路径的 launchd 作业生成 —— canonical 落后即报 100% 健康/零积压"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "high"
+weight: 0.3
+entropy_class: "high"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/debt/dashboard/current.yaml
+- ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
+- projects/omo/src/omo/omo_debt_metrics.py
+- projects/omo/src/omo/omo_debt_registry.py
+mitigation_refs:
+- 本条 history 第一条（双向对照读数与根因）
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-12-10"
+gate_level: watchlist
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/debt/dashboard/current.yaml` 报 `debt_health: 100.0` / `backlog_pressure: 0` /
+  `watchlist_item_ids: []` / `gate_item_ids: []`，而同一生成器在 origin/main 内容上算出的是
+  `backlog_pressure: 3.15` / `debt_health: 0.0` / 3 条 watchlist。两者差了一个**落后约 279 个
+  commit 的检出**。生成它的 `com.omostation.omo-debt-refresh` 每小时 :05/:35 跑，命令里
+  **硬编码** `--omo-dir /Users/xiamingxing/Workspace/.omo`。
+decision_needed: >-
+  要裁决的是：债务投影该读哪个检出？(A) 继续读 canonical，但在投影里**写明来源 commit 并在
+  落后时显式标 stale**（缺省不改变行为，缺生可见）；(B) 让该作业改读一个保证跟 origin/main 的
+  发布位检出（类似 publisher）；(C) 把该作业从 launchd 降为按需。注意 canonical 是**共享工作区**，
+  多 agent 并发下落后是常态而非异常 —— 任何「读 canonical 派生治理读数」的作业都有同一风险面，
+  本条只是其中一个实例。
+history:
+- at: "2026-11-10T13:20:00+00:00"
+  action: identify
+  note: >-
+    **双向对照（同一生成器、同一时刻、只换检出内容）**：
+    canonical（HEAD `db1b13813`）：`items: 25 / open: 0 / backlog_pressure: 0 / debt_health: 100.0 /
+    watchlist: () / gate: ()`；
+    origin/main 检出（HEAD `e1121e745`）：`items: 59 / open: 22 / backlog_pressure: 3.15 /
+    debt_health: 0.0 / watchlist: ('SUBMODULE-GATEKEEPER-PERSISTENT-RED',
+    'PANORAMA-A9-SOURCES-STALE-12D', 'ZHIXING-PUBLISH-EFFECT-PROVENANCE') / gate: ()`。
+    **根因链**：`com.omostation.omo-debt-refresh`（launchd，`StartCalendarInterval` = Minute 5 与 35，
+    实测 `runs: 24`）→ 命令硬编码 `--omo-dir /Users/xiamingxing/Workspace/.omo` →
+    `omo_debt_registry.load_debt_ledger` 只加载 **registry 里已登记** 的条目 → canonical 的
+    `.omo/_truth/registry/debt.yaml` 只有 25 条 seed_items，而 `.omo/debt/items/` 下有 39 个 YAML，
+    **14 个未登记文件恰好囊括了全部 4 个未终态条目**（`STORAGE-*` ×2、`OMLX-COPIES-CONVERGENCE`、
+    `HW-DISK8-4TB-FLAKY`）⇒ `open_items = []` ⇒ 所有罚分为 0 ⇒ **100% 健康、零积压、空队列**。
+    **为什么是假绿而不是「如实反映本检出」**：那个「100%」会被治理消费者当成**系统真实债务态**读，
+    而它与 origin/main 的真实读数（健康 0.0、积压 3.15、3 条 watchlist）**方向相反**。
+    **口径教训（本轮第 N 次同族）**：同一份登记面在不同检出上大小不同（25 vs 59），
+    拿一份检出的 registry 读数去解释另一份的行为必然出错；判据必须写明「我读的这份登记面属于哪个 commit」。
+    **同类风险面**：任何「读 canonical 派生治理读数」的定时作业都有同一形状 ——
+    本条只登记已确认的这一实例，不主张已穷举。
+  actor: "governance-agent"
