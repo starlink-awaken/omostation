@@ -75,3 +75,4 @@ seed_items:
 - .omo/debt/items/BOS-KEMS-STATUS-DIVERGENT.yaml
 - .omo/debt/items/LLM-ADVISORY-ONLY-STRING-AND-SH-COVERAGE.yaml
 - .omo/debt/items/SED-I-GUARD-UNWIRED-AND-SELF-FLAGGING.yaml
+- .omo/debt/items/DEAD-PATH-TOOL-FALLBACK-STRUCTURAL-NOOP.yaml

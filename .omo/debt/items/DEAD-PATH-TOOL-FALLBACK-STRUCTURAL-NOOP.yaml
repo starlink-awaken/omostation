@@ -1,0 +1,60 @@
+id: "DEAD-PATH-TOOL-FALLBACK-STRUCTURAL-NOOP"
+title: "check-dead-path-tool-fallback 是结构性空绿：三个 pattern 的 label 与总豁免列表完全相同，永不可能 FAIL"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "high"
+weight: 0.3
+entropy_class: "high"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- bin/gac/check-dead-path-tool-fallback.py
+- .github/workflows/gac-gate.yml
+- .omo/_truth/registry/ci-surfaces.yaml
+mitigation_refs:
+- 本条 history 第一条（证据与口径）
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/gac/check-dead-path-tool-fallback.py`（CR-P76-8-3，接线在 `gac-gate.yml`，
+  阻塞）**在任何输入下都返回 OK**：
+
+  - `DUAL_PATH_PATTERNS` 仅三项，label 分别是 `.omo/ 路径` / `protocols/ 路径` / `docs/ 路径`；
+  - `check_dual_path()` 里 `if label in (".omo/ 路径", "docs/ 路径", "protocols/ 路径"): continue`
+    把这三项**全部**跳过 —— 且跳过发生在双路判定之前，故 `issues` 恒为 `[]`。
+
+  直调实证：`check_dual_path('x = ".omo/tasks/registry/INDEX.md"\n', …)` → `[]`；
+  `docs/operations/runbook.md` → `[]`；`protocols/foo.md` → `[]`。
+
+  **来源**：2026-08-17 PR #1635（commit `a834ea94b`）以「数据域 (omo/docs/protocols)
+  总豁免 —— workspace 级路径无 projects 副本」为名加入该分支，动机是消除当时
+  **591 个误报**。豁免本身有道理（这些路径确实是 workspace 级、没有 `projects/*/` 副本），
+  但它把检查器的**全部**三项判据都豁免掉了 —— 于是「修掉误报」变成了「修掉检查器」。
+  自此该门禁持续输出 `OK 所有脚本路径引用均支持双路 fallback`，而它其实**一项都没检查**。
+decision_needed: >-
+  两条路：① **重新设计** —— 若 `.omo/`、`docs/`、`protocols/` 本就无 `projects/*/` 副本，
+  那这三项不构成「双路 fallback」对象，应换一批真正存在双路关系的路径，或改用
+  「工具在 root 与 projects 两处能否都解析」的动态探测（而非路径正则）；
+  ② **退役** —— 从 `gac-gate.yml` 与 `ci-surfaces.yaml` 摘掉，删脚本，避免门禁清单里
+  留一个不可能红的条目。
+  在裁决前，**该检查器的 OK 不构成任何证据**，不应被当作「路径双路已验证」。
+history:
+- at: "2026-11-10T22:00:00+00:00"
+  action: identify
+  note: >-
+    **发现口径**：在「已接线（ci-surfaces / hook-manifest / gac-local-gate / hook-runner /
+    workflows）且同时用 read_text + 正则」的 26 个检查器里逐个看判据，读到本文件时发现
+    `DUAL_PATH_PATTERNS` 的 label 集合与豁免元组**逐字相同**。
+    **直调实证**（`importlib` 加载后调 `check_dual_path`）：三类 root-only 引用全部返回 `[]`。
+    **历史定位**：`git log -S'数据域总豁免'` → `a834ea94b`（2026-08-17, PR #1635），
+    commit message 自述动机是「591 个误报」。
+    **影响**：`gac-gate` 每跑必绿，且输出一句它没验证过的结论 —— 与
+    `CI-SURFACE-FALSE-WIRING` 同族（声明与执行面不符），但这次是**执行面存在、判据为空**。
+  actor: "governance-agent"
