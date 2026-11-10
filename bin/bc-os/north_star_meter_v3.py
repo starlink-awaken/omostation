@@ -18,7 +18,7 @@
 用法:
   python3 bin/bc-os/north_star_meter_v3.py --json
   python3 bin/bc-os/north_star_meter_v3.py
-  python3 bin/bc-os/north_star_meter_v3.py --json --since-days 7
+  python3 bin/bc-os/north_star_meter_v3.py --json --window 7
 """
 
 from __future__ import annotations
