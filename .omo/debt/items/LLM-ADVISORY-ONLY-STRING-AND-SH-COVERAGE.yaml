@@ -39,8 +39,15 @@ description: >-
   （它是 fail-closed 守卫，ADR-0220 / ADR-0422）—— 直接把扫描面扩到 `.sh` 会把
   守卫脚本本身报成违规，需先设计白名单/守卫豁免。
 
-  另：`ci-surfaces.yaml` 中该条目 `gate: false` ⇒ 本检查器**不阻塞**，两条限制的
-  影响面被这一事实压低（这也是本条 severity 取 medium 而非 high 的依据）。
+  另：本检查器在 `gac-gate.yml:71-73` 是 **required `gac-gate` job 内的阻塞步**
+  （无 `continue-on-error`；同文件 `:224` 的注释与
+  `tests/test_gac_gate_workflow_purity.py::test_no_blocking_step_lives_outside_the_required_gate_job`
+  钉住「任何阻塞步骤都不得离开 gac-gate」）。注意 `ci-surfaces.yaml` 里该条目的
+  `gate: false` **不是**「CI 不阻塞」的意思 —— 该字段表示「是否属于 sgf-policy
+  门禁集」（`check-ci-surfaces.py:99-107` 只由 sgf-policy 的 gate command 赋
+  `gate=True`），本检查器经 workflow 接线而非 sgf-policy，故为 false。
+  severity 取 medium 的依据是**两条限制各自的影响面**（潜伏误报、覆盖缺口），
+  而非「不阻塞」。
 decision_needed: >-
   两条限制需分别裁决：① 是否把判据改成 AST 调用点判定（更准，但需处理
   `getattr(subprocess, "run")` 之类间接调用，且仍会漏掉「字符串拼进 shell 再执行」
@@ -64,4 +71,20 @@ history:
     `git commit --no-verify` / `git push --force` / `git commit -a`，命中全在 markdown；
     `.sh` 侧另查 `git commit|git push` 得到 7 个脚本，其中 `swarm-git` 的命中全是
     fail-closed 守卫注释 —— 这是限制 ② 「扩面即自伤」的直接证据。
+  actor: "governance-agent"
+- at: "2026-11-10T22:50:00+00:00"
+  action: review
+  note: >-
+    **自查更正首版的一处事实错误**：首版写「`ci-surfaces.yaml` 中该条目
+    `gate: false` ⇒ 本检查器**不阻塞**」，这是把字段语义读错了。
+    `gate` 在 `ci-surfaces.yaml` 里表示「该工具是否属于 **sgf-policy 门禁集**」——
+    `check-ci-surfaces.py:99-107` 中 `gate=True` 只由 sgf-policy 的 gate command 赋值，
+    经 workflow 接线的工具一律为 false。它**不是**「CI 是否阻塞」。
+    **实测**：`gac-gate.yml:71-73` 的 `CR-P76-7-1-LLM-ADVISORY-ONLY` 步**没有**
+    `continue-on-error`，且位于 required 的 `gac-gate` job 内（`gac-gate-aux` 才从
+    `:230` 开始）⇒ **是阻塞步**。已由
+    `tests/test_gac_gate_workflow_purity.py::test_no_blocking_step_lives_outside_the_required_gate_job`
+    钉住该不变量。
+    **影响**：本条 severity=medium 的理由从「不阻塞」改为「两条限制各自的影响面」
+    （判据本身不变 —— 它现在跑的是修好的实现，两条限制都还是真实缺口）。
   actor: "governance-agent"
