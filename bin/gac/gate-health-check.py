@@ -23,6 +23,33 @@ def run(cmd: list[str], cwd: Path = ROOT) -> tuple[int, str, str]:
     return r.returncode, r.stdout.strip(), r.stderr.strip()
 
 
+def _diagnostic(out: str, err: str) -> str:
+    """从一次子检查的输出里取一段**可读的诊断**, 供 dashboard 的 gate.detail 用。
+
+    裸取 `stdout.split("\\n")[-1]` 会把美化 JSON 的收尾括号当成诊断 —— A1 实测:
+    `check-sfop-slots.py --json` 的末行就是 `}`, 于是门禁 detail 退化成单字符
+    `'}'` (debt: PANORAMA-GATE-DETAIL-UNRELIABLE)。整体是 JSON 对象时改读它的
+    ok/errors/warnings 摘要; 非 JSON 仍取末行 (保持既有行为)。
+    """
+    text = out if out else err
+    if not text:
+        return ""
+    try:
+        data = json.loads(out)
+    except Exception:  # noqa: BLE001 — 非 JSON 输出走末行口径
+        data = None
+    if isinstance(data, dict) and isinstance(data.get("ok"), bool):
+        parts = ["ok" if data["ok"] else "not ok"]
+        errors = data.get("errors")
+        if isinstance(errors, list) and errors:
+            parts.append(f"errors={len(errors)}")
+        warnings = data.get("warnings")
+        if isinstance(warnings, list) and warnings:
+            parts.append(f"warnings={len(warnings)}")
+        return " ".join(parts)
+    return text.split("\n")[-1]
+
+
 def check(name: str, cmd: list[str], expect_exit: int = 0, cwd: Path = ROOT) -> dict:
     code, out, err = run(cmd, cwd)
     passed = code == expect_exit
@@ -30,7 +57,7 @@ def check(name: str, cmd: list[str], expect_exit: int = 0, cwd: Path = ROOT) -> 
         "gate": name,
         "ok": passed,
         "exit_code": code,
-        "output": out.split("\n")[-1] if out else err.split("\n")[-1] if err else "",
+        "output": _diagnostic(out, err) or f"exit={code}",
     }
 
 
