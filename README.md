@@ -1,7 +1,7 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-09-04
+last_updated: 2026-11-10
 last-reviewed: 2026-11-09
 lifecycle: entry
 status: active
@@ -79,7 +79,7 @@ cd projects/knowledge/gbrain && bun test
 | Tool | Command | Purpose |
 |------|---------|---------|
 | Layer dependency check | `make check-layers` | Validates cross-layer imports against [`docs/layer-contract.yaml`](docs/layer-contract.yaml) |
-| SSOT watcher | `make ssot-{status,log,sync}` | SHA-256 change tracking for 12 SSOT files, audit log in `.omo/ssot-audit-log.jsonl` |
+| SSOT watcher | `make ssot-{status,log,sync}` | SHA-256 change tracking for every registered SSOT file, audit log in `.omo/ssot-audit-log.jsonl` |
 | GaC local gate | `make gac-local-gate` | Full governance gate (validate, drift, lint, AGCP, MOF, SSOT) |
 | Agent workflow | `bin/agent-workflow.py` | Workflow lifecycle: bootstrap, start, claim, verify, closeout, compliance |
 | API versioning | `/api/version`, `/api/version/history` | Cockpit API version management with FastAPI middleware |
@@ -171,7 +171,7 @@ cd projects/knowledge/gbrain && bun test
 | 工具 | 命令 | 用途 |
 |------|------|------|
 | 分层依赖检查 | `make check-layers` | 验证跨层导入是否符合 [`docs/layer-contract.yaml`](docs/layer-contract.yaml) |
-| SSOT 追踪 | `make ssot-{status,log,sync}` | 12 个 SSOT 文件的 SHA-256 变更追踪，审计日志在 `.omo/ssot-audit-log.jsonl` |
+| SSOT 追踪 | `make ssot-{status,log,sync}` | 全部 SSOT 文件的 SHA-256 变更追踪，审计日志在 `.omo/ssot-audit-log.jsonl` |
 | GaC 本地门禁 | `make gac-local-gate` | 全量治理门禁 (validate, drift, lint, AGCP, MOF, SSOT) |
 | Agent 工作流 | `bin/agent-workflow.py` | 工作流生命周期: bootstrap, start, claim, verify, closeout, compliance |
 | API 版本管理 | `/api/version`, `/api/version/history` | Cockpit API 版本管理，FastAPI 中间件 |

@@ -5,7 +5,7 @@ lifecycle: history
 owner: governance-team
 last-reviewed: 2026-11-03
 type: documentation
-last_updated: 2026-09-17
+last_updated: 2026-11-10
 ---
 
 # SYSTEM-INDEX.md — Workspace 全景导航
