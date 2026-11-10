@@ -5,8 +5,8 @@ lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-25
 type: derived
-source: bin/ssot/architecture-deep-analysis.py
-last_synced: 2026-09-03
+source: docs/project-registry.yaml + protocols/port-registry.yaml + ARCHITECTURE.md (一次性分析, 无生成器)
+last_updated: 2026-07-13
 ---
 
 

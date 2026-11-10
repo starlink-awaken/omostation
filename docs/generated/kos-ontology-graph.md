@@ -5,8 +5,8 @@ lifecycle: history
 owner: governance-team
 last-reviewed: 2026-09-25
 type: derived
-source: bin/ssot/kos-ontology-graph.py
-last_synced: 2026-09-03
+source: kos:default (KOS SQLite 本体引擎, EicosParser 提取; 一次性分析, 无生成器)
+last_updated: 2026-07-06
 ---
 
 
