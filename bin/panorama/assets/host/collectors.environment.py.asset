@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -50,7 +51,7 @@ class EnvironmentEvidenceCollector(DataCollector):
         try:
             env = {**os.environ, "PATH": _SUBPROCESS_PATH + ":" + os.environ.get("PATH", "")}
             proc = subprocess.run(
-                ["python3", "-B", _meta_doctor_script(), "--refs-only"],
+                [sys.executable, "-B", _meta_doctor_script(), "--refs-only"],
                 capture_output=True, text=True, timeout=25, env=env,
             )
             ok = proc.returncode == 0
