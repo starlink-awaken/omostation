@@ -47679,16 +47679,38 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
-      operational:
-        evidence: {}
-        status: NOT_PROVEN
-      value:
         evidence:
-          note: 本轮为派发生成侧的重复折叠修复，不设价值指标。
+          diff:
+            ref: receipt://docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
+            sha256: sha256:c8f284d83273926374bca2ac72d3f5aed40925f9cc6bade546fc8bef88c27d66
+          merged_reachable_commit:
+            ref: git://origin/main@ba3dd71afc996c2b1abda6ab1de79fc7160737fa
+          rollback:
+            ref: receipt://docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
+            sha256: sha256:c8f284d83273926374bca2ac72d3f5aed40925f9cc6bade546fc8bef88c27d66
+          tests:
+            ref: receipt://docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
+            sha256: sha256:c8f284d83273926374bca2ac72d3f5aed40925f9cc6bade546fc8bef88c27d66
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
+            sha256: sha256:c8f284d83273926374bca2ac72d3f5aed40925f9cc6bade546fc8bef88c27d66
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
+            sha256: sha256:c8f284d83273926374bca2ac72d3f5aed40925f9cc6bade546fc8bef88c27d66
+          live_canary:
+            ref: receipt://docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
+            sha256: sha256:c8f284d83273926374bca2ac72d3f5aed40925f9cc6bade546fc8bef88c27d66
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-345.md
+            sha256: sha256:4472532b6a2793f01d6b6e657754df60a0ca5f229d97bc08a44f65d02a388a07
+        status: PROVEN
+      value:
+        evidence: {}
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   done_when:
   - 正例成立——同一 objective 连续两次 `dispatch_task` 只留下 1 份任务 JSON 与 1 张卡片，第二次返回 `deduplicated=True`
@@ -47715,7 +47737,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L2
-  status: in_progress
+  status: done
+  done_at: 2026-11-10
   title: BET-Y2Q4-T10-345 常驻自愈派发按 objective 折叠重复建档 —— 止住 task-center dispatches 无界增长
   track: T10-TOOLING
   underlying_workflow: governance-state-mutation
