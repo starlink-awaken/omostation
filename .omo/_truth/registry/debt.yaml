@@ -18,6 +18,7 @@ seed_items:
 - .omo/debt/items/HEALTH_SCORE_FORMULA.yaml
 - .omo/debt/items/TEST_COVERAGE.yaml
 - .omo/debt/items/DOC_CLAIMS_SCOPE.yaml
+- .omo/debt/items/DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN.yaml
 - .omo/debt/items/D-1.yaml
 - .omo/debt/items/D-2.yaml
 - .omo/debt/items/D-3.yaml
