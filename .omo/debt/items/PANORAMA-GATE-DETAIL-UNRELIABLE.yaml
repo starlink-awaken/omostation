@@ -17,6 +17,7 @@ evidence_refs:
 mitigation_refs:
 - docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
 - bin/panorama/assets/host/panorama-collect-main.py.asset —— 发布链冻结副本的版本化恢复件（恢复到 ~/.local/share/zhixing-dashboard/ 属部署面写操作，待 principal 授权）
+- bin/gac/check-gate-detail-contract.py —— ③ 交付的 A 系门禁 detail 一致性门禁（两平面 shape/coherence/reason_missing/order 四类阻断 + 跨平面 skew 只 advisory）
 opened_at: "2026-11-10"
 last_reviewed_at: "2026-11-10"
 next_review_at: "2026-11-17"
@@ -36,7 +37,7 @@ decision_needed: >-
   要决定的是：detail/原因这类诊断串在跨平面传递时应保持何种契约（原样透传或显式丢弃并留痕），
   并给 A 系门禁的 detail 加一条"不得为空/不得短于阈值且须与 verdict 同源"的一致性检查。
   复算：python3 -c "import json;d=json.load(open('/Users/xiamingxing/.local/share/zhixing-dashboard/current.json'));print([(g.get('id'),g.get('verdict'),g.get('source_verdict'),g.get('detail')) for g in d['gates'] if g.get('id') in ('A1','A9')])"
-  （2026-11-10 06:33 补：② 已定论为**发布链代码版本偏斜**，同 instant 双平面对照见 history 同日 review 条，不要再按「聚合截断」重做；③ 仍未做，且新增「detail 顺序需先 sorted 才能逐字比」一条判据。）
+  （2026-11-10 06:33 补：② 已定论为**发布链代码版本偏斜**，同 instant 双平面对照见 history 同日 review 条，不要再按「聚合截断」重做；③ 已于 2026-11-10 交付（门禁 `bin/gac/check-gate-detail-contract.py` + 规则 `CR-X2-GATE-DETAIL-CONTRACT`，sorted 口径同批修入 `bin/panorama/panorama-collect.py:1491`），余下未决的是**发布链代码收敛**：把 `bin/panorama/assets/host/*.asset` 恢复到宿主部署面需 principal 授权，未授权前 skew 只会一直在 advisory 里可见。）
 history:
 - at: "2026-11-10T02:40:00+00:00"
   action: identify
@@ -100,4 +101,29 @@ history:
     新增一条与 ③ 同族的判据：`required_sources`（`:1484-1489`）是 **set 字面量**，`bad_sources` 按集合顺序迭代生成，
     多源同时降级时原因串顺序随进程字符串哈希随机化而变 ⇒ 对 detail 做任何逐字比对/幂等校验都会假漂移，
     一致性检查应先固定顺序（`sorted`）再比。③（A 系门禁 detail 非空/长度阈值/与 verdict 同源的稳定性检查）仍未做。
+  actor: "governance-agent"
+- at: "2026-11-10T06:55:00+00:00"
+  action: mitigate
+  note: >-
+    新增门禁 `bin/gac/check-gate-detail-contract.py`（③ 交付），并修掉 ③ 的前置判据：
+    `bin/panorama/panorama-collect.py:1491` 改为 `for name in sorted(required_sources)`，原因串顺序不再随
+    进程字符串哈希漂移。门禁判的是**两平面**里每条 A 系门禁 detail 的形状与自洽：`shape`（空 / 纯括号残片 /
+    过短）、`coherence`（verdict=PASS 却带 failure marker）、`reason_missing`（点名 cockpit_sources 却无
+    `name=STATUS` 原因段）、`order`（未 sorted）四类为阻断口径；跨平面 `skew` 只 advisory 且**永久不参与退出码**
+    —— 清它要把 `bin/panorama/assets/host/*.asset` 恢复到宿主部署面，属 principal 授权，把授权决定做成常红灯是错的。
+    本机首跑读数（warn 期，exit 0）：`published=present(9) revision=present(9) verdict=WARN 违反=2(阻断=2 顺序=0)
+    跨平面偏斜=8`。两条阻断正是本条 ①/② 记录的两个历史形状的当场复现 —— `published A1 shape '}'` 与
+    `published A9 reason_missing 'A9 evidence incomplete: cockpit_sources'`，即 #5220 之后发布链仍跑旧代码这件事
+    现在**每天在门禁输出里可见**，不再只活在债务记录里。8 条 skew 中最重的两条：A3 `published='Governance semantic
+    gate: PASS'` vs `revision='…: FAIL'`（判定方向相反），A4 `published='{"ok": false, "drift_count": 18,
+    "orphan_count": 23…}'` vs `revision='ok'`（发布面把 meta-doctor 的原始 JSON 末行当诊断，用户看到的 18 漂移
+    是旧代码读数）。接线 4 处：规则 `CR-X2-GATE-DETAIL-CONTRACT`（X2/L2、enforcement=advisory、
+    `review_before: '2026-12-01'`、adr ADR-0457 三段式）、`bin/_registry/scripts/governance/check-gate-detail-contract.yaml`、
+    `ci-surfaces.yaml`（gate=false）、`gac-local-gate.py` GATES_LIST（不进 SOFT_CHECKS，限期到点由脚本自身退出码转红）。
+    限期口径单点：脚本常量 `ENFORCE_AFTER` 与规则 `review_before` 同值，由
+    `tests/unit/test_gate_detail_contract.py::test_enforce_after_matches_governance_rule` 钉住，不靠人记。
+    验证：`tests/unit/test_gate_detail_contract.py` 18 passed（含 1 条正向对照：健康 detail 不误报）；ruff 对两个新文件
+    All checks passed；`panorama-collect.py` 改动前后 ruff 违规计数相同（未新增）。**边界要说清**：无平面宿主（CI）
+    上两个平面都读不出 ⇒ 本门禁不判、如实报 `plane=absent`，真实约束发生在 `gac_local_gate`（本机）与有平面的宿主，
+    不能声称 CI 覆盖了它；`parse_suspicious` 自证只防「平面装着却一条 A 门都没解析出来」的空转绿。
   actor: "governance-agent"

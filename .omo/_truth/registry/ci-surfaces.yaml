@@ -27,6 +27,20 @@ surfaces:
     2026-11-10 principal 裁决「先 warn + 限期收敛」—— gate=false 到 2026-11-24,
     之后由脚本退出码自动转阻断 (规则 CR-X2-CRON-INTERP-EXECUTABILITY 的 review_before 同值)。
     判据复用 bin/lib/cron_normalize, 与 scheduler-compile / install-cron-plane 同源。
+- id: bin-gac-check-gate-detail-contract-py
+  tool: bin/gac/check-gate-detail-contract.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - gac_local_gate
+  - per_pr
+  status: active
+  note: >-
+    A 系门禁 detail 一致性门禁 (PANORAMA-GATE-DETAIL-UNRELIABLE ③, 规则
+    CR-X2-GATE-DETAIL-CONTRACT)。2026-11-10 以 advisory 上线, gate=false 到 2026-12-01
+    (与该规则 review_before 同值, 由 tests/unit/test_gate_detail_contract.py 钉住),
+    之后由脚本退出码自动转阻断。跨平面 detail 偏斜永久 advisory, 不参与退出码 —— 清它
+    要部署面写, 归 principal 授权。只读宿主平面, 无平面的宿主 (CI) 不判。
 - id: bin-gac-check-change-lane-range-py
   tool: bin/gac/check-change-lane-range.py
   workflow: gac-gate.yml
