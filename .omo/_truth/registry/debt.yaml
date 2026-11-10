@@ -41,3 +41,26 @@ seed_items:
 - .omo/debt/items/INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED.yaml
 - .omo/debt/items/LAUNCHD-PLIST-INSTALLED-DIVERGED.yaml
 - .omo/debt/items/CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN.yaml
+# 2026-11-09 再对齐: 补登 21 个存在但未登记的条目 (ledger 此前对它们不可见)。
+# 其中 7 identified + 1 in_progress 是活条目 —— 逾期未复审/未推进却零可见。
+- .omo/debt/items/AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER.yaml
+- .omo/debt/items/BET-LEDGER-CLI-AUTHORITY-SPLIT.yaml
+- .omo/debt/items/CRON-INSTALLERS-OUTSIDE-SSOT.yaml
+- .omo/debt/items/CRON-REGISTRY-NO-HOST-SCOPE.yaml
+- .omo/debt/items/DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP.yaml
+- .omo/debt/items/DEBT-20260921-X2-UNIMPLEMENTED-LEDGER.yaml
+- .omo/debt/items/DEBT-20260927-KOS-HOME-DUAL-AUTHORITY.yaml
+- .omo/debt/items/DEBT-20260927-RUN-REGISTRY-RACE.yaml
+- .omo/debt/items/DEBT-20261002-BWG2.yaml
+- .omo/debt/items/DIRECT-IO-GATE-TWO-TREES-TWO-COPIES.yaml
+- .omo/debt/items/HW-DISK8-4TB-FLAKY.yaml
+- .omo/debt/items/O-BROKEN-LAUNCHAGENT-OMO-SYNC.yaml
+- .omo/debt/items/OMLX-COPIES-CONVERGENCE.yaml
+- .omo/debt/items/OMO-SURFACES-ZOMBIE-ASSETS.yaml
+- .omo/debt/items/RESIDENT-PLANE-SPLIT-LAUNCHD-INERT.yaml
+- .omo/debt/items/STORAGE-MINI-INTERNAL-NO-RECURRING-BACKUP.yaml
+- .omo/debt/items/STORAGE-SHAREDMODEL-NO-BACKUP.yaml
+- .omo/debt/items/SUBMODULE-GATEKEEPER-PERSISTENT-RED.yaml
+- .omo/debt/items/TOOL-CI-FORCEPUSH-NO-CHECKS.yaml
+- .omo/debt/items/TOOL-GRAPHQL-FLAKY-EMPTY-MEANS-UNKNOWN.yaml
+- .omo/debt/items/TOOL-HOOK-CONFLICT-MARKER-GITLINK.yaml

@@ -16,7 +16,7 @@ evidence_refs:
 - Plans/macmini-7t-ancient-twilight.md
 - mbp ~/Library/Logs/disk-keepalive.log 实测 106 行, 窗口 2026-11-05 22:59:10 → 11-07 18:46:10 (= 43.8h, 即本次守护进程存活期, stdout/stderr 与 .v3 标记同 mtime 2026-11-05 22:59) 内 3 次 "MODEL-STORE 未挂载 → REMOUNT OK", 其中 11-07 两次 17:35:13 / 18:46:10 相隔 71 分钟; 守护卷只有 MODEL-STORE, 本条的 MOVESPEED/SHAREDWORK/SHAREDMODEL 从未出现于该日志
 - mbp ~/Library/Logs/disk-keepalive.drops 不存在 (即上面 evidence_refs 第一项声称的证据件从未产出), 而 disk-keepalive.drops.stamp mtime 2026-11-07 18:30:53 ⇒ 采集周期在跑且恒 0 记录
-- ~/bin/disk-keepalive.sh:40 DISK_MATCH="DK5A1" 与 :132 collect_drops 的触发 predicate process == "icdd": 实测 icdd 是 com.apple.imagecapture (--last 3d 共 180 行, 内容为 Lenovo LJ2655DN 打印机与 Device DB 维护), icdd AND CONTAINS "DK5A1" 在 --last 7d 命中 0 行
+- '~/bin/disk-keepalive.sh:40 DISK_MATCH="DK5A1" 与 :132 collect_drops 的触发 predicate process == "icdd": 实测 icdd 是 com.apple.imagecapture (--last 3d 共 180 行, 内容为 Lenovo LJ2655DN 打印机与 Device DB 维护), icdd AND CONTAINS "DK5A1" 在 --last 7d 命中 0 行'
 - mbp 统一日志最老 chunk /var/db/diagnostics/Special/000000000000332a.tracev3 mtime 2026-10-31 21:47 (≈6.9 天) ⇒ 2026-10-11 14:47:44 真掉线的 bluetoothd 阳性对照已不可取回; correct 记录里"约 18h 留存"的口径在 mbp 侧不成立
 mitigation_refs:
 - ~/bin/disk-keepalive.sh
