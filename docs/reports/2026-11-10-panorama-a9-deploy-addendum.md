@@ -104,7 +104,7 @@ schema_version: closeout-receipt/v1
 
 ## 5 发布后再测 A9：已核实事实与未决项
 
-**本节被重新测量推翻过四次**，错在哪、被什么否证都留在 §5.4/§5.4b 与提交历史里，不再重述推理：
+**本节被重新测量推翻过五次**，错在哪、被什么否证都留在 §5.4/§5.4b 与提交历史里，不再重述推理：
 只保留可复现的读数与代码出处。这一节因此比初稿长，但它是我能给出的最强形态——每条都能被
 第三方用同样的命令复算。
 
@@ -145,23 +145,31 @@ schema_version: closeout-receipt/v1
 2026-10-23 那次要消灭的现象（「只看得到 `cockpit_sources` 时无法分辨原因，得人工翻 cockpit current.json」）。
 截断点在哪一层未查，属新缺陷。
 
-### 5.4 生产者身份字段与我这次发布无关（两次误判的根源，附代码出处）
+### 5.4 生产者身份字段不构成发布的证据（我前几版都读错了，此处只留实测）
 
-`revisions/*/manifest.json` 的 `producer.collector_sha256` 在保留窗口内的 **48 份** revision 中
-恒为 `f891ad40…`（= `origin/main` 修复后的 `bin/panorama/panorama-collect.py` 内容），
-`root_oid` 在 11-09 23:28Z 由 `afcee8ef2…` 跳到 `697151a9…` —— 这两件事都发生在我 11-10 01:48Z
-发布**之前**。取法有两条路：
+保留窗口内 48 份 `revisions/*/manifest.json` 的 `producer.collector_sha256` **恒为** `f891ad40…`
+（= `origin/main` 上 `bin/panorama/panorama-collect.py` 的内容），`producer.root_oid` 在
+11-09 23:28Z 由 `afcee8ef2…` 跳到 `697151a9…`。两者都早于我 11-10 01:48Z 的发布。
+⇒ 这些字段与本次 publish **没有可证的因果关系**，我前三版把它当成"哪份判定器在执行"的证据是错的。
 
-- `panorama-collect.py:508-513`：`executing_collector != bound_collector` 直接
-  `raise projection_collector_not_at_bound_commit`；
-- `:571-582`：release 目录里有 `.zhixing-host-release.json` 时，身份改由
-  `release_identity.py::managed_release_identity(root)` 给出，而不是现场 git 根。
+publish 这次真正改变的只有一件事，按字节可复算：
 
-⇒ 能持续产出 revision 这件事，证明**执行中的判定器内容等于 main 的修复版**（否则守卫早就 raise），
-但**不能**证明是我这次 publish 让它变成这样的——它在发布前 3 小时已经成立。
-我前两版把 `collector_sha256` 读成"另一平面在执行/发布继承的旧判定器没被执行"的因果证据，方向都是错的：
-该字段反映的是绑定身份平面，与 release 目录里那份 `panorama-collect-main.py`（`fa7eb9c1…`）不是同一条通路。
-保留窗口只有约 8h/48 份，更早的状态无法从磁盘断言。
+| 发布前 release `17afa5408…--pub-0c898071…` | 发布后 release `697151a9…` |
+|---|---|
+| `collectors/scheduler.py` `28ad3162…`，内含 `--json` **2 处** | `collectors/scheduler.py` `51f2b281…`，内含 `--json` **0 处** |
+| `panorama-collect-main.py` `fa7eb9c1…`（`--json` 15 处，未变） | 同哈希、同样 15 处（未变） |
+| 清单 `schema = v2`，带 `publication_id` | 清单 `schema = v1`，`publication_id = null` |
+
+**别把 15 处 `--json` 读成缺陷仍在**：那是 collector/main 各自 CLI 的正常参数；A9 的幻影参数只在
+`collectors/scheduler.py` 的诊断命令行里，那 2 处已归零，与 §2 的 `scheduler.status` 和 §5.1 的
+原因串消失互相独立地对上。清单 schema 从 v2 变 v1 是因为发布脚本取自我 `697151a9` 那份源树
+（`_ROOT` 按 `__file__` 解析），不是配置项——这条也说明"用哪棵树发布"会改变产物形态。
+
+**未决**：`root_oid` 的来源没定论。新清单 mtime 是 09:48（我的发布），而 `root_oid=697151a9`
+在它出现之前 2.5h 就已经写进 revision，所以该值不是从我这份清单读的；
+`panorama-collect.py:571-582`（有 `.zhixing-host-release.json` 时走 `release_identity.py`）
+与 `:585-588`（现场 git 根要求 `code_oid == refs/remotes/origin/main`）两条路都能产出形如观测的值，
+实际走的是哪条、`ZHIXING_DASHBOARD_CODE_ROOT` 指向何处，我没有查出来，不在此断言。
 
 ### 5.4b 常驻进程仍指向发布前的 release（运维事实，非缺陷断言）
 
