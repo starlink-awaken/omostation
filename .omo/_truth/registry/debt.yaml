@@ -64,3 +64,7 @@ seed_items:
 - .omo/debt/items/TOOL-CI-FORCEPUSH-NO-CHECKS.yaml
 - .omo/debt/items/TOOL-GRAPHQL-FLAKY-EMPTY-MEANS-UNKNOWN.yaml
 - .omo/debt/items/TOOL-HOOK-CONFLICT-MARKER-GITLINK.yaml
+- .omo/debt/items/PANORAMA-A9-SOURCES-STALE-12D.yaml
+- .omo/debt/items/PANORAMA-A9-DEFERRED-UNBOUNDED.yaml
+- .omo/debt/items/PANORAMA-GATE-DETAIL-UNRELIABLE.yaml
+- .omo/debt/items/ZHIXING-PUBLISH-EFFECT-PROVENANCE.yaml

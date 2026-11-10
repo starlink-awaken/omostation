@@ -1,0 +1,46 @@
+id: "PANORAMA-GATE-DETAIL-UNRELIABLE"
+title: "门禁 detail 字段在聚合平面不可信：A9 原因串丢失、A1 detail 退化成单字符『}』"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- ~/.local/share/zhixing-dashboard/current.json
+- ~/.local/share/zhixing-dashboard/revisions/
+- bin/panorama/panorama-collect.py
+mitigation_refs:
+- docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-11-17"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+decision_needed: >-
+  两个形状（同一条 detail 通路，各自独立复现）：
+  ① A9 —— 判据把原因串作为 `missing` 的第二个元素带出
+  （`_cockpit_source_reasons`），revision 平面 `revisions/*/data.json` 里完整可见
+  （例：`A9 evidence incomplete: cockpit_sources, strategy=PARTIAL; documents=PARTIAL`），
+  而聚合平面 `current.json` 的同一门只剩 `A9 evidence incomplete: cockpit_sources`（39 字符）。
+  这正好重建了判据注释里声称 2026-10-23 已消灭的现象（「只看得到 cockpit_sources 时
+  无法分辨原因，得人工翻 cockpit current.json」）——修在采集侧，丢在聚合侧。
+  ② A1 —— `detail` 字面值是单个右括号 `'}'`（len=1），而 `source_verdict=PASS`；
+  截断成因未查，不做推测。
+  要决定的是：detail/原因这类诊断串在跨平面传递时应保持何种契约（原样透传或显式丢弃并留痕），
+  并给 A 系门禁的 detail 加一条"不得为空/不得短于阈值且须与 verdict 同源"的一致性检查。
+  复算：python3 -c "import json;d=json.load(open('/Users/xiamingxing/.local/share/zhixing-dashboard/current.json'));print([(g.get('id'),g.get('verdict'),g.get('source_verdict'),g.get('detail')) for g in d['gates'] if g.get('id') in ('A1','A9')])"
+history:
+- at: "2026-11-10T02:40:00+00:00"
+  action: identify
+  note: >-
+    发布后判定"线上是否还剩不合格源"时发现两平面读数形状不同。顺带纠正一个我自己踩过的误判：
+    `verdict=UNKNOWN` + `source_verdict=PASS/FAIL/PARTIAL` 这个形状是 cockpit 适配层的既有设计
+    （tests/test_zhixing_wrapper_base_source.py:87-88 直接断言），不是本条要报的缺陷；
+    本条只针对 detail 内容的丢失与退化。
+  actor: "governance-agent"

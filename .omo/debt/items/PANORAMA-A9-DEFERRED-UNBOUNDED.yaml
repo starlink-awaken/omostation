@@ -1,0 +1,42 @@
+id: "PANORAMA-A9-DEFERRED-UNBOUNDED"
+title: "A9 判据的年龄界不对称：DEFERRED 完全无界可永久通过，PARTIAL 界内也永不被接受"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- bin/panorama/panorama-collect.py
+- docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
+mitigation_refs: []
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-11-17"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Principle"
+decision_needed: >-
+  判据（bin/panorama/panorama-collect.py 的 A9 cockpit 源准入段）自述意图是
+  「真正的信号是年龄而不是状态标签」，但实现是三条不对称规则：
+  ① `OK` 无条件接受；② `DEFERRED` **无任何年龄界**即接受 —— 一个长期停留在 DEFERRED
+  的源可以无限期让 A9 通过，而它的上次成功观测可能已经很久；
+  ③ `STALE_UNAVAILABLE`/`FAIL` 需 ≤21600s（6h）才接受，而 `PARTIAL` 不在接受集合里，
+  **即使年龄界内也判不合格**。需要决定：DEFERRED 是否应与 ③ 同界；PARTIAL 界内是否应被接受
+  （按自述意图应当是），以及把这三条统一成"以年龄为主判据、标签只做解释"的单一口径。
+  如实留记：本条不是 A9 当前不闭合的直接原因 —— strategy/documents 既是 PARTIAL
+  又超界（306h/287h），任何一侧规则都会拒它们；直接原因见 PANORAMA-A9-SOURCES-STALE-12D。
+  本条要防的是另一个方向：2026-11-10 实测同一对源在高负载轮显示 DEFERRED、在另一些轮显示
+  PARTIAL，标签在轮次之间摆动；一旦摆动落在 DEFERRED 侧，A9 就无条件放行。
+history:
+- at: "2026-11-10T02:40:00+00:00"
+  action: identify
+  note: >-
+    BET-Y2Q4-T10-343 发布后复核 A9 时，为解释「同一源在两平面标签不同」而逐行读判据发现。
+    注释与实现之间的偏差是本仓 PITFALL 里反复出现的「声明 ≠ 执行」形状：注释给出年龄中心的
+    判据理由，实现却是标签白名单。
+  actor: "governance-agent"
