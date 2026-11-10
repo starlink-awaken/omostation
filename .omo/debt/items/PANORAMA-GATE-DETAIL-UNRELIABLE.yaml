@@ -209,3 +209,22 @@ history:
     (c) 放宽 `:514-516` 的断言（不推荐：它存在的理由写在同段注释里 —— 防止 ad-hoc import 静默读操作者工作区）。
     本条**不代决**，只把矛盾钉住，避免后续再按「env 写错」去改而去。
   actor: "governance-agent"
+- at: "2026-11-10T11:05:00+00:00"
+  action: mitigate
+  note: >-
+    **把上一条的设计矛盾收敛成一个可执行、向后兼容的修法（供 principal 裁定，本条不代决、不动 plist）**：
+    新增一个**输出根**变量，把「代码支持根」与「输出根」拆开，其余一律不动。
+    (1) `panorama-collect.py`：`OUT_DIR = Path(os.environ.get("PANORAMA_OUTPUT_ROOT") or ROOT) / "runtime/dashboard"`
+    —— 未设该变量时行为**逐字节不变**（仍用 `PANORAMA_ROOT`）。
+    (2) `orchestrator.py.asset:514-516` 的守卫改成比 `PANORAMA_OUTPUT_ROOT or PANORAMA_ROOT`
+    —— 保留它「采集器写的就是 profile 的 state 根」这条 teeth，只是改比对的变量。
+    (3) 仅 `com.omostation.zhixing-dashboard-refresh` 的 plist **追加**一行
+    `PANORAMA_OUTPUT_ROOT = <OMOSTATION_STATE_ROOT>`（纯新增，不改 `PANORAMA_ROOT`、不动 `PATH`）。
+    **为什么这条比此前列的三选一好**：不动 `_host_support_dir`（它继续从 `PANORAMA_ROOT/bin/{ssot,lib}` 解析，
+    实测存在）、不动 `PANORAMA_ROOT` 的取值、不放宽守卫的语义、不需要搬任何代码目录；
+    三处改动全部向后兼容，缺省即今日行为。
+    **仍然需要 principal 授权的原因**：唯一落在机器配置上的是第 (3) 步的 plist 追加 ——
+    BET-Y2Q4-T16-03 的 non_goals 明写「不自动改任何 plist，不执行任何 launchctl 子命令（需 principal 单独授权）」，
+    本条不越过该记录。**预期收益**：`panorama_base`（自 2026-10-28 冻结的门禁 cohort）与
+    `personal_value_truth`（同日冻结的价值证据）同时解冻。
+  actor: "governance-agent"
