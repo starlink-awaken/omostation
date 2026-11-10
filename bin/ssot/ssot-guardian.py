@@ -29,6 +29,7 @@ direct-omo-io 约束与真实状态漂移. 可手动跑、pre-commit 跑、cron 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -37,6 +38,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from repo_root import state_file_read  # noqa: E402
@@ -196,14 +198,67 @@ def _emit_event(kind: str, payload: dict) -> None:
         pass
 
 
-def _check_submodules() -> dict:
-    """检测子模块指针是否落后于子仓库 HEAD ('+' 前缀).
+SUBMODULE_DIRECTIONS = {
+    "checkout_ahead": "子仓库有未 bump 到根仓库的提交; 需先提交子仓库再更新根指针",
+    "stale_checkout": "本地检出落后于根仓库指针 (陈旧检出, 不是别人未提交的工作); 修复: git submodule update --init -- <path>",
+    "diverged": "本地检出与根仓库指针互不为祖先; 需人工核对两侧历史",
+    "unverifiable": "判方向所需的 commit 对象或方向判具不可用 (浅检出 / 未 init), 按 '+' 原样报告",
+}
 
-    '+sha path (heads/main)' 表示子仓库有未 bump 到根仓库的提交.
+
+def _drift_helper():
+    """载入 bin/gac/check-submodule-pointer-drift.py 的判定原具, 不在守门员里造第二套方向口径。
+
+    那份实现带着 GIT_DIR/GIT_WORK_TREE 泄漏清洗与浅克隆分流; 在这儿重写等于让两处判准分叉。
+    载入失败不改变判定, 只降级为 unverifiable 措辞。
+    """
+    script = WORKSPACE_ROOT / "bin" / "gac" / "check-submodule-pointer-drift.py"
+    if not script.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("gac_submodule_pointer_drift", script)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        return None
+    return module
+
+
+def _classify_checkout(helper: Any, sub_path: str, local_sha: str, pin: str | None) -> dict:
+    """把 '+' 行按方向分开: 检出领先 gitlink = 有未 bump 的提交; 落后 gitlink = 陈旧检出。"""
+    if helper is None or not pin:
+        return {"direction": "unverifiable", "diagnosis": SUBMODULE_DIRECTIONS["unverifiable"]}
+    sub_dir = helper.REPO_ROOT / sub_path
+    objects = [helper._git("cat-file", "-t", sha, cwd=sub_dir) for sha in (pin, local_sha)]
+    if any(kind != "commit" for kind in objects):
+        return {"direction": "unverifiable", "diagnosis": SUBMODULE_DIRECTIONS["unverifiable"]}
+    if helper.is_ancestor(pin, local_sha, sub_path):
+        direction = "checkout_ahead"
+    elif helper.is_ancestor(local_sha, pin, sub_path):
+        direction = "stale_checkout"
+    else:
+        direction = "diverged"
+    return {"direction": direction, "diagnosis": SUBMODULE_DIRECTIONS[direction]}
+
+
+def _submodule_drift_note(dirty: list[dict]) -> str:
+    """按方向合成诊断文字 (判定与严重度由调用方按 count 决定, 这里只改措辞)。"""
+    seen = dict.fromkeys(d.get("direction", "unverifiable") for d in dirty)
+    return " | ".join(SUBMODULE_DIRECTIONS.get(direction, SUBMODULE_DIRECTIONS["unverifiable"]) for direction in seen)
+
+
+def _check_submodules() -> dict:
+    """检测子模块检出与根仓 gitlink 不一致 ('+' 前缀), 并按方向分开诊断.
+
+    '+sha path (heads/main)' 只说明检出 commit ≠ index gitlink, 而两种成因的处置相反:
+    检出不含 gitlink 才是"子仓库有未 bump 的提交", 检出落后于 gitlink 只是陈旧检出。
     """
     result = _run(["git", "submodule", "status"], check=False)
     if result.returncode != 0:
         return {"error": result.stderr, "dirty": []}
+    helper = _drift_helper()
     dirty: list[dict] = []
     for line in result.stdout.splitlines():
         line = line.strip()
@@ -212,7 +267,13 @@ def _check_submodules() -> dict:
         # format: +sha path (ref)
         parts = line[1:].split()
         if len(parts) >= 2:
-            dirty.append({"sha": parts[0], "path": parts[1], "ref": " ".join(parts[2:])})
+            entry = {"sha": parts[0], "path": parts[1], "ref": " ".join(parts[2:])}
+            try:
+                pin = helper.get_gitlink(entry["path"]) if helper else None
+            except Exception:
+                pin = None
+            entry.update(_classify_checkout(helper, entry["path"], entry["sha"], pin))
+            dirty.append(entry)
     return {"dirty": dirty, "count": len(dirty)}
 
 
@@ -477,7 +538,7 @@ def main(argv: list[str] | None = None) -> int:
                 "severity": "high",
                 "dirty": submodule_check["dirty"],
                 "auto_fix": False,
-                "note": "子仓库有未 bump 到根仓库的提交; 需先提交子仓库再更新根指针",
+                "note": _submodule_drift_note(submodule_check["dirty"]),
             }
         )
 
