@@ -76,7 +76,11 @@ CENSUS_SERIAL = CENSUS_WRITE_WORKSPACE | CENSUS_NETWORK | CENSUS_EXCLUSIVE
 # fallback), 两者内容不同 ⇒ 两环境的清单分别是 88 / 84 个, 并集 94。
 # 账只覆盖其中一套 ⇒ 换台机器 (子模块 init 与否) 判据结论就变 ⇒ 漏登记的
 # 写类 gate 会在某台机器上静默继承「默认并行」。故普查口径改为全集。
-CENSUS_TOTAL_GATES = 95
+# 2026-11-10: 95 -> 96 (CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3) 的
+# cron-interpreter-executability gate 加入 gac-local-gate.py GATES_LIST)。
+# 该 gate 只读 .omo/cron/registry.yaml 并对候选解释器跑 find_spec 探测子进程，
+# 不写工作区 / .omo/state / 子模块指针，不走网络，不占独占本机资源 ⇒ A 类，可并行。
+CENSUS_TOTAL_GATES = 96
 
 # ── ② 全量分类账：普查中的 A 类（纯读/verification）逐一复审为「可并行」─────────
 # 维护约定：新增 gate 必须显式加入本账（或 SERIAL_ONLY），否则本文件失败。
@@ -117,6 +121,7 @@ PARALLEL_REVIEWED = frozenset(
     lane-debt-ledger
     bdsk-shadow-sandbox debt-integrity-check error-knowledge-check
     submodule-ancestry-gate sweep-index-check test-coverage-check
+    cron-interpreter-executability
     """.split()
 )
 

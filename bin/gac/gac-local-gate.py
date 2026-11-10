@@ -235,6 +235,14 @@ DEFAULT_POLICY = {
             "id": "check-severity-registry",
             "command": ["bin/gac/check-severity-registry.py"],
         },
+        # CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3): cron 解释器可执行性。
+        # 不进 SOFT_CHECKS —— 阻断与否由脚本自己的限期 (ENFORCE_AFTER) 决定,
+        # warn 期恒 exit 0, 过期未收敛自动转红; 放进 SOFT_CHECKS 就把限期取消了。
+        {
+            "id": "cron-interpreter-executability",
+            "command": ["bin/gac/check-cron-interpreter-executability.py", "--json"],
+            "timeout": 60,
+        },
         {
             "id": "check-submodule-rewind",
             "command": ["bin/gac/check-submodule-rewind.py"],
