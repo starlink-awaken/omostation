@@ -432,3 +432,57 @@ def test_required_l0_check_is_discovered_and_registered() -> None:
         (ROOT / ".omo/_truth/registry/ci-surfaces.yaml").read_text(encoding="utf-8")
     )
     assert l0 in {str(s.get("tool")) for s in payload["surfaces"]}
+
+
+def _surface_declaring(tmp_path: Path, tool: str, workflow: str) -> None:
+    _write(
+        tmp_path / "ci-surfaces.yaml",
+        "version: 1\nsurfaces:\n"
+        f"  - id: {tool.replace('/', '-')}\n    tool: {tool}\n"
+        f"    workflow: {workflow}\n    gate: false\n    triggers: []\n    status: active\n",
+    )
+    _write(tmp_path / tool, "#!/usr/bin/env python3\n")
+
+
+def test_false_wiring_warns_when_declared_workflow_cannot_execute(cs, tmp_path) -> None:
+    """声明了 workflow 但它既不含该工具、也不调 runner/本地门禁 → false-wiring warn.
+
+    实测背景: perception-coverage 声明 gac-gate.yml 却从未被执行
+    (CI-SURFACE-FALSE-WIRING-PERCEPTION-COVERAGE)。
+    """
+    _surface_declaring(tmp_path, "bin/gac/check-fake-wiring.py", "gac-gate.yml")
+    _write(tmp_path / "workflows" / "gac-gate.yml",
+           "on: [push]\njobs:\n  a:\n    steps:\n      - run: echo hi\n")
+    report = cs.check_ci_surfaces()
+    assert any("false-wiring" in w for w in report["warnings"]), report["warnings"]
+
+
+def test_false_wiring_ok_when_local_gate_runs_the_tool(cs, tmp_path) -> None:
+    """gac-gate.yml 跑 gac-local-gate.py 且工具在其门禁集里 → 不告警.
+
+    反例保护: 旧实现把这类本地门禁工具全算成「未接线」, 于是
+    「声明了却无人执行」也永远报不出来。
+    """
+    _surface_declaring(tmp_path, "bin/gac/check-fake-wiring.py", "gac-gate.yml")
+    _write(tmp_path / "workflows" / "gac-gate.yml",
+           "on: [push]\njobs:\n  a:\n    steps:\n      - run: python3 bin/gac/gac-local-gate.py --strict\n")
+    _write(tmp_path / "bin/gac/gac-local-gate.py",
+           'GATES = [{"command": ["bin/gac/check-fake-wiring.py"]}]\n')
+    _write(tmp_path / "projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml",
+           'gates:\n  - id: x\n    command: ["bin/gac/check-fake-wiring.py"]\n')
+    report = cs.check_ci_surfaces()
+    assert not any("false-wiring" in w for w in report["warnings"]), report["warnings"]
+
+
+def test_false_wiring_indeterminate_when_sgf_policy_absent(cs, tmp_path) -> None:
+    """sgf-policy 缺席（子模块未初始化）⇒ 对 gac-local-gate 下单保守跳过, 不报假警.
+
+    实测: script-registry 是 sgf-policy 的 gate 命令, 在子模块未初始化的检出里
+    被旧口径判成「无人执行」—— 那是装置缺席, 不是被检对象的问题。
+    """
+    _surface_declaring(tmp_path, "bin/gac/check-fake-wiring.py", "gac-gate.yml")
+    _write(tmp_path / "workflows" / "gac-gate.yml",
+           "on: [push]\njobs:\n  a:\n    steps:\n      - run: python3 bin/gac/gac-local-gate.py --strict\n")
+    _write(tmp_path / "bin/gac/gac-local-gate.py", "GATES = []\n")
+    report = cs.check_ci_surfaces()
+    assert not any("false-wiring" in w for w in report["warnings"]), report["warnings"]
