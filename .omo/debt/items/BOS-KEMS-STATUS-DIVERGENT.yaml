@@ -1,0 +1,49 @@
+id: "BOS-KEMS-STATUS-DIVERGENT"
+title: "kems 的 4 条 BOS URI 在 bos-services.yaml 标 active、在 services.yaml 标 enabled=false/manual —— 两个登记面互相矛盾, bos-uri-verify 因此恒报不可达"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- projects/agora/etc/bos-services.yaml
+- .omo/_truth/registry/services.yaml
+evidence_refs:
+- bin/ssot/bos-uri-verify.py
+- .omo/_truth/registry/services.yaml
+mitigation_refs: []
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-11-17"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+decision_needed: >-
+  两个登记面对同一服务给出相反状态:
+  · `.omo/_truth/registry/services.yaml` (4758 起) 写 `enabled: false` +
+    `scheduler: manual` + `trigger: on_demand` + `disabled_reason: "manual 能力注册项,
+    非守护进程 (BET-Y1Q4-T14)"` —— 即它本来就不该被探活;
+  · `projects/agora/etc/bos-services.yaml` (3032 起) 写 `status: active`,
+    而 `bin/ssot/bos-uri-verify.py:174` 只跳过 `deprecated/unimplemented/planned`
+    —— 于是这 4 条 (`bos://memory/kems/{status,graph,ocr-queue,forecast}`)
+    每次都被当活跃 HTTP 服务去探, 恒报 `unreachable` (localhost:8090 无监听)。
+  要决定的是: BOS 登记是否需要补 `scheduler: manual`/`trigger: on_demand` 词汇
+  (现有 active/deprecated/unimplemented/planned 四值表达不了「手动能力」),
+  以及 `bos-uri-verify` 是否据此跳过。另一条路是把 4 条直接标 `deprecated`
+  —— 但语义不对 (它们不是被废弃, 而是从未作为守护进程实现)。
+  附带: `bos-uri-verify` 本身**未接线** (不在任何 workflow / sgf-policy /
+  Makefile / gac-local-gate), exit 0, 属建议性检查。
+history:
+- at: "2026-11-10T06:50:00+00:00"
+  action: identify
+  note: >-
+    复算命令: `python3 bin/ssot/bos-uri-verify.py` → 4 unreachable, 全部指向
+    localhost:8090; `launchctl list | grep kems` 无作业, `lsof -iTCP:8090` 无监听。
+    全仓无 kems 退役 ADR, 也没有 kems 服务端 (projects/runtime/scripts/kems-v2/
+    只有 check 脚本)。两处登记的状态分歧是确定的, 缺的是「该信哪一边 + 探针该不该
+    跳过手动能力」这个裁决。
+  actor: "governance-agent"

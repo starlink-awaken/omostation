@@ -68,3 +68,4 @@ seed_items:
 - .omo/debt/items/PANORAMA-A9-DEFERRED-UNBOUNDED.yaml
 - .omo/debt/items/PANORAMA-GATE-DETAIL-UNRELIABLE.yaml
 - .omo/debt/items/ZHIXING-PUBLISH-EFFECT-PROVENANCE.yaml
+- .omo/debt/items/BOS-KEMS-STATUS-DIVERGENT.yaml
