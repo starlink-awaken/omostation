@@ -1,7 +1,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-09
+last-reviewed: 2026-11-10
 version: 3
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml
@@ -73,3 +73,4 @@ seed_items:
 - .omo/debt/items/PANORAMA-GATE-DETAIL-UNRELIABLE.yaml
 - .omo/debt/items/ZHIXING-PUBLISH-EFFECT-PROVENANCE.yaml
 - .omo/debt/items/BOS-KEMS-STATUS-DIVERGENT.yaml
+- .omo/debt/items/LLM-ADVISORY-ONLY-STRING-AND-SH-COVERAGE.yaml

@@ -1,0 +1,67 @@
+id: "LLM-ADVISORY-ONLY-STRING-AND-SH-COVERAGE"
+title: "check-llm-advisory-only 判据口径两处限制：字符串字面量不区分执行上下文、.sh 不在扫描面"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- bin/gac/check-llm-advisory-only.py
+- .omo/_truth/registry/ci-surfaces.yaml
+- .github/workflows/gac-gate.yml
+- bin/gac/swarm-git
+mitigation_refs:
+- 本条 history 第一条（同轮已修注释/docstring 误报）
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/gac/check-llm-advisory-only.py`（CR-P76-7-1，声明「LLM 只 generate suggestion,
+  不 auto-apply」）的判据是文本正则，两处限制：
+
+  ① **字符串字面量不区分执行上下文**：`git commit --no-verify` / `git push --force`
+  等模式对字符串内容一律命中 —— `return "git push --force"` 与
+  `os.system("git push --force")` 在本检查器眼里同形。实测仓内 `.py` 当前**零命中**
+  （含这些命令文本的都是 `.omo/_knowledge`、`docs`、`.agents/skills` 下的 markdown，
+  而本检查器只扫 `*.py`），故属**潜伏**误报而非现行红灯。要区分需按 AST 判定
+  「字符串是否处于被调用位置（Call 的 args）」，而不是逐行文本。
+
+  ② **只扫 `*.py`**：shell 脚本里的 `git commit --no-verify` 完全不在覆盖范围内。
+  而 `bin/gac/swarm-git` 恰恰是 `.sh`，且其**注释**里就写着 `--no-verify`
+  （它是 fail-closed 守卫，ADR-0220 / ADR-0422）—— 直接把扫描面扩到 `.sh` 会把
+  守卫脚本本身报成违规，需先设计白名单/守卫豁免。
+
+  另：`ci-surfaces.yaml` 中该条目 `gate: false` ⇒ 本检查器**不阻塞**，两条限制的
+  影响面被这一事实压低（这也是本条 severity 取 medium 而非 high 的依据）。
+decision_needed: >-
+  两条限制需分别裁决：① 是否把判据改成 AST 调用点判定（更准，但需处理
+  `getattr(subprocess, "run")` 之类间接调用，且仍会漏掉「字符串拼进 shell 再执行」
+  的形状 —— 改判据的收益边界要写清）；② 是否把扫描面扩到 `.sh`（需先给 `swarm-git`
+  这类**守卫脚本**设计豁免，否则扩面即自伤）。本条不代决。
+history:
+- at: "2026-11-10T19:05:00+00:00"
+  action: identify
+  note: >-
+    同轮修掉的是**第三类**误报：注释与 docstring。实测探针（docstring 里写
+    `git commit --no-verify` + 两行注释）在旧实现下报 **3 处**违规，其中 **2 处是纯文字**；
+    改为「匹配前抹掉注释与 docstring、但保留字符串字面量」（保留字符串是因为判据本身
+    要匹配 `subprocess.run(["git","commit"])` / `os.system("git commit ...")` 这类
+    字符串里的命令文本）后，该探针只剩字符串字面量那 1 处 —— 即本条限制 ①。
+
+    **变异对照**：把 `_strip_comments_and_docstrings` 改回全文读取 ⇒
+    `tests/unit/test_llm_advisory_only_code_only.py::test_comments_and_docstrings_are_not_auto_apply`
+    当场红（另两条真实检出用例仍绿），证明用例承重。
+
+    **扫描口径**：对 `bin/`、`lib/` 下 `.py` 与 `.sh` 全量搜
+    `git commit --no-verify` / `git push --force` / `git commit -a`，命中全在 markdown；
+    `.sh` 侧另查 `git commit|git push` 得到 7 个脚本，其中 `swarm-git` 的命中全是
+    fail-closed 守卫注释 —— 这是限制 ② 「扩面即自伤」的直接证据。
+  actor: "governance-agent"
