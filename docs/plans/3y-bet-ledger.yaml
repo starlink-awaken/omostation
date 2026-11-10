@@ -47619,6 +47619,55 @@ bets:
         evidence:
           note: "价值面不是本轮领用条件：它消除的是一次可复现的观测失效（A9 detail 恒为 diagnostic command exit 2），但「A9 从此稳定 PASS」要由部署侧 asset 镜像/发布链路之后的多次采集计量，且该链路不在本 BET 写面内，故不预支价值结论（value_indicator_policy: false）。"
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-344
+  title: TASK-EEF1CEDC — 让 mini 的 Cron 作用域识别已登记的现场主机名
+  goal: 以同一 Task 的精确三路径修正 mini 看护条目的主机别名，验证编译与安装预览的选择一致，保留其它主机与 launchd 输出。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-HOLDABILITY
+  value_indicator_policy: false
+  write_surfaces:
+  - .omo/cron/registry.yaml
+  - tests/test_scheduler_compile.py
+  - tests/unit/gac/test_install_cron_plane.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-10-cron-mini-host-alias-task-eef1cedc.md
+    spec_version: 1.0.0
+    content_digest: sha256:5f1c19bd3c14d747499969bac18054ee5575cdf6739262b0c882b7aa964b2122
+    decision_ref: decision://accepted/BET-Y2Q4-T10-344
+  non_goals:
+  - 不改 Cron 命令、频率、解释器、已有 launchd 项、其他主机作用域或脚本。
+  - 本阶段只做精确三路径的变更与离线复核，不执行安装、部署、发布、提交、打标签、合并、复盘写入或 BET 完成。
+  done_when:
+  - mini 和 Mac-mini 均恰好选中一个既有看护条目，MBP 与未知主机不选中。
+  - CRON_HOST 显式覆盖与未指定主机分支遵循原策略，七组回放保持现有 launchd 段。
+  - 独立验证确认受控测试、路径和 diff 范围，记录证据后停止于本次获批阶段。
+  verify:
+  - cmd: python3 -m pytest -q tests/test_scheduler_compile.py tests/unit/gac/test_install_cron_plane.py
+    expect: 两个目标测试模块通过，七组隔离作用域回放由独立验证者记录。
+  circuit_breaker: 未确认同一 Task、有效批准、可开工 BET、已接受 Spec、canonical WorkPacket 或三条受影响图路径 claim
+    即停止；遇超出批准范围的后续动作交由 owner 裁决。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47757,7 +47806,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 591
+  total_bets: 592
   windows:
   - Y1Q1
   - Y1Q2
