@@ -57,3 +57,17 @@ history:
     同批发现 `com.omostation.tailscale-heartbeat` 也恒失败 (已由 #5176 修好), 说明
     「已安装 plist 与本仓漂移」不是孤例。
   actor: "governance-agent"
+- at: '2026-11-10T02:05:00+00:00'
+  action: review
+  note: 'Q1 (plist 正确形态) 已闭环 (PR #5213, 2026-11-10): repo plist 解释器由
+    `python3` 改为 `.venv/bin/python` —— launchd 默认 PATH 下 `python3` =
+    `/usr/bin/python3`(3.9.6), 而 `omo_debt_cli.py:15` `from datetime import UTC`
+    是 3.11+ 才有的 (实跑 ImportError); 改 venv (3.14) 后与解释器版本解耦。
+    同轮发现已安装 plist 被手工削掉 WorkingDirectory / PATH /
+    StartCalendarInterval (只剩 RunAtLoad ⇒ 每 30 分钟的刷新实际只在家载入时
+    跑一次), 已整份覆盖重装 (bootout+bootstrap, runs=2, last exit code=0),
+    services.yaml 的 content_digest 同步 (旧值与 repo/已装两边都不匹配)。
+    Q2 (同步机制) 部分收敛: 该条目已是 `generate: true`, E1 判据 (注册表渲染 vs
+    plist 文本) 闭合; 但「install 时别只抄 command 行」目前只写在 plist 注释里,
+    仍无机器判据 —— 剩余风险保留。'
+  actor: "governance-agent"
