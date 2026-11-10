@@ -220,6 +220,30 @@ def test_absent_declared_workspace_is_not_judged_on_this_host(tmp_path: Path) ->
     assert res["verdict"] == "FAIL"
 
 
+def test_effective_workspace_is_the_last_cd(tmp_path: Path) -> None:
+    """复合命令里第二个 `cd` 覆盖第一个 —— 调用点按 shell 语义解析，不按第一个。
+
+    登记面 59 条 active 作业今天 0 条命中多 `cd`，钉的是潜伏形状：拿第一个 `cd` 当有效
+    工作区会把其后的脚本解析到错的根，宿主判定跟着一起错。
+    """
+    a, b, gone = tmp_path / "A", tmp_path / "B", tmp_path / "gone"
+    for d in (a, b):
+        (d / "bin").mkdir(parents=True)
+        (d / "bin" / "job.py").write_text("import os  # noqa\n", encoding="utf-8")
+    sites = cn.python_call_sites(
+        f"cd {a} && python3 bin/job.py && cd {b} && python3 bin/job.py", repo_root=tmp_path
+    )
+    assert len(sites) == 2
+    assert [Path(s["workspace"]) for s in sites] == [a, b]
+    assert [Path(s["script"]) for s in sites] == [a / "bin" / "job.py", b / "bin" / "job.py"]
+    assert [s["host_assessable"] for s in sites] == [True, True]
+    # 第二个 cd 指向不在本机的目录: 只有其后那个调用点不判, 前一个照判
+    sites = cn.python_call_sites(
+        f"cd {a} && python3 bin/job.py && cd {gone} && python3 bin/job.py", repo_root=tmp_path
+    )
+    assert [s["host_assessable"] for s in sites] == [True, False]
+
+
 # ── 形状 3：warn → 限期 → 阻断 ────────────────────────────────────────────
 def _evaluate(registry: Path, root: Path, **kw):
     jobs = yaml.safe_load(registry.read_text(encoding="utf-8"))["jobs"]

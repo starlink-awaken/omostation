@@ -306,12 +306,18 @@ def _repo_local_modules(root: Path) -> frozenset[str]:
 def declared_workspace(scope: str) -> tuple[Path | None, bool]:
     """`cd <dir>` 段（可能是 `$HOME` 拼法）声明的工作区 → (展开后的路径, 本机是否存在).
 
+    取**最后一个** `cd`：shell 语义下复合命令里后面的 `cd` 覆盖前面的，拿第一个当有效
+    工作区会把其后的调用点解析到错的根（脚本路径与宿主判定跟着一起错）。今天登记面
+    59 条 active 作业里 0 条命中多 `cd`，是潜伏形状，不是当前误读。
+
     没有 cd 段返回 (None, True)：没声明过工作区，就不构成「不在本机」。存在性判的是
     **作业声明的那个目录**，不是兜底根 —— CI 的检出目录同样存在，拿兜底根当判据会把
     别人机器上的作业算到本机头上（决策(3) 落地时实测：CRON_HOST 换成跑无关的宿主，
     30 条作业照样全部进入判定）。
     """
-    cd = re.search(r"(?:^|[\s;&|])cd\s+(?P<dir>\"[^\"]+\"|[^\s;&|]+)", scope)
+    cd = None
+    for cand in re.finditer(r"(?:^|[\s;&|])cd\s+(?P<dir>\"[^\"]+\"|[^\s;&|]+)", scope):
+        cd = cand
     raw = cd.group("dir").strip('"') if cd else None
     if not raw:
         return None, True
