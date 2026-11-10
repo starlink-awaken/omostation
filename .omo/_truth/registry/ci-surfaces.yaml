@@ -14,6 +14,19 @@ surfaces:
   triggers:
   - manual
   status: active
+- id: bin-gac-check-cron-interpreter-executability-py
+  tool: bin/gac/check-cron-interpreter-executability.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - gac_local_gate
+  - per_pr
+  status: active
+  note: >-
+    cron 登记面解释器可执行性门禁 (CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3))。
+    2026-11-10 principal 裁决「先 warn + 限期收敛」—— gate=false 到 2026-11-24,
+    之后由脚本退出码自动转阻断 (规则 CR-X2-CRON-INTERP-EXECUTABILITY 的 review_before 同值)。
+    判据复用 bin/lib/cron_normalize, 与 scheduler-compile / install-cron-plane 同源。
 - id: bin-gac-check-change-lane-range-py
   tool: bin/gac/check-change-lane-range.py
   workflow: gac-gate.yml

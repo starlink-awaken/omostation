@@ -70,8 +70,8 @@ mitigation_refs:
   - "PR #5171 (origin/main@be298ba44) —— scheduler-compile / install-cron-plane 两个发射点共用按宿主解析的解释器口径, 登记面保持中性"
   - "PR #5174 (origin/main@dabd44465) —— 解析改逐调用点判定, 收掉复合命令第二个之后的裸 python3"
 opened_at: '2026-11-09'
-last_reviewed_at: '2026-11-09'
-next_review_at: '2026-11-16T00:00:00+00:00'
+last_reviewed_at: '2026-11-10'
+next_review_at: '2026-11-24T00:00:00+00:00'
 gate_level: none
 x1_policy_ref: ''
 x3_tier: Principle
@@ -79,9 +79,10 @@ decision_needed: '三问分开裁决, 有顺序依赖。(1) **计划任务的解
   否则 mini 侧路径可能不存在, 把一个死因换成另一个; ② 要求所有 cron 可达脚本自带 3.9 兼容垫片 (把 189 处裸导入收敛到 14 处已有写法) — 纯代码、不依赖宿主, 但覆盖面大且对未来新脚本无自动约束;
   ③ 由 `scheduler-compile` 在生成/安装时按宿主解析并替换解释器 (把 `normalize_interpreter` 反向用作 codegen, 登记面保持中性) — 一处改动收全部, 需同时修 :71
   的 launchd 硬编码。(2) **`normalize_interpreter` 的等价是否收窄**: 它现在同时承担「比较用等价」与「事实上的许可」两件事; 若保留比较用途, 需要另一个独立断言「声明的解释器能
-  import 目标脚本」, 否则任何解释器缺陷都会被折叠掉。(3) **新增可执行性门禁的起法**: 7 条现在就是死的, fail-closed 会让本地门禁立刻红并阻塞无关交付 —— 先 warn 限期收敛, 还是先把
-  7 条修绿再翻门禁。**裁决前不要动手**: 逐个脚本改 import 会把 189 处碎片化; 手写 crontab 会撞上 EINTR 与 pitfalls:301 的登记面/已装面分裂; 两者都会留下「--check
-  绿但仍在死」的第三条通路。'
+  import 目标脚本」, 否则任何解释器缺陷都会被折叠掉。(3) **已裁并落地** (principal 2026-11-10 选「先 warn + 限期收敛」, 限期 2026-11-24): 门禁
+  bin/gac/check-cron-interpreter-executability.py, 判据/限期/实测读数见 history 2026-11-10 两条条目; warn 期恒
+  exit 0, 过期未收敛自动转阻断。剩 (2) 待裁。**裁决前不要动手**: 逐个脚本改 import 会把 189 处碎片化; 手写 crontab 会撞上 EINTR 与
+  pitfalls:301 的登记面/已装面分裂; 两者都会留下「--check 绿但仍在死」的第三条通路。'
 history:
 - at: '2026-11-09T03:26:00+00:00'
   action: identify
@@ -111,4 +112,12 @@ history:
 - at: '2026-11-09T08:32:20+00:00'
   action: correct
   note: '本项 evidence 有一条事实已过期, 单独记下来免得后续复核沿用旧读数: 立案时写「mini `/opt/homebrew/bin` 下**只有** python3.15 (无 3.13/3.14)”, 据此把决策(1)①「登记面写各宿主都存在的绝对路径」判成只剩一条无契约保证的候选。 2026-11-09 ssh Mac-mini 实测: `/opt/homebrew/bin` 下 python3.12 / 3.13 / 3.14 / 3.15 全在, 且 `Workspace/.venv` =  CPython 3.14.7 (本机 mbp 的 `.venv` 是 3.13.13) ⇒ ① 的被否前提今天不再成立; 若要重开(1) 或用「宿主路径不齐」论据,  请先重跑该读数。同期读数: mini crontab 有效 59 行 / 裸 `python3` 调用点 36, **未实装** —— owner 本次授权范围仅本机,  而 #5171/#5174 的解析按宿主取候选 (`.venv` 优先, 其次 homebrew 版本名), 对 mini 的 3.13/3.14/3.15 布局同样可解,  缺的只是一次独立的实装授权。'
+  actor: governance-agent
+- at: '2026-11-10T03:58:32+00:00'
+  action: resolve_partial
+  note: '决策(3) 由 principal 2026-11-10 裁决「先 warn + 限期收敛」, 本日按裁定落地, 未触碰 crontab / registry / 任何 import 语句: ① 新门禁 bin/gac/check-cron-interpreter-executability.py —— 断言「声明的解释器真能 import 目标脚本」, 判据是可执行性而不是数入口文件名 (按入口只覆盖 8/87); ② 判据全部复用 bin/lib/cron_normalize, 与 scheduler-compile / install-cron-plane 同一份实现 —— 库侧新增 import_closure / closure_undetermined / python_call_sites, 并把依赖口径做成 resolve_python_command(deps_fn=...) 入参: 发射侧仍用 third_party_imports (保证安装结果与登记面口径不分叉), 门禁传 import_closure 覆盖动态加载的兄弟模块 (本项立案时指的 execution-environment-steward.py 死因就在它 spec_from_file_location 拉起的兄弟文件里); ③ warn 期限 2026-11-24 = 脚本常量 ENFORCE_AFTER = governance-checks.yaml 新规则 CR-X2-CRON-INTERP-EXECUTABILITY 的 review_before, 两份值由 tests/unit/test_cron_interpreter_executability.py 钉成同源; 门禁进 gac-local-gate.py GATES_LIST 且显式**不进** SOFT_CHECKS —— SOFT_CHECKS 里失败永不翻转 gate, 放进去等于把限期取消; ④ 读数: 本机 87 条登记作业里 30 条 active crontab 作业含 python 调用点, 按本机候选池 0 缺口 (warn 期不阻塞 mbp 交付); 模拟只有 3.9.6 的宿主 (--candidate /usr/bin/python3) 同一判据报 30 条阻断缺口, --now 2026-11-25 时 exit 1; 门禁单跑 0.56s。未覆盖面照记: 决策(2) normalize_interpreter 等价是否收窄仍待 owner 裁决; mini 侧 36 个裸 python3 调用点仍未实装 (本次授权范围不含 mini); 在 projects/*/src 未检出的 worktree 里闭包会虚报 1 条 advisory (local-ops-observer-daily, 仓内包被当第三方), advisory 不参与退出码, 真宿主上无此项。'
+  actor: governance-agent
+- at: '2026-11-10T04:12:19+00:00'
+  action: fix_judgment_scope
+  note: '同日补: 上一记 ④ 的读数只在 mbp 成立, 门禁对宿主无感知 —— 实测把 HOME 换成不存在的目录 (CI 检出形状) 仍照扫 30 条, 冒出 7 条「target script not found」假缺口: 限期 2026-11-24 一到, 这些假缺口会让 ubuntu-latest 上每个无关 PR 变红, 把「宿主差异」读成「缺陷」。两处补齐: ① cron_normalize 新增 declared_workspace() —— 取 command 里 `cd <dir>` 段 (含 $HOME 拼法) 展开后判是否在位, 不在位则该 python 调用点 host_assessable=False, 整条不进判定, 单独计数 jobs_off_host (全体被跳过与全体判得出, 在汇总行上必须是两种形状); ② 新增 installed_crontab_lines() 三态读平面 (0=已装 / 1 且 no crontab for=没装 / 其余=读不出), 读不出照判并标 plane=unreadable —— 仪器故障不能算成被检物的清白; scheduler-compile.py:248 与 install-cron-plane.py:77 早已各自 shell 出 crontab -l, 但从没回答「这台机器跑不跑 cron 平面」这个前提。门禁 evaluate 新增 plane/jobs_off_host 字段, blocking/advisory 只在 host_assessable 子集上算; 单测不再依赖宿主身份 (注入 installed_plane, 走 main 的用例 monkeypatch 同一个读函数), 并各加一条正控制: 工作区一旦在本机存在 / 平面一旦装上就照判, 证明上面的绿不是恒真。'
   actor: governance-agent
