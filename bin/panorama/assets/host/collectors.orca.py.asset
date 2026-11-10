@@ -61,10 +61,12 @@ class OrcaCollector(DataCollector):
                 # carries ok/result instead, so derive one for source_health.
                 data["status"] = "OK" if data.get("ok") else "DEGRADED"
                 return data
-        except Exception:
-            pass
-
-        return {"status": "UNAVAILABLE", "observed_at": _now(), "source": "none"}
+            # 非零退出时 orca 的输出才是原因 —— 丢掉它, 板板上只剩 UNAVAILABLE。
+            reason = (result.stderr or result.stdout).strip()[:200] or f"exit={result.returncode}"
+        except Exception as exc:
+            reason = str(exc)[:200]
+        return {"status": "UNAVAILABLE", "observed_at": _now(), "source": "none",
+                "error": reason}
 
     def validate(self, data: dict) -> bool:
         return isinstance(data.get("status"), str)
