@@ -6,6 +6,7 @@ bet_id: BET-Y2Q4-T10-344
 owner: governance-team
 status: accepted
 lifecycle: contract
+last-reviewed: 2026-11-10
 ---
 
 现有 Cron registry 的 `work-agent-respire-mbp-watchdog` 仅列出 `mini`。同一台 mini 在现场也以 `Mac-mini` 标识。编译与安装预览应使用同一主机作用域，在两个已登记别名下各选择一次既有看护条目。仅更新该 registry 条目的别名及说明，并用现有两个测试模块验证。

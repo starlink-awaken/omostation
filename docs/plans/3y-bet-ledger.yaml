@@ -47641,7 +47641,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-10-cron-mini-host-alias-task-eef1cedc.md
     spec_version: 1.0.0
-    content_digest: sha256:ac7af68ab5856d832cbf0d065ebba19912ec05e94c84c9bc1261850bd6e41b8d
+    content_digest: sha256:5f1c19bd3c14d747499969bac18054ee5575cdf6739262b0c882b7aa964b2122
     decision_ref: decision://accepted/BET-Y2Q4-T10-344
   non_goals:
   - 不改 Cron 命令、频率、解释器、已有 launchd 项、其他主机作用域或脚本。
