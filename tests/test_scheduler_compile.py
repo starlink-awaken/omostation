@@ -674,3 +674,52 @@ def test_interpreter_fold_shadow_failure_keeps_verdict(tmp_path, monkeypatch) ->
     baseline = sc.check_drift(installed_lines=installed)
     for key in ("ok", "drift_count", "orphan_count"):
         assert res[key] == baseline[key], (key, res[key], baseline[key])
+
+
+def _fake_launchd(tmp_path: Path, monkeypatch, *, label: str, env: dict) -> None:
+    """把 Path.home() 指到 tmp_path, 并在其中造一个已装 plist。"""
+    import plistlib
+    la = tmp_path / "Library" / "LaunchAgents"
+    la.mkdir(parents=True, exist_ok=True)
+    (la / f"{label}.plist").write_bytes(plistlib.dumps({
+        "Label": label,
+        "ProgramArguments": ["/usr/bin/python3", "/tmp/probe.py"],
+        "EnvironmentVariables": env,
+    }))
+    monkeypatch.setattr(Path, "home", staticmethod(lambda: tmp_path))
+
+
+def test_launchd_env_only_in_plist_is_visible(tmp_path, monkeypatch) -> None:
+    """registry 未声明、plist 却设了的 env 必须可见 (CRON-REGISTRY-ENV-GAP)。
+
+    缺陷 (2026-11-10 实测): 15 个已登记作业的 plist 含 registry 未声明的 env, 含
+    OMOSTATION_STATE_ROOT (决定 runtime 写面) 与 PANORAMA_ROOT (决定 base 落根);
+    而 check_launchd_plane 原本只比 label/schedule/command, 对这些**零可见**。
+    """
+    label = "com.omostation.envgap"
+    _fake_launchd(tmp_path, monkeypatch, label=label,
+                  env={"OMOSTATION_STATE_ROOT": "/tmp/state", "PYTHONDONTWRITEBYTECODE": "1"})
+    sc = _load_compile_module()
+    result = sc.check_launchd_plane([{
+        "name": "envgap", "label": label, "status": "active", "planes": ["launchd"],
+        "command": "PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 /tmp/probe.py",
+    }])
+    assert result["env_only_in_plist_count"] == 1
+    assert result["env_only_in_plist"][0]["vars"] == ["OMOSTATION_STATE_ROOT"]
+    assert result["env_mismatch_count"] == 0
+    assert result["blocks_gate"] is False, "launchd 平面是 shadow, 不得进 ok 判定"
+
+
+def test_launchd_env_mismatch_is_visible(tmp_path, monkeypatch) -> None:
+    """反向: registry 声明了、plist 却是另一个值, 也必须可见 (实测当前为 0)。"""
+    label = "com.omostation.envclash"
+    _fake_launchd(tmp_path, monkeypatch, label=label,
+                  env={"PANORAMA_CODE_ROOT": "/somewhere/else"})
+    sc = _load_compile_module()
+    result = sc.check_launchd_plane([{
+        "name": "envclash", "label": label, "status": "active", "planes": ["launchd"],
+        "command": "PANORAMA_CODE_ROOT=/declared/root /usr/bin/python3 /tmp/probe.py",
+    }])
+    assert result["env_mismatch_count"] == 1
+    assert result["env_mismatch"][0]["vars"] == ["PANORAMA_CODE_ROOT"]
+    assert result["env_only_in_plist_count"] == 0

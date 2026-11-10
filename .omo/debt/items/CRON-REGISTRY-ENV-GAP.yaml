@@ -1,0 +1,58 @@
+id: "CRON-REGISTRY-ENV-GAP"
+title: "15 个已登记 launchd 作业的 plist 设置了 registry 未声明的 env（含决定写面的 profile 根），而调度门禁不比 env"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/cron/registry.yaml
+- bin/scheduler-compile.py
+- bin/gac/zhixing-host-sync.py
+mitigation_refs:
+- 本条 history 第一条（量化扫描口径与结果）
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/cron/registry.yaml` 是调度 SSOT（ADR-A 生成模式），但其中 10 条作业只在 `command` 前缀里声明了
+  部分 env（如 `PYTHONDONTWRITEBYTECODE=1`），而机器上对应 plist 的 `EnvironmentVariables` 里还有
+  **一批未声明**的变量 —— 共 15 个作业、24 个变量，其中 12 个含 `OMOSTATION_STATE_ROOT`（ADR-0456
+  的 profile 根，决定 runtime 写面），两个 panorama 作业含 `PANORAMA_ROOT`（决定 base 落根与代码支持根）。
+  而 `bin/scheduler-compile.py --check` 报 `drift_count: 0` —— 它只比 label / schedule / command 字面，
+  **完全不读 `EnvironmentVariables`**（全文件无该字符串）。
+decision_needed: >-
+  要裁决的是：调度 SSOT 是否必须记录 env？若是，`scheduler-compile` 该不该把「plist-only env」
+  与「registry 声明与 plist 不符」都算成 drift（后者阻断、前者告警）？还是只把 env 补进 registry
+  作文档记录、门禁不动？注意本仓多个 plist 是「本机手写/外部工具安装」（`services.yaml` 多条
+  `generate: false`），把它们改成 registry 生成会动到机器配置，属 principal 授权面。
+history:
+- at: "2026-11-10T12:25:00+00:00"
+  action: identify
+  note: >-
+    **量化扫描**（判据：registry 作业 `planes` 含 launchd 时，取 `command` 里 `VAR=value` 前缀为「已声明」，
+    与 `~/Library/LaunchAgents/<label>.plist` 的 `EnvironmentVariables` 比对，找**只在 plist 里出现**且名字含
+    `ROOT`/`STATE`/`PATH`/`PYTHONPATH` 的变量）。结果 15 个作业命中：
+    `zhixing-dashboard-refresh`（PANORAMA_ROOT / PANORAMA_CODE_ROOT / OMOSTATION_ROOT / OMOSTATION_STATE_ROOT /
+    PYTHONPATH / ZHIXING_DASHBOARD_STATE_ROOT / PATH）、`panorama-dashboard-refresh`（同形 6 个）、
+    `resident-launchd-*` 7 条（各 OMOSTATION_STATE_ROOT）、`agent-cell-*` 2 条、`omo-health-refresh`、
+    `omo-state-sync`、`reference-cell-direct-local-smoke`、`test-archive-purge-7d-daily`、
+    `zhixing-host-drift-hourly-active`。
+    **反向核对**：registry 已声明的 env 与 plist **全部一致**（10 条含前缀的作业里，`panorama-dashboard-refresh`
+    的 `PANORAMA_CODE_ROOT=code-main`、各条的 `PYTHONDONTWRITEBYTECODE=1` 均 OK）—— 即缺口**只在单向**
+    （plist 多、registry 少），没有「声明了却对不上」的反向漂移。
+    **与在跑故障的关系**：`PANORAMA_ROOT` / `OMOSTATION_STATE_ROOT` 正是 `PANORAMA-GATE-DETAIL-UNRELIABLE`
+    里两个 cohort 自 2026-10-28 冻结的直接变量（前者决定 base 落根与 `_host_support_dir` 的代码支持根，
+    后者决定 `state_root()` 读面）。它们**不在调度 SSOT 里** ⇒ 任何「按 registry 重建调度」的动作都会丢根，
+    而门禁对此零可见。
+    **门禁盲点**：`bin/scheduler-compile.py` 全文不含 `EnvironmentVariables`（2026-11-10 实测），
+    `--check` 的 `drift_count` 只覆盖 label/schedule/command；`interpreter_fold` 块只处理解释器字面。
+  actor: "governance-agent"
