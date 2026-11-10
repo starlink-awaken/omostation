@@ -5,6 +5,7 @@ Mesh 路由 (bin/mesh/, 以及 mesh 相关工具) 必须遵循 BOS URI 标准,
 确保路由注册与声明一致.
 """
 
+import ast
 import re
 import subprocess
 import sys
@@ -17,6 +18,34 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Mesh 相关目录
 MESH_DIRS = ["bin/mesh", "bin/ssot"]
+
+ROUTING_RE = re.compile(r"route|dispatch|forward|send|publish", re.IGNORECASE)
+
+
+def _code_only(path: Path) -> str:
+    """只保留代码：抹掉 docstring、所有字符串常量与注释。
+
+    判据是「有没有路由逻辑」, 而 route/dispatch/forward/send/publish 这五个词
+    在工作流状态名里也出现（`StepDispatched`、`dispatched` 生命周期串、
+    seed 链 "Requested→Admitted→Dispatched→Started"）—— 直接对全文跑正则会把
+    `bin/ssot/mesh-iris-executor.py` 这类**纯工作流编排**文件误判成 mesh 路由
+    （2026-11-11 实测：本机恒报 1 条 WARN）。真正的路由调用是标识符/调用,
+    不含在字符串里, 所以抹掉字符串不影响真命中。
+
+    解析失败时回退到「仅去注释」的文本, 宁可多报也不静默漏报。
+    """
+    src = path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return re.sub(r"#.*", "", src)
+    lines = src.splitlines(keepends=True)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            for i in range(node.lineno - 1, node.end_lineno):
+                if 0 <= i < len(lines):
+                    lines[i] = ""
+    return re.sub(r"#.*", "", "".join(lines))
 
 
 def main() -> int:
@@ -43,12 +72,12 @@ def main() -> int:
         except Exception:
             continue
 
-        # 检查是否有 BOS URI 注册
+        # 检查是否有 BOS URI 注册（BOS URI 在字符串里, 必须扫全文）
         has_bos = bool(re.search(r"bos://|bos_route|bos_service|bos:", text))
         # 检查是否有错误处理
         has_error_handling = bool(re.search(r"try:|except|raise|return", text))
-        # 检查是否有路由逻辑
-        has_routing = bool(re.search(r"route|dispatch|forward|send|publish", text, re.IGNORECASE))
+        # 检查是否有路由逻辑 —— 只扫代码: 字符串里的状态名不是路由
+        has_routing = bool(ROUTING_RE.search(_code_only(f)))
 
         if has_routing and not has_bos:
             violations.append(f"  {rel} — 包含路由逻辑但无 BOS URI 注册")
