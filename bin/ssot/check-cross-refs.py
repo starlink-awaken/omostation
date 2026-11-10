@@ -104,8 +104,12 @@ def resolve_link(source: Path, link: str, root: Path) -> Path | None:
     # 智能补 .omo/ 前缀 (如果存在, 治 F-3 ADR-0122 S1 2026-07-02)
     if "/" in link and not link.startswith("./") and not link.startswith("../"):
         # 尝试 .omo/ 前缀补全
-        if (root / f".omo/{link}").exists():
-            return None  # .omo/ 下有这文件, 链接 "对" 只是路径写法问题
+        omo_candidate = root / f".omo/{link}"
+        # `.exists()` 对运行期生成物 (如 .omo/state/system.yaml) 恒 false,
+        # 于是链接被当掉去相对源文件解析 ⇒ 误报。被 .gitignore 覆盖即视为
+        # 「写法问题」而非死链。
+        if omo_candidate.exists() or _is_gitignored(omo_candidate, root):
+            return None  # .omo/ 下有这文件 (或它是生成物), 链接 "对"
         # 尝试 docs/ 前缀补全
         if (root / f"docs/{link}").exists():
             return None
