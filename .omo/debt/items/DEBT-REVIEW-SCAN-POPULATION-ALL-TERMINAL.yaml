@@ -116,3 +116,16 @@ history:
     (git grep 带 rev 参数时输出行含 rev:path 前缀) 登记进 docs/pitfalls.md
     与 AGENTS.md §7 索引。'
   actor: governance-agent
+- at: '2026-11-10T01:52:49+00:00'
+  action: decide
+  note: 'Q1 裁决落地 (PR #5212, 2026-11-10): 采用选项 ①「两面双向同步」—— 把
+    当时全部 21 条未登记条目补登进 seed_items (31 → 52), 并在
+    bin/gac/debt-integrity-check.py 增加反向判据 (items/*.yaml 必须都在
+    seed_items 里), 使「磁盘有、登记面无」这个方向不再能静默漂移。同轮修两个
+    被「未登记」掩盖的 bug: HW-DISK8-4TB-FLAKY 的 evidence_refs 混入 YAML 映射
+    (dict 而非 str) 与 naive/aware datetime 比较 (补登后整份 dashboard 生成崩溃,
+    由 omo#244 修)。读数变化: 复审面 31 → 52; due_now 0 → 3 (HW-DISK8 与
+    STORAGE-SHAREDMODEL 各逾期 22 天, STORAGE-MINI 21 天); debt_health 100 → 0
+    (15 条开放项全部缺证据指针或 refs 晚于 last_reviewed —— 真实数据质量缺口,
+    非度量缺陷, 见 pointer_entropy)。Q2/Q3 仍未裁决。'
+  actor: governance-agent
