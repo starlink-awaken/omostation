@@ -24,6 +24,16 @@ def run_cmd(cmd, cwd="."):
         return ""
 
 
+def _is_initialized(path: str) -> bool:
+    """Only a submodule carrying its own .git entry is initialized.
+
+    Without this guard every ``git -C <path>`` below silently walks up to the
+    parent repository, so an uninitialized submodule reports the parent's
+    branch/tag/HEAD numbers and the summary counts 0 uninitialized.
+    """
+    return (WORKSPACE / path / ".git").exists()
+
+
 def gather_submodule_info():
     result = run_cmd("grep 'path = ' .gitmodules | awk '{print $3}'", cwd=str(WORKSPACE))
     if not result:
@@ -34,6 +44,10 @@ def gather_submodule_info():
         if not path:
             continue
         info = {"path": path, "name": path.split("/")[-1]}
+        if not _is_initialized(path):
+            info.update(remote_branches=0, tags=0, status="❌ 未初始化", last_commit="N/A")
+            submodules.append(info)
+            continue
         branches = run_cmd(f"git -C {path} branch -r 2>/dev/null | grep -v HEAD | wc -l", cwd=str(WORKSPACE))
         info["remote_branches"] = int(branches) if branches else 0
         tags = run_cmd(f"git -C {path} tag 2>/dev/null | wc -l", cwd=str(WORKSPACE))
