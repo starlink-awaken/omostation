@@ -1,0 +1,65 @@
+id: "SED-I-GUARD-UNWIRED-AND-SELF-FLAGGING"
+title: "no-sed-i-guard 零接线且自扫描 6/6 命中自身；AGENTS.md 的 sed -i 禁令无执行面"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- bin/gac/no-sed-i-guard.py
+- bin/_registry/scripts/governance/no-sed-i-guard.yaml
+- AGENTS.md
+- .omo/_truth/registry/hook-manifest.yaml
+mitigation_refs:
+- 本条 history 第一条（扫描口径与实测）
+opened_at: "2026-11-10"
+last_reviewed_at: "2026-11-10"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  AGENTS.md 写明硬纪律「**禁止 `sed -i` 做添加/删除条目操作** —— use Python
+  `read → check → modify → write`」，仓里也有对应守卫 `bin/gac/no-sed-i-guard.py`。
+  但该守卫**在任何执行面上都不存在**：
+
+  - 全仓引用只有两处 —— 它自己的源码，以及它的登记条目
+    （`bin/_registry/scripts/governance/no-sed-i-guard.yaml`，`triggers: []`）。
+  - `.omo/_truth/registry/hook-manifest.yaml`（pre-commit / pre-push / post-checkout
+    的唯一检查清单来源）里没有它；`.github/workflows/`、`.githooks/`、
+    `.pre-commit-config.yaml`、`bin/gac/gac-local-gate.py`、`Makefile` 均无引用。
+  - 也就是说：**这条纪律目前靠人自觉，机器不拦**。
+
+  更糟的是守卫本身**自扫描 6/6 命中自己**（`python3 bin/gac/no-sed-i-guard.py
+  bin/gac/no-sed-i-guard.py` ⇒ rc=1）：docstring 两行、usage 一行、argparse
+  description 一行、两条 print 文案两行 —— 全是它自己的说明文字。它匹配的是
+  **行内任意位置的 `sed -i` 子串**，不区分注释 / docstring / 字符串字面量 / 真调用。
+decision_needed: >-
+  两条路，需裁决：① **接线** —— 让它真的拦住 `sed -i`。但直接接进 `hook-manifest`
+  会先被自己挡住（自扫描 6/6），且会挡住任何在注释里提到该纪律的提交；要接就得先做
+  **调用上下文判定**（`.py` 侧用 AST 判定字符串是否处于 `subprocess`/`os.system`
+  的调用参数里，`.sh` 侧至少剥掉 `#` 注释），并补 `--staged` 支持（现有 CLI 只收
+  `<file_or_dir>`，而 hook-runner 的其余检查都走 `--staged`）。② **删除** —— 作为
+  从未生效的死重删掉，纪律改靠 code review。本条不代决。
+history:
+- at: "2026-11-10T21:30:00+00:00"
+  action: identify
+  note: >-
+    **扫描口径**：`grep` 工具全仓搜 `sed-i-guard`（含 `.githooks/`、`.pre-commit-config.yaml`、
+    `.github/workflows/`、`bin/gac/gac-local-gate.py`、`bin/gac/hook-runner.sh`、`Makefile`、
+    `.omo/_truth/registry/hook-manifest.yaml`）⇒ 仅命中守卫自身与其登记条目。
+    另核对 `hook-manifest.yaml` 的 pre-commit/pre-push/post-checkout 三段检查清单，无此项。
+    **自扫描实测**：`python3 bin/gac/no-sed-i-guard.py bin/gac/no-sed-i-guard.py`
+    报 6 处（`:2` `:4` `:20` `:37` `:62` `:66`），逐条看全是该文件自身的说明文字，
+    无一处是真调用 —— 即「守卫把自己算成违规」。
+    **为何现在不重**：该工具 `ci-surfaces` 里连条目都没有（另 743 条登记脚本里
+    大量 `triggers: []` 的条目同形），单看它并不特殊；本条记下来是因为**「文档写了硬纪律
+    + 仓里有守卫 + 守卫从不运行」这个组合**会让人误以为纪律已被机器执行 ——
+    这与 `CI-SURFACE-FALSE-WIRING` 是同一类「声明与执行面不符」，只是这次连
+    假声明都没有（`triggers: []` 是诚实的），所以表现为纯粹的执行缺口。
+  actor: "governance-agent"
