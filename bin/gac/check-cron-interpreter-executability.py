@@ -42,6 +42,7 @@ from cron_normalize import (  # noqa: E402
     closure_undetermined,
     current_host,
     installed_crontab_lines,
+    installed_interpreter_gaps,
     interpreter_candidates,
     interpreter_executability_jobs,
 )
@@ -70,7 +71,14 @@ def evaluate(
     repo_root: Path | None = None,
     installed_plane: list[str] | None | Any = ...,
 ) -> dict:
-    """跑一遍判据，返回可直接落记录面的 dict（`gaps` 只数发射侧口径）。"""
+    """跑一遍判据，返回可直接落记录面的 dict（缺口只数发射侧口径）。
+
+    两个面分开判，同一个退出码（决策(2) 改判 B′, principal 2026-11-10）：
+      · **登记面** —— `interpreter_executability_jobs`：作业**声明**的解释器能不能跑；
+      · **已装面** —— `installed_interpreter_gaps`：cron **实际执行**的那一行里的解释器
+        还在不在、跑不跑得动它指向的脚本。安装侧按宿主重写解释器，两面不是同一个对象；
+        只判登记面时「venv 被删 / homebrew 换了版本号」对 `--check` 完全隐形。
+    """
     root = Path(repo_root) if repo_root else _ROOT
     # 只读一次已装面：既给判据当「这台机器跑不跑 cron」的闸门，也如实报状态
     plane = installed_crontab_lines() if installed_plane is ... else installed_plane
@@ -94,11 +102,19 @@ def evaluate(
             undetermined += [
                 f"{r['name']} → {p}" for p in closure_undetermined(script, root, max_depth=max_depth)
             ]
+    # 已装面：cron 真正执行的字符串。plane 没装或读不出时行集为空 ⇒ 自然不判，
+    # 与登记面的宿主纪律一致（CI 上不会因为「这台机器不跑 cron」而变红）。
+    plane_res = installed_interpreter_gaps(jobs, installed_lines=plane, repo_root=root)
+    plane_gaps = plane_res["gaps"]
+    # 自证：已装面有 python 调用点却一行都配不上登记面 ⇒ 配对口径坏了，此时「0 缺口」
+    # 是空转出来的。仪器故障报成 advisory（不翻退出码 —— 那会把归属问题算成交付缺陷），
+    # 但必须看得见。
+    pairing_suspicious = 1 if (plane_res["python_sites"] and not plane_res["paired_lines"]) else 0
     enforce_after = datetime.date.fromisoformat(ENFORCE_AFTER)
     escalated = now >= enforce_after
     verdict = "OK"
-    if blocking or advisory or undetermined:
-        verdict = "FAIL" if (blocking and (escalated or strict)) else "WARN"
+    if blocking or plane_gaps or advisory or undetermined or pairing_suspicious:
+        verdict = "FAIL" if ((blocking or plane_gaps) and (escalated or strict)) else "WARN"
     return {
         "check": Path(__file__).name,
         "debt_id": DEBT_ID,
@@ -109,7 +125,15 @@ def evaluate(
         "host_candidates": candidates if candidates is not None else interpreter_candidates(root),
         "jobs_scanned": len(assessable),
         "jobs_off_host": len(skipped),
-        "blocking_gaps": len(blocking),
+        "blocking_gaps": len(blocking) + len(plane_gaps),
+        "registry_gaps": len(blocking),
+        "plane_gaps": len(plane_gaps),
+        "plane_lines_scanned": plane_res["lines_scanned"],
+        "plane_paired_lines": plane_res["paired_lines"],
+        "plane_unregistered_broken": len(plane_res["unregistered_broken"]),
+        "plane_bare_tokens": plane_res["bare_tokens"],
+        "plane_python_sites": plane_res["python_sites"],
+        "plane_pairing_suspicious": pairing_suspicious,
         "closure_advisories": len(advisory),
         "undetermined_edges": len(undetermined),
         "enforce_after": ENFORCE_AFTER,
@@ -130,6 +154,8 @@ def evaluate(
             for r in advisory
         ],
         "undetermined": sorted(set(undetermined))[:40],
+        "plane_gap_details": plane_gaps[:20],
+        "plane_unregistered_details": plane_res["unregistered_broken"][:20],
     }
 
 
@@ -182,9 +208,15 @@ def main(argv: list[str] | None = None) -> int:
     record = _six_field_record(
         result,
         started=started,
-        inputs=[str(registry), f"jobs={len(jobs)}", f"candidates={result['host_candidates']}"],
+        inputs=[
+            str(registry),
+            f"jobs={len(jobs)}",
+            f"candidates={result['host_candidates']}",
+            f"installed_plane_lines={result['plane_lines_scanned']} 配对={result['plane_paired_lines']}",
+        ],
         basis=[
             f".omo/debt/items/{DEBT_ID}.yaml (决策(3) 裁决 2026-11-10)",
+            f".omo/debt/items/{DEBT_ID}.yaml (决策(2) 改判 B′ 裁决 2026-11-10: 已装面逐字比对不成立, 改判已装行解释器健康)",
             ".omo/_truth/registry/governance-checks.yaml::CR-X2-CRON-INTERP-EXECUTABILITY",
             "bin/lib/cron_normalize.py (与 scheduler-compile / install-cron-plane 同源)",
         ],
@@ -199,11 +231,20 @@ def main(argv: list[str] | None = None) -> int:
             f"verdict={result['verdict']} "
             f"扫描={result['jobs_scanned']} 非本机不判={result['jobs_off_host']} "
             f"阻断缺口={result['blocking_gaps']} "
+            f"(登记面={result['registry_gaps']} 已装面={result['plane_gaps']}/"
+            f"扫{result['plane_lines_scanned']}行 配对{result['plane_paired_lines']}"
+            f" 未登记坏{result['plane_unregistered_broken']} 裸写法{result['plane_bare_tokens']}) "
             f"闭包提醒={result['closure_advisories']} 判不出={result['undetermined_edges']} "
+            f"已装面调用点={result['plane_python_sites']}"
+            + (" ⚠配对全空(仪器自证失败)" if result["plane_pairing_suspicious"] else "") + " "
             f"(enforcement={result['enforcement']}, 限期={ENFORCE_AFTER})"
         )
         for g in result["gaps"][:20]:
             print(f"  GAP  {g['name']}: {str(g['reason'])[:160]}")
+        for g in result["plane_gap_details"][:20]:
+            print(f"  PLANE-GAP  {g['name'] or '(未登记)'} {g['interpreter']}: {str(g['reason'])[:150]}")
+        for g in result["plane_unregistered_details"][:20]:
+            print(f"  PLANE-UNREG  {g['interpreter']}: {str(g['reason'])[:150]}")
         for a in result["advisories"][:20]:
             print(f"  ADV  {a['name']}: {str(a['closure_reason'])[:160]}")
         for u in result["undetermined"][:10]:
