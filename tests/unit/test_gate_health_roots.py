@@ -99,3 +99,49 @@ def test_gate_health_passes_split_roots_to_reference_checks(
     assert meta_command[meta_command.index("--workspace") + 1] == str(runtime_root.resolve())
     assert meta_command[meta_command.index("--reference-root") + 1] == str(code_root.resolve())
     assert scheduler_command[1] == str(code_root.resolve() / "bin/scheduler-compile.py")
+
+
+# ── gate detail 诊断质量 ──────────────────────────────────────────────
+#
+# 缺陷 (debt: PANORAMA-GATE-DETAIL-UNRELIABLE): `check()` 裸取
+# `stdout.split("\n")[-1]` 当诊断, 于是 `check-sfop-slots.py --json` 这类
+# 美化 JSON 输出的末行 `}` 被当成门禁 detail, 在 dashboard 上退化成单字符
+# `'}'`。以下用例钉住「JSON 输出读摘要 / 非 JSON 取末行 / 空输出给 exit 兜底」。
+
+
+def test_diagnostic_reads_json_summary_instead_of_last_line() -> None:
+    module = _module("bin/gac/gate-health-check.py", "gate_health_diag_json")
+
+    out = json.dumps({"ok": True, "errors": [], "warnings": [1, 2, 3]}, indent=2)
+    assert out.split("\n")[-1] == "}"  # 反证: 旧口径取到的正是这个
+    assert module._diagnostic(out, "") == "ok warnings=3"
+
+    bad = json.dumps({"ok": False, "errors": ["a", "b"], "warnings": []}, indent=2)
+    assert module._diagnostic(bad, "") == "not ok errors=2"
+
+
+def test_diagnostic_keeps_last_line_for_plain_text() -> None:
+    module = _module("bin/gac/gate-health-check.py", "gate_health_diag_text")
+    # run() 会 strip, 故真实入参无尾换行 —— 与生产路径同口径
+    assert module._diagnostic("line one\nGovernance semantic gate: FAIL", "") == \
+        "Governance semantic gate: FAIL"
+
+
+def test_check_falls_back_to_exit_code_when_output_empty() -> None:
+    module = _module("bin/gac/gate-health-check.py", "gate_health_diag_empty")
+
+    class _Result:
+        returncode = 1
+        stdout = ""
+        stderr = ""
+
+    import subprocess
+
+    original = subprocess.run
+    try:
+        subprocess.run = lambda *a, **k: _Result()  # type: ignore[assignment]
+        got = module.check("X", ["true"])
+    finally:
+        subprocess.run = original  # type: ignore[assignment]
+
+    assert got["output"] == "exit=1"
