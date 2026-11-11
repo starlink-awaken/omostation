@@ -529,6 +529,20 @@ if not any(gate.get("id") == "bin-quota-diff" for gate in GATES_LIST):
         }
     )
 
+# Root-owned §7 索引条首短语字面可命中门禁 (2026-11-11, BET-Y2Q4-T10-346):
+# 放 root-owned 段而非 DEFAULT_POLICY["gates"] —— 本机 POLICY 由 ecos 子模块 sgf-policy.yaml
+# 提供 (78 gates)，DEFAULT_POLICY 只是 policy 缺失时的降级副本，写进它等于没接线
+# (CR-X2-GATE-DETAIL-CONTRACT 即栽在同一处：注册了但两条执行路径都不跑它)。
+# 不进 SOFT_CHECKS —— 阻断与否由脚本自己的 ENFORCE_AFTER=2026-12-12 决定。
+if not any(gate.get("id") == "pitfalls-index" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "pitfalls-index",
+            "command": ["bin/gac/check-pitfalls-index.py", "--json"],
+            "timeout": 60,
+        }
+    )
+
 # Root-owned PITFALL-GAT-006 detector (2026-09-05): 检测当前分支是否在 main 已自愈后
 # 重复造轮子. 分支 diff 为空 + main 有近期 merge → WARNING (exit 0, 非阻断).
 # 防多 agent 并发下修复目标已被其他 PR 达成, 合并后回退 main 正确值.
