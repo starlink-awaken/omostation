@@ -1,6 +1,9 @@
 # CI Workflows
 
-> 37 个 GitHub Actions workflow。按类型分组。
+> 本文件按类型收录**主要** workflow，不是全量索引 —— 全量以
+> `.github/workflows/` 目录为准（文件数与增删请直接看目录，**不要在此硬编码计数**，
+> 见根仓 AGENTS.md §2）。机器可读的「工具 ↔ 执行面」索引见
+> `.omo/_truth/registry/ci-surfaces.yaml`。
 
 ## Governance Gates (PR-blocking)
 
@@ -85,6 +88,35 @@
 |----------|---------|------|
 | `publish-pypi.yml` | push (tags) | Publish Python packages to PyPI |
 | `workspace.yml` | push + PR | Workspace CI |
+
+## Other Workflows（未在上表展开）
+
+| Workflow | 自述名称 |
+|---|---|
+| `aetherforge-ci.yml` | AetherForge CI (Local Compute Gateway & Swarm) |
+| `ai-pr-review.yml` | AI PR Review |
+| `architecture-check.yml` | Architecture Check |
+| `bet-done-gate.yml` | BET Done Gate |
+| `bulk-deletion-guard.yml` | bulk-deletion-guard |
+| `cascading-test.yml` | Cascading Topological Tests |
+| `diff-governance.yml` | Diff Governance (lifecycle + debt + growth) |
+| `doc-gov-check.yml` | doc-gov-check |
+| `gac-maintenance.yml` | GAC Maintenance |
+| `harness-ci.yml` | Harness Lifecycle |
+| `hook-regression.yml` | Hook Regression |
+| `omlxc-ci.yml` | omlxc CI (Compute Fabric & Data Plane) |
+| `phase-gate-enforce.yml` | phase-gate-enforce |
+| `post-merge-validate.yml` | post-merge-validate |
+| `prune-ci-runs.yml` | Scheduled CI Runs Pruner |
+| `pyright-sweep.yml` | pyright-sweep |
+| `registry-drift-monitor.yml` | registry-drift-monitor |
+| `repo-health-daily.yml` | repo-health-daily |
+| `repo-visibility-guard.yml` | Repo Visibility Guard |
+| `reusable-setup.yml` | reusable-setup |
+| `reusable-submodule-bump-pr.yml` | Reusable Submodule Bump PR |
+| `service-gateway.yml` | Service Gateway CI/CD |
+| `submodule-autobump.yml` | Submodule Auto-Bump |
+| `worktree-hygiene.yml` | Worktree Hygiene |
 
 ## Deleted (cleanup 2026-07-01)
 
