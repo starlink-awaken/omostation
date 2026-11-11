@@ -22,10 +22,16 @@ def main() -> int:
 
     text = WORKFLOW.read_text(encoding="utf-8")
 
-    # 查找 ruff-lint job 中的 src: "..." 行
-    match = re.search(r'^\s+src:\s*["\']?(.+?)["\']?\s*$', text, re.MULTILINE)
+    # 只锚定 ruff-lint job 内的 src —— 全文首个 `src:` 可能落在别的 job 里
+    # (判据自述就是「ruff-lint job 的 src 参数」, 实现必须真的限定在那个块内)。
+    m_job = re.search(r"^  ruff-lint:[ \t]*$(.*?)(?=^  \S|\Z)", text, re.MULTILINE | re.DOTALL)
+    if not m_job:
+        print("FAIL 未找到 quality.yml 的 ruff-lint job")
+        return 1
+
+    match = re.search(r'^\s+src:\s*["\']?(.+?)["\']?\s*$', m_job.group(1), re.MULTILINE)
     if not match:
-        print("FAIL 未找到 quality.yml 中的 src 参数")
+        print("FAIL 未找到 ruff-lint job 内的 src 参数")
         return 1
 
     scope = match.group(1).strip()
