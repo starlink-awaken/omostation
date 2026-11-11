@@ -512,13 +512,11 @@ surfaces:
   note: Root-owned guard for untracked or unregistered root shadow surfaces.
 - id: bin-gac-perception-coverage-py
   tool: bin/gac/perception-coverage.py
-  workflow: gac-gate.yml
+  workflow: (none)
   gate: false
-  triggers:
-  - per_pr
-  - push
+  triggers: []
   status: active
-  note: Perception coverage report generator (7 probes + 25 routes + 17 data sources).
+  note: Perception coverage report generator (7 probes + 25 routes + 17 data sources). 2026-11-11 更正假声明 —— gac-gate.yml 0 处引用本工具, gac-local-gate.py 门禁集（含 sgf-policy）亦无它。它是静态 report generator（DATA_SOURCES/PROBES 硬编码, 无退出码语义）, 接进 blocking gate 前须先有真实探测与退出码。接线与否待裁定。
 - id: bin-ops-lighthouse-stub-py
   tool: bin/ops/lighthouse-stub.py
   workflow: (none)

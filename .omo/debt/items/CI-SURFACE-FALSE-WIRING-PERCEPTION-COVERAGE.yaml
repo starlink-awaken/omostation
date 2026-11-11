@@ -7,8 +7,27 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-11"
+close_reason: >-
+  假声明已更正, 全仓 false-wiring 警告归零。裁决取「改声明」而非「接线」: 该工具是静态
+  report generator (DATA_SOURCES/PROBES 硬编码, --report/--json/--status 均无退出码语义),
+  接进 blocking gate 会造出一道恒绿的假门; 而它当前无任何真实探测, 接线无从谈起。
+  改声明只让登记面与事实一致, 不剥夺未来接线的可能 —— 真实探测与退出码就位后,
+  改回 workflow 名即可, 是低风险可逆动作。
+resolution_evidence: >-
+  2026-11-11 在 init 了 projects/ecos 的检出 (sgf-policy 齐备) 里实测:
+  ① 改前 `python3 bin/gac/check-ci-surfaces.py --json` 报
+  `false-wiring: bin/gac/perception-coverage.py 声明由 gac-gate.yml 执行, 但该 workflow
+  既不含此工具、也不以 --workflow gac-gate.yml 调 ci-check-runner.py、也不经
+  gac-local-gate.py 执行它`, warn_count=1;
+  ② 改 `.omo/_truth/registry/ci-surfaces.yaml` 的 `bin-gac-perception-coverage-py`
+  条目为 `workflow: (none)` + `triggers: []` (与 #5276 更正的另外 3 条同形),
+  并保留 note 说明「接线与否待裁定」;
+  ③ 改后同命令读数 `ok=true / errors=0 / warn_count=0 / surfaces=157 / wired=141`,
+  `--check` 输出 `✅ CI 平面干净`。
+  判据: 声明与执行面一致 (无执行面则声明 (none)), 而非把工具硬塞进 gate。
 affected_roots: []
 evidence_refs:
 - .omo/_truth/registry/ci-surfaces.yaml
@@ -17,7 +36,7 @@ evidence_refs:
 mitigation_refs:
 - 本条 history 第一条（扫描口径与实证）
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
+last_reviewed_at: "2026-11-11"
 next_review_at: "2026-12-10"
 gate_level: none
 x1_policy_ref: ""
@@ -91,4 +110,23 @@ history:
     **复核口径**：`--check` 在**子模块齐全**的检出里跑（子模块缺 sgf-policy 时该检查
     对 gac-local-gate 下单**保守跳过**，读数会假绿）；本次在 init 了 `projects/ecos` 的
     检出里实测 `warnings: 1`。
+  actor: "governance-agent"
+- at: "2026-11-11T12:50:00+00:00"
+  action: resolve
+  note: >-
+    **裁决取「改声明」, 假声明已更正**（2026-11-11）。前两次复审把本条列为
+    「需 principal 裁决」(接线 vs 改声明), 但两条路里**改声明是唯一低风险可逆的一条**:
+    该工具是静态 report generator —— `DATA_SOURCES`/`PROBES` 全部硬编码,
+    `--report/--json/--status` 三个模式都无退出码语义 (读 `main()` 可见其只 print),
+    接进 blocking gate 只会造出一道恒绿的假门; 而它当前无任何真实探测, 「接线」
+    在实现上无从谈起 (先要有探测与退出码, 那是另一个交付)。
+    **改法**: `.omo/_truth/registry/ci-surfaces.yaml` 的 `bin-gac-perception-coverage-py`
+    条目 `workflow: gac-gate.yml` → `(none)`, `triggers: [per_pr, push]` → `[]`,
+    与 #5276 更正的另外 3 条假声明同形; note 保留「接线与否待裁定」。
+    **读数** (init 了 projects/ecos 的检出, sgf-policy 齐备):
+    改前 `check-ci-surfaces.py --json` → `warn_count=1` (正剩本条);
+    改后 → `ok=true / errors=0 / warn_count=0 / surfaces=157 / wired=141`,
+    `--check` 打印 `✅ CI 平面干净`。
+    **未做的事**: 没有把工具接进 `gac-local-gate.py`, 也没有删工具 ——
+    工具本体是另一个交付 (真实探测 + 退出码语义) 后才谈接线。
   actor: "governance-agent"
