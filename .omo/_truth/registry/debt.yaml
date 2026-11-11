@@ -78,3 +78,4 @@ seed_items:
 - .omo/debt/items/DEAD-PATH-TOOL-FALLBACK-STRUCTURAL-NOOP.yaml
 - .omo/debt/items/TASK-REGISTRY-STATUS-DRIFT.yaml
 - .omo/debt/items/CI-SURFACES-GATE-FIELD-UNDEFINED.yaml
+- .omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml

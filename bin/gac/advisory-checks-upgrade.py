@@ -42,7 +42,7 @@ UPGRADE_TARGETS = [
     {
         "id": "CR-X1-GOD-MODULE-LIMIT",
         "name": "God module 行数上限",
-        "check": ["python3", "bin/gac/check-god-module.py"],
+        "check": ["python3", "bin/ssot/check-god-module.py"],
         "target": "pre_commit",
         "priority": "P1",
     },
