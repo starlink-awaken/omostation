@@ -44,6 +44,10 @@ WORKSPACE = Path(__file__).resolve().parents[2]
 REGISTRY = WORKSPACE / ".omo" / "_truth" / "registry" / "governance-checks.yaml"
 CI_SURFACES = WORKSPACE / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
 HOOKS_DIR = WORKSPACE / ".githooks"
+# `.githooks/pre-commit` 只有 9 行, 整篇委托给 hook-runner.sh (AGENTS.md §6: 「在那里
+# grep 不到任何东西」)。真正的 hook 调用面有 18 处 `run_check` 落在那里, 只扫
+# `.githooks/` 会把 hooks 平面读成空集 (2026-11-12 实测: 0 个 .py token)。
+HOOK_RUNNER = WORKSPACE / "bin" / "gac" / "hook-runner.sh"
 WORKFLOWS_DIR = WORKSPACE / ".github" / "workflows"
 LOCAL_GATE = WORKSPACE / "bin" / "gac" / "gac-local-gate.py"
 GAC_TOOLS = sorted(
@@ -55,7 +59,7 @@ RULE_ID_SELF = "CR-X2-GAC-BOOTSTRAP"
 
 PATH_REF_RE = re.compile(r"^[\w.\-/@]+\.(?:py|sh|ya?ml|md|json|toml)$")
 PY_TOKEN_RE = re.compile(r"[\w./$-]+/[\w.-]+\.py")
-HOOK_CALL_RE = re.compile(r"\b(?:python3?|bash|run_py|\w*run_stage)\b")
+HOOK_CALL_RE = re.compile(r"\b(?:python3?|bash|run_py|\w*run_stage|run_check)\b")
 ROOT_VAR_RE = re.compile(r"^\$?\{?(?:ROOT|WORKSPACE|REPO_ROOT|_ROOT|WORKSPACE_ROOT)\}?/")
 # 只声明 manual 的工具不参与平面点名: 没有平面跑它是登记的本意, 不是谎报.
 AUTOMATED_TRIGGERS = {"gac_local_gate", "per_pr", "push", "ci_gate", "scheduled", "pr"}
@@ -334,14 +338,16 @@ def check_plane_coverage() -> dict:
     hook_files: list[Path] = []
     if HOOKS_DIR.is_dir():
         hook_files = [p for p in sorted(HOOKS_DIR.iterdir()) if p.is_file() and p.suffix != ".md"]
-        for hp in hook_files:
-            try:
-                lines = hp.read_text(encoding="utf-8", errors="replace").splitlines()
-            except OSError:
-                continue
-            for line in lines:
-                if HOOK_CALL_RE.search(line):
-                    hook_tokens |= set(PY_TOKEN_RE.findall(line))
+    if HOOK_RUNNER.is_file():
+        hook_files.append(HOOK_RUNNER)
+    for hp in hook_files:
+        try:
+            lines = hp.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if HOOK_CALL_RE.search(line):
+                hook_tokens |= set(PY_TOKEN_RE.findall(line))
 
     policy_tokens: set[str] = set()
     if isinstance(policy, dict):
