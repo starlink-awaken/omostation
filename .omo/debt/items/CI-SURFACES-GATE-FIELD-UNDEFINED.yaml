@@ -1,0 +1,65 @@
+id: "CI-SURFACES-GATE-FIELD-UNDEFINED"
+title: "ci-surfaces 的 gate 字段含义未定义：80 条声明里 26 条既不在 sgf-policy 也不在 hook-manifest"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/_truth/registry/ci-surfaces.yaml
+- bin/gac/check-ci-surfaces.py
+- .omo/_truth/registry/hook-manifest.yaml
+- projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml
+mitigation_refs:
+- 本条 history 第一条（量化口径）
+opened_at: "2026-11-11"
+last_reviewed_at: "2026-11-11"
+next_review_at: "2026-12-11"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/_truth/registry/ci-surfaces.yaml` 的 `gate` 字段**没有任何消费者**
+  （全仓 `grep` 只有 `check-ci-surfaces.py` 自己写入/读取计算值，没有脚本按它分支），
+  但它是纯声明，读者会按字面理解成「这是门禁（阻塞）」。
+
+  三种口径的实测差异（2026-11-11，ecos 子模块在位）：
+
+  - 注册表声明 `gate: true`：**80** 条；
+  - `sgf-policy.yaml` 的 gate command 覆盖：**54** 条（`check-ci-surfaces.py::_discover_wiring`
+    计算 `gate=True` 的来源）；
+  - `.omo/_truth/registry/hook-manifest.yaml` 覆盖：**1** 条（`bin/gac/mass-deletion-gate.py`；
+    注意 hook-manifest 的 `script` 字段带参数，如 `bin/gac/mass-deletion-gate.py --staged`，
+    按「以 .py 结尾」解析会整条漏掉 —— 本次修正为从字符串里提取工具路径）。
+
+  ⇒ **25 条声明 `gate: true` 的工具既不在 sgf-policy 也不在 hook-manifest**，例如
+  `bin/gac/architecture-check.py` / `harness-compliance-check.py`
+  （它们确实是阻塞型门禁，但由 `.githooks/` 脚本或 `make` 目标调用）。
+
+  一个字段三种读法：按字面（是门禁）/ 按 sgf-policy（MOF 门禁集）/ 按 hook-manifest
+  （hook 门禁集）—— 差 26 条。
+decision_needed: >-
+  ① **定义字段**：`gate` 到底指「MOF/sgf-policy 门禁集成员」，还是「任何阻塞型门禁」？
+  前者要改名（如 `mof_gate`）并修正 26 条声明；后者要扩展 `_discover_wiring()` 的去处
+  （把 `.githooks/` 脚本与 `make` 目标纳入发现），并补一条校验使声明与计算值一致。
+  ② 若确认它只是描述性信息、无人消费，考虑**删字段**（少一个三种读法的来源）。
+  本条不代决。
+history:
+- at: "2026-11-11T11:20:00+00:00"
+  action: identify
+  note: >-
+    **发现口径**：给 `check-ci-surfaces.py` 修接线判据时（#5287/#5288），顺手核对
+    `gate` 字段与 sgf-policy 的一致性 —— 80 条声明里 26 条对不上，且这 26 条在
+    hook-manifest 里也一条都没有。
+    **消费者核查**：`grep -rn '"gate"\|\[.gate.\]\|get("gate")' bin/ lib/` 只命中
+    `check-ci-surfaces.py` 自身的计算与输出，无任何脚本按它分支 ⇒ 纯声明。
+    **可复现**：`check-ci-surfaces.py --json` 的 `registered_tools` 与
+    `_discover_wiring()` 的 `gate=True` 集合做差（2026-11-11 在 init 了 `projects/ecos`
+    的检出里实测：sgf-policy gate tools 69、hook-manifest tools 17、
+    `declared gate:true` 82、mismatch 26、其中 1 条在 hook-manifest）。
+  actor: "governance-agent"

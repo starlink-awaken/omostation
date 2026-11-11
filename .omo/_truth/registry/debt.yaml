@@ -77,3 +77,4 @@ seed_items:
 - .omo/debt/items/SED-I-GUARD-UNWIRED-AND-SELF-FLAGGING.yaml
 - .omo/debt/items/DEAD-PATH-TOOL-FALLBACK-STRUCTURAL-NOOP.yaml
 - .omo/debt/items/TASK-REGISTRY-STATUS-DRIFT.yaml
+- .omo/debt/items/CI-SURFACES-GATE-FIELD-UNDEFINED.yaml
