@@ -47775,16 +47775,40 @@ bets:
   completion_evidence:
     axes:
       engineering:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-11-pitfalls-index-closeout.md
+            sha256: sha256:46e4eba5d2933ce569c0db9b74c3fb04c39659a55ee85e50b6822d4c6bad889b
+          merged_reachable_commit:
+            ref: git://origin/main@519d0fc514018eb725084df54c4e1260bcf49107
+          rollback:
+            ref: receipt://docs/reports/2026-11-11-pitfalls-index-closeout.md
+            sha256: sha256:46e4eba5d2933ce569c0db9b74c3fb04c39659a55ee85e50b6822d4c6bad889b
+          tests:
+            ref: receipt://docs/reports/2026-11-11-pitfalls-index-closeout.md
+            sha256: sha256:46e4eba5d2933ce569c0db9b74c3fb04c39659a55ee85e50b6822d4c6bad889b
+        status: VERIFIED
       operational:
-        evidence: {}
-        status: NOT_STARTED
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-11-pitfalls-index-closeout.md#operational-轴
+            sha256: sha256:46e4eba5d2933ce569c0db9b74c3fb04c39659a55ee85e50b6822d4c6bad889b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-11-pitfalls-index-closeout.md
+            sha256: sha256:46e4eba5d2933ce569c0db9b74c3fb04c39659a55ee85e50b6822d4c6bad889b
+          live_canary:
+            ref: receipt://docs/reports/2026-11-11-pitfalls-index-closeout.md#判读要点
+            sha256: sha256:46e4eba5d2933ce569c0db9b74c3fb04c39659a55ee85e50b6822d4c6bad889b
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-346.md
+            sha256: sha256:639680b2c572f71422decf1e88d52cc62f8ac42e44f78f3bf40953d82434f157
+        status: PROVEN
       value:
         evidence:
-          note: mint 时点只声明判据与实测读数，未宣称索引失配已收敛。
+          note: 工程/运维两轴已验（索引失配 16→0、门禁在干净检出上确实执行）；但门禁判据是正文全文子串，实测
+            45 条短语中 20 条不锚定条首 —— 寻址键真正落到条首的比例尚未收敛，不在本 BET 绿灯内宣称。
         status: NOT_PROVEN
-    overall_state: evaluating
+    overall_state: delivery_accepted
     schema_version: completion-evidence-matrix/v1
   done_when:
   - gate 在修复前的 main（`b97281171`）上读出 `total=45 dead=16`，与本 spec §1 实测一致。
@@ -47809,7 +47833,8 @@ bets:
   priority: P1
   retro: required
   risk_level: L1
-  status: in_progress
+  status: done
+  done_at: 2026-11-11
   title: BET-Y2Q4-T10-346 §7 索引条首短语的字面可命中门禁 —— 45 条登记里 16 条 rg 不到，落笔当天即失配且零检测器
   track: T10-TOOLING
   underlying_workflow: governance-state-mutation
@@ -47834,6 +47859,8 @@ bets:
   - bin/gac/gac-local-gate.py
   - .omo/_truth/registry/ci-surfaces.yaml
   - AGENTS.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-346.md
+  - docs/reports/2026-11-11-pitfalls-index-closeout.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
