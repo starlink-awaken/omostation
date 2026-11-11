@@ -1,0 +1,62 @@
+id: "TASK-REGISTRY-STATUS-DRIFT"
+title: "任务注册表状态漂移：交付 PR 已合并、BET 已 done，任务仍挂 candidate"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/tasks/planned/TASK-152D15B1.yaml
+- .omo/tasks/planned/TASK-263EF9EC.yaml
+- docs/plans/3y-bet-ledger.yaml
+- bin/gac/worktree-hygiene-audit.py
+- tests/unit/gac/test_worktree_hygiene_audit.py
+mitigation_refs:
+- 本条 history 第一条（逐条核验口径）
+opened_at: "2026-11-11"
+last_reviewed_at: "2026-11-11"
+next_review_at: "2026-12-11"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/tasks/` 是治理任务注册表（`omo task list` 的输入，也是 Agent Brief 里
+  「candidate tasks」的来源）。其中至少 2 条**已交付完成**的任务仍挂 `status: candidate`：
+
+  - **`TASK-152D15B1`**（worktree-hygiene-audit 补 squash 合并感知）：实现已落地
+    —— `bin/gac/worktree-hygiene-audit.py` 的 `_squash_equivalent_to_origin_main()`
+    两个探针（tree 等价 / PR MERGED）都在；`tests/unit/gac/test_worktree_hygiene_audit.py`
+    **45 条用例全通过**；交付提交 `1043b6e8e`（PR #4755，标题含 `worktree squash 感知`）；
+    对应 BET `BET-Y2Q4-T10-251` 台账 `status: done` / `done_at: 2026-10-13`。
+  - **`TASK-263EF9EC`**（worktree 删除闸门补子仓推送检查）：交付 PR **#4649**
+    已于 2026-10-10 MERGED，commit 标题直接写着 `(TASK-263EF9EC)`。
+
+  **危害**：仓库自己的「下一步工作队列」把已完成项列成待办 —— 任何按
+  `.omo/tasks/planned/` 或 Agent Brief 派活的 agent 都会重复造已完成的东西，
+  或误判该类工作仍有缺口。
+decision_needed: >-
+  ① **这两条现在归档**（`omo task done TASK-152D15B1 TASK-263EF9EC` —— OMO broker
+  会连带更新任务索引与 ingress 工件；注意它会写 canonical 的 `.omo/`，属共享面，
+  需避让并发 agent）；② 是否加一道**闭环环节** —— PR 合并时按标题/commit 里点名的
+  task id 自动归档（或至少在 `check-task-field-governance` 里加一条「task 的交付 PR
+  已 merged 却仍 candidate」的告警）。本条不代决。
+history:
+- at: "2026-11-11T06:20:00+00:00"
+  action: identify
+  note: >-
+    **发现口径**：把 Agent Brief 的 `work_state.tasks.open_recent`（8 条 open）当作
+    工作队列逐个核。对每条查 ① `bin/` 里有无对应实现 ② `tests/` 里有无对应用例
+    ③ 交付 PR/BET 是否已合并/闭环。前两条即命中。
+    **逐条核验**：TASK-152D15B1 → 实现 + 45 用例 + PR #4755 + BET done；
+    TASK-263EF9EC → PR #4649 MERGED（标题点名该 task）。其余 5 条 candidate
+    在 `git log --grep` 里查不到点名它们的交付 commit，暂判为真未开始。
+    **根因假设**：交付 PR 的标题/commit 里点名了 task id，但**没有任何环节**在
+    PR 合并后把任务从 `planned/` 移到 `done/` —— 任务生命周期与 PR 生命周期脱钩。
+    **可复现命令**：`omo task list`（看 8 条 open）+ 对每条 `git log --oneline --all
+    --grep=<TASK-ID>`。
+  actor: "governance-agent"
