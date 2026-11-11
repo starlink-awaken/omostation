@@ -182,6 +182,30 @@ def _is_archive_path(path: Path) -> bool:
     return "_archive" in path.relative_to(ROOT).parts or "PACKS" in path.relative_to(ROOT).parts
 
 
+def _is_naming_alias(path: Path, text: str) -> bool:
+    """文件只是加载与自己同名（连字符↔下划线互换）的兄弟模块 —— 命名别名/包装。
+
+    判据是**结构**而非措辞: 别名文件的正文里必然出现 `from <swapped> import` /
+    `with_name("<swapped>.py")` 这类加载动作, 而实现文件不会加载自己的异名。
+    旧分类只看 "Compatibility wrapper" / "CLI alias" 两种自述措辞, 漏掉了
+    "CLI wrapper"(bionic)、"CLI entry for"(sunset)、"下划线命名版别名"(zhixing)
+    —— 于是这 3 对刻意命名别名全被算成 implementation, 报成「高置信重名」,
+    会诱导把别名与实现合并（合并即丢一个被 spec/调用方点名的文件名）。
+    """
+    stem = path.stem
+    swapped = stem.replace("-", "_") if "-" in stem else stem.replace("_", "-")
+    if swapped == stem:
+        return False
+    return bool(
+        re.search(
+            rf"(?:from\s+[\w\.]*{re.escape(swapped)}\s+import\b"
+            rf"|import\s+[\w\.]*{re.escape(swapped)}\b"
+            rf"|with_name\(\s*['\"]{re.escape(swapped)}\.py['\"]\s*\))",
+            text,
+        )
+    )
+
+
 def _is_shim(path: Path, text: str) -> bool:
     if not text:
         return False
@@ -191,7 +215,7 @@ def _is_shim(path: Path, text: str) -> bool:
         return True
     if path.suffix in {".sh", ".bash", ".zsh"} and "exec " in text:
         return True
-    return False
+    return _is_naming_alias(path, text)
 
 
 def script_role(path: Path) -> str:
