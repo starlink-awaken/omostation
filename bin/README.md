@@ -17,9 +17,13 @@ last-reviewed: 2026-11-09
 > 8 条已删除（§2 的 ADR drift 三步流水线、§6 的两个 dashboard 脚本、§15 的共享库声明）。
 > 归档/删除项在各自章节内联标注，不静默消失。
 
-## 域归类 (14 域)
+## 域归类
 
-### 1. GaC 治理即代码 (13) — 规则注册 / drift / gate / healthcheck
+> 本节是**策展式归类**（子目录化的低成本试验），不是全量索引 —— 各类下的
+> 脚本数与域数**不在此维护**：以 `bin/` 目录与 `bin/_registry/scripts/` 为准
+> （根仓 AGENTS.md §2：Markdown 不硬编码当前计数）。
+
+### 1. GaC 治理即代码 — 规则注册 / drift / gate / healthcheck
 规则声明式注册 + 执行器绑定 + drift 检测 + 元治理自检.
 
 | 脚本 | 功能 |
@@ -39,7 +43,7 @@ last-reviewed: 2026-11-09
 | `gac-hook-pre-edit.py` | 编辑前 hook |
 | `gac-ingest-legacy.py` | ~~legacy 规则摄入~~ **已归档** (`bin/_archive/migrations/`) |
 
-### 2. ADR 治理 (3) — drift 流水线 + coverage
+### 2. ADR 治理 — drift 流水线 + coverage
 `check → apply` 流水线 + coverage。**原三步流水线的后两步已删除**（见下）。
 
 | 脚本 | 功能 |
@@ -53,7 +57,7 @@ last-reviewed: 2026-11-09
 > `if auto_fix.exists()` 守卫 —— 脚本缺席时该步静默跳过，流水线退化为 check → apply。
 > `adr-typo-fix.py` / `adr-typo-real-fix.py`（P95/P96 占位）亦已删除。
 
-### 3. SSOT 守护 (6) — 文档/边界/交叉引用一致性
+### 3. SSOT 守护 — 文档/边界/交叉引用一致性
 | 脚本 | 功能 |
 |:-----|:-----|
 | `doc-link-check.py` | 文档链接有效性 |
@@ -65,7 +69,7 @@ last-reviewed: 2026-11-09
 | `doc-governance-migrate.py` | 文档元数据迁移与 `metadata-only` → `content-reviewed` 批次升级 |
 | `check_health_ssot.py` | health SSOT 一致 (snake_case, 待渐进改) |
 
-### 4. God Module (3) — F7114ABA 拆分支持
+### 4. God Module — F7114ABA 拆分支持
 | 脚本 | 功能 |
 |:-----|:-----|
 | `check-god-module.py` | 检测 (>800L warn, >1500L error) |
@@ -74,12 +78,12 @@ last-reviewed: 2026-11-09
 
 > ⚠️ 前缀不一 (`check-god-module` vs `god-module-*`), 待渐进统一.
 
-### 5. 证据与反馈 (1) — BOS 鸿沟 + 回路存活
+### 5. 证据与反馈 — BOS 鸿沟 + 回路存活
 | 脚本 | 功能 |
 |:-----|:-----|
 | `evidence-smoke.py` | BOS 声明/执行鸿沟量化 + 反馈回路维度 (综合 smoke) |
 
-### 5b. 模型驱动治理闭环 (10) — L0↔MOF 模型驱动 (2026-08-09)
+### 5b. 模型驱动治理闭环 — L0↔MOF 模型驱动 (2026-08-09)
 | 脚本 | 功能 |
 |:-----|:-----|
 | `consumer_index.py` | L0 约束 → 16 抽象族/规则反向索引（谁引用此约束） |
@@ -93,7 +97,7 @@ last-reviewed: 2026-11-09
 | `owl_adapter.py` | L0 约束 → OWL-DL（HermiT/Pellet 标准化推理铺路） |
 | `governance_closed_loop.py` | 串联 5 阶段闭环端到端验证（真实数据） |
 
-### 6. 治理仪表盘 / 趋势 / 告警 (12) — 可视化 + history + alert + trend fusion + prediction
+### 6. 治理仪表盘 / 趋势 / 告警 — 可视化 + history + alert + trend fusion + prediction
 | 脚本 | 功能 |
 |:-----|:-----|
 | `swarm-activity-dashboard.py` | 多 agent 实时活动面板 (active runs/locks/worktree/claims/子模块 dirty/冲突) |
@@ -114,22 +118,22 @@ last-reviewed: 2026-11-09
 
 > ⚠️ 前缀不一 (`governance-` vs `gov-` vs `dashboard-`), 同域历史碎片, 待渐进归并.
 
-### 7. X2 抗熵 (3) — freshness 规则
+### 7. X2 抗熵 — freshness 规则
 `x2-freshness-check.py` / `x2-rule-add.py` / `x2-rule-lint.py`
 
-### 8. MOF (1) — 模型覆盖
+### 8. MOF — 模型覆盖
 `mof-m2-coverage.py` (M2 覆盖率; GaC 视角见 `gac-mof-validate.py`)
 
-### 9. Submodule 治理 (1)
+### 9. Submodule 治理
 `submodule-reachability-gate.py`
 
 > **2026-11-09 对拍**: `cross-submodule-check.py` / `cross-submodule-events.py` 已迁入
 > `bin/_archive/`（后者在 `migrated_low_value/`），不再列入本节。
 
-### 10. Project / Registry 生成 (2)
+### 10. Project / Registry 生成
 `mof/gen-project-registry.py` (registry 派生) / `mof/project-layer-index.py` (layer digest)
 
-### 11. 入口 / framework (7) — 高频, 留 bin/ 根
+### 11. 入口 / framework — 高频, 留 bin/ 根
 | 脚本 | 功能 | 调用方 |
 |:-----|:-----|:-------|
 | `agent-workflow.py` (1319L) | Agent Workflow Runner (framework 级) | CLAUDE/AGENTS §0 |
@@ -140,7 +144,7 @@ last-reviewed: 2026-11-09
 | `change-lane-check.py` | commit lane 校验 (pre-commit/gac-local-gate) | GaC gate |
 | `ssot/doc-ssot-lint.py` | 文档 SSOT 门禁 (CI) | gac-local-gate/CI |
 
-### 12. 杂项单例 (6) — 待归域或留根
+### 12. 杂项单例 — 待归域或留根
 `cockpit-readiness.py` / `ssot/venv-yaml-check.py` / `ssot/ts-file-analyze.py` / `gac/p0-event-listener.py`
 
 > **2026-11-09 路径核对**: `verify-spaces.py` / `register-mcp.py` / `graphify-local-extract.py` /
@@ -156,7 +160,7 @@ last-reviewed: 2026-11-09
 > **已迁移** (2026-07-07): `omo-health.py` → `omo health dashboard`, `omo-manage` → `omo manage`, `omo-validate` → `omo validate`
 > **已迁移** (2026-07-07): `scripts/omo/cards_x3_metrics.py` → `omo audit cards`, `scripts/omo/vault_x1_audit.py` → `omo audit vault`, `scripts/omo/x2_freshness_audit.py` → `omo audit freshness`
 
-### 13. P74 Solidification (3, ADR-0130) — workflow 沉默治理
+### 13. P74 Solidification — workflow 沉默治理
 常态化机制: 检测 + 拦截 + 治理信号. 治 P71 三类声明/执行鸿沟复发.
 
 | 脚本 | 功能 | 对应 GaC 规则 |
@@ -169,7 +173,7 @@ last-reviewed: 2026-11-09
 > **已迁移** (2026-07-07): `omo-state-projection-guard.py` → `omo lint projection-guard`, `omo-runtime-stamp-policy.py` → `omo lint stamp-policy`
 > 原脚本保留作为 backward-compat wrapper, 新功能请使用 omo CLI.
 
-### 14. Bin Tool Registry (2, 工具盘点 + 依赖闭环) — 盘点 + 依赖闭环
+### 14. Bin Tool Registry — 盘点 + 依赖闭环
 
 > **已迁移** (2026-08-21): `scripts/bin/` 工具已迁移到 `bin/`，scripts 仓库已 archive。
 > 并行收敛治理不再需要（scripts/bin 已不存在）。
@@ -215,7 +219,7 @@ SSOT: `docs/operations/bin-scripts-convergence-manifest.json` (entries: name/bin
 
 ## `bin/lib/` — 共享库（非入口）
 
-`bin/lib/` 不计入上面的 15 个脚本域：它是被 import 的库，不是可执行入口。
+`bin/lib/` 不计入上面的脚本域：它是被 import 的库，不是可执行入口。
 
 ### `lib/repo_root.py` — 根解析唯一处（契约 ADR-0456）
 
