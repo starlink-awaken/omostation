@@ -343,7 +343,10 @@ def check_ci_surfaces() -> dict:
         "surfaces": len(surfaces),
         "registered_tools": len(registered_tools),
         "orphan_registered": len(orphan_registered),
-        "wired_tools": len(wiring),
+        # 「已接线的登记面」= (workflow/sgf-policy 接的 ∪ gac-local-gate 执行的) ∩ 已登记。
+        # 旧口径是 len(wiring)（含未登记工具、漏本地门禁工具）⇒ 同一份注册表读出 147，
+        # 而 registered∩wired 只有 134、并上本地门禁是 138 —— 一个数字三种含义。
+        "wired_tools": len((set(wiring) | local_gate_tools) & set(registered_tools)),
     }
 
 
@@ -466,7 +469,7 @@ def main() -> int:
         return 1 if report["errors"] else 0
     print("=== CI 平面可观测性 (check-ci-surfaces.py, ADR-0379) ===")
     print(
-        f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']} orphan_registered={report['orphan_registered']}"
+        f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']}/{report['surfaces']} orphan_registered={report['orphan_registered']}"
     )
     if not _sgf_policy_present():
         # 缺生可见: wired_tools 来自 workflow 文本 + sgf-policy; 后者在子模块未
