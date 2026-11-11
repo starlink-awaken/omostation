@@ -29,6 +29,10 @@ DEFAULT_SCRIPT_REGISTRY = ROOT / "bin" / "_registry" / "scripts"
 DEFAULT_CI_SURFACES = ROOT / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
 DEFAULT_CRON = ROOT / ".omo" / "cron" / "registry.yaml"
 DEFAULT_HOOKS = ROOT / ".githooks"
+# `.githooks/pre-commit` 只有 9 行, 整篇委托给 hook-runner.sh (AGENTS.md §6 已记:
+# 「在那里 grep 不到任何东西」)。真正的 hook 调用面有 18 处 run_check 落在那里,
+# 只扫 `.githooks/` 等于把 hooks 平面读成空集 (2026-11-12 实测: 0 个 .py token)。
+DEFAULT_HOOK_RUNNER = ROOT / "bin" / "gac" / "hook-runner.sh"
 
 BIN_IN_COMMAND = re.compile(r"(bin/[A-Za-z0-9_./-]+\.(?:py|sh))")
 NONE_WORKFLOWS = {"", "(none)", "none", "null"}
@@ -84,11 +88,11 @@ def _load_cron_jobs(path: Path) -> list[dict]:
     return [j for j in jobs if isinstance(j, dict)]
 
 
-def _hook_paths(hooks_dir: Path) -> set[str]:
+def _hook_paths(hooks_dir: Path, extra_files: list[Path] | None = None) -> set[str]:
     found: set[str] = set()
-    if not hooks_dir.is_dir():
-        return found
-    for path in hooks_dir.iterdir():
+    files = list(hooks_dir.iterdir()) if hooks_dir.is_dir() else []
+    files += [p for p in (extra_files or []) if p.is_file()]
+    for path in files:
         if not path.is_file():
             continue
         try:
@@ -121,7 +125,7 @@ def check(
     scripts = _load_script_records(script_registry_dir)
     surfaces = _load_ci_surfaces(ci_surfaces_path)
     jobs = _load_cron_jobs(cron_registry_path)
-    hook_hits = _hook_paths(hooks_dir)
+    hook_hits = _hook_paths(hooks_dir, extra_files=[DEFAULT_HOOK_RUNNER])
 
     items: dict[str, dict] = {}
 

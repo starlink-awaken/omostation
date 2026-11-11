@@ -255,6 +255,21 @@ def test_l6_real_population_is_measured_with_denominators() -> None:
             assert v.get("verdict") == "device_unavailable", f"未预期的判定: {v}"
 
 
+def test_l6_hook_plane_covers_hook_runner() -> None:
+    """.githooks/pre-commit 只有 9 行, 整篇委托给 bin/gac/hook-runner.sh
+    (18 处 run_check / 13 个不同工具, AGENTS.md §6 已记「在那里 grep 不到任何东西」)。
+    只扫 .githooks/ 会把 hooks 平面读成空集 —— 2026-11-12 实测: paths=10 且其中
+    0 个 .py token, 于是「只有 hook 调用面」的工具会被误判成四平面全缺席。
+    """
+    b = _boot()
+    assert b.HOOK_RUNNER.is_file(), "HOOK_RUNNER 常量指向的文件不存在"
+    assert "run_check" in b.HOOK_RUNNER.read_text(encoding="utf-8"), (
+        "hook-runner.sh 里没有 run_check —— 前提变了, 本钉要重写"
+    )
+    r = b.check_plane_coverage()
+    assert r["planes"]["hooks"]["paths"] > 10, "hooks 平面没读到 hook-runner.sh"
+
+
 # ---------------------------------------------------------------- 总体口径
 
 
