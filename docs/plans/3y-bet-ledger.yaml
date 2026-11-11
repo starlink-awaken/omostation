@@ -47828,6 +47828,7 @@ bets:
   - docs/plans/3y-bet-ledger.yaml
   - docs/superpowers/specs/2026-11-10-pitfalls-index-integrity.md
   - bin/gac/check-pitfalls-index.py
+  - bin/_registry/scripts/governance/check-pitfalls-index.yaml
   - tests/unit/test_check_pitfalls_index.py
   - .omo/_truth/registry/governance-checks.yaml
   - bin/gac/gac-local-gate.py
