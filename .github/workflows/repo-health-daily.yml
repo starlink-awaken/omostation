@@ -47,13 +47,16 @@ jobs:
           python3 - <<'PYEOF'
           import json, os
           d = json.load(open('/tmp/repo-health/report.json'))
+          total = d.get('total_repos', '?')
+          audited = d.get('audited_repos', len(d.get('repos', [])))
+          scope = f"本次审计覆盖面: {audited}/{total} 个仓库（--limit 只审计前 N 个，未审计的不参与告警）"
           high = [r for r in d.get('repos', []) if r.get('risk_score', 0) >= 50 and not r.get('covered_by_parent')]
           if not high:
-              print("✅ 无高风险仓库")
+              print(f"✅ 无高风险仓库（{scope}）")
               raise SystemExit(0)
           lines = [f"- **{r['repo']}** 风险分 {r.get('risk_score',0)}" for r in high]
-          body = "## 高风险仓库告警\n\n" + "\n".join(lines) + "\n\n> 由 repo-health-daily 自动生成 (audit-repo-health.sh)"
-          print("⚠️ 高风险:\n" + "\n".join(lines))
+          body = "## 高风险仓库告警\n\n" + "\n".join(lines) + f"\n\n> 由 repo-health-daily 自动生成 (audit-repo-health.sh)。{scope}"
+          print("⚠️ 高风险:\n" + "\n".join(lines) + f"\n{scope}")
           open('/tmp/repo-health/high-repos.md', 'w').write(body)
           PYEOF
           if [ -f /tmp/repo-health/high-repos.md ]; then
