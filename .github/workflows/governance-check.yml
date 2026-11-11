@@ -631,6 +631,12 @@ jobs:
         # tests/unit/** 不在任何 CI 白名单里, 不点名则「CI 绿」不构成这条门禁的证据。
         # 实测 12 pass。
         run: python3 -m pytest tests/unit/test_gac_bootstrap_layers.py -q
+      - name: gate parallel-classification census gate
+        # 钉 gac-local-gate 的并行/串行分类账完备性: 新增 gate 未进任何一本账即红
+        # (漏登记写类 gate 会让它静默继承「默认并行」⇒ 并发读写同一份工作区)。
+        # tests/unit/** 不在任何 CI 白名单里; pitfalls-index (#5286) 漏登记本账,
+        # 在 main 上静默了 8 天 (2026-11-12 实测 98 vs 97)。实测 7 pass。
+        run: python3 -m pytest tests/unit/gac/test_gac_local_gate_parallel.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
