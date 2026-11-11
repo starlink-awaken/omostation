@@ -625,6 +625,12 @@ jobs:
         # 钉「不可判定的 gitlink 不得静默放行」的反橡皮章契约 (契约 2 是关键断言)。
         # 本轮同时修了它只在 seed 仓配 git 身份、clone 侧缺失的缺陷。实测 4 pass。
         run: python3 -m pytest tests/unit/test_submodule_reachability_undecidable.py -q
+      - name: gac-bootstrap layer mutation gate
+        # 钉 gac-bootstrap 层3/层4/层6 的三组变异 (BET-Y2Q4-T10-347): 零分母判红、
+        # 层4 覆盖全部路径型 source_ref、层6 的平面比对不得退回文本正则。
+        # tests/unit/** 不在任何 CI 白名单里, 不点名则「CI 绿」不构成这条门禁的证据。
+        # 实测 12 pass。
+        run: python3 -m pytest tests/unit/test_gac_bootstrap_layers.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
