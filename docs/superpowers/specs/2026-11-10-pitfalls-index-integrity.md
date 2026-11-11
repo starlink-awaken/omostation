@@ -86,9 +86,16 @@ last-reviewed: 2026-11-11
   使 gate 落地即绿。改写用 `read → check → modify → write` 脚本（`/tmp/gdc/346/fix-index-phrases.py`，
   18 对映射、幂等：已改写的行报 SKIP），禁 `sed -i`。两条改写因正文命中 2 次（另一条目交叉引用了
   同一段文字）而加长，保证寻址键唯一指向一条 pitfall。
-- 新增 `bin/` 脚本要同批把 `gac.subtraction_quota.script_baseline` 741→742，
-  否则 `check-bin-quota-diff` 判红（§7「新增 `bin/` 脚本要同批 bump `script_baseline`」条，
-  且该 gate 读 committed HEAD ⇒ 编辑态自测必红是预期，不是回归）。
+- 新增 `bin/` 脚本要同批做**两件**登记，缺一判红：
+  ① `gac.subtraction_quota.script_baseline` 741→742，否则 `check-bin-quota-diff` 红（§7
+     「新增 `bin/` 脚本要同批 bump `script_baseline`」条，且该 gate 读 committed HEAD ⇒
+     编辑态自测必红是预期，不是回归）；
+  ② `bin/_registry/scripts/governance/check-pitfalls-index.yaml`（`schema: script-registry/v1`、
+     `id:` 必须是仓内相对路径原样），否则 `bin/ssot/script-registry.py validate` 红。
+  本 spec 首版只写了 ①，交付当场被 ② 拦下（`make gac-local-gate` 的 `script-registry-validate`
+  FAIL 点名 `bin/gac/check-pitfalls-index.py`）——登记面有两处、baseline 只数数量、registry 只查
+  有无，两者互不覆盖。修复后 `validate` 打印 `742 scripts registered`，与 ①的 baseline 同值：
+  这是一条免费的跨平面自证。
 - 新增 `tests/unit/test_check_pitfalls_index.py`：6 条用例全在 `tmp_path` 造 AGENTS.md +
   pitfalls.md，断言①字面命中计数正确；②改写措辞判 dead 且限期/strict 两档退出码正确；
   ③仅标点差异（`·` vs 空格）判 dead；④正文缺失 → `error` 且判红；⑤§7 无表行 → `error` 且判红；
@@ -116,6 +123,10 @@ last-reviewed: 2026-11-11
    不读 canonical 工作区的真实 `AGENTS.md`（不写穿、不依赖 host 状态）。
 5. 接线自证：`rg -n "check-pitfalls-index" bin/gac/gac-local-gate.py` 有命中，且
    `governance-checks.yaml` 里该规则的 `source_ref` 与 ci-surfaces 的 `tool` 指向同一脚本。
+6. `python3 bin/ssot/script-registry.py validate` 打印的注册数 == `script_baseline`（742），
+   且 `make gac-local-gate` 的 FAIL 只剩两条与本体无关的 host 态项
+   （`current-state-coherence` 缺 `.omo/state/system.yaml`、`check-evidence-freshness`
+   `import_failed`；两者在 canonical 工作区分别可读/`PASS score=100`，且都不读本 diff 的任何文件）。
 
 **已知偏离（如实记）**：16 条改写里有 2 条（closeout verify / release 守卫）的字面片段在正文
 命中 2 次——另一次是别的条目**逐字引用**了这条条首。唯一指向不是本 gate 的判据（§2.1 只要
