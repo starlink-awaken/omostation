@@ -637,6 +637,12 @@ jobs:
         # tests/unit/** 不在任何 CI 白名单里; pitfalls-index (#5286) 漏登记本账,
         # 在 main 上静默了 8 天 (2026-11-12 实测 98 vs 97)。实测 7 pass。
         run: python3 -m pytest tests/unit/gac/test_gac_local_gate_parallel.py -q
+      - name: governance orchestrator path-resolution gate
+        # 钉 governance-orchestrator 的 REPO 是检出根、且模块里每条 REPO / '<file>'
+        # 都解析到真实文件。2026-11-12 前 REPO 是 parents[1] (= <root>/bin), 于是
+        # compliance_check 的 interface_check 恒 false (路径全错一层 + 工具名写错)。
+        # 实测 3 pass; 把 REPO 改回 parents[1] ⇒ 2 条当场红。
+        run: python3 -m pytest tests/unit/gac/test_governance_orchestrator_paths.py -q
       - name: Run full governance verification
         run: make governance-verify
       - name: Submodule pointer drift check
