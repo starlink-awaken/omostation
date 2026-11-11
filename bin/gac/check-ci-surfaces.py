@@ -460,6 +460,11 @@ def main() -> int:
     print(
         f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']} orphan_registered={report['orphan_registered']}"
     )
+    if not _sgf_policy_present():
+        # 缺生可见: wired_tools 来自 workflow 文本 + sgf-policy; 后者在子模块未
+        # init 的检出里缺席 ⇒ 计数静默偏低 (实测 154 面里 wired 146 => 95)。
+        # 不说清楚, 读者会把「计数低」读成「这些工具没接线」。
+        print("  ⚠️  sgf-policy.yaml 缺席 (子模块未 init): wired_tools 计数偏低, 不代表这些工具未接线")
     for e in report["errors"]:
         print(f"  ❌ {e}")
     for w in report["warnings"]:
