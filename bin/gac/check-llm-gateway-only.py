@@ -18,6 +18,7 @@ CR-LLM-GATEWAY-ONLY — 禁止业务代码硬编码直连 ollama (localhost:1143
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
@@ -77,6 +78,31 @@ SCAN_GLOBS = (
 )
 
 
+def _docstring_lines(path: Path) -> set[int]:
+    """AST 取该文件全部 docstring 占用的行号。
+
+    判据本身写明「文档说明里提到旧端口/旧路由是正常的」, 但旧实现只跳过
+    **行首 `#`** —— docstring（模块/类/函数）与行内注释里的同一句话照样命中。
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError):
+        return set()
+    rows: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            body = getattr(node, "body", [])
+            if (
+                body
+                and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)
+            ):
+                doc = body[0]
+                rows.update(range(doc.lineno, (doc.end_lineno or doc.lineno) + 1))
+    return rows
+
+
 def scan() -> list[dict]:
     findings: list[dict] = []
     for glob in SCAN_GLOBS:
@@ -95,11 +121,30 @@ def scan() -> list[dict]:
                 lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
             except OSError:
                 continue
+            doc_rows: set[int] | None = None
+
+            def _is_docstring(idx: int) -> bool:
+                """惰性解析: 只有真正命中候选行的文件才付 AST 的代价。
+
+                无脑对每个文件都 parse 会让全量扫描超时 (CI 实测 TIMEOUT after
+                15s) —— 候选行极稀疏, 按需解析足矣。
+                """
+                nonlocal doc_rows
+                if doc_rows is None:
+                    doc_rows = _docstring_lines(path)
+                return idx in doc_rows
+
             for idx, line in enumerate(lines, start=1):
                 # 行注释不是调用(文档说明里提到旧端口/旧路由是正常的)
                 if line.lstrip().startswith("#"):
                     continue
+                # strict 必须先于豁免判定: 默认值指向**裸运行时推理端点**时豁免
+                # 不适用 —— 那正是「默认绕过网关」(既存用例
+                # test_env_default_pointing_at_raw_runtime_is_flagged 钉住)。
+                # 豁免只对 direct 侧的非运行时默认值(死 IP / 假 key 之类)生效。
                 if any(p.search(line) for p in STRICT_PATTERNS):
+                    if _is_docstring(idx):
+                        continue
                     findings.append({"file": rel, "line": idx, "text": line.strip()[:120]})
                     continue
                 if any(p.search(line) for p in DIRECT_PATTERNS):
@@ -108,6 +153,8 @@ def scan() -> list[dict]:
                         continue
                     # 行级豁免 2: os.environ.get 默认值是运行时可用环境变量覆盖的可配置默认值
                     if "os.environ.get(" in line or "os.getenv(" in line or ".get(" in line:
+                        continue
+                    if _is_docstring(idx):
                         continue
                     findings.append({"file": rel, "line": idx, "text": line.strip()[:120]})
                     continue
