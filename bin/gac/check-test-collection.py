@@ -271,6 +271,19 @@ def main() -> int:
     env_reasons: list[dict[str, str]] = []
     repo_errors: list[dict[str, str]] = []
     uninit = _uninitialized_submodules()
+    # 零分母不得判绿: pytest 没产出收集计数、也没有任何 ERROR 行 ⇒ 收集根本没跑成
+    # (典型: pyproject addopts 里的参数当前解释器不认 ⇒ rc=4 且 0 条 ERROR)。
+    # 旧实现 ok = not repo_errors ⇒ 这种失败被读成 pass/collected=None (2026-11-12 实测)。
+    if result["collected"] is None and not result["errors"]:
+        repo_errors.append(
+            {
+                "file": "<pytest --collect-only>",
+                "reason": (
+                    f"无收集计数且无 ERROR 行 (pytest rc={result.get('returncode')}) "
+                    "— 收集未跑成, 不得判绿"
+                ),
+            }
+        )
     for err in result["errors"]:
         if _missing_path_in_uninit_submodule(err["reason"], uninit) or _module_in_uninit_submodule(
             err["reason"], uninit
