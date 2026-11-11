@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-11
 type: ephemeral
 task: "Remediate omostation debt across measurement, sync, backlog, architecture"
 slug: 20260701-143000_debt-rootcause-remediation
@@ -43,7 +43,7 @@ omostation 在 7 天 462 提交的并发演进下，治理仪表盘呈现"全绿
 - **不改 bus-foundation 核心。** G3 只补降级 ADR，不动三平面实现。
 - **不做功能新增。** 本 ISA 是治债，不是建新能力——任何"顺便加个功能"的冲动都记 Decisions 并剔除。
 - **不动 MOF M1/M2/M3 元模型结构。** G5 只加阈值告警，不删 M1 节点。
-- **不重写 GaC 规则集。** 89 条规则不动，只补 L4 枚举值与最小覆盖。
+- **不重写 GaC 规则集。** 现有 GaC 规则一律不动，只补 L4 枚举值与最小覆盖。
 
 ## Principles
 
