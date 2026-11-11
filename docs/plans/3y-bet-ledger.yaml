@@ -47861,6 +47861,114 @@ bets:
   - AGENTS.md
   - .omo/_knowledge/retros/BET-Y2Q4-T10-346.md
   - docs/reports/2026-11-11-pitfalls-index-closeout.md
+- id: BET-Y2Q4-T10-347
+  title: BET-Y2Q4-T10-347 gac-bootstrap 层3/层4 结构性空绿收口 —— glob 落空与 indexed-only 存在性判据，补执行平面缺席点名
+  goal: '`bin/gac/gac-bootstrap.py` 自述「GaC 治 GaC 自身」，但 2026-11-11 在 origin/main 实机 `--json`
+    读数为 `tools={alive:0,dead:[],total:0}`、`indexed_integrity.missing_count=0`、`ok=true`：层3
+    的 `GAC_TOOLS` glob 打在 `bin/gac-*.py`（顶层 0 个，真实 326 个工具在 `bin/gac/`，另有 `__init__.py` 包标记不计入普查），层4 只对 `source_type==indexed`
+    的 6 条规则查 `source_ref` 存在性（75 条带路径型 `source_ref` 的规则里 12 条指向不存在的路径，旧尺子一条都见不到 —— 12 条全是 `native`）。本 BET 把三层尺子修准：层3 覆盖 `bin/gac/*.py`
+    ∪ `bin/gac-*.py` 且 `total==0` 判 FAIL（零分母=仪器没接上）；层4 覆盖全部路径型 `source_ref`，子模块内路径改按
+    gitlink 树判定、装置不可用时显式标注而非计入通过；新增层6 执行平面缺席点名 —— 对 `ci-surfaces.yaml` 登记的 check 工具比对
+    runtime `GATES_LIST`（importlib 实读）∧ workflow ∧ hook ∧ sgf-policy 四平面，全缺席即点名。顺手改对
+    B 类 2 条 `source_ref` 目录（`bin/gac/check-god-module.py` ⇒ 真实 `bin/ssot/check-god-module.py`）与
+    `bin/gac/advisory-checks-upgrade.py:45` 的同一错路径；A 类（`check-gate-detail-contract.py`、`check-cron-interpreter-executability.py`
+    只活在永不执行的 `DEFAULT_POLICY`）与其余不可达 `source_ref` 只点名不私改，登记为 debt 交 principal 裁决。'
+  status: in_progress
+  corrected_at: 2026-11-11
+  correction_note: 2026-11-11 交付前纠偏 —— 落笔时写进 goal/done_when/verify 的四个数字是未实测的预估，现按 shipped 判据的当场读数改正：
+    层3 普查 324 ⇒ 326（`bin/gac/__init__.py` 是包标记，不计入）；层4 路径型 `source_ref` 63 ⇒ 75，不可达 15 ⇒ 12（11 条 bin/ 脚本类 +
+    1 条 `.omo/standards/` 文档类），且旧尺子（仅 indexed）见到的不是 1 条而是 0 条 —— 12 条全是 native；done_when 的「13 条」⇒ 修 B 类 2 条后余 10 条。
+    另两处口径修正：verify 的「改动后必须 `ok=false`」与 done_when 的「`ENFORCE_AFTER` 之后由脚本退出码转阻断」是按「点名即红 + 脚本内限期常量」想象的形状，
+    实际交付是 advisory/blocking 分界读 registry `CR-X2-GAC-BOOTSTRAP.enforcement`（限期同规则 `review_before`）—— 按原句验收会得到一个为凑红而凑红
+    的实现（把 20 条无人认领的发现一次性染红 CI），故按实现口径改正；同时把三组变异的「恰 2 条红」改成实测 1/2/1、用例下限 8 ⇒ 实测 12 passed。
+    spec 正文随前述两处同步修订，`content_digest` 已按修订后文件重算；历史预估留在本注里，不作为当前真相。
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-11-gac-bootstrap-execution-truth.md
+  - bin/gac/gac-bootstrap.py
+  - bin/gac/advisory-checks-upgrade.py
+  - tests/unit/test_gac_bootstrap_layers.py
+  - .omo/_truth/registry/governance-checks.yaml
+  - .omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml
+  - docs/pitfalls.md
+  - AGENTS.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-347.md
+  - docs/reports/2026-11-11-gac-bootstrap-execution-truth-closeout.md
+  - .omo/_truth/registry/debt.yaml
+  non_goals:
+  - 不改 `DEFAULT_POLICY` 的兜底语义与存在合理性 —— 本 BET 只禁止「把兜底当执行平面」这一误读。
+  - 不动 `check-ci-surfaces.py:121` 的全文文本扫描形状（#5287 作者正在改该文件，避免撞面；该盲区另案登记）。
+  - 不把点名降级为模糊匹配或名字相似度猜测；不新增 CLI flag / env 开关 / 豁免常量。
+  - 不改 `CR-AGE-*` / `CR-SEC-*` 的规则语义本体，只在层4 点名其不可达 `source_ref`，处置交 debt。
+  - 不新增第二个 dispatcher 或第五套 ontology；不删改任何既有 run 记录与别人的锁。
+  done_when:
+  - 零分母不再为绿 —— 改动后 `gac-bootstrap.py --json` 的 `tools.total>300`（实测 326），且把 glob
+    退回 `bin/gac-*.py` 时层3 用例当场红（记红条数）。
+  - 层4 覆盖面成立 —— 90 条规则中 75 条带路径型 `source_ref` 全部纳入存在性判定；当前 main 实测 12 条不可达（11 条 `bin/` 脚本类 + 1 条
+    `.omo/standards/` 文档类）必须被点名，且 B 类 2 条（GOD-MODULE）在目录改对后转为可达，余 10 条进 debt。
+  - '层6 点名成立 —— `check-gate-detail-contract.py` 与 `check-cron-interpreter-executability.py`
+    被点名且理由写明「四平面全缺席」；把平面比对换成文本正则（`DEFAULT_POLICY` 里的字面量）时该用例当场红 —— 这条是 #5286 同型形状的防复发钉子。'
+  - 契约 2 不扩权 —— 加宽的层4/层6/层3-无入口首月只 advisory，转阻断的单点是 registry 规则
+    `CR-X2-GAC-BOOTSTRAP.enforcement`（限期由同规则 `review_before=2026-11-29` 承载，脚本内不设 `ENFORCE_AFTER`
+    常量、不设 CLI/env 开关）；advisory 期 `make gac-local-gate` 不得因本层红。仪器类失效（层3 零分母、`indexed`
+    子集缺席、schema、executor）不受此让步，恒红。
+  - 零回归 —— `tests/unit/test_gac_bootstrap_layers.py` 新增用例全绿且 `tests/unit` 既有相关用例不因本改动转红；`uv
+    run pytest tests/unit/test_gac_bootstrap_layers.py -q` 读数写入收据。
+  - debt 登记成立 —— A 类 2 条与其余不可达 `source_ref` 落成 `.omo/debt/items/*.yaml` 条目，且 debt 条目里的证据读数与本
+    BET 收据一致。
+  - 两条固化条目落地且被本 BET 自己造的门禁验过 —— `「DEFAULT_POLICY 不是执行平面」` 与 `「判据口径要与契约名同源」` 追加进 `docs/pitfalls.md`，并在
+    AGENTS.md §7 索引表登记同名条首短语，`check-pitfalls-index.py` 读数 dead=0。
+  verify:
+  - cmd: python3 bin/gac/gac-bootstrap.py --json
+    expect: 改动前基线（origin/main 实测）：`tools.total=0`、`indexed_integrity.missing_count=0`、`ok=true`。改动后必须
+      `tools.total=326`、层4 `checked=75 missing_count=10`（12 条实测缺席 − B 类修掉的 2 条）、层6 `declared=148 reached=138
+      violations_count=10`，点名清单含 `bin/gac/check-gate-detail-contract.py`、`bin/gac/check-cron-interpreter-executability.py`（层6）。
+      `ok` 按 registry `CR-X2-GAC-BOOTSTRAP.enforcement` 取值：当前 advisory ⇒ `ok=true, rc=0`；该字段改 `blocking`
+      即 `ok=false, rc=1`（把余下 debt 清零后转阻断，不在实现里为凑红而硬置）。
+  - cmd: uv run --with pytest --with pytest-timeout python -m pytest tests/unit/test_gac_bootstrap_layers.py
+      -q -p no:randomly -o addopts=""
+    expect: 新增用例全绿（实测 12 passed）；三组变异分别记读数（实测）：glob 退回 `bin/gac-*.py` ⇒ 层3 1 条红；层4 退回仅
+      indexed ⇒ 层4 2 条红；层6 换成文本正则 ⇒ 层6 1 条红。落笔时的「恰 2 条」是未实测的预估，已按实际变异读数改正。
+  - cmd: python3 -c "import importlib.util,sys; s=importlib.util.spec_from_file_location('g','bin/gac/gac-local-gate.py');
+      m=importlib.util.module_from_spec(s); sys.modules['g']=m; s.loader.exec_module(m);
+      ids=[str(x.get('id'))+str(x.get('command')) for x in m.GATES_LIST]; print('RUNTIME_PLANES',
+      len(m.GATES_LIST), 'gate-detail' in ' '.join(ids), 'cron-interp' in ' '.join(ids))"
+    expect: 实机 canary 读数必须为 `RUNTIME_PLANES 90 False False` —— 证明层6 用的是 runtime `GATES_LIST`
+      而不是文本扫描；收据缺该读数即视为该面未验。
+  circuit_breaker: 若为了凑绿把层3 的 `total==0` 重新当通过、把层4 的存在性判定退回 `indexed` 子集、把层6 的平面比对换成对
+    `gac-local-gate.py` 全文的正则字面量匹配（那正是本 BET 要修的盲区），或私自把 A 类 2 条从 `ci-surfaces.yaml`
+    撤登记以消除点名，或开始改别人的 run 记录与锁 —— 立即停止并返回主协调。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-11-gac-bootstrap-execution-truth.md
+    spec_version: 1.0.0
+    content_digest: sha256:7e37725806e963983d6bdb7900629f235abb23ddb7426d9769b80160c279eb60
+    decision_ref: decision://accepted/BET-Y2Q4-T10-347
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: mint 时点只声明判据与实测读数，不宣称空绿已收敛。
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47999,7 +48107,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 594
+  total_bets: 595
   windows:
   - Y1Q1
   - Y1Q2
