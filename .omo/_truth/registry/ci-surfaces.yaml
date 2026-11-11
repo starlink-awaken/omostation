@@ -495,22 +495,18 @@ surfaces:
   note: Perception coverage report generator (7 probes + 25 routes + 17 data sources).
 - id: bin-ops-lighthouse-stub-py
   tool: bin/ops/lighthouse-stub.py
-  workflow: gac-gate.yml
+  workflow: (none)
   gate: false
-  triggers:
-  - per_pr
-  - push
+  triggers: []
   status: active
-  note: Lighthouse CI stub (pending real integration).
+  note: Lighthouse CI stub (pending real integration). 2026-11-11 更正假声明 —— gac-gate.yml 0 处引用本工具; 接线与否待裁定。
 - id: bin-ops-nfr-stub-py
   tool: bin/ops/nfr-stub.py
-  workflow: gac-gate.yml
+  workflow: (none)
   gate: false
-  triggers:
-  - per_pr
-  - push
+  triggers: []
   status: active
-  note: NFR metrics stub (pending real integration).
+  note: NFR metrics stub (pending real integration). 2026-11-11 更正假声明 —— gac-gate.yml 0 处引用本工具; 接线与否待裁定。
 - id: bin-ssot-check-hardcoded-ports-py
   tool: bin/ssot/check-hardcoded-ports.py
   workflow: mof-update.yml
@@ -1075,11 +1071,11 @@ surfaces:
   status: active
 - id: bin-gac-gac-worktree-sh-bumpfast
   tool: bin/gac/gac-worktree.sh
-  workflow: reusable-submodule-bump-pr.yml
+  workflow: (none)
   gate: false
-  triggers:
-  - workflow_call
+  triggers: []
   status: active
+  note: 2026-11-11 更正假声明 —— reusable-submodule-bump-pr.yml 是云端提案流(只 upload-artifact, 不 publish), 全文件 0 处引用本工具; 声明为它所执行是假的。接线与否待裁定。
 - id: bin-gac-meta-doctor-py
   tool: bin/gac/meta-doctor.py
   args:

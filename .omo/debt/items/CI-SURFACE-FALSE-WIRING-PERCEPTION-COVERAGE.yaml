@@ -75,3 +75,20 @@ history:
     三条都不成立即告警。**子模块未初始化的检出**里 sgf-policy 缺席，此时对 gac-local-gate
     下单**保守跳过**（否则会把 `script-registry` 这类真 gate 误报成无人执行）。
   actor: "governance-agent"
+- at: "2026-11-11T02:30:00+00:00"
+  action: review
+  note: >-
+    **②③④ 三条假声明已更正**（2026-11-11）：本条复审里给出的表达约定建议
+    （「`workflow: "(none)"` + note 说明待接入」）对 ②③④ 是**纯事实更正**、不涉政策选择，
+    已直接改 `.omo/_truth/registry/ci-surfaces.yaml`：
+    ① `bin-gac-gac-worktree-sh-bumpfast` → `workflow: (none)`（核实：
+    `reusable-submodule-bump-pr.yml` 全文件 0 处引用本工具，它是云端提案流，只 upload-artifact）；
+    ② `bin-ops-lighthouse-stub-py` → `workflow: (none)`；
+    ③ `bin-ops-nfr-stub-py` → `workflow: (none)`。
+    **读数**：`check-ci-surfaces.py --json` 的 false-wiring 警告由 **4 条降为 1 条**，
+    剩下的一条正是本条的 ① `perception-coverage.py` —— 它才是真正需要 principal 裁决的
+    （接线 vs 改声明）那一条，现在警告列表里只剩它，决策面更清晰。
+    **复核口径**：`--check` 在**子模块齐全**的检出里跑（子模块缺 sgf-policy 时该检查
+    对 gac-local-gate 下单**保守跳过**，读数会假绿）；本次在 init 了 `projects/ecos` 的
+    检出里实测 `warnings: 1`。
+  actor: "governance-agent"
