@@ -22,6 +22,7 @@
   CR-C2G-V3-01: done+context_uri 任务必须有 ssot_written_back (P5 读侧门禁)
 """
 
+import ast
 import re
 import subprocess
 import sys
@@ -29,6 +30,28 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+
+
+def _code_only(path: Path) -> str:
+    """只保留代码：抹掉 docstring、所有字符串常量与注释。
+
+    调用点判据描述的是**调用语法**（`proxy_manager.start(..., lazy=True)`），
+    注释 / docstring / 字符串里出现同一形态只是文字。旧实现对文件全文跑正则
+    ⇒ 一行「# 旧实现: proxy_manager.start(..., lazy=False)」就会让这道**阻塞型
+    L0 约束**报「检出 lazy=False (eager 初始化)」（2026-11-11 自证）。
+    """
+    src = path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return re.sub(r"#.*", "", src)
+    lines = src.splitlines(keepends=True)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            for i in range(node.lineno - 1, node.end_lineno):
+                if 0 <= i < len(lines):
+                    lines[i] = ""
+    return re.sub(r"#.*", "", "".join(lines))
 PORT_REGISTRY = REPO / "protocols/port-registry.yaml"
 # X2-C04 / CR-MCP-LAZY-01 的真实数据源 (ecos 子模块协议注册表 + agora 代理调用点)
 L0_REGISTRY = REPO / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml"
@@ -367,10 +390,10 @@ def check_cr_mcp_lazy_01() -> tuple[bool, str]:
             problems.append(f"{desc}: 调用点文件缺失 ({rel})")
             continue
         seen += 1
-        text = f.read_text(encoding="utf-8")
-        if re.search(bad_re, text):
+        code = _code_only(f)
+        if re.search(bad_re, code):
             problems.append(f"{desc}: 检出 lazy=False (eager 初始化)")
-        elif not re.search(req_re, text):
+        elif not re.search(req_re, code):
             problems.append(f"{desc}: 未找到显式 lazy=True 调用 (疑似 eager/改写)")
     if problems:
         return False, "E-L0-011: " + "; ".join(problems)
