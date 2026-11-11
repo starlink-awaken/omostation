@@ -40,3 +40,31 @@ history:
     注释与实现之间的偏差是本仓 PITFALL 里反复出现的「声明 ≠ 执行」形状：注释给出年龄中心的
     判据理由，实现却是标签白名单。
   actor: "governance-agent"
+- at: "2026-11-12T01:30:00+00:00"
+  action: review
+  note: >-
+    **试过「按自述意图改成年龄为主判据」, 被现有测试拦下 —— 记录为决策证据, 不动手。**
+    在 `origin/main` (`4cf69d69a`) 上把 `collect_a9_gate` 的接受条件从三条标签规则
+    改成 `bounded (age is not None and age <= 21600)` 单一口径, 实跑
+    `tests/unit/test_panorama_a9_deferred.py` / `test_panorama_a9_bounded_fail.py` /
+    `test_panorama_a9_race.py` / `test_panorama_source_health.py`:
+    **改前 14 passed, 改后 5 failed** ⇒ 现有测试**明确钉住标签规则**, 不是遗漏。
+    逐个看失败点, 现行为是**混合规则**而非纯标签白名单:
+    `test_bounded_fail_is_accepted` (FAIL + 4.77h ⇒ PASS) /
+    `test_beyond_bound_fail_still_blocks` (FAIL + 48h ⇒ PARTIAL) /
+    `test_bounded_stale_unavailable_still_accepted` (STALE_UNAVAILABLE + 5h ⇒ PASS)
+    三条都符合「年龄为主」; 但 `test_unbounded_failure_still_blocks` 用
+    `compute: UNAVAILABLE` 且 fixture 默认 `age=1h`(**界内**)却断言 PARTIAL ——
+    **用例名里的 "unbounded" 与 fixture 的 1h 界内互相矛盾**, 它钉的是
+    「UNAVAILABLE 即使界内也阻断」这条标签规则。
+    ⇒ 裁决的必要证据已齐: 现行为是**刻意的混合规则**(三条年龄 + OK/DEFERRED 无条件 +
+    其余标签恒阻), 不是实现疏漏; 且其中一条用例名与自身 fixture 不符。
+    **另测实时影响**: 把 `/data.json` 实取 (`curl 127.0.0.1:43191/data.json`, 111 键)
+    喂给改前/改后两个版本, A9 的 `verdict` 与 `detail` **逐字相同**
+    (PARTIAL; `cockpit_sources, strategy=PARTIAL; workflow=DEGRADED`) ——
+    印证本条自述「不是 A9 当前不闭合的直接原因」: 14 个 required 源里
+    strategy=PARTIAL/349h、workflow=DEGRADED/18h 两条两侧规则都拒, 其余全 OK 且 ~2.3h。
+    **纪律**: 本条裁决要连带改那 4 个文件里被钉住的期望, 且先裁定
+    `test_unbounded_failure_still_blocks` 的用例名与 fixture 哪个是真意图 ——
+    不以「实现与注释不符」为由单方面改测试。
+  actor: "governance-agent"
