@@ -1089,12 +1089,12 @@ surfaces:
   note: 治理闭环端到端验证 (真实场景)
 - id: bin-gac-documents-domain-jobs-py
   tool: bin/gac/documents_domain_jobs.py
-  workflow: phase-gate-enforce.yml
+  workflow: (none)
   gate: true
-  triggers:
-  - push
-  - pull_request
+  triggers: []
   status: active
+  note: 2026-11-11 更正假声明 —— phase-gate-enforce.yml 只在**路径过滤器**与
+    **ruff 参数表**里提到它, 从未执行 (全仓无 python/bash 调用形态)。接线与否待裁定。
 - id: bin-gac-gac-worktree-sh-bumpfast
   tool: bin/gac/gac-worktree.sh
   workflow: (none)
