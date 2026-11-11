@@ -101,7 +101,10 @@ SPEC_MARKER_READINGS = {
     # 2026-11-05 DEBT-20260927-RUN-REGISTRY-RACE (PR #5059): auto-pruner 新增
     # `_run_update_lock()`，其取注册表的链 WORKSPACE_ROOT / ".omo" / "_truth" / ...
     # 是新的一处钉检出根站点 => `.omo/_truth` 162 -> 163。
-    ".omo/_truth": 163,
+    # 2026-11-11 BET-Y2Q4-T10-347: gac-bootstrap 新增层6, 其登记面常量
+    # CI_SURFACES = WORKSPACE / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
+    # 是新的一处钉检出根站点 => `.omo/_truth` 163 -> 164。
+    ".omo/_truth": 164,
     ".omo/state": 103,
     ".omo/_delivery": 78,
     "runtime": 50,
