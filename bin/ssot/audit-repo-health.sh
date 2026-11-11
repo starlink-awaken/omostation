@@ -167,9 +167,12 @@ except Exception: print(0)
 
 render_report() {
   local format="${1:-markdown}" limit="${2:-}"
-  local repos
-  repos=$(enumerate_repos | sort -u)
-  if [ -n "$limit" ]; then repos=$(echo "$repos" | head -n "$limit"); fi
+  local all_repos repos total_repos audited_repos
+  all_repos=$(enumerate_repos | sort -u)
+  total_repos=$(printf '%s\n' "$all_repos" | grep -c . || true)
+  repos=$all_repos
+  if [ -n "$limit" ]; then repos=$(printf '%s\n' "$repos" | head -n "$limit"); fi
+  audited_repos=$(printf '%s\n' "$repos" | grep -c . || true)
   local tmp
   tmp=$(mktemp)
   # 修复: 用 mapfile 读取 repos 到数组, 避免 while read 的 pipe subshell 问题
@@ -198,9 +201,11 @@ render_report() {
   if [ "$format" = "json" ]; then
     local items
     items=$(paste -sd, "$tmp" 2>/dev/null || cat "$tmp" | tr '\n' ',')
-    echo "{\"repos\":[${items}]}"
+    echo "{\"total_repos\": ${total_repos}, \"audited_repos\": ${audited_repos}, \"repos\":[${items}]}"
   else
     echo "# 多仓库治理健康度审计报告"
+    echo ""
+    echo "覆盖面: ${audited_repos}/${total_repos} 个仓库（--limit 只审计前 N 个，未审计的不参与告警）"
     echo ""
     echo "| repo | CI红 | drift | hook | score | 结论 |"
     echo "|---|---|---|---|---|---|"
