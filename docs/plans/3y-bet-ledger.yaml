@@ -47765,7 +47765,7 @@ bets:
   - .omo/_knowledge/retros/BET-Y2Q4-T10-345.md
   - docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
 - accepted_specifications:
-  - content_digest: sha256:91272d6124ad9720d231d7fe5e89910c997a7121db5b0d34b0600efcf6b269b6
+  - content_digest: sha256:57de51c00ba8fe8585cce44af7936c2ace7f7cc6148f614a9a683bba624deece
     decision_ref: decision://accepted/BET-Y2Q4-T10-346
     spec_ref: repo://docs/superpowers/specs/2026-11-10-pitfalls-index-integrity.md
     spec_version: 1.0.0
