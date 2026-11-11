@@ -143,7 +143,15 @@ def _discover_wiring() -> dict[str, dict]:
 
 
 def _is_check_tool(tool: str) -> bool:
-    return tool.startswith(CHECK_PREFIX)
+    if tool.startswith(CHECK_PREFIX):
+        return True
+    # 根级 bin/*.py 里的 check/guard/audit/lint/verify 工具同样算 CI 检查面。
+    # 前缀列表漏认它们 ⇒ bin/change-lane-check.py (sgf-policy 门禁) 与
+    # bin/layer-dependency-check.py (gac-gate.yml 执行) 既不进登记、也不被
+    # gate-parity 点名 (2026-11-11 实测: 两者在 bin/_registry/scripts/ 有登记,
+    # 在 ci-surfaces 里完全没有条目)。
+    name = tool.rsplit("/", 1)[-1]
+    return tool.count("/") == 1 and any(k in name for k in ("check", "guard", "audit", "lint", "verify"))
 
 
 def check_workflow_trigger_drift(registry: dict, workflow_dir: Path) -> list[str]:

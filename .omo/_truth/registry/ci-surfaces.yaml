@@ -63,6 +63,21 @@ surfaces:
   note: lane 隔离判据 (per-commit) — 此前 lane 尺在 CI 上恒 PASS 却没判任何东西 (--staged 读到空集);
     本条补上第四条路径 (按 PR base..head 逐 commit 判 lane)。advisory 步 (实测 32.5% 红率属历史欠账,
     阻断与否待独立授权)。2026-10-30
+- id: bin-change-lane-check-py
+  tool: bin/change-lane-check.py
+  workflow: (none)
+  gate: true
+  triggers: []
+  status: active
+  note: 根级 lane 判据 (sgf-policy gate change-lane-check, 带 --staged)。2026-11-11 补登记 ——
+    _is_check_tool 的前缀列表漏认根级 check 工具, 于是它既不进 ci-surfaces 也不被 gate-parity 点名。
+- id: bin-layer-dependency-check-py
+  tool: bin/layer-dependency-check.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers: []
+  status: active
+  note: 根级跨层依赖检查 (gac-gate.yml 的 check-layers 步)。2026-11-11 补登记, 同上。
 - id: bin-gac-check-uri-prefix-pattern-py
   tool: bin/gac/check-uri-prefix-pattern.py
   workflow: gac-gate.yml
