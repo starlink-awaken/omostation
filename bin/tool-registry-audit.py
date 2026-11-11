@@ -197,6 +197,10 @@ def _is_shim(path: Path, text: str) -> bool:
 def script_role(path: Path) -> str:
     if _is_archive_path(path):
         return "archive"
+    if path.name == "__init__.py":
+        # 包标记不是脚本: 旧分类把它算成 implementation, 于是 bin/*/__init__.py
+        # 三份被报成「高置信重名 __init__」—— 那会诱导一次毫无意义的合并。
+        return "package"
     if path.suffix == ".md":
         return "doc"
     try:
