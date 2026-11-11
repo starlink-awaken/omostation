@@ -41,6 +41,17 @@ surfaces:
     (与该规则 review_before 同值, 由 tests/unit/test_gate_detail_contract.py 钉住),
     之后由脚本退出码自动转阻断。跨平面 detail 偏斜永久 advisory, 不参与退出码 —— 清它
     要部署面写, 归 principal 授权。只读宿主平面, 无平面的宿主 (CI) 不判。
+- id: bin-gac-check-pitfalls-index-py
+  tool: bin/gac/check-pitfalls-index.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - gac_local_gate
+  - per_pr
+  status: active
+  note: AGENTS.md §7 索引条首短语字面可命中门禁（规则 CR-X2-PITFALLS-INDEX-INTEGRITY, BET-Y2Q4-T10-346）。2026-11-11
+    以 advisory 上线, gate=false 到 2026-12-12 (与该规则 review_before 同值), 之后由脚本退出码自动转阻断。判据只认字面子串,
+    不做模糊匹配; 文件缺失或 §7 解析不出表行按仪器失败判红。
 - id: bin-gac-check-change-lane-range-py
   tool: bin/gac/check-change-lane-range.py
   workflow: gac-gate.yml

@@ -47764,6 +47764,76 @@ bets:
   - projects/omo
   - .omo/_knowledge/retros/BET-Y2Q4-T10-345.md
   - docs/reports/2026-11-10-resident-dispatch-objective-dedupe-closeout.md
+- accepted_specifications:
+  - content_digest: sha256:57de51c00ba8fe8585cce44af7936c2ace7f7cc6148f614a9a683bba624deece
+    decision_ref: decision://accepted/BET-Y2Q4-T10-346
+    spec_ref: repo://docs/superpowers/specs/2026-11-10-pitfalls-index-integrity.md
+    spec_version: 1.0.0
+  appetite: 2 hours
+  circuit_breaker: 若为了让 gate 绿而引入模糊匹配/放宽判据，或开始改写 `docs/pitfalls.md` 条目正文（动到被台账 sha256
+    绑定的收据/retro 同族文件），或把 advisory 直接升 mandatory，停止并返回主协调。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence: {}
+        status: NOT_STARTED
+      operational:
+        evidence: {}
+        status: NOT_STARTED
+      value:
+        evidence:
+          note: mint 时点只声明判据与实测读数，未宣称索引失配已收敛。
+        status: NOT_PROVEN
+    overall_state: evaluating
+    schema_version: completion-evidence-matrix/v1
+  done_when:
+  - gate 在修复前的 main（`b97281171`）上读出 `total=45 dead=16`，与本 spec §1 实测一致。
+  - 修复后 `dead=0`，且 `docs/pitfalls.md` 字节数不变（只动 `AGENTS.md`）。
+  - 限期前 advisory 恒 exit 0；把一条已修好的短语改写成近义后 `--strict` 立即 exit≠0，还原后字节一致 —— 证明判据真挂在字面命中上。
+  - '`tests/unit/test_check_pitfalls_index.py` 6 条用例全绿，全部在 tmp_path 内跑，不读 canonical
+    真实 AGENTS.md。'
+  - '`CR-X2-PITFALLS-INDEX-INTEGRITY` 在 governance-checks.yaml 有 source_ref，且 ci-surfaces.yaml
+    里能找到它的执行接线（只注册不接线 = 判据存在但没有 CI 路径）。'
+  goal: 给 `AGENTS.md` §7「主题簇速查」与 `docs/pitfalls.md` 之间的「按条首短语定位」约定装上检测器：新增 `bin/gac/check-pitfalls-index.py`，把索引里每条
+    `「…」` 短语对正文做字面子串核验（不做模糊匹配），注册 `CR-X2-PITFALLS-INDEX-INTEGRITY`（advisory）并接进 ci-surfaces，同批把
+    main 上实测 16 条不可命中的登记短语改写为条首原文的可 rg 前缀，使 gate 落地即绿。
+  human_gate: false
+  id: BET-Y2Q4-T10-346
+  non_goals:
+  - 不做反向检查（正文条目必须在 §7 登记）：正文 125 条，§7 表头自陈只列「高频咬人条目」，反向是口径错误而非缺陷。
+  - 不引入模糊匹配、embedding 召回或前缀相似放宽——放宽后 gate 不再检验「人能否 rg 到」这件事。
+  - 不改 `docs/pitfalls.md` 任何条目正文，不规整 §7 表的列数不齐形状（那是另一个改动面，会让 gate 的修复互相掩蔽）。
+  - 首版不升 mandatory；升级前置条件写进 spec §2.5（连续 5 个触碰 §7 的 PR 零告警）。
+  objective_ref: OBJ-TRUST
+  pasw_required: false
+  priority: P1
+  retro: required
+  risk_level: L1
+  status: in_progress
+  title: BET-Y2Q4-T10-346 §7 索引条首短语的字面可命中门禁 —— 45 条登记里 16 条 rg 不到，落笔当天即失配且零检测器
+  track: T10-TOOLING
+  underlying_workflow: governance-state-mutation
+  value_indicator_policy: false
+  verify:
+  - cmd: python3 bin/gac/check-pitfalls-index.py --json
+    expect: '`dead` 为空数组；`total=45`（与 main 上 §7 登记短语数一致）。'
+  - cmd: python3 bin/gac/check-pitfalls-index.py --strict --json; echo rc=$?
+    expect: rc=0；再临时把一条登记短语改成近义改写，同命令 rc≠0。
+  - cmd: uv run --with pytest --with pytest-timeout -q pytest tests/unit/test_check_pitfalls_index.py
+      -q -p no:cacheprovider
+    expect: 6 passed。
+  window: Y2Q4
+  workflow: project-code-change
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-10-pitfalls-index-integrity.md
+  - bin/gac/check-pitfalls-index.py
+  - bin/_registry/scripts/governance/check-pitfalls-index.yaml
+  - tests/unit/test_check_pitfalls_index.py
+  - .omo/_truth/registry/governance-checks.yaml
+  - bin/gac/gac-local-gate.py
+  - .omo/_truth/registry/ci-surfaces.yaml
+  - AGENTS.md
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -47902,7 +47972,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 593
+  total_bets: 594
   windows:
   - Y1Q1
   - Y1Q2
