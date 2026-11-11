@@ -24,9 +24,20 @@ gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
 description: >-
-  `.omo/_truth/registry/ci-surfaces.yaml` 的 `gate` 字段**没有任何消费者**
-  （全仓 `grep` 只有 `check-ci-surfaces.py` 自己写入/读取计算值，没有脚本按它分支），
-  但它是纯声明，读者会按字面理解成「这是门禁（阻塞）」。
+  `.omo/_truth/registry/ci-surfaces.yaml` 的 `gate` 字段**含义未定义** —— 三个消费者各自
+  按不同语义读它（见下），而它是纯声明，读者会按字面理解成「这是门禁（阻塞）」。
+
+  **消费者（2026-11-12 复核，含本条首版写作时的漏检）**：本条首版称「没有任何消费者」，
+  依据是一次 `grep -rn '"gate"\[.gate.\]|get("gate")' bin/ lib/` —— 该 pattern 里的引号
+  在 shell 中被吃掉，实际只匹配到字面 `"gate"`，于是漏掉两处**带点号接收者**的调用：
+
+  - `bin/gac/check-execution-chain.py:157` `if surf.get("gate") is True:` → 给该工具补一个
+    `"hook"` 触发面（即把 `gate: true` 读成「由 hook 触发」）；
+  - `bin/gac/gac-bootstrap.py:404/435/443`（BET-Y2Q4-T10-347 层6）→ 把 `gate: true` 读成
+    「声称有执行平面」，用来区分「手动豁免」与「四平面全缺席」。
+
+  加上计算侧 `check-ci-surfaces.py:143`（`entry["gate"] = True` 的来源是 sgf-policy 的
+  gate command），同一字段目前有**三种互不相同的读法** —— 这正是本条要解决的问题。
 
   三种口径的实测差异（2026-11-11，ecos 子模块在位）：
 
@@ -44,11 +55,18 @@ description: >-
   一个字段三种读法：按字面（是门禁）/ 按 sgf-policy（MOF 门禁集）/ 按 hook-manifest
   （hook 门禁集）—— 差 26 条。
 decision_needed: >-
-  ① **定义字段**：`gate` 到底指「MOF/sgf-policy 门禁集成员」，还是「任何阻塞型门禁」？
-  前者要改名（如 `mof_gate`）并修正 26 条声明；后者要扩展 `_discover_wiring()` 的去处
-  （把 `.githooks/` 脚本与 `make` 目标纳入发现），并补一条校验使声明与计算值一致。
-  ② 若确认它只是描述性信息、无人消费，考虑**删字段**（少一个三种读法的来源）。
-  本条不代决。
+  **首版的选项 ②（「无人消费 ⇒ 删字段」）已撤回** —— 2026-11-12 复核出两个真实消费者
+  （`check-execution-chain.py:157`、`gac-bootstrap.py` 层6），删字段会当场打断它们。
+
+  待裁的是**三种读法如何统一**（三者都真实存在，必须共存或拆分）：
+  ① `check-ci-surfaces.py:143` 把 `gate: true` 计算成「sgf-policy gate command 成员」；
+  ② `check-execution-chain.py:157` 把 `gate: true` 读成「由 hook 触发」；
+  ③ `gac-bootstrap.py:404` 把 `gate: true` 读成「声称有执行平面」。
+  可选路径：（a）**改名拆分** —— 保留 `gate` 给语义 ①，另加 `hook_trigger` / `claims_plane`
+  承载 ②③，并修正 80 条声明里语义不符的；（b）**统一到「执行平面」语义** —— 让 ① 的
+  sgf-policy 计算结果也表达成平面（policy 平面本就是四平面之一），② 改读 `also_in`/hook
+  字段，③ 不变；（c）**补一条校验**使声明与三个消费者的期望一致，先把 25 条对不上的
+  声明逐条裁定。本条不代决。
 history:
 - at: "2026-11-11T11:20:00+00:00"
   action: identify
@@ -62,4 +80,30 @@ history:
     `_discover_wiring()` 的 `gate=True` 集合做差（2026-11-11 在 init 了 `projects/ecos`
     的检出里实测：sgf-policy gate tools 69、hook-manifest tools 17、
     `declared gate:true` 82、mismatch 26、其中 1 条在 hook-manifest）。
+  actor: "governance-agent"
+- at: "2026-11-12T00:10:00+00:00"
+  action: review
+  note: >-
+    **首版的核心论据是错的, 撤回重写**: 首版写「`gate` 字段没有任何消费者（全仓 grep
+    只有 check-ci-surfaces.py 自己写入/读取计算值）」—— 实测**至少有两个真实消费者**,
+    2026-11-12 在 `origin/main` 上逐条核过:
+    ① `bin/gac/check-execution-chain.py:157` `if surf.get("gate") is True:` → 命中就给该工具
+       补一个 `"hook"` 触发面（读成「由 hook 触发」）;
+    ② `bin/gac/gac-bootstrap.py:404/435/443`（BET-Y2Q4-T10-347 新增的层6）→ 读成「声称有
+       执行平面」, 用来区分「只声明 manual 的豁免」与「四平面全缺席的点名」;
+    ③ `bin/gac/check-ci-surfaces.py:143/303/399` 是计算/输出侧（`entry["gate"] = True`
+       的来源是 sgf-policy 的 gate command）。
+    **首版 grep 为何漏**: pattern 写作 `'"gate"|\[.gate.\]|get("gate")'` —— 引号里的
+    `get("gate")` 在 shell 单引号串中嵌双引号, 实际交给 grep 的是 `get(gate)`（无引号）,
+    而源码写的是 `get("gate")`（带引号）⇒ 零命中; 而 `check-execution-chain.py` 的
+    `surf.get("gate")` 与 `gac-bootstrap.py` 的 `s.get("gate")` 恰好都是**带点号接收者**,
+    首版的 pattern 只覆盖 `.get("gate")` 的裸形式。这是「判据与被检对象不同源」的又一例:
+    **pattern 的引号转义错了, 于是「没命中」被读成「不存在」**。
+    **后果**: 若按首版的「纯声明、无人消费」去执行第 ② 条裁决（删字段）, 会当场打断
+    `check-execution-chain`（少一类触发面）与 `gac-bootstrap` 层6（`gate=true 但无平面`
+    的点名会消失）。裁决项因此从「删字段 vs 定义字段」变成「统一三种读法 vs 改名拆分」。
+    **复核口径（本次用的）**: `grep -rnE '\.get\("gate"\)|\.get\(.gate.\)|\["gate"\]'`
+    跨 `.py/.ts/.tsx/.js/.sh` 全量, 再人工剔除同名不同构的命中
+    （`phase-gate-check.py` / `est-minutes-coefficient.py` / `scene-metasos-gate.py` /
+    `m1-closeout-report.py` 的 `gate` 属于别的结构: 相位门结果 / review_policy / 场景结果）。
   actor: "governance-agent"
