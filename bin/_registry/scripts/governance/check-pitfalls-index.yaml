@@ -1,0 +1,25 @@
+schema: script-registry/v1
+id: bin/gac/check-pitfalls-index.py
+name: Check Pitfalls Index Integrity
+category: governance
+owner: governance-team
+description: AGENTS.md §7「主题簇速查」索引与 docs/pitfalls.md 正文之间的一致性门禁（BET-Y2Q4-T10-346）：§7 把「条首短语」当寻址键，但基线 b97281171 上 45 条登记里
+  16 条（36%）在正文里 rg 字面命不中——全部是措辞改写而非幻影条目，且此前没有任何脚本读过这两个文件，所以失配是长期无测的稳态而非某次回归。判据只有一条：索引里每个 `「X」` 必须是正文的连续子串（不做模糊匹配/embedding/前缀放宽，放宽后就不再检验「人能不能
+  rg 到」这件事）；只查索引→正文单向（反向把索引当全量目录是口径错误）；解析面限 §7 章节内以 `|` 开头的表行，天然容忍 main 上列数不齐的形状。仪器自证优先于绿：AGENTS.md/pitfalls.md 缺失或 §7 解析不出表行短语时输出
+  error 且判红，不交空转的绿。advisory 限期 ENFORCE_AFTER=2026-12-12 与 governance-checks.yaml 同名规则的 review_before 同值，到期由脚本自身退出码转阻断；`--strict`
+  是显式提前判红（也是变异证明开关），故接线不进 SOFT_CHECKS。
+inputs:
+- AGENTS.md
+- docs/pitfalls.md
+outputs:
+- type: exit_code
+- type: json
+dependencies: []
+triggers:
+- gac-local-gate
+- ci_gate
+related:
+- .omo/_truth/registry/governance-checks.yaml
+- docs/superpowers/specs/2026-11-10-pitfalls-index-integrity.md
+maturity: draft
+last_reviewed: '2026-11-11'
