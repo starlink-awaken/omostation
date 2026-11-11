@@ -24,7 +24,10 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]  # bin/gac/x.py → bin/gac → bin → workspace
+# 2026-11-12 修: 原为 parents[1] (= <root>/bin), 于是下面所有
+# REPO / "bin/..." 都指向 <root>/bin/bin/... —— 与两个同类编排器
+# (unified-orchestrator / pipeline-orchestrator 均为 parents[2]) 不一致。
 STATE_FILE = REPO / ".omo" / "state" / "governance-orchestrator-state.json"
 
 
@@ -56,7 +59,7 @@ def compliance_check() -> dict:
         "gac_validate": _run(["python3", str(REPO / "bin/gac/gac-validate.py"), "--gate"]),
         "script_registry": _run(["python3", str(REPO / "bin/ssot/script-registry.py"), "validate"]),
         "doc_governance": _run(["python3", str(REPO / "bin/ssot/doc-governance-check.py"), "--no-new-warnings"]),
-        "interface_check": _run(["python3", str(REPO / "bin/gac/check-interfaces.py")]),
+        "interface_check": _run(["python3", str(REPO / "bin/ssot/check-interfaces.py")]),
         "drift_check": _run(["python3", str(REPO / "bin/gac/gac-drift.py")]),
     }
 
