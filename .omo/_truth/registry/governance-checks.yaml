@@ -617,7 +617,7 @@ gac:
     created_at: '2026-07-02'
     adr: ADR-0171
     enforcement: advisory
-    source_ref: bin/gac/check-god-module.py
+    source_ref: bin/ssot/check-god-module.py
     owner: governance-team
     expected: Check CR-X1-GOD-MODULE-LIMIT must pass without violations
     remediation: Investigate check failure and apply targeted fix
@@ -1126,7 +1126,7 @@ gac:
     adr: ADR-0171
     source_type: native
     enforcement: required
-    source_ref: bin/gac/check-god-module.py
+    source_ref: bin/ssot/check-god-module.py
     owner: omo-team
     expected: Check CR-X2-GOD-MODULE-EDIT must pass without violations
     remediation: Investigate check failure and apply targeted fix
