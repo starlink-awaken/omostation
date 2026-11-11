@@ -483,7 +483,7 @@ def print_report(report: dict) -> None:
     ci = report["ci_plane"]
     ci_status = "✅" if ci["ok"] else "❌"
     print(
-        f"▶ CI平面 (ADR-0379): {ci_status} surfaces={ci['surfaces']} wired={ci['wired_tools']} errors={ci['error_count']} warns={ci['warn_count']}"
+        f"▶ CI平面 (ADR-0379): {ci_status} surfaces={ci['surfaces']} wired={ci['wired_tools']}/{ci['surfaces']} errors={ci['error_count']} warns={ci['warn_count']}"
     )
     for e in ci["errors"][:5]:
         print(f"    ❌ {e}")

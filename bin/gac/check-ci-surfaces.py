@@ -85,7 +85,9 @@ def _workflow_triggers(text: str) -> list[str]:
 #: 1. `[^|\n]*?` 非贪婪 + 同行 ⇒ 一行内多条 `python3 bin/a.py && python3 bin/b.py` 都会捕获;
 #: 2. 折叠块 (`run: >-` 后逐行的文件列表, 如 `uv run --with ruff ruff check` 的 lint 目标)
 #:    不再被误判为「执行该工具」(它们是 lint 参数, 不是被执行的检查)。
-WIRED_COMMAND_RE = re.compile(r"(python3|python|uv run[^|\n]*?|bash)[ \t]+((?:bin|scripts)/[\w./-]+\.(?:py|sh))")
+# 允许 `../../` 前缀: governance-verify 的 cwd 在 projects/omo, 工具以
+# `python3 ../../bin/ssot/xxx.py` 调用 —— 旧正则要求路径紧跟解释器, 漏认这种形态。
+WIRED_COMMAND_RE = re.compile(r"(python3|python|uv run[^|\n]*?|bash|sh|zsh)[ \t]+((?:\.\./)*(?:bin|scripts)/[\w./-]+\.(?:py|sh))")
 
 
 def _sgf_policy_present() -> bool:
@@ -140,6 +142,15 @@ def _discover_wiring() -> dict[str, dict]:
                 entry = tools.setdefault(part, {"workflows": [], "gate": False})
                 entry["gate"] = True
     return tools
+
+
+def _invoked_tools(text: str) -> set[str]:
+    """文本里以**调用**形态出现的工具路径（归一化掉 `../../` 前缀）。
+
+    「被这条 workflow 执行」必须是调用, 不是「文本里提过」—— 路径过滤器、
+    ruff 参数表、注释里的同路径提及都不是执行。
+    """
+    return {m.group(2).lstrip("./") for m in WIRED_COMMAND_RE.finditer(text)}
 
 
 def _is_check_tool(tool: str) -> bool:
@@ -258,8 +269,15 @@ def check_ci_surfaces() -> dict:
             # sgf-policy；子模块未初始化的检出里那份文件不存在，此时对它下
             # 「无人执行」的结论就是按装置缺席报假警（实测 script-registry 如此）。
             continue
+        # 「被这条 workflow 执行」= 出现**调用**形态, 不是「文本里提过」——
+        # 路径过滤器、ruff 参数表、注释里的同路径提及都不是执行。
+        # 旧判据 `tool in text` 把提及当执行 ⇒ bin/gac/documents_domain_jobs.py
+        # (只在 phase-gate-enforce.yml 的路径过滤器与 ruff 参数里出现) 与
+        # bin/ssot/check-interfaces.py (workflow 里只有注释提到它) 两条假声明
+        # 因此长期漏报 (2026-11-11 实测)。
+        invoked = _invoked_tools(text)
         executed = (
-            tool in text
+            tool in invoked
             or ("ci-check-runner.py" in text and f"--workflow {declared}" in text)
             or via_local_gate
         )
@@ -343,7 +361,10 @@ def check_ci_surfaces() -> dict:
         "surfaces": len(surfaces),
         "registered_tools": len(registered_tools),
         "orphan_registered": len(orphan_registered),
-        "wired_tools": len(wiring),
+        # 「已接线的登记面」= (workflow/sgf-policy 接的 ∪ gac-local-gate 执行的) ∩ 已登记。
+        # 旧口径是 len(wiring)（含未登记工具、漏本地门禁工具）⇒ 同一份注册表读出 147，
+        # 而 registered∩wired 只有 134、并上本地门禁是 138 —— 一个数字三种含义。
+        "wired_tools": len((set(wiring) | local_gate_tools) & set(registered_tools)),
     }
 
 
@@ -466,7 +487,7 @@ def main() -> int:
         return 1 if report["errors"] else 0
     print("=== CI 平面可观测性 (check-ci-surfaces.py, ADR-0379) ===")
     print(
-        f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']} orphan_registered={report['orphan_registered']}"
+        f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']}/{report['surfaces']} orphan_registered={report['orphan_registered']}"
     )
     if not _sgf_policy_present():
         # 缺生可见: wired_tools 来自 workflow 文本 + sgf-policy; 后者在子模块未
