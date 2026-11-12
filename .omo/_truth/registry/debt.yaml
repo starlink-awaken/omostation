@@ -86,3 +86,4 @@ seed_items:
 - .omo/debt/items/BET-DONE-SPEC-DIGEST-MASS-STALENESS.yaml
 - .omo/debt/items/BET-DONE-SPEC-DIGEST-UNVERIFIABLE-ON-MAIN.yaml
 - .omo/debt/items/STATE-SHADOW-BIN-OMO-ORPHANED-DATA.yaml
+- .omo/debt/items/DEPENDENCY-BASELINE-DRIFT-INVISIBLE.yaml

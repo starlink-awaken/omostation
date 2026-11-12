@@ -1,0 +1,89 @@
+id: "DEPENDENCY-BASELINE-57-DRIFT-INVISIBLE"
+title: "dependency-baseline 有 32 项 drift（CI 读数：MISSING 19 / STALE 1 / MISMATCHED 12），而生成器因根深度缺陷恒报「0 deps 全部对齐」"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/dependency-baseline.yaml
+- bin/mof/gen-dependency-baseline.py
+evidence_refs:
+- bin/mof/gen-dependency-baseline.py
+- .omo/_truth/registry/dependency-baseline.yaml
+mitigation_refs: []
+opened_at: "2026-11-13"
+last_reviewed_at: "2026-11-13"
+next_review_at: "2026-12-13"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/mof/gen-dependency-baseline.py --check` 的读数在 2026-11-13 之前是
+  **「✅ dependency-baseline 无 drift (0 deps 全部对齐)」** —— 这不是「无 drift」，
+  是**一个依赖都没扫到**：`WORKSPACE = Path(__file__).resolve().parent.parent`
+  把根算成 `<root>/bin`（少一级），于是扫描面 `projects/**/pyproject.toml`
+  落到 `<root>/bin/projects/**`（不存在），baseline 路径也指向
+  `<root>/bin/.omo/_truth/registry/dependency-baseline.yaml`（不存在）。
+
+  修根深度（#5323）后，**同一条命令**的读数是 **32 项 drift**（在带全部子模块
+  的检出里复算，与 CI 逐项一致）：
+
+  | 类别 | 数量 | 含义 |
+  |---|---|---|
+  | MISSING | 19 | pyproject 有但 baseline 未登记（`aiosqlite` / `anyio` / `flagembedding` / `icalendar` / `keyring` / `mlx` / `oxigraph` / `platformdirs` / `pyobjc-framework-quartz` 等） |
+  | STALE | 1 | baseline 有但 pyproject 无（`jinja2`，依赖已移除未清） |
+  | MISMATCHED | 12 | 下限不一致 |
+
+  MISMATCHED 里 11 条方向是 **derived > baseline**（`cryptography` `>=41.0`→`>=50.0.2`、
+  `fastapi` `>=0.128.8`→`>=0.162.0`、`pydantic` `>=2.13.4`→`>=2.14.1`、
+  `pytest-cov` `>=5.0`→`>=7.1.0`、`redis` `>=8.0.0`→`>=5.0`（反向）等）。
+
+  **注意读数依赖子模块**：同一个缺陷在**空 worktree**（只有 2 个 pyproject）里
+  读出的是 **57 项**（STALE 52 / MISMATCHED 4）—— 因为子模块的 pyproject 不在，
+  它们的依赖全被误判成「已移除」。**两个读数都不是错的，是扫描面不同**；
+  重生成 baseline 只能用前者（带子模块）的读数。
+
+  **为什么长期无人知**：该脚本**是接线的** —— `.omo/_truth/registry/ci-surfaces.yaml`
+  对它声明 `gate: true`，`gac-local-gate` 真的跑
+  `bin/mof/gen-dependency-baseline.py --check`。但那个绿灯是**空分母**的：
+  扫描面算错 ⇒ 0 个依赖 ⇒ 三类 drift 全为空 ⇒
+  「✅ 无 drift (0 deps 全部对齐)」exit 0。
+  **接线让判据存在，却不妨碍它空转** —— 这与「未接线」是两种不同的失明，
+  本条原写「未接线」是错的（已更正）。
+decision_needed: >-
+  **语义已定，不必再裁**：baseline 文件头自己写着
+  「Purpose: unified minimum version constraints ... Update cadence: after any
+  pyproject.toml dependency change」，生成器的三类 drift 定义（MISSING /
+  STALE / MISMATCHED）就是「baseline 应等于派生值」。CI 的 12 条 MISMATCHED
+  里 11 条方向是 **derived > baseline**（项目抬了下限、baseline 没跟上），
+  只有 `redis` 反向 —— 指向 baseline 陈旧，而非「有意设更严下限」。
+  已按 `--direct-write` 重新生成（#5323），`--check` 读数 **0 drift
+  (75 deps 全部对齐)**。
+  **仍然要注意**：重生成**必须在带全部子模块的检出里做** —— 空 worktree
+  只有 2 个 pyproject，会读出 52 条**假 STALE** 并把它们删掉（本次实测），
+  生成的 baseline 会漏掉全部子模块依赖。
+  本条已闭环，留作「空分母判绿」的样本。
+history:
+- at: "2026-11-13T00:30:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：把根深度缺陷类的检测规则（模块级 `parents[K]` + 根相对 marker）
+    跑全量 `bin/**/*.py`，得到 14 个文件；其中 13 个已由 #5322 修掉，第 14 个
+    是 `bin/mof/gen-dependency-baseline.py`。修它时顺手跑了 `--check` 对拍，
+    读数从「0 deps 全部对齐」变成 57 项 drift —— **修一条路径算错，
+    才让一个治理面的真实状态第一次可见**。
+    **判据**：`--check` 这类「报漂移」的命令，**必须先确认分母非零** ——
+    「0 deps 全部对齐」与「真的全部对齐」在输出里长得一样，而前者是
+    扫描面算错的必然结果。**纪律**：修路径/根类缺陷后，**同一条命令的读数
+    要前后对拍** —— 只验证「脚本能跑」会漏掉「跑得通的却是空分母」。
+    **补记（同日）**：修复过程中我先把该脚本判成「未接线」并写进条目，
+    实际上 `ci-surfaces.yaml` 对它声明 `gate: true`、`gac-local-gate` 真的跑它 ——
+    **接线 ≠ 非空转**，这条更正比原发现更重要：一个被门禁调用的检查，
+    只要扫描面算错，照样恒绿。判据：**引用一个工具前先查 `ci-surfaces.yaml` 的
+    `gate:` 字段，别只 grep workflow/Makefile/cron**。
+  actor: "governance-agent"

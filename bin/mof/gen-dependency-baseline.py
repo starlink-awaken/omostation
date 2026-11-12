@@ -10,7 +10,7 @@
   2. 收集 workspace project name (排除内部依赖, 如 agora/omo/aetherforge-gateway)
   3. 解析每个 pyproject 的 [project.dependencies] + [project.optional-dependencies]
   4. 聚合外部依赖: name → [(consumer, lower_bound, extras), ...]
-  5. --check: 对比 runtime/omo/_truth/registry/dependency-baseline.yaml 报三类 drift
+  5. --check: 对比 .omo/_truth/registry/dependency-baseline.yaml 报三类 drift
   6. --dry-run: 打印从 pyproject 推导出的 baseline
 
 drift 类型:
@@ -35,7 +35,7 @@ import tomllib
 from collections import defaultdict
 from pathlib import Path
 
-WORKSPACE = Path(__file__).resolve().parent.parent
+WORKSPACE = Path(__file__).resolve().parent.parent.parent
 # P0-fix (2026-07-02): baseline SSOT 回 .omo (tracked), 跟 omo broker 写入路径一致
 # (find_omo_dir → OMO_ROOT/.omo, apply_baseline_patches 写 omo_dir/_truth/registry/).
 # PR#4 半吊子迁移把 baseline 搬到 runtime/omo (gitignored) → CI 拿不到 → 52 drift.
@@ -327,12 +327,16 @@ def main() -> int:
         for d in drift.get("missing", []):
             name = d["name"]
             baseline = d["derived_baseline"]
+            # 2026-11-13: consumers 是 derive_baseline 已经算好的（sorted 列表, 含 extras）,
+            # 原实现却恒定写 `- (auto-detected)` —— 生成器把自己已知的信息丢掉, 于是
+            # 自动登记的条目比手工条目信息量更低, 下游无法据此定位是哪个 project 引入的。
+            consumer_lines = [f"        - {c}" for c in derived[name]["consumers"]]
             entry_lines = [
                 f"    - name: {name}",
                 f"      baseline: '{baseline}'",
                 f"      reason: 'Consumed by {d['consumers']} project(s)'",
                 "      consumers:",
-                "        - (auto-detected)",
+                *consumer_lines,
             ]
             lines = content.split("\n")
             insert_idx = None
