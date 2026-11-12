@@ -1,0 +1,74 @@
+id: "DEPENDENCY-BASELINE-57-DRIFT-INVISIBLE"
+title: "dependency-baseline 有 57 项 drift（MISSING 1 / STALE 52 / MISMATCHED 4），而生成器因根深度缺陷恒报「0 deps 全部对齐」"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/dependency-baseline.yaml
+- bin/mof/gen-dependency-baseline.py
+evidence_refs:
+- bin/mof/gen-dependency-baseline.py
+- .omo/_truth/registry/dependency-baseline.yaml
+mitigation_refs: []
+opened_at: "2026-11-13"
+last_reviewed_at: "2026-11-13"
+next_review_at: "2026-12-13"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/mof/gen-dependency-baseline.py --check` 的读数在 2026-11-13 之前是
+  **「✅ dependency-baseline 无 drift (0 deps 全部对齐)」** —— 这不是「无 drift」，
+  是**一个依赖都没扫到**：`WORKSPACE = Path(__file__).resolve().parent.parent`
+  把根算成 `<root>/bin`（少一级），于是扫描面 `projects/**/pyproject.toml`
+  落到 `<root>/bin/projects/**`（不存在），baseline 路径也指向
+  `<root>/bin/.omo/_truth/registry/dependency-baseline.yaml`（不存在）。
+
+  修根深度（#5323）后，**同一条命令**的读数是 **57 项 drift**：
+
+  | 类别 | 数量 | 含义 |
+  |---|---|---|
+  | MISSING | 1 | pyproject 有但 baseline 未登记（`icalendar`, consumers=1, derived `>=5.0`） |
+  | STALE | 52 | baseline 有但 pyproject 无（依赖已移除，baseline 未清） |
+  | MISMATCHED | 4 | 下限不一致 |
+
+  MISMATCHED 逐条：`httpx` baseline `>=0.28.1` vs derived `>=0.27.0`；
+  `pydantic` `>=2.13.4` vs `>=2.0.0`；`pytest` `>=9.0` vs `>=8.0.0`；
+  `pytest-asyncio` `>=1.0` vs `>=0.23.0`。
+
+  **为什么长期无人知**：该脚本**未接线** —— `.github/workflows/`、`Makefile`、
+  `.omo/cron/registry.yaml` 对它零调用点（只有自己的 docstring 声称
+  「有 drift exit 1 (CI 友好)」）。所以「CI 绿」从来不构成它的证据。
+decision_needed: >-
+  两步，顺序不能反：
+  ① **先修 baseline 或先定义口径** —— 52 条 STALE 说明 baseline 是
+  「历史上加过、后来 pyproject 移除」的依赖清单，直接 `--dry-run` 重生成会
+  把它们清掉；但 MISMATCHED 那 4 条的方向是 **baseline 比 pyproject 更严**
+  （baseline 声称 `>=9.0` 而实际声明 `>=8.0.0`），这有两种可能：
+  (a) baseline 是**有意的安全下限**（比声明值严，防低版本混入）—— 那
+  `--check` 的比较口径就是错的，该比的是「声明值 ≥ baseline」而不是相等；
+  (b) baseline 是**派生值**（该等于声明值）—— 那 4 条是真漂移。
+  **必须先裁定语义**，否则重生成会把有意的下限抹掉，不重生成则 57 条永远红。
+  ② **接线** —— 裁定后把 `--check` 接进 CI（它已按「有 drift exit 1」设计），
+  否则修完还会再烂。
+  本条不代决。
+history:
+- at: "2026-11-13T00:30:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：把根深度缺陷类的检测规则（模块级 `parents[K]` + 根相对 marker）
+    跑全量 `bin/**/*.py`，得到 14 个文件；其中 13 个已由 #5322 修掉，第 14 个
+    是 `bin/mof/gen-dependency-baseline.py`。修它时顺手跑了 `--check` 对拍，
+    读数从「0 deps 全部对齐」变成 57 项 drift —— **修一条路径算错，
+    才让一个治理面的真实状态第一次可见**。
+    **判据**：`--check` 这类「报漂移」的命令，**必须先确认分母非零** ——
+    「0 deps 全部对齐」与「真的全部对齐」在输出里长得一样，而前者是
+    扫描面算错的必然结果。**纪律**：修路径/根类缺陷后，**同一条命令的读数
+    要前后对拍** —— 只验证「脚本能跑」会漏掉「跑得通的却是空分母」。
+  actor: "governance-agent"
