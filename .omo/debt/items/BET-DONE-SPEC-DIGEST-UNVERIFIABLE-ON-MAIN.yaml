@@ -1,0 +1,92 @@
+id: "BET-DONE-SPEC-DIGEST-UNVERIFIABLE-ON-MAIN"
+title: "16 条 done BET 的 content_digest 无法在 spec 的 main 历史中复现（11 条任何 ref 都找不到，5 条只存在于 refs/wip 备份分支）"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- docs/plans/3y-bet-ledger.yaml
+- docs/superpowers/specs/
+evidence_refs:
+- docs/plans/3y-bet-ledger.yaml
+- docs/superpowers/specs/
+mitigation_refs: []
+opened_at: "2026-11-12"
+last_reviewed_at: "2026-11-12"
+next_review_at: "2026-12-12"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  2026-11-12 在 `origin/main`（`0cf1b413f`）上核查 `BET-DONE-SPEC-DIGEST-MASS-STALENESS`
+  时发现的第二类缺陷：329 条陈旧绑定里有 **16 条的 `content_digest` 无法在 spec 的
+  main 历史中复现** —— 沿 `git log -- <spec>` 逐提交算 sha256，没有任何提交的内容
+  等于声明值。
+
+  **这意味着这些绑定从未与 main 上的任何 spec 版本对应过**，无法用「归一化摘要」
+  挽救（那条路径假定漂移是机械改动，这里连基线都不可考）。
+
+  分两类：
+
+  **A. 只存在于 WIP 备份 ref（5 条）** —— 声明内容与提交 `d01aec466` 相符，而该提交
+  只被 `refs/wip/chore_main-repo-retros-ledger-specs-*` 与
+  `refs/original/refs/heads/surgery/purge-crushdb` 包含，**不在任何分支上**（`git
+  for-each-ref --contains d01aec466` 只有这两类 ref）。即：这些绑定是在一条未合并的
+  工作分支上被认证的，之后 main 上的 spec 是另一份内容。
+
+  | BET | spec |
+  |---|---|
+  | BET-Y2Q2-T10-163 | `2026-09-25-panorama-command-palette-and-navigation-integration.md` |
+  | BET-Y2Q2-T10-164 | `2026-09-25-panorama-wallboard-auto-rotation-and-micro-interactions.md` |
+  | BET-Y2Q2-T10-165 | `2026-09-25-panorama-a11y-and-full-test-suite.md` |
+  | BET-Y2Q2-T10-166 | `2026-09-25-dashboard-ssot-documentation-convergence.md` |
+  | BET-Y2Q2-T6-02 | `2026-09-25-dashboard-sunset-redirector-design.md` |
+
+  **B. 任何 ref 都找不到（11 条）** —— 用 `git log --all -- <spec>` 遍历所有 ref
+  可达提交，仍无匹配：
+
+  | BET | spec |
+  |---|---|
+  | BET-Y2Q1-T6-01 | `2026-09-07-memory-decay-and-conflict-elimination-design.md` |
+  | BET-Y1Q4-T10-05 | `2026-09-11-t10-05-offline-sandbox-vault-spec.md` |
+  | BET-Y2Q3-T7-01 | `2026-09-12-y2q3-t7-01-family-asset-governance-spec.md` |
+  | BET-Y1Q4-T10-135 | `2026-09-07-gate-optimization-phase2-spec.md` |
+  | BET-Y1Q4-T10-128 | `2026-09-06-t10-128-agent-namespace-isolation.md` |
+  | BET-Y1Q4-T6-30 | `2026-09-16-t6-30-persona-mirror-spec.md` |
+  | BET-Y1Q4-T10-124 | `2026-09-06-t10-124-runtime-jobs-parity.md` |
+  | BET-Y1Q4-T10-139 | `2026-09-07-bet-claim-broadcast-spec.md` |
+  | BET-Y3H1-T7-05 | `2026-09-17-t7-05-admin-cold-start-design.md` |
+  | BET-Y2Q3-T10-OMLXC-01 | `2026-09-23-omlxc-health-cli-fix-design.md` |
+  | BET-Y2Q4-SH-2 | `2026-09-25-face-wide-frontmatter-coverage.md` |
+
+  这些 spec 的 main 历史通常只有 1-2 个提交（A 或 M），声明值与两者都不符 ——
+  最可能的解释是认证发生在**有未提交改动的工作树**上（digest 算的是 dirty 工作树
+  内容，随后工作树被 checkout/reset 还原，该内容从未进过任何提交）。
+decision_needed: >-
+  与 `BET-DONE-SPEC-DIGEST-MASS-STALENESS` 的 (a)/(b)/(c)/(d) 四条路径都不同：
+  这 16 条**没有可复现的基线**，归一化与「冻结快照」口径都无法验证它们，只能
+  **逐条重新认证**（把 digest 更新为当前 main 内容的 sha256，或按 (d) 的口径
+  重签为归一化摘要）。**本条不代决**，但有一点是确定的：这 16 条不能靠任何
+  「承认现状」的口径消化掉 —— 它们的绑定值本身就是不可考的。
+  另需决定的是**认证口径**：`bin/ssot/sync-bet-digests.py` 之类的批量同步工具
+  必须在**干净工作树**上运行（或至少显式报告 dirty 文件），否则会持续制造
+  不可复现的 digest。
+history:
+- at: "2026-11-12T08:29:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：为验证 (c) 方案的归一化口径，对每条陈旧绑定沿 `git log -- <spec>`
+    逐提交取内容算 sha256、定位与 `content_digest` 相等的那一版 —— 313/329 定位成功，
+    **16 条定位失败**。失败即「声明 digest 在 main 历史里从未出现」。
+    **判据**：`git log --all -- <path>` 遍历所有 ref 可达提交后仍无匹配的 11 条，
+    与只匹配 `refs/wip/*` / `refs/original/*` 备份 ref 的 5 条要分开记 ——
+    前者是「从未进过任何提交」，后者是「进过但未合并」，**处置不同**
+    （前者只能重签，后者可以 cherry-pick 那条 WIP 提交或直接重签）。
+    **纪律**：定位失败不能当作「实验失败」忽略 —— 它本身就是一类缺陷的证据，
+    且数量（16/451）足够影响 `content_digest` 这个字段的可信度。
+  actor: "governance-agent"

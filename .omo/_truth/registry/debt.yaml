@@ -84,3 +84,4 @@ seed_items:
 - .omo/debt/items/PROJECTION-SIZE-CAP-THREE-WAY-DRIFT.yaml
 - .omo/debt/items/BET-LEDGER-STATUS-LAGS-DELIVERY.yaml
 - .omo/debt/items/BET-DONE-SPEC-DIGEST-MASS-STALENESS.yaml
+- .omo/debt/items/BET-DONE-SPEC-DIGEST-UNVERIFIABLE-ON-MAIN.yaml
