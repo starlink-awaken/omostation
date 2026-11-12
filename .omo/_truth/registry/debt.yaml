@@ -80,3 +80,4 @@ seed_items:
 - .omo/debt/items/CI-SURFACES-GATE-FIELD-UNDEFINED.yaml
 - .omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml
 - .omo/debt/items/TEST-AUTO-FIX-LOOP-REPO-STATE-DEPENDENT.yaml
+- .omo/debt/items/GAC-M1-REGISTRY-DRIFT-UNATTENDED.yaml
