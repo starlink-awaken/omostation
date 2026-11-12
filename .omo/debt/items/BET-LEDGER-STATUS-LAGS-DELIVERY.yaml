@@ -71,3 +71,25 @@ history:
     把 digest 校验写在 `if status != "done"` 分支里, done BET 被刻意豁免。
     详见 `BET-DONE-SPEC-DIGEST-MASS-STALENESS`。本条正方向那 3 条状态滞后不受影响。
   actor: "governance-agent"
+- at: "2026-11-12T13:20:00+00:00"
+  action: review
+  note: >-
+    **T10-344 的停滞 run 已处置，交付来源已定位**。本条原写「T10-344 的 registry /
+    测试 / spec 也已在 main 上（并发 agent 提交）」但没给出来源。补：交付 commit 是
+    **`d284efcaa`（PR #5226，2026-11-10T06:34Z 合并）**「fix(cron): 识别 Mac-mini
+    看护主机别名（BET-Y2Q4-T10-344）」。
+    **run 处置**：`20261110T033347Z-bet-execution-a24a5945`（actor
+    `codex-cron-wp-20261110`）自 `2026-11-10T03:37:48Z` 起无心跳，4 把锁全部过期
+    （`bet:` + 3 条 `path:`），是 `agent-workflow.py status` 与 `doctor` 三项 FAIL
+    的唯一来源。已按共享锁面的 documented 路径 `close --status ok --evidence …`
+    关闭（`release_locks()` 只 unlink `run_id` 等于本 run 的锁，不碰他人活锁；
+    **没有用 `prune-locks`** —— 那会把只看心跳时间的阈值套到别人的活锁上）。
+    关闭后读数：`status.ok=True / lock_count=0 / stale=0`，`doctor` `exit=0`、
+    33 PASS、仅剩 2 条 pre-existing 环境 WARN（缺 gstack / openspec 健康）。
+    **后继分支已废弃**：`agent/codex-cron-wp-20261110/bet-y2q4-t10-344-successor`
+    的 5 个 commit 已被 main 完全超越 —— registry 与 spec 逐字节相同，main 还多
+    303 行台账与 49 行测试。**不要 cherry-pick 它**（会带回旧 digest 与旧测试体）。
+    **本条的状态滞后结论不变**：`BET-Y2Q4-T10-344` 台账仍是 `status: pending`
+    而工作已交付 —— 要推进到 `done` 需先补 `completion_evidence`（当前三轴全
+    NOT_STARTED/NOT_PROVEN，`complete` 报 `derived state is evaluating`）。
+  actor: "governance-agent"
