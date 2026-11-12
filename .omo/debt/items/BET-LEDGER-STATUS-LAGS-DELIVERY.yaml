@@ -59,3 +59,15 @@ history:
     「A 在 B 之前出现是合法的吗」—— 本例合法（spec 先于交付提交），所以该判据不成立。
     **纪律**：否定结论也要落进条目，否则下一轮会有人把同一个不成立的判据再提一遍。
   actor: "governance-agent"
+- at: "2026-11-12T08:05:00+00:00"
+  action: review
+  note: >-
+    **自我更正**：本条 `decision_needed` 里写「台账 status: done 的 BET, 其
+    content_digest 必须等于 origin/main 上 spec 的实际 sha256 —— 本轮实测反方向
+    0 违规, 当前成立」, 那句话**只查了存在性、不是 digest 一致性**。补做真正的
+    digest 比对后真实读数是 **329/451 陈旧 / 122 一致 / 0 缺失** —— 该判据
+    **当前不成立**。成因是批量 frontmatter 补丁（典型 `fef14ccef` / #4328
+    一次改 1145 个文件）改写了 spec 而没同步台账 digest, 而 `bet-ledger.py lint`
+    把 digest 校验写在 `if status != "done"` 分支里, done BET 被刻意豁免。
+    详见 `BET-DONE-SPEC-DIGEST-MASS-STALENESS`。本条正方向那 3 条状态滞后不受影响。
+  actor: "governance-agent"
