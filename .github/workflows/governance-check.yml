@@ -182,6 +182,16 @@ jobs:
           # maturity-align/strategy-check 用正则解析 stdout)。实测 5 pass; 变异对照: 摘掉 main()
           # 的声明接线 ⇒ test_status_emits_declaration_on_stderr_not_stdout 当场红
           # (1 failed / 4 passed), 恢复后复绿。不读 host 状态 (git rev-parse 只读仓内 ref)。
+          # 2026-11-12 追加: test_zhixing_projection_size_contract 钉投影产物的两个大小上限 ——
+          # 加载上限 (`runtime_paths._MAX_ARTIFACT_BYTES`, 64 MiB, 由 #4875 `5d5ae5404` 从
+          # 16 MiB 抬升) 与服务上限 (`live_server.MAX_PROJECTION_ARTIFACT_BYTES`, 32 MiB)
+          # 用途不同, 不要求相等; 契约是「服务上限 ≤ 加载上限」且两者都留裕量于真实
+          # data.json (2026-11-12 实测 15,335,922 字节 ≈14.6 MiB)。
+          # 补的正是 E2 在 CI 上的结构性失明面 —— 该文件此前不在任何白名单, 于是 #4875 之后
+          # 必然红的相等断言本地红、CI 永不见 (同 §7「判据不被任何 CI 路径跑 = 不存在」)。
+          # 实测 3 pass; 变异对照两次: serve cap 降到 16 MiB → 2 failed (下限件 + 接受件);
+          # serve cap 抬到 128 MiB (越过加载上限) → 1 failed (排序件)。复原后逐字节一致。
+          # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时同样 3 pass (不读 host)。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -213,6 +223,7 @@ jobs:
             ../../tests/unit/test_chain_bind_runs_anchor_seam.py \
             ../../tests/unit/test_ops_launchd_plist_declared_guard.py \
             ../../tests/test_bet_ledger_authority_declaration.py \
+            ../../tests/test_zhixing_projection_size_contract.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
