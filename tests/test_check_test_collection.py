@@ -20,6 +20,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 WORKSPACE = Path(__file__).resolve().parents[1]
 SCRIPT = WORKSPACE / "bin" / "gac" / "check-test-collection.py"
 
@@ -150,3 +152,33 @@ def test_module_in_uninit_submodule_is_env() -> None:
     assert gate._module_in_uninit_submodule(
         "ModuleNotFoundError: No module named 'omo'", []
     ) is False
+
+def test_zero_denominator_never_reads_as_pass(monkeypatch, capsys) -> None:
+    """收集根本没跑成 (无计数且无 ERROR 行) 不得判绿 —— 零分母不是通过。
+
+    2026-11-12 实测: 当前解释器缺 pytest-timeout ⇒ pyproject addopts 里的
+    `--timeout=300` 不认 ⇒ `pytest --collect-only` rc=4 且 0 条 ERROR 行;
+    旧实现 `ok = not repo_errors` 把它读成 status=pass / collected=None,
+    而 tests/test_check_test_collection.py::test_live_repo_collection_is_clean
+    的 `assert report["collected"]` 会当场红 (本用例是它的合成版, 不依赖解释器)。
+    """
+    gate = _load()
+    monkeypatch.setattr(
+        gate,
+        "collect",
+        lambda paths, timeout=600: {
+            "ok": False,
+            "returncode": 4,
+            "collected": None,
+            "errors": [],
+            "timeout": False,
+        },
+    )
+    monkeypatch.setattr(sys, "argv", ["check-test-collection.py", "--json"])
+    rc = gate.main()
+    out = json.loads(capsys.readouterr().out)
+    assert rc == 1, out
+    assert out["ok"] is False
+    assert out["status"] == "fail"
+    assert out["collected"] is None
+    assert out["repo_errors"], "零分母必须落成一条 repo_error, 不能静默通过"
