@@ -75,3 +75,25 @@ history:
     或者把断言删掉 —— 后者都是拿判据迁就现状。**纪律**：`tests/**` 不在 CI 白名单的
     那批（本次实测根 247 + `tests/bin/**`）要当「本地跑得到、CI 看不见」的平面对待。
   actor: "governance-agent"
+- at: "2026-11-12T08:55:00+00:00"
+  action: review
+  note: >-
+    **已按 (c) 落地（#5319），并更正本条的一处读数**。
+    **更正**：本条原写「部署中的 `live_server.py` 是 16 MiB」—— 2026-11-12 复核
+    `~/.local/share/zhixing-dashboard/current/live_server.py:218` 是 **32 MiB**，
+    与仓内 asset 一致（`current` 指向 `485e2518…`）。16 MiB 仍留在 28 个历史
+    release 目录里（#4875 之前部署的），但**在跑的不是它**。故当前只有**两个**值
+    （64 / 32），不是三个。
+    **落地内容**：把 `test_artifact_caps_align_without_relaxing_control_or_document_limits`
+    的相等链换成真实契约 —— 服务上限 ≥ 32 MiB（真实 data.json ≈14.6 MiB 留约 2 倍
+    裕量）、加载上限 ≥ 服务上限、control/document 上限不放宽；`parametrize` 的拒绝件
+    从 32 MiB+1 改为 64 MiB+1。**不写死真实字节数**（它随每次投影滚动，写死就是
+    时钟炸弹）。**同时把该文件纳入 `governance-check.yml` 白名单** —— 它此前不在，
+    这正是「本地红、CI 永不见」的成因。
+    **验证**：修前 `2 failed, 1 passed` → 修后 `3 passed`；变异对照两次
+    （serve cap → 16 MiB 得 2 failed；→ 128 MiB 越过加载上限得 1 failed）；
+    hermetic 复跑（`HOME=<空>` + `env -u OMOSTATION_*`，最小 venv）3 pass。
+    **仍未做**：选 64 还是 32 作为唯一权威值属**容量决策**，本条继续挂账；
+    若将来把 serve cap 也抬到 64 MiB，测试的下限断言（32 MiB）不会拦 —— 那是
+    有意的（下限只保证裕量，不限制上调）。
+  actor: "governance-agent"
