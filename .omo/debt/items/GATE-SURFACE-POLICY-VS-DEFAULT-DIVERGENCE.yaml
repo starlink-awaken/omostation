@@ -43,9 +43,14 @@ description: >-
     `m4-mcp-tool-integrity`、`p74-silent-workflows`、`resident-bos-check`、
     `resident-mof-sync-check`、`resident-status-check`、`scene-v3-guardrail`、
     `script-registry-validate`、`zones-check`
-  - **默认独有（6）** —— 在 CI 里**不跑**：
+  - **默认独有（6）** —— 不出现在 CI 的 `gac-local-gate` 里：
     `bdsk-shadow-sandbox`、`debt-integrity-check`、`error-knowledge-check`、
-    `submodule-ancestry-gate`、`sweep-index-check`、`test-coverage-check`
+    `submodule-ancestry-gate`、`sweep-index-check`、`test-coverage-check`。
+    其中 **`debt-integrity-check` 另由 `.github/workflows/debt-audit.yml`（每周）
+    单独跑**，所以它并非「CI 完全不跑」；**其余 5 条**在
+    `.github/workflows/`、`Makefile`、`.omo/cron/registry.yaml` 里都 grep 不到
+    调用点（`bin/` 内也只出现在 `gac-local-gate.py` 的 gate 定义里）——
+    即它们**只在「子模块没初始化」的机器上被 gac-local-gate 跑到**。
 
   **注意 `doc-governance` 不在任何一侧的差集里**：它不在 `DEFAULT_POLICY` 的
   gates 列表里，但 `gac-local-gate.py` 会**强制追加**（连同
@@ -55,9 +60,9 @@ description: >-
 
   **为什么危险**：同一台机器上 `make gac-local-gate` 的结果取决于子模块状态，
   而**两边都不报错**。本机 canonical 工作区常年不初始化子模块 ⇒ 长期跑的是
-  83 条那套，其中 6 条**在 CI 里根本不跑**；反过来 CI 里有 11 条本地永远见不到。
-  这与「判据不被任何 CI 路径跑 = 不存在」是同一枚硬币的反面：
-  **判据被跑，但跑的是另一套**。
+  83 条那套，其中 5 条（见上）**在 CI 的任何路径里都不会跑**；反过来 CI 里有
+  11 条本地永远见不到。这与「判据不被任何 CI 路径跑 = 不存在」是同一枚硬币的
+  反面：**判据被跑，但跑的是另一套**。
 decision_needed: >-
   已做的（#5325）：把静默退回改成**显式告警**（stderr 300 字节，点名缺失路径与
   「这不是 CI 门禁面」）。门禁面可以降级，不能无声降级。
@@ -108,4 +113,23 @@ history:
     配置列表到运行时行为之间可能有追加、过滤、旗标三层加工。
     **纪律**：把「列表差集」当「行为差集」是本条自己犯的那类错的典型 ——
     与 §7「判据与被检对象不同源」同族。
+  actor: "governance-agent"
+- at: "2026-11-13T02:40:00+00:00"
+  action: review
+  note: >-
+    **第三次更正：「默认独有 6 条在 CI 里不跑」也说过头了**。逐条查调用点：
+    `debt-integrity-check` 由 `.github/workflows/debt-audit.yml`（每周）单独跑，
+    所以它不是「CI 完全不跑」；**其余 5 条**（`bdsk-shadow-sandbox` /
+    `error-knowledge-check` / `submodule-ancestry-gate` / `sweep-index-check` /
+    `test-coverage-check`）在 `.github/workflows/`、`Makefile`、
+    `.omo/cron/registry.yaml` 里都 grep 不到，`bin/` 内也只出现在
+    `gac-local-gate.py` 的 gate 定义里 —— 即**只在子模块没初始化的机器上被跑到**。
+    措辞已改为「不出现在 CI 的 gac-local-gate 里」+ 单独点名那一个例外。
+    **判据**：说「某判据在 CI 里不跑」之前，**要查全部 CI 路径**（workflow 不止
+    gac-gate 一个，还有 debt-audit / architecture / phase-gate 等）——
+    只查 gac-gate 就下结论，是把「不在这个 gate 里」读成「不在 CI 里」。
+    **补一条负面结论**：全 `bin/` 扫了一遍同族形态（「注册表配置 + 静默 fallback
+    到硬编码默认」），**只有 `gac-local-gate.py` 一例**；其余 `DEFAULT_*` 都是
+    CLI 默认值或**有声**回落（如 `dim-weight.py` 会返回「样本不足, 使用默认权重」）。
+    所以这不是系统性问题，是单点。
   actor: "governance-agent"
