@@ -1,0 +1,76 @@
+id: "STATE-SHADOW-BIN-OMO-ORPHANED-DATA"
+title: "bin/.omo/ 影子状态面里困着 9 条 value-executions 记录（2026-10-10~10-13，全部 signal-chain），在主状态面的 34 条里一条都没有"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/.omo/
+- .omo/state/value-executions.json
+evidence_refs:
+- bin/.omo/state/value-executions.json
+- .omo/state/value-executions.json
+- bin/gac/value-tracker.py
+- bin/gac/value-evolution-connector.py
+mitigation_refs: []
+opened_at: "2026-11-12"
+last_reviewed_at: "2026-11-12"
+next_review_at: "2026-12-12"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/.omo/` 是一个**真实存在、被 `.gitignore:402` 单独忽略**的影子状态面 ——
+  它由一类根常量缺陷造出来：`bin/<subdir>/x.py` 用
+  `Path(__file__).resolve().parents[1]` 当 workspace 根，而 `parents[1]` 是
+  `<root>/bin`，`parents[2]` 才是 workspace。13 个脚本有此缺陷，已修（#5322）。
+
+  影子面里现存两个文件：
+
+  | 文件 | 大小 | 最后写入 | 来源脚本 |
+  |---|---|---|---|
+  | `bin/.omo/state/value-executions.json` | 1,433 B | 2026-10-13 21:50 | `bin/gac/value-tracker.py` |
+  | `bin/.omo/_state/weekly-review-latest.json` | 1,147 B | 2026-10-13 21:50 | `bin/gac/weekly-review.py`（未接线副本） |
+
+  **价值记录是困住的**：`value-executions.json` 两份都是 list。主状态面
+  `<root>/.omo/state/value-executions.json` 有 **34 条**（2026-09-21 → 2026-11-09，
+  由 `value-evolution-connector.py` 用 marker 探测的正确根写入）；影子面有
+  **9 条**（2026-10-10T08:13:51Z → 2026-10-13T13:50:09Z，`task_id` 全为
+  `signal-chain`，每条 `minutes_saved: 15.0`）。**按 timestamp 比对，9 条全部不在主日志里**
+  —— 不是子集，是纯增量。
+
+  `weekly-review-latest.json` 的落点 `<root>/.omo/_state/` 尚不存在；且真正接线的
+  周报脚本是 `bin/ssot/weekly-review.py`（cron `weekly-review-post-inbox`，写
+  `.omo/_control/cockpit-inbox/weekly-review-latest.json`），所以影子那份来自
+  **未接线的重复实现**，价值低于价值日志。
+decision_needed: >-
+  两份数据要**合并而不是删除**：把影子面 9 条按 timestamp 升序并入主日志
+  （34 + 9 = 43，无重复键可判，timestamp 精确到微秒且互不重叠）。
+  **但不要在主工作区手工编辑** —— 主工作区是只读面（根 `AGENTS.md` §0），
+  运行态写入应走受管通道或一次性脚本。可选路径：
+  (a) 写一个一次性合并脚本（读两份 → 按 timestamp 排序 → 原子写回主日志 →
+  校验条数 43 且 sha 前后可复算），跑完即删；
+  (b) 认为 2026-10 的 9 条 `signal-chain` 记录已无价值（value-indicator 政策下
+  这类自报 minutes_saved 的记录本来就不进价值结论），直接删掉影子面并
+  **删掉 `.gitignore:402`**（缺陷已修，这条 band-aid 不再需要，留着只会掩盖下一次）。
+  **本条不代决**；无论选哪条，`bin/.omo/` 该被清掉而不是继续留着。
+  另：`bin/gac/weekly-review.py` 是 `bin/ssot/weekly-review.py` 的未接线重复实现，
+  建议单独裁决去留（dup 脚本会让下一个改错）。
+history:
+- at: "2026-11-12T15:19:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：修根深度缺陷（#5322）时顺带查 `bin/.omo/` 里有什么 ——
+    不是空的，两份 JSON 都是脚本真实写出来的。**判据**：修一类「路径算错」的
+    缺陷时，必须同时查**错误路径下已经落了多少数据** —— 缺陷修好只保证将来
+    不再落错，已经落错的数据不会自己回来，而「写入方」与「读取方」用的根
+    不同（一个 `parents[1]`、一个 marker 探测）时，两边**各自都自洽**，
+    没有任何一侧会报错，只有把两份按 timestamp 对拍才看得见缺口。
+    **纪律**：影子状态面的存在本身（`.gitignore:402` 的 band-aid）是缺陷的
+    **症状**而不是缺陷的处置 —— 加 ignore 让脏树消失，等于把证据删掉。
+  actor: "governance-agent"

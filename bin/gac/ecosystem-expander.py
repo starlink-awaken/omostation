@@ -9,7 +9,7 @@ import os
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 
 NEW_SERVICES = [
     {"id": "orchestrator.unified", "bos_uri": "bos://governance/orchestrator", "description": "统一编排引擎"},

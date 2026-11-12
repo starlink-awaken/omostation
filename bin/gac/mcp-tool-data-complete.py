@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-WS = Path(__file__).resolve().parents[1]
+WS = Path(__file__).resolve().parents[2]
 MCP_DIR = WS / "projects/ecos/src/ecos/ssot/mof/m1/mcptool"
 
 

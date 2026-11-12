@@ -17,7 +17,7 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 VALUE_LOG = REPO / ".omo" / "state" / "value-executions.json"
 NORTH_STAR_INPUT = REPO / ".omo" / "state" / "north-star-input.json"
 

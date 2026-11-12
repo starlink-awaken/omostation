@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]  # bin/gac/ → Workspace/
+REPO = Path(__file__).resolve().parents[2]  # bin/gac/ → Workspace/
 HISTORY_FILE = REPO / ".omo/state/history/uhs.jsonl"
 TARGETS = {
     "tools": 90,

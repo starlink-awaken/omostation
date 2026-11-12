@@ -22,7 +22,7 @@ import sys
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 INBOX_FILE = REPO / ".omo" / "state" / "decision-inbox.json"
 METRICS_FILE = REPO / ".omo" / "state" / "decision-sla-metrics.json"
 

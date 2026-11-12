@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 # Add workspace root to path for spine package
-WS_ROOT = Path(__file__).resolve().parents[1]
+WS_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WS_ROOT / "projects" / "spine" / "src"))
 
 from spine.ingress.parsers.email_parser import EmailParser

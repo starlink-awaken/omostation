@@ -22,7 +22,7 @@ except ImportError:  # cron 下 python3 可能是 3.9 (<3.11 无 datetime.UTC)
     UTC = _timezone.utc
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 REPORT_FILE = REPO / ".omo" / "state" / "weekly-evolution-report.json"
 
 
