@@ -10,7 +10,7 @@
   2. 收集 workspace project name (排除内部依赖, 如 agora/omo/aetherforge-gateway)
   3. 解析每个 pyproject 的 [project.dependencies] + [project.optional-dependencies]
   4. 聚合外部依赖: name → [(consumer, lower_bound, extras), ...]
-  5. --check: 对比 runtime/omo/_truth/registry/dependency-baseline.yaml 报三类 drift
+  5. --check: 对比 .omo/_truth/registry/dependency-baseline.yaml 报三类 drift
   6. --dry-run: 打印从 pyproject 推导出的 baseline
 
 drift 类型:
