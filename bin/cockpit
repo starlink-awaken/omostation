@@ -19,7 +19,17 @@ from repo_root import code_root  # noqa: E402
 # ~/Workspace 而抛错 (本仓 CI 的检出根不是 ~/Workspace)。原先硬编码
 # /Users/xiamingxing/Workspace 同样不可取 —— 换个检出根就失效。
 _COCKPIT_VENV_PYTHON = code_root() / "projects/cockpit/.venv/bin/python"
-if _COCKPIT_VENV_PYTHON.is_file() and sys.executable != str(_COCKPIT_VENV_PYTHON):
+# 这段 re-exec 是给「手工跑 bin/cockpit」用的; 在 pytest 下它是地雷 ——
+# tests/unit/test_phase8_unified_ecosystem.py:68 在**模块层** runpy.run_path(bin/cockpit),
+# 于是收集阶段进程就被 execv 换成 `cockpit .venv/bin/python <pytest argv>`,
+# pytest 当场消失 (实测 rc=2 且 stdout/stderr 皆 0 字节), 收集计数与 ERROR 行一起消失,
+# 让 check-test-collection.py 的旧口径读成 pass (2026-11-12 实证)。
+if (
+    _COCKPIT_VENV_PYTHON.is_file()
+    and sys.executable != str(_COCKPIT_VENV_PYTHON)
+    and "pytest" not in sys.modules
+    and not os.environ.get("PYTEST_CURRENT_TEST")
+):
     try:
         import rich
     except ImportError:
