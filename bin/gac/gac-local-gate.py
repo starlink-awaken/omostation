@@ -20,7 +20,16 @@ SGF_POLICY_YAML = (
 
 
 def load_sgf_policy() -> dict:
-    """Load SGF-v1 dynamic configuration. Fallback to hardcoded default values if missing."""
+    """Load SGF-v1 dynamic configuration. Fallback to hardcoded default values if missing.
+
+    2026-11-13: 文件缺失时**一声不响**地退回硬编码 `DEFAULT_POLICY`，而两者不是同一套
+    门禁 —— 实测 policy 77 条 gate / default 72 条，strict 全量 87 vs 84，差集 19 条
+    （CI 独有 `ci-surfaces-check` / `sfop-slots` / `execution-chain` /
+    `resident-*-check` / `bet-retro-due-check` 等 12 条；default 独有
+    `doc-governance` / `debt-integrity-check` / `test-coverage-check` 等 7 条）。
+    子模块没初始化的检出（worktree / 新克隆）会静默跑另一套门禁，且 stderr 零字节。
+    改为显式告警：门禁面可以降级，不能无声降级。
+    """
     if SGF_POLICY_YAML.is_file():
         try:
             import yaml
@@ -31,6 +40,12 @@ def load_sgf_policy() -> dict:
                 f"[WARN] Failed to load sgf-policy.yaml: {e}. Falling back to default policy.",
                 file=sys.stderr,
             )
+    print(
+        f"[WARN] SGF policy not found at {SGF_POLICY_YAML} — falling back to the hardcoded "
+        "DEFAULT_POLICY. The active gate set is NOT the CI gate surface (projects/ecos "
+        "submodule uninitialized?); do not read this run as full gate coverage.",
+        file=sys.stderr,
+    )
     return {}
 
 

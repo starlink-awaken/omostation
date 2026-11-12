@@ -1,0 +1,81 @@
+id: "GATE-SURFACE-POLICY-VS-DEFAULT-DIVERGENCE"
+title: "gac-local-gate 的门禁面随 projects/ecos 是否初始化而变：strict 87 vs 84，差集 19 条（CI 独有 12 / 默认独有 7），而退回是静默的"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/gac/gac-local-gate.py
+- projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml
+evidence_refs:
+- bin/gac/gac-local-gate.py
+- projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml
+mitigation_refs: []
+opened_at: "2026-11-13"
+last_reviewed_at: "2026-11-13"
+next_review_at: "2026-12-13"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/gac/gac-local-gate.py` 的门禁列表**有两个来源**：
+  `SGF_POLICY_YAML`（指向 **`projects/ecos` 子模块**内的
+  `src/ecos/ssot/mof/m1/governance/sgf-policy.yaml`）存在时用它，不存在时
+  **一声不响**退回硬编码的 `DEFAULT_POLICY`（实测 stderr **0 字节**）。
+
+  两者不是同一套门禁（2026-11-13 实测，strict 全量）：
+
+  | 来源 | gate 条数 | `gate_checks(strict=True)` |
+  |---|---|---|
+  | `sgf-policy.yaml`（子模块已初始化 / CI `submodules: recursive`） | 77 | **87** |
+  | `DEFAULT_POLICY`（子模块未初始化：worktree / 新克隆） | 74 | **84** |
+
+  **差集 19 条**：
+
+  - **CI 独有（12）** —— 本地不初始化子模块就永远不会跑：
+    `bet-retro-due-check`、`check-llm-gateway-only`、`ci-surfaces-check`、
+    `execution-chain`、`m4-mcp-tool-integrity`、`p74-silent-workflows`、
+    `resident-bos-check`、`resident-mof-sync-check`、`resident-status-check`、
+    `script-registry-validate`、`sfop-slots`、`zones-check`
+  - **默认独有（7）** —— 在 CI 里**不跑**：
+    `bdsk-shadow-sandbox`、`debt-integrity-check`、`doc-governance`、
+    `error-knowledge-check`、`submodule-ancestry-gate`、`sweep-index-check`、
+    `test-coverage-check`
+
+  **为什么危险**：同一台机器上 `make gac-local-gate` 的结果取决于子模块状态，
+  而**两边都不报错**。本机 canonical 工作区常年不初始化子模块 ⇒ 长期跑的是
+  84 条那套，其中 `doc-governance` / `debt-integrity-check` 等**在 CI 里
+  根本不跑**；反过来 CI 里有 12 条本地永远见不到。这与「判据不被任何 CI 路径跑
+  = 不存在」是同一枚硬币的反面：**判据被跑，但跑的是另一套**。
+decision_needed: >-
+  已做的（#5325）：把静默退回改成**显式告警**（stderr 300 字节，点名缺失路径与
+  「这不是 CI 门禁面」）。门禁面可以降级，不能无声降级。
+  **仍需裁定**：
+  (a) 是否让 CI 在 policy 缺失时 **fail-closed**（现在 CI 永远拿得到 policy，
+  所以这条只影响本地/新克隆 —— 但 fail-closed 会让没子模块的检出直接跑不动）；
+  (b) 是否把 `DEFAULT_POLICY` 与 `sgf-policy.yaml` **对齐**（19 条差集里，
+  默认独有的 7 条像是 policy 化时的历史残留，CI 独有的 12 条像是后加的）；
+  (c) 还是**承认两套并存**，但要求任何门禁结论必须声明自己跑的是哪一套。
+  **本条不代决**；在裁定前，至少「无声」这一半已由 #5325 消掉。
+history:
+- at: "2026-11-13T01:30:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：审计 `ci-surfaces.yaml` 里 `gate: true` 的工具是否真被调用 ——
+    发现 4 个候选（`check-silent-workflows` / `check-llm-gateway-only` /
+    `cross-domain-trend` / `predictive-governance`）在 workflow/Makefile/cron 里
+    找不到，但其中 `check-llm-gateway-only` 明明出现在 CI 日志里。顺着
+    `GATES_LIST` → `POLICY` → `load_sgf_policy()` 查，才看到 `SGF_POLICY_YAML`
+    指向子模块，而 canonical 工作区**根本没有这个文件**。
+    **判据**：一个「门禁清单」如果有**两个来源**（注册表 + 硬编码 fallback），
+    那么任何门禁结论都必须先回答「我跑的是哪一套」—— 而这里两边都没说。
+    **纪律**：审计「声明为门禁的工具是否被调用」时，**别只 grep
+    workflow/Makefile/cron** —— 门禁清单本身可能是注册表的，gac-local-gate 就是
+    从 `sgf-policy.yaml`（子模块内）读的；grep 不到 ≠ 没接线，也可能是**接在
+    另一棵树上**。
+  actor: "governance-agent"
