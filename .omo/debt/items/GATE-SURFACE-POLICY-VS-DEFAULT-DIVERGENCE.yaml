@@ -28,38 +28,44 @@ description: >-
   `src/ecos/ssot/mof/m1/governance/sgf-policy.yaml`）存在时用它，不存在时
   **一声不响**退回硬编码的 `DEFAULT_POLICY`（实测 stderr **0 字节**）。
 
-  两者不是同一套门禁（2026-11-13 实测，strict 全量）：
+  两者不是同一套门禁。**读数随 policy 版本变**，所以下面的数字一律标注所依据的
+  policy 提交 —— 本条采用 **CI 实际用的钉版** `68af3541`（`origin/main` 的 gitlink）：
 
   | 来源 | gate 条数 | `gate_checks(strict=True)` |
   |---|---|---|
-  | `sgf-policy.yaml`（子模块已初始化 / CI `submodules: recursive`） | 77 | **87** |
-  | `DEFAULT_POLICY`（子模块未初始化：worktree / 新克隆） | 74 | **84** |
+  | `sgf-policy.yaml` @ `68af3541`（CI `submodules: recursive`） | 78 | **88** |
+  | `DEFAULT_POLICY`（子模块未初始化：worktree / 新克隆） | 73 | **83** |
 
-  **差集 19 条**：
+  **差集 17 条**（`comm` 对两份 `gate_checks` 全量集合）：
 
-  - **CI 独有（12）** —— 本地不初始化子模块就永远不会跑：
+  - **CI 独有（11）** —— 本地不初始化子模块就永远不会跑：
     `bet-retro-due-check`、`check-llm-gateway-only`、`ci-surfaces-check`、
-    `execution-chain`、`m4-mcp-tool-integrity`、`p74-silent-workflows`、
-    `resident-bos-check`、`resident-mof-sync-check`、`resident-status-check`、
-    `script-registry-validate`、`sfop-slots`、`zones-check`
-  - **默认独有（7）** —— 在 CI 里**不跑**：
-    `bdsk-shadow-sandbox`、`debt-integrity-check`、`doc-governance`、
-    `error-knowledge-check`、`submodule-ancestry-gate`、`sweep-index-check`、
-    `test-coverage-check`
+    `m4-mcp-tool-integrity`、`p74-silent-workflows`、`resident-bos-check`、
+    `resident-mof-sync-check`、`resident-status-check`、`scene-v3-guardrail`、
+    `script-registry-validate`、`zones-check`
+  - **默认独有（6）** —— 在 CI 里**不跑**：
+    `bdsk-shadow-sandbox`、`debt-integrity-check`、`error-knowledge-check`、
+    `submodule-ancestry-gate`、`sweep-index-check`、`test-coverage-check`
+
+  **注意 `doc-governance` 不在任何一侧的差集里**：它不在 `DEFAULT_POLICY` 的
+  gates 列表里，但 `gac-local-gate.py` 会**强制追加**（连同
+  `root-directory-governance` / `bin-scripts-convergence-audit` /
+  `omo-runtime-final-tree` / `current-state-coherence`），理由是「子模块更新不能
+  静默移除根自有门禁」。所以「不在 policy 的 gates 里」≠「CI 不跑」。
 
   **为什么危险**：同一台机器上 `make gac-local-gate` 的结果取决于子模块状态，
   而**两边都不报错**。本机 canonical 工作区常年不初始化子模块 ⇒ 长期跑的是
-  84 条那套，其中 `doc-governance` / `debt-integrity-check` 等**在 CI 里
-  根本不跑**；反过来 CI 里有 12 条本地永远见不到。这与「判据不被任何 CI 路径跑
-  = 不存在」是同一枚硬币的反面：**判据被跑，但跑的是另一套**。
+  83 条那套，其中 6 条**在 CI 里根本不跑**；反过来 CI 里有 11 条本地永远见不到。
+  这与「判据不被任何 CI 路径跑 = 不存在」是同一枚硬币的反面：
+  **判据被跑，但跑的是另一套**。
 decision_needed: >-
   已做的（#5325）：把静默退回改成**显式告警**（stderr 300 字节，点名缺失路径与
   「这不是 CI 门禁面」）。门禁面可以降级，不能无声降级。
   **仍需裁定**：
   (a) 是否让 CI 在 policy 缺失时 **fail-closed**（现在 CI 永远拿得到 policy，
   所以这条只影响本地/新克隆 —— 但 fail-closed 会让没子模块的检出直接跑不动）；
-  (b) 是否把 `DEFAULT_POLICY` 与 `sgf-policy.yaml` **对齐**（19 条差集里，
-  默认独有的 7 条像是 policy 化时的历史残留，CI 独有的 12 条像是后加的）；
+  (b) 是否把 `DEFAULT_POLICY` 与 `sgf-policy.yaml` **对齐**（17 条差集里，
+  默认独有的 6 条像是 policy 化时的历史残留，CI 独有的 11 条像是后加的）；
   (c) 还是**承认两套并存**，但要求任何门禁结论必须声明自己跑的是哪一套。
   **本条不代决**；在裁定前，至少「无声」这一半已由 #5325 消掉。
 history:
@@ -78,4 +84,28 @@ history:
     workflow/Makefile/cron** —— 门禁清单本身可能是注册表的，gac-local-gate 就是
     从 `sgf-policy.yaml`（子模块内）读的；grep 不到 ≠ 没接线，也可能是**接在
     另一棵树上**。
+  actor: "governance-agent"
+- at: "2026-11-13T02:10:00+00:00"
+  action: review
+  note: >-
+    **自我更正：本条原先的读数与差集都是错的，三处**。
+    ① 原写「gate 条数 77 / 74、`gate_checks` 87 / 84、差集 19」——那是从
+    **canonical 工作区的 policy 副本**（`5746b8973`）算的，而 CI 用的是
+    `origin/main` 钉的 `68af3541`。**判据与被检对象不同源**，读数自然不是 CI 的。
+    改用钉版复算：**78 / 73，`gate_checks` 88 / 83，差集 17**。
+    ② 原把 `doc-governance` 列进「默认独有」——**错**：它不在 `DEFAULT_POLICY`
+    的 gates 列表里，但 `gac-local-gate.py` 会**强制追加**根自有门禁
+    （`root-directory-governance` / `bin-scripts-convergence-audit` /
+    `omo-runtime-final-tree` / `current-state-coherence` / `doc-governance`），
+    理由是「子模块更新不能静默移除根自有门禁」。所以**「不在 policy 的 gates 里」
+    ≠「CI 不跑」** —— 我从「两份 id 列表做差」推出行为，而行为里还有一段
+    追加逻辑。**方法错误**：比较对象应该是 `gate_checks()` 的实际输出，不是
+    配置列表的差。
+    ③ 因此原列的 `execution-chain` / `sfop-slots` 实际在两侧都跑（被
+    `gate_checks` 的过滤旗标滤掉或本就在另一侧），已从差集移除。
+    **判据**：任何「两套配置不一致」的结论，**必须先声明所依据的那一版**
+    （commit/文件 sha），并且**比较运行时的实际集合**而不是配置文本 ——
+    配置列表到运行时行为之间可能有追加、过滤、旗标三层加工。
+    **纪律**：把「列表差集」当「行为差集」是本条自己犯的那类错的典型 ——
+    与 §7「判据与被检对象不同源」同族。
   actor: "governance-agent"
