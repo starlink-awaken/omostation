@@ -33,7 +33,7 @@ SCHEMAS = {
     "omo-health-record": OmoHealthRecord,
 }
 
-OUTPUT_DIR = Path(__file__).resolve().parents[1] / ".omo" / "standards" / "content-schemas" / "omo"
+OUTPUT_DIR = Path(__file__).resolve().parents[2] / ".omo" / "standards" / "content-schemas" / "omo"
 
 
 def main():
