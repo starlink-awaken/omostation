@@ -1,0 +1,77 @@
+id: "PROJECTION-SIZE-CAP-THREE-WAY-DRIFT"
+title: "投影产物大小上限三处不一致：runtime_paths 64 MiB / live_server asset 32 MiB / 部署中的 live_server 16 MiB —— 守「两 cap 相等」的用例是 #4875 之前的契约"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/panorama/assets/host/runtime_paths.py.asset
+- bin/panorama/assets/host/live_server.py.asset
+- tests/test_zhixing_projection_size_contract.py
+evidence_refs:
+- bin/panorama/assets/host/runtime_paths.py.asset
+- bin/panorama/assets/host/live_server.py.asset
+- tests/test_zhixing_projection_size_contract.py
+mitigation_refs: []
+opened_at: "2026-11-12"
+last_reviewed_at: "2026-11-12"
+next_review_at: "2026-12-12"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  同一个「投影产物大小上限」在三处是三个值（2026-11-12 实测）：
+
+  | 位置 | 值 |
+  |---|---|
+  | `bin/panorama/assets/host/runtime_paths.py.asset:36` `_MAX_ARTIFACT_BYTES` | **64 MiB** |
+  | `bin/panorama/assets/host/live_server.py.asset:218` `MAX_PROJECTION_ARTIFACT_BYTES` | **32 MiB** |
+  | 部署中的 `~/.local/share/zhixing-dashboard/releases/*/live_server.py:217` | **16 MiB** |
+
+  **64 MiB 是有实测依据的**：commit `5d5ae5404`（#4875）的 diff 注释写
+  「2026-10-22: 16 MiB 被 data.json 越过 (16,836,519 字节), 于是 revision 加载整体失败
+  —— 提高到 64 MiB 留裕量; 这是**加载上限**不是裁剪阈值, 超限仍然拒绝」。
+  同一条 commit 只把 `runtime_paths.py` 纳管，**没有同步抬 `live_server.py` 的上限**。
+
+  而 `tests/test_zhixing_projection_size_contract.py` 的
+  `test_artifact_caps_align_without_relaxing_control_or_document_limits` 断言
+  `runtime._MAX_ARTIFACT_BYTES == live.MAX_PROJECTION_ARTIFACT_BYTES == 32 * MIB`
+  —— 该断言是 #4875 **之前**的契约，#4875 之后必然红。
+
+  同文件另一条 `test_real_revision_read_and_http_response_are_bounded[33554433-False]`
+  断言真实 revision 的 data.json 满足 `16 * MIB < size < 32 * MIB`，而实测
+  `/data.json` 为 **15,335,922 字节（≈14.6 MiB）** ⇒ 下界 16 MiB 也已过期。
+
+  **为什么长期无人知**：`tests/test_zhixing_projection_size_contract.py` 不在任何 CI
+  白名单里（`governance-check.yml` 点名 132 个 `tests/…` 文件，不含它）。
+decision_needed: >-
+  三条路：（a）**以 64 MiB 为准** —— 把 `live_server.py.asset` 与部署中的
+  `MAX_PROJECTION_ARTIFACT_BYTES` 一并抬到 64 MiB，并把测试的相等断言改成 64；
+  （b）**以 32 MiB 为准** —— 回退 `runtime_paths` 的 64 MiB，但要先解释
+  #4875 记录的「16 MiB 被 data.json 越过导致 revision 加载整体失败」怎么在 32 MiB 下不再发生
+  （实测 data.json 已降到 14.6 MiB，也许确实不再需要 64 MiB）；
+  （c）**承认两个上限用途不同**（revision 加载 vs HTTP 响应），把测试的相等断言
+  拆成两条各自的下限断言（各自 ≥ 当前真实 data.json 体积 + 裕量），
+  并把「控制/文档上限不得放宽」的断言保留 —— 这最贴合该用例的名字
+  （`..._without_relaxing_control_or_document_limits`）。
+  **另需单独处理**：`test_real_revision_read_and_http_response_are_bounded` 的
+  下界 16 MiB 与实测 14.6 MiB 的冲突（要么改下界，要么说明为何仍要求 >16 MiB）。
+  本条不代决。
+history:
+- at: "2026-11-12T04:05:00+00:00"
+  action: identify
+  note: >-
+    **发现口径**：根 `tests/` 全量 sweep（22 分钟）里 `test_zhixing_projection_size_contract.py`
+    两条红，逐层查读数得到上表。关键证据是 `git show 5d5ae5404 -- <asset>`
+    的 diff 注释 —— 它把「为什么抬到 64 MiB」写得很清楚，而同一条 commit 没有
+    同步抬 `live_server.py`。
+    **判据**：一个「两处常量必须相等」的断言，在其比较对象之一被**有实测依据地**
+    单独调整后，必然红；此时要问的是「相等这条契约还成立吗」，而不是把常量改回去
+    或者把断言删掉 —— 后者都是拿判据迁就现状。**纪律**：`tests/**` 不在 CI 白名单的
+    那批（本次实测根 247 + `tests/bin/**`）要当「本地跑得到、CI 看不见」的平面对待。
+  actor: "governance-agent"
