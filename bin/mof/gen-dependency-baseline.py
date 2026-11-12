@@ -327,12 +327,16 @@ def main() -> int:
         for d in drift.get("missing", []):
             name = d["name"]
             baseline = d["derived_baseline"]
+            # 2026-11-13: consumers 是 derive_baseline 已经算好的（sorted 列表, 含 extras）,
+            # 原实现却恒定写 `- (auto-detected)` —— 生成器把自己已知的信息丢掉, 于是
+            # 自动登记的条目比手工条目信息量更低, 下游无法据此定位是哪个 project 引入的。
+            consumer_lines = [f"        - {c}" for c in derived[name]["consumers"]]
             entry_lines = [
                 f"    - name: {name}",
                 f"      baseline: '{baseline}'",
                 f"      reason: 'Consumed by {d['consumers']} project(s)'",
                 "      consumers:",
-                "        - (auto-detected)",
+                *consumer_lines,
             ]
             lines = content.split("\n")
             insert_idx = None
