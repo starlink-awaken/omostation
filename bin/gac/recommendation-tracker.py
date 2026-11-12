@@ -16,7 +16,7 @@ import time
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 TRACK_FILE = REPO / ".omo" / "state" / "recommendation-tracker.jsonl"
 
 

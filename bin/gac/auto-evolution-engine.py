@@ -26,7 +26,7 @@ import sys
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 STATE_FILE = REPO / ".omo" / "state" / "auto-evolution-state.json"
 
 
