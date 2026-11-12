@@ -1,0 +1,71 @@
+id: "GAC-M1-REGISTRY-DRIFT-UNATTENDED"
+title: "governance-checks registry (90 条) 与 ecos M1 存储 (136 个 GacRule) 分叉 —— 无同步作业、守它的回归测试不在 CI 白名单"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/governance-checks.yaml
+- projects/ecos/src/ecos/ssot/mof/m1/governance/
+- bin/gac/gac-m1-sync.py
+evidence_refs:
+- bin/gac/gac-m1-sync.py
+- tests/test_gac_m1_tracked_truth.py
+- .omo/_truth/registry/governance-checks.yaml
+mitigation_refs: []
+opened_at: "2026-11-12"
+last_reviewed_at: "2026-11-12"
+next_review_at: "2026-12-12"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/gac/gac-m1-sync.py --json --tracked` 在 `origin/main`（`2716b3249`，子模块对齐）
+  实测：
+
+  - `registry_rules: 90` vs `m1_instances: 136`；
+  - `missing_in_m1: 22`（registry 有、M1 无，例如 `CR-AGE-BOS-01` / `CR-AGE-EVENT-01` /
+    `CR-AGE-MEMORY-01` / `CR-AGE-POLICY-01`）；
+  - `orphan_in_m1: 68`（M1 有、registry 无，例如 `CR-ADVERSARIAL-EFFECTIVENESS` /
+    `CR-BASELINE-REPLAYED` / `CR-CROSS-REPO-CHECK`）；
+  - `stale: 7`（字段级漂移），其中一条是 `CR-X1-GOD-MODULE-LIMIT.source_ref`:
+    registry=`bin/ssot/check-god-module.py` vs m1=`bin/gac/check-god-module.py`
+    —— 即 #5297 修了 registry 侧，M1 侧未随之重生成；
+  - 另有 1 处 schema enum 漂移（`CR-AGE-MEMORY-01.check_type='file_exists'` 不在 enum 里）。
+
+  M1 目录共 164 个 yaml：`GacRule` 137 / `GovernancePolicy` 21 / `GovernanceCheck` 4 /
+  `ConstraintL0` 1 / `GovernanceEvent` 1。
+
+  **为什么长期无人知**：① `gac-m1-sync` 既不在 `.omo/cron/registry.yaml`，也不在 `Makefile`
+  targets 里 —— 没有周期同步作业，漂移只随手工调用累积；② 唯一守这个不变量的回归测试
+  `tests/test_gac_m1_tracked_truth.py`（ADR-0376 G8）**不在任何 CI 白名单里**
+  （`governance-check.yml` 点名 132 个 `tests/…` 文件，不含它）⇒ 它红得无人见；
+  ③ 该测试的 docstring 写「ADR-0374 后 M1=117 对齐」，而实测 M1 已 136 ⇒ 前提本身已过期。
+decision_needed: >-
+  先裁定**哪一侧是权威**，再谈怎么修：（a）registry 权威 ⇒ 让 `gac-m1-sync` 有周期作业
+  （cron 或 pre-merge gate），把 68 个 orphan 与 22 个 missing 逐条裁定后同步；
+  （b）M1 权威 ⇒ registry 侧补齐 47 条缺口，并解释为何 68 条 M1 规则长期不在 registry；
+  （c）两者本就不该相等（M1 含 X1/X3/X4 等非 X2 规则）⇒ 那么
+  `test_tracked_instances_match_root_pointer` 的相等断言是**过时的契约**，应改判据而不是
+  改数据。**注意**：`stale` 里那条 `CR-X1-GOD-MODULE-LIMIT.source_ref` 是 #5297 修 registry
+  之后 M1 未重生成造成的，属「修了一侧、另一侧未跟上」——无论选 (a)(b)(c) 都要先处理它。
+  本条不代决。
+history:
+- at: "2026-11-12T03:20:00+00:00"
+  action: identify
+  note: >-
+    **发现口径**：根 `tests/` 全量 sweep（22 分钟，3218 passed / 20 failed）里
+    `tests/test_gac_m1_tracked_truth.py` 两条红，逐条查读数得到上述数字。
+    为排除环境性，先 `git reset --hard origin/main` 再 `git submodule update --init`
+    对齐全部子模块后复跑，读数不变（registry=90 / m1_instances=136）。
+    **判据**：一个「两侧存储一致性」的守卫，若自己既无执行面（不在任何 cron / Makefile /
+    CI 白名单）又不被任何周期动作触发，它的红就不构成信号 —— 与 AGENTS.md §7
+    「判据不被任何 CI 路径跑 = 不存在」同族。**纪律**：`tests/**` 不在 CI 白名单的
+    那批（本次实测 247 个根文件 + `tests/bin/**`）要当「本地跑得到、CI 看不见」的
+    平面对待，别把本地绿当证据。
+  actor: "governance-agent"
