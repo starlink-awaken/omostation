@@ -35,7 +35,7 @@ import tomllib
 from collections import defaultdict
 from pathlib import Path
 
-WORKSPACE = Path(__file__).resolve().parent.parent
+WORKSPACE = Path(__file__).resolve().parent.parent.parent
 # P0-fix (2026-07-02): baseline SSOT 回 .omo (tracked), 跟 omo broker 写入路径一致
 # (find_omo_dir → OMO_ROOT/.omo, apply_baseline_patches 写 omo_dir/_truth/registry/).
 # PR#4 半吊子迁移把 baseline 搬到 runtime/omo (gitignored) → CI 拿不到 → 52 drift.
