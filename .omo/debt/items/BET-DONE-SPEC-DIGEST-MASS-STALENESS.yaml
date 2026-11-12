@@ -66,3 +66,21 @@ history:
     不能推出后者为 0 违规。**纪律**：抽样验证时先打印被比对的两个值
     （declared vs actual），确认它们确实是同一个字段的同一种编码。
   actor: "governance-agent"
+- at: "2026-11-12T08:30:00+00:00"
+  action: review
+  note: >-
+    **归因已量化 —— 陈旧几乎全是机械改动**：对 329 条陈旧绑定逐个取
+    `git log --format=%h origin/main -- <spec>` 的前三次提交并计数，
+    **319/329** 的 spec 命中 `fef14ccef`（#4328「SH-2 face-wide frontmatter
+    coverage — 1145 files patched to 100%」），140/329 命中
+    `94aa91fa6`（dual-node failover，但其提交含文档类型批量修补）与
+    `2168a58ab`（#2968「P2+P3 文档类型覆盖率提升」）。两者都是**批量 frontmatter /
+    文档类型覆盖**，不是语义改动。
+    **这对裁决的意义**：(c)「frontmatter 归一化摘要」的支撑最强 —— 既然漂移源是
+    机械字段补齐，把机械字段从摘要口径里剔除就能让 329 条中的绝大多数恢复一致，
+    而真正的语义改动仍然会被抓到。(a) 全量重认证会把 319 条纯机械改动写成一次
+    巨型台账 diff；(b) 「冻结快照」则让 spec 的任何后续改动都不可见。
+    **未做**：本条只证「漂移源是批量补丁」，没有逐条证「改动只在 frontmatter」——
+    要坐实 (c) 需要先定义哪些字段算机械（`last-reviewed` / `owner` / `type` …），
+    再对 329 条重算归一化摘要，看剩余陈旧是否降到个位数。
+  actor: "governance-agent"
