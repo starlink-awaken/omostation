@@ -204,6 +204,13 @@ jobs:
           # ⇒ 检测器在真实树上命中 2 处, 恢复 ⇒ 0; 合成违规样本两种根写法 (下标 /
           # 链式 .parent) 均被点名, 而 `parents[1] / "lib"` / `"ssot"` 等 bin 相对
           # 合法写法不误报。不读 host (只解析仓内 .py 的 AST)。
+          # 2026-11-13 追加: test_sgf_policy_fallback_is_loud 钉「门禁面有两个来源」——
+          # `SGF_POLICY_YAML` 指向 projects/ecos 子模块, 缺失时 `load_sgf_policy()`
+          # 静默退回硬编码 DEFAULT_POLICY (改前 stderr 0 字节), 而两套门禁差 19 条
+          # (policy 87 / default 84, strict) —— 同一台机器上 `make gac-local-gate`
+          # 的结果取决于子模块是否初始化, 且两边都不报错。同族: 「判据被跑, 但跑的是
+          # 另一套」。实测 4 pass; 不依赖子模块 (SGF_POLICY_YAML 由 monkeypatch 注入),
+          # 故 HOME=<空> + env -u OMOSTATION_* 下同样通过。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -237,6 +244,7 @@ jobs:
             ../../tests/test_bet_ledger_authority_declaration.py \
             ../../tests/test_zhixing_projection_size_contract.py \
             ../../tests/unit/test_bin_root_constant_depth.py \
+            ../../tests/unit/test_sgf_policy_fallback_is_loud.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
