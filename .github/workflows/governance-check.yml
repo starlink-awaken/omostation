@@ -192,6 +192,18 @@ jobs:
           # 实测 3 pass; 变异对照两次: serve cap 降到 16 MiB → 2 failed (下限件 + 接受件);
           # serve cap 抬到 128 MiB (越过加载上限) → 1 failed (排序件)。复原后逐字节一致。
           # HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给时同样 3 pass (不读 host)。
+          # 2026-11-13 追加: test_bin_root_constant_depth 钉「根常量少算一级」这一类路径缺陷 ——
+          # `bin/<subdir>/x.py` 用 `Path(__file__).resolve().parents[1]` 当 workspace 根
+          # (实为 `<root>/bin`), 于是 `REPO / ".omo" / ...` 落到 `<root>/bin/.omo/` 影子状态面。
+          # 2026-11-13 实测 14 个脚本有此缺陷 (#5322 修 13 / #5323 修 1), 其中
+          # gen-dependency-baseline 被 gac-local-gate 调用却恒报「0 deps 全部对齐」——
+          # **接线 ≠ 非空转**。补的正是 E2 在 CI 上的结构性失明面: 该判据此前只存在于
+          # 一次性 grep 里, 而 `bin/gac/path-dependency-scan.py` 的前身 blanket 匹配
+          # `parents[1]` 与 `"bin"` 字面量 (219 文件恒红, 于是零接线)。
+          # 实测 15 pass; 变异对照: 把 #5322 修好的 value-tracker 改回 parents[1]
+          # ⇒ 检测器在真实树上命中 2 处, 恢复 ⇒ 0; 合成违规样本两种根写法 (下标 /
+          # 链式 .parent) 均被点名, 而 `parents[1] / "lib"` / `"ssot"` 等 bin 相对
+          # 合法写法不误报。不读 host (只解析仓内 .py 的 AST)。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -224,6 +236,7 @@ jobs:
             ../../tests/unit/test_ops_launchd_plist_declared_guard.py \
             ../../tests/test_bet_ledger_authority_declaration.py \
             ../../tests/test_zhixing_projection_size_contract.py \
+            ../../tests/unit/test_bin_root_constant_depth.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."

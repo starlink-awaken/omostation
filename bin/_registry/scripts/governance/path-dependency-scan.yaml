@@ -1,15 +1,23 @@
 schema: script-registry/v1
 id: bin/gac/path-dependency-scan.py
-name: Path Dependency Scan
+name: Root Constant Depth Scan
 category: governance
 owner: governance-team
-description: ""
+description: >-
+  扫描 bin/** 里「根常量少算一级」的路径缺陷: 模块级常量由
+  Path(__file__).resolve().parents[K] 定义, 随后被拼上根相对 marker
+  (.omo / docs / projects / tests / runtime / config / kos / scripts / bin /
+  根级文档) 时, K 必须等于该文件到 workspace 根的层数。
+  2026-11-13 重写: 前身 blanket 匹配 `parents[1]` 与 `"bin"` 字面量,
+  读数 219 文件恒红、于是零接线; 精确判据在同日 main 上读数为 0。
+  用例 tests/unit/test_bin_root_constant_depth.py (自证 + 反过宽 + 变异对照)。
 inputs: []
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
 triggers: []
-related: []
-maturity: draft
-last_reviewed: "2026-08-24"
+related:
+  - tests/unit/test_bin_root_constant_depth.py
+maturity: stable
+last_reviewed: "2026-11-13"
