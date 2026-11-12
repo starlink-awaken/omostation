@@ -1,0 +1,69 @@
+id: "TEST-AUTO-FIX-LOOP-REPO-STATE-DEPENDENT"
+title: "tests/bin/test_auto_fix_loop_b11.py 两条用例断言「仓库里存在可检测的 drift」，干净树（无 drift）上必红"
+dimension: "governance"
+subdimension: "test-hygiene"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- tests/bin/test_auto_fix_loop_b11.py
+evidence_refs:
+- tests/bin/test_auto_fix_loop_b11.py
+- bin/gac/auto-fix-loop.py
+mitigation_refs: []
+opened_at: "2026-11-12"
+last_reviewed_at: "2026-11-12"
+next_review_at: "2026-12-12"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `tests/bin/test_auto_fix_loop_b11.py` 的两条用例把「主仓当前存在 frontmatter
+  drift」当前提：
+
+  - `test_json_output_contains_expected_kinds` 断言 `auto-fix-loop.py --json` 的
+    drift 列表里至少出现 `expected_any` 之一；
+  - `test_json_output_with_skip_env_var` 同理，断言 `SKIP_FIX_LOOP_BRANCH=1` 下
+    出现 `*-RETRO-SKIPPED` 之一，或 `PATH-DRIFT`。
+
+  实测（2026-11-12，`origin/main` `e8feabf9a`）：把 `.omo/_knowledge` 恢复成
+  提交态之后实跑 `python3 bin/gac/auto-fix-loop.py --json` 得 **drifts: 0**，
+  于是 `expected_any & kinds == set()` ⇒ 两条当场红。
+
+  **这不是本文件引入的**：把同文件改前/改后、干净树/脏树四种组合都跑过 ——
+  干净树上、**不带任何本文件改动**时同样 2 failed。它们只在「仓库恰好有可检测
+  drift」时绿，而 drift 会被同文件的 `test_apply_fix_handles_new_kinds` 修掉
+  （见 TEST 面另一条：该用例此前真跑 `fix-frontmatter.py --batch .`，
+  2026-11-12 已加 stub 修掉；但 stub 之后 drift 被修完，这两条就失去了前提）。
+
+  **为什么此前没被发现**：`tests/bin/**` 不在任何 CI 白名单里
+  （`governance-check.yml` 点名 132 个 `tests/…` 文件，不含 `tests/bin/`），
+  而本机跑到它们时仓库往往是脏的（上一轮 sweep 或手动跑过批量修复器）⇒ 绿灯。
+decision_needed: >-
+  两条路：（a）**改成 fixture 驱动** —— 在 `tmp_path` 造一个带坏 frontmatter 的
+  最小目录，把 `auto-fix-loop.py` 的扫描根指过去（或抽出纯函数喂 fixture），
+  断言与真实仓库状态解耦；（b）**删掉这两条** —— 它们测的是「drift 检测器在
+  有 drift 时能报出来」，而该语义已由 `tests/test_check_test_collection.py`
+  与 auto-fix-loop 自己的其它用例覆盖。本条不代决。
+history:
+- at: "2026-11-12T02:10:00+00:00"
+  action: identify
+  note: >-
+    **发现口径**：跑根 `tests/` 全量（22 分钟）后清理 `.omo/_knowledge` 的意外
+    改动（10~12 个文件 `lifecycle: entry -> history`）时，为定位「谁改的」逐条
+    试跑，撞到这两条红。为排除「是清理动作自己引入的」，做了四种组合对照：
+    ① 改前测试文件 + 干净树 ⇒ 2 failed（且跑完树脏 10 个文件）；
+    ② 改后（加 stub）+ 干净树 ⇒ 2 failed（树干净）；
+    ③ 改前 + 脏树 ⇒ 通过（drift 还在）；
+    ④ 改后 + 脏树 ⇒ 通过。
+    ⇒ 结论：红与本文件改动无关，是「干净树 ⇒ 无 drift ⇒ 断言必红」。
+    **判据**：断言里含「仓库当前状态」的测试，必须先问「这个状态是谁的」——
+    是 fixture 的、还是被测仓库的。后者在干净检出上必红，在脏检出上可能绿，
+    两种都不构成证据。**纪律**：不在 CI 白名单里的 `tests/bin/**` 同样是
+    「本地跑得到、CI 看不见」的平面（AGENTS.md §7 已记 `tests/unit/**`，
+    `tests/bin/**` 是同一族的另一支）。
+  actor: "governance-agent"

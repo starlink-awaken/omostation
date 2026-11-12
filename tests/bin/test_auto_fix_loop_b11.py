@@ -29,7 +29,7 @@ def _load():
     return m
 
 
-def test_apply_fix_handles_new_kinds():
+def test_apply_fix_handles_new_kinds(monkeypatch):
     m = _load()
     supported_kinds = {
         "DERIVED-STALE",
@@ -39,6 +39,23 @@ def test_apply_fix_handles_new_kinds():
         "INVALID-METADATA",
         "CELL-STALE",
     }
+    dispatched: list[tuple[list[str], dict]] = []
+
+    class _Result:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    def _fake_run(cmd, **kwargs):
+        dispatched.append((cmd, kwargs))
+        return _Result()
+
+    # 必须 stub: apply_fix 会真跑 fix_cmd, 而这里的 fix_cmd 是
+    # `python3 bin/gac/fix-frontmatter.py --batch .` —— 不 stub 就会改真实检出。
+    # 2026-11-12 实测: 跑一遍 tests/ 全量后 .omo/_knowledge 下 12 个文件被改
+    # (lifecycle: entry -> history), 全是这个用例干的。
+    monkeypatch.setattr(m.subprocess, "run", _fake_run)
+
     for kind in ("FRONTMATTER-MISSING-FIELD", "INVALID-METADATA"):
         d = m.Drift(
             kind=kind,
@@ -47,13 +64,12 @@ def test_apply_fix_handles_new_kinds():
             fix_cmd="python3 bin/gac/fix-frontmatter.py --batch .",
             auto_fixable=True,
         )
-        # Run apply_fix with mock; it will try subprocess but that's fine
-        # because the drift is auto-fixable, the only path tested is dispatch
-        try:
-            m.apply_fix(d)
-        except Exception:
-            pass  # subprocess may fail in CI; we only assert dispatch works
+        ok, _ = m.apply_fix(d)
+        assert ok, f"{kind} 的修复命令未成功派发"
         assert d.kind in supported_kinds
+
+    assert dispatched, "apply_fix 没有派发任何修复命令"
+    assert dispatched[0][1].get("cwd") == m.WORKSPACE, "修复命令必须在检出根执行"
 
 
 def test_json_output_contains_expected_kinds():
