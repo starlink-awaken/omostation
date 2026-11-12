@@ -28,13 +28,19 @@ def test_architecture_job_initializes_ecos_before_gate() -> None:
     )
 
     assert checkout_index < init_index < gate_index
-    assert checkout_step["with"] == {
-        "submodules": False,
-        "token": "${{ secrets.CROSS_REPO_TOKEN }}",
+
+    # token 允许两种写法: 裸 CROSS_REPO_TOKEN, 或 `CROSS_REPO_TOKEN || GITHUB_TOKEN`
+    # (PAT 缺席时 —— fork、未配 secret 的检出 —— 仍能 checkout)。接受回退的依据见
+    # tests/test_github_publication_effect_owner.py 的 ALLOWED_READONLY_TOKEN_RE 注释:
+    # 回退的另一操作数只能是 secrets.GITHUB_TOKEN, 且发布安全由
+    # FORBIDDEN_PUBLICATION_PATTERNS 与 no-contents:write 断言单独保证。
+    _ALLOWED_TOKENS = {
+        "${{ secrets.CROSS_REPO_TOKEN }}",
+        "${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}",
     }
-    assert init_step["env"] == {
-        "CROSS_REPO_TOKEN": "${{ secrets.CROSS_REPO_TOKEN }}",
-    }
+    assert checkout_step["with"]["submodules"] is False
+    assert checkout_step["with"]["token"] in _ALLOWED_TOKENS, checkout_step["with"]
+    assert init_step["env"]["CROSS_REPO_TOKEN"] in _ALLOWED_TOKENS, init_step["env"]
     script = init_step["run"]
     assert "x-access-token:%s" in script
     assert "http.https://github.com/.extraheader" in script
