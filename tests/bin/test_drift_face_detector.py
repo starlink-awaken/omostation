@@ -39,7 +39,10 @@ class DriftDetectorTests(unittest.TestCase):
         (self.tmp / ".omo/_delivery/agent-workflows/locks").mkdir(parents=True)
 
     def test_dashboard_stale(self):
-        (self.tmp / ".omo/_control/debt-dashboard/current.yaml").write_text(
+        # 检测器读的是真看板 .omo/debt/dashboard/current.yaml (见 detect_dashboard
+        # 的 docstring: 不再读 .omo/_control/debt-dashboard/ 那份 tracked 镜像)。
+        (self.tmp / ".omo/debt/dashboard").mkdir(parents=True)
+        (self.tmp / ".omo/debt/dashboard/current.yaml").write_text(
             "generated_at: '2026-01-01T00:00:00Z'\nfoo: bar\n"
         )
         det = _load("drift_face_detector", ROOT / "bin/ssot/drift-face-detector.py")
@@ -49,12 +52,16 @@ class DriftDetectorTests(unittest.TestCase):
         self.assertEqual(findings[0]["id"], "DASHBOARD-STALE")
         self.assertGreater(findings[0]["age_hours"], 0)
 
-    def test_dashboard_missing(self):
+    def test_dashboard_absent_is_not_a_finding(self):
+        """真看板缺席 (干净检出) 不是 drift —— 检测器刻意跳过, 不报 DASHBOARD-MISSING。
+
+        detect_dashboard() 的 docstring: 「真看板是 gitignored 的运行时产物 ——
+        干净检出里不存在属正常, 不是 drift, 因此跳过而不是报 DASHBOARD-MISSING
+        (旧行为会让每个干净检出都挂一条 high)」。本用例把该决策钉住。
+        """
         det = _load("drift_face_detector", ROOT / "bin/ssot/drift-face-detector.py")
         det.WORKSPACE_ROOT = self.tmp
-        findings = det.detect_dashboard()
-        self.assertEqual(len(findings), 1)
-        self.assertEqual(findings[0]["id"], "DASHBOARD-MISSING")
+        self.assertEqual(det.detect_dashboard(), [])
 
     def test_ephemeral_detect(self):
         (self.tmp / "docs/reports/old-report.md").write_text(
