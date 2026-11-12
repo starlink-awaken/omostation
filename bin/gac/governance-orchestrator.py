@@ -21,7 +21,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]  # bin/gac/x.py → bin/gac → bin → workspace
@@ -103,14 +103,17 @@ def auto_remediate() -> dict:
     }
 
 
-def generate_governance_report() -> dict:
-    """Generate comprehensive governance report."""
-    compliance = compliance_check()
-    remediation = auto_remediate()
+def generate_governance_report(*, compliance: dict, remediation: dict) -> dict:
+    """Assemble a report from already-collected results — no side effects of its own.
+
+    2026-11-12: 原实现自己调 `compliance_check()` + `auto_remediate()`, 于是
+    `full_governance_cycle()` 的 Phase 2 刚跑完一遍自动修复, Phase 3 又跑一遍 ——
+    升级决策 / 自动批准提案 / 漂移同步 / 心跳刷新全部**双份副作用**。改为由调用方
+    传入, 报告组装不再触发任何动作。
+    """
 
     # Get system stats
     services = _run(["grep", "-c", "bos://", str(REPO / ".omo/_truth/registry/services.yaml")])
-    scripts = _run(["find", str(REPO / "bin"), "-name", "*.py", "-o", "-name", "*.sh"])
 
     report = {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -154,7 +157,7 @@ def full_governance_cycle() -> dict:
 
     # Phase 3: Report
     print("\n[3/3] 生成报告...")
-    report = generate_governance_report()
+    report = generate_governance_report(compliance=compliance, remediation=remediation)
     print(f"  建议: {len(report['recommendations'])} 项")
 
     # Save state
@@ -196,7 +199,9 @@ def main() -> int:
         return 0
 
     if args.governance_report:
-        result = generate_governance_report()
+        compliance = compliance_check()
+        remediation = auto_remediate()
+        result = generate_governance_report(compliance=compliance, remediation=remediation)
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
@@ -207,8 +212,9 @@ def main() -> int:
         print(f"  总循环数: {len(cycles)}")
         if cycles:
             latest = cycles[-1]
-            print(f"  最新循环: {latest['timestamp']}")
-            print(f"  合规率: {latest['compliance_rate']}%")
+            # 早期版本的状态文件可能缺键 —— 用 get 而不是下标, 否则 --status 会 KeyError。
+            print(f"  最新循环: {latest.get('timestamp', 'unknown')}")
+            print(f"  合规率: {latest.get('compliance_rate', 'unknown')}%")
         return 0
 
     parser.print_help()
