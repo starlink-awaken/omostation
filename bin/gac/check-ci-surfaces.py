@@ -125,16 +125,35 @@ def _local_gate_tools() -> set[str]:
 
 
 def _discover_wiring() -> dict[str, dict]:
-    """扫描 workflows + sgf-policy, 返回 tool -> {workflows, gate}."""
+    """扫描 workflows + sgf-policy + ci-check-runner 的登记面分派, 返回 tool -> {workflows, gate}."""
     tools: dict[str, dict] = {}
+    runner_covered: set[str] = set()
     for wf in sorted(WORKFLOWS_DIR.glob("*.yml")):
         text = wf.read_text(encoding="utf-8", errors="ignore")
         name = wf.name
+        if "ci-check-runner.py" in text:
+            m = re.search(r"--workflow\s+([\w.-]+\.y*ml)", text)
+            if m:
+                runner_covered.add(m.group(1))
         for m in WIRED_COMMAND_RE.finditer(text):
             tool = m.group(2)
             entry = tools.setdefault(tool, {"workflows": [], "gate": False})
             if name not in entry["workflows"]:
                 entry["workflows"].append(name)
+    # registry-driven 承接面: workflow 里 `ci-check-runner.py --workflow <自己>` 会按
+    # ci-surfaces 的 workflow 字段分派执行, 所以这些登记项同样算「已接线」。
+    # 不读这一层, wired_tools 会系统性少算 (2026-11-12 实测少算 2 条:
+    # bin/ssot/check-interfaces.py / bin/ssot/governance_closed_loop.py,
+    # 它们声明 workflow: governance-check.yml, 由该 workflow 的 runner 步分派)。
+    for surface in (_load_yaml(CI_SURFACES) or {}).get("surfaces") or []:
+        if not isinstance(surface, dict):
+            continue
+        tool = str(surface.get("tool") or "")
+        wf_name = str(surface.get("workflow") or "")
+        if tool and wf_name in runner_covered:
+            entry = tools.setdefault(tool, {"workflows": [], "gate": False})
+            if wf_name not in entry["workflows"]:
+                entry["workflows"].append(wf_name)
     policy = _load_yaml(SGF_POLICY)
     for gate in policy.get("gates") or []:
         for part in gate.get("command") or []:

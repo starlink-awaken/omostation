@@ -250,7 +250,7 @@ def test_l6_real_population_is_measured_with_denominators() -> None:
     for v in r["violations"]:
         assert v["tool"].endswith(".py")
         if v.get("verdict") == "declared_no_execution_plane":
-            assert "四平面全缺席" in v["reason"]
+            assert "五平面全缺席" in v["reason"]
         else:
             assert v.get("verdict") == "device_unavailable", f"未预期的判定: {v}"
 
@@ -268,6 +268,22 @@ def test_l6_hook_plane_covers_hook_runner() -> None:
     )
     r = b.check_plane_coverage()
     assert r["planes"]["hooks"]["paths"] > 10, "hooks 平面没读到 hook-runner.sh"
+
+
+def test_l6_cron_plane_uses_installed_reality_only() -> None:
+    """cron 平面只算 reality=installed/crontab_installed 的作业。
+
+    declared_only (22 条) / pending (6 条) 是「声明但未被验证装机」, 算进去就是把
+    声明当执行 (2026-11-12 实测: anomaly-detector / alert-router 由 anomaly-alert-daily
+    声明执行, 但该作业 reality=declared_only ⇒ 仍必须被点名)。
+    """
+    b = _boot()
+    r = b.check_plane_coverage()
+    cron = r["planes"]["cron"]
+    assert cron["paths"] > 0, "cron 平面没读到任何已装机作业"
+    assert cron["declared_only"] > 0, "declared_only 计数为 0 ⇒ 口径退化成全算, 本钉要重写"
+    named = {v["tool"] for v in r["violations"]}
+    assert "bin/gac/anomaly-detector.py" in named, "declared_only 作业声明的工具被当成了已接线"
 
 
 # ---------------------------------------------------------------- 总体口径

@@ -48,6 +48,10 @@ HOOKS_DIR = WORKSPACE / ".githooks"
 # grep 不到任何东西」)。真正的 hook 调用面有 18 处 `run_check` 落在那里, 只扫
 # `.githooks/` 会把 hooks 平面读成空集 (2026-11-12 实测: 0 个 .py token)。
 HOOK_RUNNER = WORKSPACE / "bin" / "gac" / "hook-runner.sh"
+CRON_REGISTRY = WORKSPACE / ".omo" / "cron" / "registry.yaml"
+# cron 作业只有 reality 表明「已装机」才算执行面: declared_only / pending
+# 是「声明但未被验证装机」, 算进去就是把声明当执行。
+CRON_REACHED_REALITY = {"installed", "crontab_installed"}
 WORKFLOWS_DIR = WORKSPACE / ".github" / "workflows"
 LOCAL_GATE = WORKSPACE / "bin" / "gac" / "gac-local-gate.py"
 GAC_TOOLS = sorted(
@@ -349,6 +353,19 @@ def check_plane_coverage() -> dict:
             if HOOK_CALL_RE.search(line):
                 hook_tokens |= set(PY_TOKEN_RE.findall(line))
 
+    cron_tokens: set[str] = set()
+    cron_declared_only: set[str] = set()
+    if CRON_REGISTRY.is_file():
+        for job in (yaml.safe_load(CRON_REGISTRY.read_text(encoding="utf-8")) or {}).get("jobs") or []:
+            if not isinstance(job, dict):
+                continue
+            cmd = str(job.get("command") or "")
+            found = {t for t in _py_tokens(cmd) if t.endswith(".py")}
+            if str(job.get("reality") or "") in CRON_REACHED_REALITY:
+                cron_tokens |= found
+            else:
+                cron_declared_only |= found
+
     policy_tokens: set[str] = set()
     if isinstance(policy, dict):
         found: list[Any] = [policy]
@@ -376,6 +393,10 @@ def check_plane_coverage() -> dict:
         },
         "hooks": {"files": len(hook_files), "paths": len(hook_tokens)},
         "policy": {"available": isinstance(policy, dict), "paths": len(policy_tokens)},
+        "cron": {
+            "paths": len(cron_tokens),
+            "declared_only": len(cron_declared_only),
+        },
     }
     devices_unavailable = [k for k, v in planes.items() if not v.get("paths") and not v.get("available", True)]
 
@@ -419,6 +440,7 @@ def check_plane_coverage() -> dict:
             "ci": _norm_hit(ci_tokens, tool) or (wf in runner_covered),
             "hooks": _norm_hit(hook_tokens, tool),
             "policy": _norm_hit(policy_tokens, tool),
+            "cron": _norm_hit(cron_tokens, tool),
         }
         if any(hit.values()):
             reached += 1
@@ -433,7 +455,8 @@ def check_plane_coverage() -> dict:
                 }
             )
             continue
-        reason = "四平面全缺席 (runtime GATES_LIST / CI workflow run: / .githooks 调用行 / sgf-policy command)"
+        reason = ("五平面全缺席 (runtime GATES_LIST / CI workflow run: / .githooks 调用行 / "
+                   "sgf-policy command / cron 已装机作业)")
         if wf != "(none)" and not (WORKFLOWS_DIR / wf).is_file():
             reason += f"; 声称的 workflow 文件不存在: {wf}"
         elif wf != "(none)" and wf not in {p.name for p in wf_files}:
