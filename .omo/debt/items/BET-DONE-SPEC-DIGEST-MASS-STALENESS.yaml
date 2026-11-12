@@ -1,0 +1,68 @@
+id: "BET-DONE-SPEC-DIGEST-MASS-STALENESS"
+title: "329/451 条 done BET 的 accepted_specifications.content_digest 已陈旧（spec 被批量 frontmatter 补丁改过），而 bet-ledger.py lint 刻意豁免 done BET 从不校验"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- docs/plans/3y-bet-ledger.yaml
+- bin/plan/bet-ledger.py
+- docs/superpowers/specs/
+evidence_refs:
+- bin/plan/bet-ledger.py
+- docs/plans/3y-bet-ledger.yaml
+- docs/superpowers/specs/
+mitigation_refs: []
+opened_at: "2026-11-12"
+last_reviewed_at: "2026-11-12"
+next_review_at: "2026-12-12"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  2026-11-12 在 `origin/main`（`8c631df4d`）上实测：对 451 条 `status: done` 的 BET
+  spec 绑定，逐个比对 `accepted_specifications[].content_digest` 与该 spec 在
+  origin/main 上的实际 sha256 —— **329 条陈旧、122 条一致、0 条缺失**。
+
+  **直接成因**：批量 frontmatter 补丁改写了大量 spec 而没同步台账 digest。最典型的是
+  `fef14ccef`（#4328「SH-2 face-wide frontmatter coverage — 1145 files patched to 100%」），
+  它一个 commit 就改了 1145 个文件；抽验 `BET-Y1Q3-T6-15` 的 spec
+  （`2026-08-28-post2408-main-recovery-and-required-gac-gate-design.md`）最近三次提交
+  里有 `fef14ccef` / `94aa91fa6` / `2168a58ab`，全是 frontmatter / 文档类型批量修补。
+
+  **为什么从不报错**：`bin/plan/bet-ledger.py` 的 spec 摘要校验写在
+  `if bet.get("status") != "done":` 分支里（`:2138`）—— **done BET 被刻意豁免**，
+  于是 `bet-ledger.py lint` 恒报 `OK -- N bets, no errors`。
+
+  **这同时更正了本条之前的结论**：`BET-LEDGER-STATUS-LAGS-DELIVERY`（#5315）的
+  `decision_needed` 里写「实测反方向 0 违规」并据此推荐「done ⇒ digest 必须一致」
+  这条判据 —— 那句话是**只查存在性**得出的（spec 在 main 上存在 ⇒ 0 违规），
+  **不是** digest 一致性。真实读数是本条的 329 陈旧。
+decision_needed: >-
+  三条路：（a）**重新认证（re-attest）** —— 批量把 329 条 digest 更新为当前 spec 的
+  sha256，然后把 lint 的 done 豁免去掉，让这条判据真正生效（风险：一次性大 diff，
+  且若 spec 还会被批量补丁再改，就得有周期重认证）；（b）**承认 done BET 的 digest
+  是「冻结快照」** —— 即 done 时冻结、之后 spec 的机械改动不影响它，那么 lint 的
+  豁免是**对的**，但要在字段语义里写清楚（现在的注释没说），并且把「spec 被改过」
+  这件事用别的判据暴露（例如 spec 的 `last-reviewed` 与 digest 的漂移）；
+  （c）**只对非机械改动报错** —— 先算 spec 的 frontmatter 归一化摘要（剔除
+  `last-reviewed` 等机械字段）再比对，这样 #4328 那类批量补丁不再触发陈旧。
+  **本条不代决。** 另：无论选哪条，`BET-LEDGER-STATUS-LAGS-DELIVERY` 里那句
+  「0 违规」的措辞都要按本条更正。
+history:
+- at: "2026-11-12T08:00:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：上一轮（#5315）我提出「done ⇒ content_digest 必须一致」并声称
+    「实测反方向 0 违规」—— 那句话只查了**存在性**。本轮补做真正的 digest 比对，
+    得到 329/451 陈旧，**据此更正 #5315 的措辞**。
+    **判据**：说「某判据当前成立」之前，先确认自己测的**就是**那个判据 ——
+    「spec 存在」与「spec 内容摘要一致」是两条不同的判据，前者为 0 违规
+    不能推出后者为 0 违规。**纪律**：抽样验证时先打印被比对的两个值
+    （declared vs actual），确认它们确实是同一个字段的同一种编码。
+  actor: "governance-agent"
