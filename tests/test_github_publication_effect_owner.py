@@ -35,7 +35,16 @@ FORBIDDEN_PUBLICATION_PATTERNS = (
 # is enforced by FORBIDDEN_PUBLICATION_PATTERNS and the no-contents:write
 # assertions, not by its absence. Any OTHER write-capable secret token
 # remains banned below.
-ALLOWED_READONLY_TOKEN_RE = re.compile(r"^\$\{\{\s*secrets\.CROSS_REPO_TOKEN\s*\}\}$")
+ALLOWED_READONLY_TOKEN_RE = re.compile(
+    r"^\$\{\{\s*secrets\.CROSS_REPO_TOKEN\s*\}\}$"
+    # 回退形态: 三个 workflow 写的是 `CROSS_REPO_TOKEN || GITHUB_TOKEN`
+    # (PAT 缺席时——fork、未配 secret 的检出——仍能 checkout 私有子模块)。
+    # 接受它的依据不是「GITHUB_TOKEN 无害」, 而是: ① 该回退的另一操作数只能是
+    # secrets.GITHUB_TOKEN; ② 这三个 workflow 都声明 permissions.contents: read
+    # (下方断言), GITHUB_TOKEN 对 contents 亦为只读; ③ 发布安全由
+    # FORBIDDEN_PUBLICATION_PATTERNS 与 no-contents:write 断言单独保证。
+    r"|^\$\{\{\s*secrets\.CROSS_REPO_TOKEN\s*\|\|\s*secrets\.GITHUB_TOKEN\s*\}\}$"
+)
 
 WRITE_CAPABLE_TOKEN_RE = re.compile(
     r"token\s*:\s*\$\{\{\s*secrets\.(?!CROSS_REPO_TOKEN\s*\}\})(?:bot_token|[A-Z0-9_]*TOKEN)\s*\}\}"
