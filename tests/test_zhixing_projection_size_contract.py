@@ -124,14 +124,20 @@ def _revision(root, runtime, live, size):
     return data
 
 
-@pytest.mark.parametrize("size, accepted", [(16 * MIB + 1, True), (32 * MIB + 1, False)])
+@pytest.mark.parametrize(
+    "size, accepted",
+    [
+        (16 * MIB + 1, True),  # 真实 data.json 区间（≈14.6 MiB）之上，两个上限之下
+        (64 * MIB + 1, False),  # 越过加载上限（#4875 由 16 MiB 抬到 64 MiB）
+    ],
+)
 def test_real_revision_read_and_http_response_are_bounded(modules, tmp_path, size, accepted):
     runtime, live = modules
     state = tmp_path / "state"
     original = _revision(state, runtime, live, size)
     store = runtime.ProjectionRevisionStore(state)
     if accepted:
-        assert 16 * MIB < size < 32 * MIB
+        assert 16 * MIB < size < runtime._MAX_ARTIFACT_BYTES
         assert store.load().artifact_bodies["data"] == original
     else:
         with pytest.raises(runtime.ProjectionStateError) as error:
@@ -162,8 +168,16 @@ def test_real_revision_read_and_http_response_are_bounded(modules, tmp_path, siz
         thread.join(timeout=5)
 
 
-def test_artifact_caps_align_without_relaxing_control_or_document_limits(modules):
+def test_artifact_caps_cover_real_projection_without_relaxing_control_or_document_limits(modules):
+    """两个上限用途不同，不要求相等 —— 要求的是「服务上限 ≤ 加载上限」且都留裕量。
+
+    #4875（`5d5ae5404`）把 runtime 的加载上限从 16 MiB 抬到 64 MiB：当时 data.json
+    16,836,519 字节越过了 16 MiB，导致 revision 加载整体失败。serve cap 未同步抬，
+    但真实 data.json 已回落（2026-11-12 实测 15,335,922 字节 ≈14.6 MiB），32 MiB
+    仍有约 2 倍裕量。这里不把真实字节数写死 —— 它会随每次投影滚动，写死就是时钟炸弹。
+    """
     runtime, live = modules
-    assert runtime._MAX_ARTIFACT_BYTES == live.MAX_PROJECTION_ARTIFACT_BYTES == 32 * MIB
+    assert live.MAX_PROJECTION_ARTIFACT_BYTES >= 32 * MIB
+    assert runtime._MAX_ARTIFACT_BYTES >= live.MAX_PROJECTION_ARTIFACT_BYTES
     assert runtime._MAX_CONTROL_BYTES == 256 * 1024
     assert live.MAX_DOCUMENT_BYTES == MIB
