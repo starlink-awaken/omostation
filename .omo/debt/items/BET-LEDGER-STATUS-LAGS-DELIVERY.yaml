@@ -1,0 +1,61 @@
+id: "BET-LEDGER-STATUS-LAGS-DELIVERY"
+title: "3 条 BET 的 spec 已在 origin/main 但台账状态仍 pending/in_progress —— 另记：spec 存在性不能当交付判据"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- docs/plans/3y-bet-ledger.yaml
+evidence_refs:
+- docs/plans/3y-bet-ledger.yaml
+- tests/test_gac_m1_tracked_truth.py
+mitigation_refs: []
+opened_at: "2026-11-12"
+last_reviewed_at: "2026-11-12"
+next_review_at: "2026-12-12"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  2026-11-12 在 `origin/main`（`8c631df4d`）上做的一次横向核查：对台账里 454 条
+  spec 绑定，逐个 `git cat-file -e origin/main:<spec_ref>` 判存在性，再与台账
+  `status` 交叉。
+
+  **反方向干净**：`spec 不在 main 但台账 done` = **0 条**。
+
+  **正方向 3 条**（spec 已在 main，台账仍非终态）：
+
+  | BET | 台账 status | spec |
+  |---|---|---|
+  | BET-Y2Q4-T10-279 | `in_progress` | `2026-10-29-compute-i9-01-integration.md` |
+  | BET-Y2Q4-T10-344 | `pending` | `2026-11-10-cron-mini-host-alias-task-eef1cedc.md` |
+  | BET-Y2Q4-T10-347 | `in_progress` | `2026-11-11-gac-bootstrap-execution-truth.md` |
+
+  其中 T10-347 的**实质工作已由 #5297 交付**（gac-bootstrap 层3/层4/层6 收口），
+  T10-344 的 registry / 测试 / spec 也已在 main 上（并发 agent 提交），
+  T10-279 自 2026-10-29 起 `in_progress` 已两周。
+
+  **重要否定结论**：本轮最初想做的判据是「spec 在 main ⇒ BET 应推进/已完成」，
+  核查后确认**该判据不成立** —— spec 是契约文档，完全可以在 BET 尚未启动时就提交
+  （T10-344 就是：spec 已在 main，BET 还 `pending`）。**不要用 spec 存在性做交付判据。**
+decision_needed: >-
+  ① 这 3 条各自推进到与实际相符的状态（T10-347 → `done` + 补 closeout；T10-344 →
+  `in_progress` 或 `done`，取决于其 `done_when` 是否满足；T10-279 → 确认是否仍在进行），
+  还是把它们登记为「已知滞后」；② 是否需要一个**真正的**交叉判据 —— 例如
+  「台账 `status: done` 的 BET，其 `accepted_specifications[].content_digest` 必须等于
+  origin/main 上 spec 的实际 sha256」（本轮实测反方向 0 违规，说明这一条当前成立，
+  但它是**内容一致性**判据，不是存在性判据）。本条不代决。
+history:
+- at: "2026-11-12T07:35:00+00:00"
+  action: identify
+  note: >-
+    **核查口径**：`git cat-file -e origin/main:<path>` 逐条判存在 + 与 `status` 交叉，
+    两条方向都算。**判据**：设计「用 A 的存在性推断 B 的状态」这类判据前，先问
+    「A 在 B 之前出现是合法的吗」—— 本例合法（spec 先于交付提交），所以该判据不成立。
+    **纪律**：否定结论也要落进条目，否则下一轮会有人把同一个不成立的判据再提一遍。
+  actor: "governance-agent"
