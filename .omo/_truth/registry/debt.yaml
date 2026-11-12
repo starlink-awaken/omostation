@@ -82,3 +82,4 @@ seed_items:
 - .omo/debt/items/TEST-AUTO-FIX-LOOP-REPO-STATE-DEPENDENT.yaml
 - .omo/debt/items/GAC-M1-REGISTRY-DRIFT-UNATTENDED.yaml
 - .omo/debt/items/PROJECTION-SIZE-CAP-THREE-WAY-DRIFT.yaml
+- .omo/debt/items/BET-LEDGER-STATUS-LAGS-DELIVERY.yaml
