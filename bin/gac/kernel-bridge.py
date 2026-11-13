@@ -77,12 +77,17 @@ def main() -> int:
         return 0
 
     if args.sync_state:
-        print("✓ State sync completed")
-        return 0
+        # 2026-11-13: 原实现只打印 "✓ State sync completed" 而**不读不写** ——
+        # _load_state/_save_state 就在旁边却没被调用, 也没有对端可同步。**假成功
+        # 会让调用方以为两侧状态已一致**。改为显式拒绝并指路。
+        print("✗ --sync-state 未实现：本桥只落 .omo/state/kernel-bridge.json, 无对端可同步。")
+        print("  查看状态: python3 bin/gac/kernel-bridge.py --status")
+        print("  开启委托: python3 bin/gac/kernel-bridge.py --delegate <function>")
+        return 1
 
     parser.print_help()
     return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

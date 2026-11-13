@@ -205,12 +205,18 @@ def main() -> int:
         return 1
 
     if args.sync_all:
-        print("✓ All bridges synced")
-        return 0
+        # 2026-11-13: 原实现只打印 "✓ All bridges synced" 而**什么都不做** ——
+        # BRIDGES 与 delegate() 就在旁边, 但既没有遍历也没有调用。**假成功会让
+        # 调用方以为所有桥都已同步**, 而实际上什么都没发生。改为显式拒绝并指路
+        # (本仓既有纪律: 空转路径要打印「本形态不适用」并给出该走哪条路)。
+        print("✗ --sync-all 未实现：本运行时只支持逐个委托, 没有批量同步。")
+        print("  先看有哪些桥: python3 bin/gac/bridge-runtime.py --list-bridges")
+        print("  再逐个委托:   python3 bin/gac/bridge-runtime.py --delegate <BRIDGE> <FUNC>")
+        return 1
 
     parser.print_help()
     return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
