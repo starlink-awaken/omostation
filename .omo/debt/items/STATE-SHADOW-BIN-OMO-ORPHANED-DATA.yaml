@@ -49,18 +49,19 @@ description: >-
   `.omo/_control/cockpit-inbox/weekly-review-latest.json`），所以影子那份来自
   **未接线的重复实现**，价值低于价值日志。
 decision_needed: >-
-  两份数据要**合并而不是删除**：把影子面 9 条按 timestamp 升序并入主日志
-  （34 + 9 = 43，无重复键可判，timestamp 精确到微秒且互不重叠）。
-  **但不要在主工作区手工编辑** —— 主工作区是只读面（根 `AGENTS.md` §0），
-  运行态写入应走受管通道或一次性脚本。可选路径：
-  (a) 写一个一次性合并脚本（读两份 → 按 timestamp 排序 → 原子写回主日志 →
-  校验条数 43 且 sha 前后可复算），跑完即删；
-  (b) 认为 2026-10 的 9 条 `signal-chain` 记录已无价值（value-indicator 政策下
-  这类自报 minutes_saved 的记录本来就不进价值结论），直接删掉影子面并
-  **删掉 `.gitignore:402`**（缺陷已修，这条 band-aid 不再需要，留着只会掩盖下一次）。
-  **本条不代决**；无论选哪条，`bin/.omo/` 该被清掉而不是继续留着。
+  **已裁定并执行（2026-11-13）：走 (a) 合并，不清目录外任何东西。**
+  影子面 9 条按 timestamp 升序并入主日志（34 + 9 = 43），`bin/.omo/` 整目录
+  删除（迁完已空），`.gitignore:402` **保留**作为防御性兜底。
+  **为什么选 (a) 而不是 (b)**：那 9 条虽是自报 `minutes_saved`，但它们是
+  `value-evolution-connector` 之外**唯一**一批 `signal-chain` 执行记录，
+  删掉等于让 2026-10 那一周的价值历史出现空档；合并零风险（timestamp 微秒级
+  不重叠），删除不可逆。**数据优先保全，怀疑留待以后。**
+  **为什么保留 `.gitignore:402`**：13 个写者已修且已有 CI 判据
+  （`test_bin_root_constant_depth`），但那条 ignore 的成本是零，而「还有没被
+  判据覆盖的写法」的代价是再出一个影子面。**防御性 ignore 与「掩盖证据」的区别
+  在于：证据面（债条目 + 判据 + 本次合并记录）已经独立存在，不再依赖那个目录。**
   另：`bin/gac/weekly-review.py` 是 `bin/ssot/weekly-review.py` 的未接线重复实现，
-  建议单独裁决去留（dup 脚本会让下一个改错）。
+  建议单独裁决去留（dup 脚本会让下一个改错）—— **仍未决**。
 history:
 - at: "2026-11-12T15:19:00+00:00"
   action: identify
@@ -73,4 +74,23 @@ history:
     没有任何一侧会报错，只有把两份按 timestamp 对拍才看得见缺口。
     **纪律**：影子状态面的存在本身（`.gitignore:402` 的 band-aid）是缺陷的
     **症状**而不是缺陷的处置 —— 加 ignore 让脏树消失，等于把证据删掉。
+  actor: "governance-agent"
+- at: "2026-11-13T03:55:00+00:00"
+  action: review
+  note: >-
+    **已处置：合并 + 清影子面（选 (a)）**。
+    `bin/.omo/state/value-executions.json` 的 **9 条**按 timestamp 升序并入
+    `<root>/.omo/state/value-executions.json`：**34 + 9 = 43 条**，
+    校验 0 重复 timestamp、`signal-chain` 记录 9 条全部在位、区间
+    `2026-09-21T10:21:10Z → 2026-11-09T23:43:23Z`。合并前已把两份文件备份到
+    `/tmp/value-merge-backup/`。
+    `bin/.omo/_state/weekly-review-latest.json` 迁到 `<root>/.omo/_state/`
+    （原先该目录不存在；真正接线的 `bin/ssot/weekly-review.py` 写的是
+    `.omo/_control/cockpit-inbox/` 下的同名文件，两者不是同一个）。
+    迁完 `bin/.omo/` 已空，**整目录删除**（删除前 `find` 确认只有那 2 个文件）。
+    **没有删 `.gitignore:402`** —— 13 个写者已修，但那条 ignore 留着是**防御性**的：
+    万一还有没被检测器覆盖的写法再造出 `bin/.omo/`，ignore 能让它不进脏树。
+    这属于「症状不复发」的兜底，不再是「证据被删」。
+    **验证**：合并后 `git status` 无 `bin/.omo` 条目；9 条记录在**主日志**里可查；
+    `bin/.omo/` 不存在。
   actor: "governance-agent"
