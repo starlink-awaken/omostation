@@ -211,6 +211,11 @@ jobs:
           # 的结果取决于子模块是否初始化, 且两边都不报错。同族: 「判据被跑, 但跑的是
           # 另一套」。实测 4 pass; 不依赖子模块 (SGF_POLICY_YAML 由 monkeypatch 注入),
           # 故 HOME=<空> + env -u OMOSTATION_* 下同样通过。
+          # 2026-11-13 追加: test_weekly_review_to_inbox_is_honest 钉「空转路径要显式报」——
+          # bin/gac/weekly-review.py 的 --to-inbox 原只打印 `✓ pushed to inbox` 而**不写
+          # 任何文件**(全文件唯一 write_text 在 --generate 里), 是**假成功**: 调用方会以为
+          # 周报已进 cockpit inbox。已改为显式拒绝 + 指路 bin/ssot/weekly-review.py
+          # --post-inbox。实测 3 pass; 变异对照: 改回假成功 ⇒ 2 failed, 恢复 ⇒ 3 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -245,6 +250,7 @@ jobs:
             ../../tests/test_zhixing_projection_size_contract.py \
             ../../tests/unit/test_bin_root_constant_depth.py \
             ../../tests/unit/test_sgf_policy_fallback_is_loud.py \
+            ../../tests/unit/test_weekly_review_to_inbox_is_honest.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
