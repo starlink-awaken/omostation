@@ -222,6 +222,13 @@ jobs:
           # `✓ State sync completed` 就 return 0 (_load_state/_save_state 就在旁边却不读不写)。
           # 两条还都写成 `main()` 而非 `sys.exit(main())` ⇒ 退出码永远 0。已改诚实拒绝 +
           # 指路, 并补上 sys.exit。实测 4 pass; 变异对照: 撤销修复 ⇒ 3 failed, 恢复 ⇒ 4 pass。
+          # 2026-11-14 追加: tests/unit/gac/test_cross_domain_trend 钉「测试不得污染生产状态」——
+          # 其 run_trend 原只传 --registry 不传 --output, 于是脚本把 fixture 数据
+          # (2026-01-01..05) 写进**真实的** .omo/state/runtime/cross-domain-trend.json
+          # (实测那份产物的 days 就是 fixture 日期)。已修 run_trend 始终显式给 --output,
+          # 并加守卫用例(模块导入时取快照, 跑完必须逐字节不变)。
+          # 实测 4 pass; 变异对照: 撤销修复 ⇒ 守卫 1 failed 且真实产物被创建(562 字节),
+          # 恢复 ⇒ 4 passed 且不创建。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -258,6 +265,7 @@ jobs:
             ../../tests/unit/test_sgf_policy_fallback_is_loud.py \
             ../../tests/unit/test_weekly_review_to_inbox_is_honest.py \
             ../../tests/unit/test_bridge_sync_flags_are_honest.py \
+            ../../tests/unit/gac/test_cross_domain_trend.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
