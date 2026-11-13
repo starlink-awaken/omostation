@@ -1,0 +1,76 @@
+id: "CRON-REGISTRY-REALITY-NO-PRODUCER"
+title: "cron 登记面的 `reality` 字段没有任何生产者（纯手工维护），且对 launchd 盲 —— `debt-refresh-weekly` 标 `declared_only` 而 launchd 正在跑同一条命令"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/cron/registry.yaml
+evidence_refs:
+- .omo/cron/registry.yaml
+- bin/scheduler-compile.py
+- bin/mof/gen-service-configs.py
+mitigation_refs: []
+opened_at: "2026-11-14"
+last_reviewed_at: "2026-11-14"
+next_review_at: "2026-12-14"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/cron/registry.yaml` 88 条作业里 **22 条**标 `reality: declared_only` +
+  `status: proposed`（另有 6 条 `reality: pending`）⇒ 登记面自己说「四分之一的
+  调度没装」。
+
+  **但这个字段没有生产者** —— 全仓没有任何脚本写 `reality`（`bin/` 与
+  `projects/omo/src` 里只有**读**它的地方：`bin/panorama/panorama-collect.py`
+  用 `reality == "installed"` 过滤）。它是**纯手工维护**的，于是必然漂移。
+
+  **实证一条**：`debt-refresh-weekly` 标 `declared_only`，而 launchd 的
+  `com.omostation.omo-debt-refresh` **正在跑同一条命令** ——
+  登记面写 `uv run --project projects/omo omo debt refresh ...`，
+  plist 的 `ProgramArguments` 是 `python -m omo.omo_debt_cli refresh ...`，
+  而 `projects/omo/src/omo/cli.py:113` 就是 `if args[0] == "debt": from omo.omo_debt_cli import main`
+  ⇒ **两者是同一个 CLI**，只是入口拼写不同。
+
+  **为什么手工维护必然漂**：`reality` 的语义是「有没有装」，但机器上有**两个**
+  安装面 —— `crontab(1)` 与 `launchd`。登记面只在被 `ops-cron-install.py`
+  装上时才写 `crontab_installed`，**没有任何地方知道 launchd 装了什么**。
+  `bin/scheduler-compile.py` 的 docstring 已经记下「登记面是部分视图」（对 crontab 而言，
+  已装 crontab 比它多出 resident daemon 条目），但**对 launchd 的盲**没人记。
+
+  **后果**：任何人按 `reality` 分诊调度健康度，都会把「其实一直在跑」的作业列进
+  「未安装」，要么重复安装、要么误判该调度已死。
+decision_needed: >-
+  (a) **让 `reality` 有生产者** —— 写一个只读探针，同时看 `crontab -l` 与
+  `launchctl list`（label ↔ 作业的映射需要解决：两套入口拼写不同，
+  如 `omo debt refresh` vs `python -m omo.omo_debt_cli refresh`；
+  可以先用「命令里的 CLI 名/模块名 + label 词干」做启发式，再手工兜底一张小映射表），
+  把结果写回登记面或直接作为门禁读数。
+  (b) **承认它是手工字段**，那就别让它看起来像机器读数 —— 把 `reality` 改名/
+  加注释说明「仅反映 crontab，launchd 不在内」，并在任何消费点
+  （`panorama-collect.py` 的 `reality == "installed"` 过滤）旁边写明这个限制。
+  **本条不代决**。**注意**：无论选哪条，`debt-refresh-weekly` 这条
+  `declared_only` 都是**假的**，可以立即订正为 `crontab_installed` 之外的第四种
+  取值（如 `launchd_installed`）—— 但那只是 22 条里的 1 条，
+  **逐条订正不解决「没有生产者」这个问题**。
+history:
+- at: "2026-11-14T01:20:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：在 `anomaly-alert-daily` 标 `declared_only`/`proposed` 的基础上
+    统计了整个登记面（22/88 declared_only），随后逐条抽查「是真没装还是字段陈旧」。
+    抽查 `debt-refresh-weekly` 时发现 launchd 有一个 `omo-debt-refresh`，
+    其 `ProgramArguments` 与登记命令是同一个 CLI 的两种拼写。
+    **判据**：登记面上任何**机器可读的状态字段**（`reality` / `status` /
+    `installed`）都要先问「**谁写它**」—— 没有生产者的字段会在第一次真实漂移时
+    永久骗人，而且它看起来比手工备注更可信（这正是它比「没有字段」更危险的地方）。
+    **纪律**：抽查一条怀疑项时，**先找「它其实一直在跑」的可能** ——
+    两个安装面（crontab / launchd）时尤其如此；按「声明 a vs 已装 b」做集合差
+    之前，先确认 a 与 b 是同一个平面。
+  actor: "governance-agent"
