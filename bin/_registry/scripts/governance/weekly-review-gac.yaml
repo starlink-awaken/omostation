@@ -3,7 +3,12 @@ id: bin/gac/weekly-review.py
 name: Weekly Review
 category: governance
 owner: governance-team
-description: ""
+description: >-
+  周价值回顾生成器 (Makefile `weekly-review` 目标 + ops-cron-install 的 Fri 17:00 cron
+  + unified-orchestrator)。只写 .omo/_state/weekly-review-latest.json。
+  2026-11-13: `--to-inbox` 原为**假成功空转**（只打印 pushed 而全文件唯一 write_text
+  在 --generate 里），已改为显式拒绝并指向接线的 bin/ssot/weekly-review.py --post-inbox。
+  用例 tests/unit/test_weekly_review_to_inbox_is_honest.py。
 inputs: []
 outputs:
   - type: exit_code

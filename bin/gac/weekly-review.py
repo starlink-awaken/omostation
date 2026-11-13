@@ -111,13 +111,13 @@ def main() -> int:
         return 0
 
     if args.to_inbox:
-        if not REVIEW_FILE.exists():
-            print("No review found. Run --generate first.")
-            return 1
-        review = json.loads(REVIEW_FILE.read_text(encoding="utf-8"))
-        # Push summary to inbox
-        print(f"✓ Weekly review pushed to inbox (Week {review.get('week')})")
-        return 0
+        # 2026-11-13: 原实现只打印 "✓ ... pushed to inbox" 而**不写任何文件** ——
+        # 全文件唯一的 write_text 在 --generate 里。**假成功比空着更糟**：调用方
+        # 会以为周报已进 cockpit inbox，而 inbox 侧永远收不到。改为显式拒绝并指路
+        # （本仓既有纪律：空转路径要打印「本形态不适用」并给出该走哪条路）。
+        print("✗ --to-inbox 在本实现里不落地：本脚本只写 .omo/_state/weekly-review-latest.json。")
+        print("  周报进 cockpit inbox 请用接线的实现：python3 bin/ssot/weekly-review.py --post-inbox")
+        return 1
 
     parser.print_help()
     return 0
