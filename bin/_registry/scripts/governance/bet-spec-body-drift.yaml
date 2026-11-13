@@ -1,0 +1,27 @@
+schema: script-registry/v1
+id: bin/plan/bet-spec-body-drift.py
+name: Bet Spec Body Drift
+category: governance
+owner: governance-team
+description: >-
+  对 done BET 的 spec 绑定做「只报不改」的正文漂移观察：沿 git log 找到与
+  content_digest 相等的那一版（绑定时的内容），再按正文归一化（剥 frontmatter、
+  丢空行、行尾去空白）比对，分成 mechanical_only / body_drift / unverifiable
+  三类。不写任何东西。2026-11-13 实测 451 条：mechanical_only 431、
+  body_drift 4、unverifiable 16。
+  背景：bet-ledger.py 的摘要校验只对非 done BET 生效（done 被刻意豁免），
+  于是 329 条陈旧 digest 从不报错；本工具是债条目 BET-DONE-SPEC-DIGEST-MASS-STALENESS
+  里路径 (d) 的落地 —— 只报不改、零迁移成本。
+inputs: []
+outputs:
+  - type: exit_code
+  - type: json
+  - type: stdout
+dependencies:
+  - git
+triggers: []
+related:
+  - .omo/debt/items/BET-DONE-SPEC-DIGEST-MASS-STALENESS.yaml
+  - .omo/debt/items/BET-DONE-SPEC-DIGEST-UNVERIFIABLE-ON-MAIN.yaml
+maturity: stable
+last_reviewed: "2026-11-13"
