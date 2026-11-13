@@ -218,7 +218,7 @@ def check_g_conv_4_gitlink(root: Path) -> dict[str, Any]:
 
 def check_g_conv_5_write_owner(root: Path) -> dict[str, Any]:
     wo = root / ".omo/_truth/registry/write-owners.yaml"
-    repair = root / "bin/ssot/write-owner-repair-draft.py"
+    repair = root / "bin/_archive/write-owner-repair-draft.py"
     pre = root / ".pre-commit-config.yaml"
     pre_txt = pre.read_text(encoding="utf-8") if pre.is_file() else ""
     ok = wo.is_file() and repair.is_file() and ("write-owner" in pre_txt or "write_owner" in pre_txt)

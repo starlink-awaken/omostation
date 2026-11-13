@@ -80,7 +80,7 @@ repos:
       # G-CONV.5: write-owners 单写者 + 失败时生成本地 repair-draft commit (L2)
       - id: write-owner-audit
         name: write-owner-audit (G-CONV.5 门禁即免疫)
-        entry: bash -c 'uv run --with pyyaml python bin/ssot/write-owner-audit.py --staged || { uv run --with pyyaml python bin/ssot/write-owner-repair-draft.py --from-audit-exit --commit; exit 1; }'
+        entry: bash -c 'uv run --with pyyaml python bin/ssot/write-owner-audit.py --staged || { uv run --with pyyaml python bin/_archive/write-owner-repair-draft.py --from-audit-exit --commit; exit 1; }'
         language: system
         pass_filenames: false
         stages: [pre-commit]
