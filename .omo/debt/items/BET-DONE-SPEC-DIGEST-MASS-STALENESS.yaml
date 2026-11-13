@@ -111,3 +111,23 @@ history:
     按 `body_lines_only` 比对，只在正文变了时告警。这条同时把上面 4 条真改动与 16 条
     不可验证绑定暴露出来，且零迁移成本。
   actor: "governance-agent"
+- at: "2026-11-13T03:10:00+00:00"
+  action: review
+  note: >-
+    **路径 (d) 已落地为常驻工具**：`bin/plan/bet-spec-body-drift.py`（observe-only，
+    缺省 exit 0，可选 `--fail-on drift|any`）。它沿 `git log -- <spec>` 反查与
+    `content_digest` 相等的那一版，再按正文归一化（剥 frontmatter、丢空行、行尾去空白）
+    比对，分成三类。
+    **读数（451 条 done BET 绑定）**：`mechanical_only` **431**、`body_drift` **4**、
+    `unverifiable` **16**。与本条上一轮实验（313 条可定位里 309 机械 + 4 正文改动，
+    另 16 条定位失败）**逐项吻合** —— 431 = 122 本来就一致 + 309 机械漂移。
+    **意义**：这条判据现在**可被反复运行**，不再只存在于本条目的叙述里。它同时把
+    两条债暴露出来：`body_drift` 的 4 条是「spec 正文真改了而绑定没跟上」，
+    `unverifiable` 的 16 条是 `BET-DONE-SPEC-DIGEST-UNVERIFIABLE-ON-MAIN`。
+    **未接线**：本工具当前**没有**接进任何 CI 路径（`triggers: []`），
+    所以「跑一次有读数」≠「持续有证据」。是否接线、以及是否升级为 `--fail-on`，
+    取决于 (a)/(b)/(c)/(d) 的最终裁决 —— 本条仍不代决。
+    **纪律**：observe-only 工具如果永不接线，就是本仓反复出现的「判据不被任何 CI
+    路径跑 = 不存在」的又一个实例；登记工具时**必须同时写明它的接线状态与升级条件**，
+    否则下一个人会把它当成已有证据。
+  actor: "governance-agent"
