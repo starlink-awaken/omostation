@@ -88,3 +88,4 @@ seed_items:
 - .omo/debt/items/STATE-SHADOW-BIN-OMO-ORPHANED-DATA.yaml
 - .omo/debt/items/DEPENDENCY-BASELINE-DRIFT-INVISIBLE.yaml
 - .omo/debt/items/GATE-SURFACE-POLICY-VS-DEFAULT-DIVERGENCE.yaml
+- .omo/debt/items/METRICS-STORE-PIPELINE-UNWIRED.yaml

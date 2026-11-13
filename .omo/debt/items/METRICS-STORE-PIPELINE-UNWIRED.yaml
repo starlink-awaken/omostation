@@ -1,0 +1,83 @@
+id: "METRICS-STORE-PIPELINE-UNWIRED"
+title: "`.omo/state/metrics-store.jsonl` 的唯一写者（`gac-local-gate --metrics`）从不执行 —— 11 个消费者读一个停在 2026-09-21 的库"
+dimension: "governance"
+subdimension: "observability"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/state/metrics-store.jsonl
+- bin/gac/gac-local-gate.py
+evidence_refs:
+- bin/gac/gac-local-gate.py
+- .omo/state/metrics-store.jsonl
+- .omo/cron/registry.yaml
+mitigation_refs: []
+opened_at: "2026-11-14"
+last_reviewed_at: "2026-11-14"
+next_review_at: "2026-12-14"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/state/metrics-store.jsonl` 是 **11 个脚本**的共同输入（`adaptive-gate` /
+  `anomaly-detector` / `cross-domain-trend` / `predictive-governance` /
+  `governance-dashboard` / `governance-scanner` / `observability-events` /
+  `debt-predictor` / `metrics-store` / `ssot/predictive-governance` /
+  `gac-local-gate` 自身）。但它的**唯一写者**从不执行：
+
+  - `bin/gac/gac-local-gate.py` 的 `append_metrics()` 只在 `if args.metrics:` 里调
+    （`:1547`），而 `--metrics` 是 `store_true`（`:1482`）⇒ **默认不写**；
+  - CI 的门禁调用是 `python3 bin/gac/gac-local-gate.py --strict`
+    （`.github/workflows/gac-gate.yml:209`）—— **不带 `--metrics`**；
+  - `.omo/cron/registry.yaml` 与本机 `crontab -l` 里**没有任何** `gac-local-gate`
+    条目 ⇒ 本地也没有定时跑门禁；
+  - 唯一的 reader cron（`anomaly-alert-daily`，每天 08:45 跑 `anomaly-detector`
+    + `alert-router`）登记为 `reality: declared_only` / `status: proposed`
+    —— **未安装**。
+
+  **读数（2026-11-14）**：文件 59 条、**distinct days = 1**（全是 2026-09-21）、
+  mtime `2026-09-21 18:22` —— 恰好是**一次** gate 运行的条目量（一次 strict 门禁
+  约 60 个 check）。也就是说这个库**自建库以来只被写过一次**。
+
+  **后果**：`cross-domain-trend` 的 `_compute_trend` 要求 ≥2 天才算斜率
+  （`len(days) < 2 ⇒ insufficient_data`）⇒ 所有跨域趋势/预测投影**结构性地**
+  返回 `insufficient_data`。实测 2026-11-14 手工跑 `cross-domain-trend.py`
+  重算，`governance` 域结果是 `{"trend": "insufficient_data", "slope": 0.0, "values": []}`。
+  同理 `adaptive-gate`（自适应阈值）与 `anomaly-detector`（异常检测）也拿不到
+  足够窗口 ⇒ 这一族「用历史数据自适应/告警」的能力**整体空转**。
+
+  **顺带**：本次核查的起因是 `cross-domain-trend.py` 的产物
+  `.omo/state/runtime/cross-domain-trend.json` 内容竟是**测试 fixture**
+  （`days` = 2026-01-01..05）—— 已由 #5337 修（测试不传 `--output` 导致污染）。
+  修完后重算才暴露出本条：真实输入根本不够。
+decision_needed: >-
+  两条路，**先裁定「这条链还要不要」**，再决定接线方式：
+  (a) **要** —— 那么得先回答「谁在什么频率上跑带 `--metrics` 的门禁」。CI 不行
+  （每次干净检出，写了也随 runner 消失）；得是**长生命周期检出**上的定时任务
+  （本机 cron / launchd）。注意写面还要跟 ADR-0456 的 state 根一致
+  （`bin/gac/gac-local-gate.py:16` 的 `WORKSPACE` 是 code root，与读者同侧，
+  这一点没问题；但若将来声明 profile，写面要跟着走）。
+  (b) **不要** —— 那就该把 11 个消费者连同 `trend-fusion.yaml` /
+  `runtime-projections.yaml` 里的相关 projection / `anomaly-alert-daily` cron
+  一起退役，别留一条「声明完整、从未跑通」的链继续误导（本仓已有
+  「工具写好但不可达 = 等于没有」的纪律）。
+  **本条不代决**。**注意**：无论选哪条，`metrics-store.jsonl` 里那 1 天的
+  数据都没有价值（它是**一次**运行的快照，不是时间序列）。
+history:
+- at: "2026-11-14T00:40:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：核查 `cross-domain-trend.py` 的产物为什么是测试 fixture 时
+    （#5337）发现测试污染；修完污染后手工重算, 结果竟是 `insufficient_data` ——
+    顺着 `metrics-store.jsonl` 往上查, 才看到「唯一写者从不执行」这条链。
+    **判据**：一个**被多处消费**的数据文件, 要先确认**写者是否真的在跑** ——
+    「文件存在」与「文件在被持续写入」是两件事; 这里文件存在、有内容、
+    消费者众多, 唯独写者从未执行。**纪律**：报告一个库「没什么数据」时,
+    先查**写入侧的调度**再查读取侧 —— 本次若只看 `cross-domain-trend` 的
+    消费者代码, 会误判成「趋势算法有问题」。
+  actor: "governance-agent"
