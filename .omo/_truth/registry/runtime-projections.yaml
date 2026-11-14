@@ -74,7 +74,7 @@ projections:
     description: Predictive governance output with recommendations (JSON)
     canonical: .omo/state/runtime/predictive-governance.json
     legacy: .omo/state/runtime/predictive-governance.json
-    generator: predictive-governance.py
+    generator: bin/gac/predictive-governance.py
     lane: runtime_snapshot
 
   memory_os:
