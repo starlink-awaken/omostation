@@ -38,7 +38,8 @@ CORE_FILES = {
     "validate": "bin/gac/gac-validate.py",
     "drift": "bin/gac/gac-drift.py",
     "ci_gate": ".github/workflows/gac-gate.yml",
-    "cron": ".omo/cron/opc-closeout-crontab",
+    # 2026-11-15: opc-closeout-crontab 已于 2026-08-22「登记退役」并归档到
+    # .omo/cron/_archived-20260822-opc-closeout-crontab，旧路径不再要求存在。
     "agents_md": "AGENTS.md",
     "m2_type": "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml",
     "stage1_design": ".omo/_knowledge/gac/stage1-hook-design.md",
@@ -48,7 +49,8 @@ CORE_FILES = {
     "doc_ssot_lint": "bin/ssot/doc-ssot-lint.py",
     "hygiene": "bin/gac/gac-hygiene-check.py",
     "gen_registry": "bin/mof/gen-project-registry.py",
-    "ingest_legacy": "bin/gac/gac-ingest-legacy.py",
+    # 2026-11-15: gac-ingest-legacy.py 已由 #1839 归档到 bin/_archive/migrations/,
+    # 旧路径不再要求存在(见债条目 GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED)。
     "bootstrap": "bin/gac/gac-bootstrap.py",
     "executor": "bin/gac/gac-executor.py",
     "local_gate": "bin/gac/gac-local-gate.py",
