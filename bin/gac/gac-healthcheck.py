@@ -142,6 +142,30 @@ def check_m2_type() -> dict:
     }
 
 
+def probe_legacy_drift(script: str = "bin/gac/gac-ingest-legacy.py") -> dict:
+    """legacy-drift 项的读数。
+
+    2026-11-14: 该脚本已被 #1839 归档到 `bin/_archive/migrations/` 而引用没跟 ——
+    于是 `run_tool` 拿不到输出、json={} ⇒ 读数全是 0、判 ❌。**「源=0 indexed=0」
+    与「真的没问题」在输出里长得一样**，而真相是「工具根本没跑」。显式区分:
+    工具缺失时报 `tool_missing` 且各计数为 `None`，不再伪装成「扫了 0 个」。
+    """
+    missing = not (WORKSPACE / script).exists()
+    code, out = run_tool(script, ["--check", "--json"]) if not missing else (127, "")
+    try:
+        data = json.loads(out) if out else {}
+    except json.JSONDecodeError:
+        data = {}
+    return {
+        "ok": code == 0,
+        "tool_missing": missing,
+        "legacy_count": None if missing else data.get("legacy_count", 0),
+        "indexed_count": None if missing else data.get("indexed_count", 0),
+        "missing": None if missing else len(data.get("missing", [])),
+        "ghost": None if missing else len(data.get("ghost", [])),
+    }
+
+
 def healthcheck() -> dict:
     """主健康检查. 返回报告 dict."""
     report: dict = {"timestamp": subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"]).decode().strip()}
@@ -266,18 +290,7 @@ def healthcheck() -> dict:
     }
 
     # 10. legacy drift (动态收敛: X1-X4+L0 源 vs GaC indexed, 多套并行检测)
-    lg_code, lg_out = run_tool("bin/gac/gac-ingest-legacy.py", ["--check", "--json"])
-    try:
-        lg_json = json.loads(lg_out) if lg_out else {}
-    except json.JSONDecodeError:
-        lg_json = {}
-    report["legacy_drift"] = {
-        "ok": lg_code == 0,
-        "legacy_count": lg_json.get("legacy_count", 0),
-        "indexed_count": lg_json.get("indexed_count", 0),
-        "missing": len(lg_json.get("missing", [])),
-        "ghost": len(lg_json.get("ghost", [])),
-    }
+    report["legacy_drift"] = probe_legacy_drift()
 
     # 11. GaC 自举递归 (元治理核心: GaC 治 GaC 自身, CR-X2-GAC-BOOTSTRAP)
     bs_code, bs_out = run_tool("bin/gac/gac-bootstrap.py", ["--json"])
@@ -454,9 +467,15 @@ def print_report(report: dict) -> None:
     # legacy drift (动态收敛: X1-X4+L0 源 vs GaC indexed)
     lg = report["legacy_drift"]
     lg_status = "✅" if lg["ok"] else "❌"
-    print(
-        f"▶ legacy-drift (收敛同步): {lg_status} 源={lg['legacy_count']} indexed={lg['indexed_count']} missing={lg['missing']} ghost={lg['ghost']}"
-    )
+    if lg.get("tool_missing"):
+        print(
+            f"▶ legacy-drift (收敛同步): {lg_status} 工具缺失: bin/gac/gac-ingest-legacy.py "
+            "(已归档至 bin/_archive/migrations/, 引用没跟) —— 本项读数不可用, 不是「扫了 0 个」"
+        )
+    else:
+        print(
+            f"▶ legacy-drift (收敛同步): {lg_status} 源={lg['legacy_count']} indexed={lg['indexed_count']} missing={lg['missing']} ghost={lg['ghost']}"
+        )
 
     # GaC 自举递归 (元治理: GaC 治 GaC 自身)
     bs = report["bootstrap"]

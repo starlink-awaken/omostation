@@ -1,0 +1,65 @@
+id: "GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED"
+title: "`gac-ingest-legacy.py` 被 #1839 归档而引用没跟 —— healthcheck 的 legacy-drift 项恒红且读数全 0（看着像「扫了 0 个」），归档副本本身还有根深度 bug"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/gac/gac-healthcheck.py
+- bin/_archive/migrations/gac-ingest-legacy.py
+evidence_refs:
+- bin/gac/gac-healthcheck.py
+- bin/_archive/migrations/gac-ingest-legacy.py
+mitigation_refs: []
+opened_at: "2026-11-14"
+last_reviewed_at: "2026-11-14"
+next_review_at: "2026-12-14"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/gac/gac-ingest-legacy.py` 被 #1839 归档到 `bin/_archive/migrations/`，但引用没跟：
+
+  | 引用点 | 后果 |
+  |---|---|
+  | `bin/gac/gac-healthcheck.py` 的 `CORE_FILES["ingest_legacy"]` | 「核心文件」红一条（明确列出缺失路径，这一处是诚实的） |
+  | `bin/gac/gac-healthcheck.py` 的 legacy-drift 探测 | **恒红且读数全 0** —— `run_tool` 拿不到输出、json={} ⇒ `源=0 indexed=0 missing=0 ghost=0` |
+  | `bin/ssot/gen-tools-index.py` 的工具清单 | 列了一个不存在的路径（展示面） |
+
+  **为什么全 0 比红更糟**：`▶ legacy-drift (收敛同步): ❌ 源=0 indexed=0 missing=0 ghost=0`
+  与「真的没问题」在输出里**长得一样**，而真相是「工具根本没跑」。健康检查的总体结论
+  因此长期带红，而这条红传递的信息是 0。
+
+  **归档副本本身也跑不了**：`bin/_archive/migrations/gac-ingest-legacy.py` 实测
+  `FileNotFoundError: .../bin/.omo/_truth/registry/governance-checks.yaml`
+  —— 它把根算成 `bin/`（根深度少一级，与 #5322 修的同一类），所以即使把引用指回
+  归档路径也跑不通。
+
+  **另注**：legacy 源文件（`.omo/_truth/x{1,2,3,4}-*.yaml`）**仍在**，所以这次
+  「X1-X4 原有规则 → GaC indexed」的收敛**没有明显完成**，该能力不是想退就能退的。
+decision_needed: >-
+  三条，先裁定「这条收敛链还要不要」：
+  (a) **要** —— 把工具从归档挪回 `bin/gac/` 并修根深度（`parents[2]` 而非
+  `parents[1]`），引用不用动。代价: 重新占一个 bin 脚本配额。
+  (b) **不要** —— 那就把 healthcheck 的 legacy-drift 项与 `CORE_FILES` 条目
+  一并退役，并说明 legacy 源将长期不收敛（否则下一个人会以为它在跑）。
+  (c) **先只修读数诚实性**（#5348 已做）：工具缺失时显式报 `tool_missing`
+  且计数为 `None`，不再伪装成全 0 —— 这不决定链路去留，但让这条红**说人话**。
+  **本条不代决**；#5348 落的是 (c)。
+history:
+- at: "2026-11-14T02:20:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：扫「healthcheck 报红但读数全 0」的项 —— `legacy-drift` 是唯一
+    一条计数全零却判 ❌ 的。没有直接怀疑「工具不存在」, 是先看到「全 0 + 红」
+    这个不寻常组合才去查 `run_tool` 的目标路径。
+    **判据**：**计数为 0 却判红**（或反过来）是「测量装置没跑起来」的典型信号 ——
+    正常的检查红一定带着某个非零读数。**纪律**：把这类项的报数改成
+    「工具缺失 ⇒ 计数 None + 显式原因」, 别让 0 冒充「没问题」、也别让红
+    不带信息。
+  actor: "governance-agent"
