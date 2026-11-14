@@ -6,8 +6,12 @@
 - `bin/gac/gac-ingest-legacy.py` —— 由 #1839 归档到 `bin/_archive/migrations/`。
 
 两条都让「核心文件」检查恒红（实测 25/27），而红的原因不是交付缺文件，
-是**清单没跟退役走**。本文件把「清单里的主仓路径必须在 origin/main 上被跟踪」钉住。
+是**清单没跟退役走**。本文件把「清单里的主仓路径必须在交付树里被跟踪」钉住。
 （`projects/` 下的条目属于子模块，用主仓 ls-tree 看不到内容，跳过。）
+
+判据落在 `HEAD` 而不是 `origin/main`：`governance-verify` 的 checkout 用
+`ref: <pull_request.head.sha>`，`origin/main` 未必存在 —— 第一版按 origin/main
+判，CI 当场挂而本地过（2026-11-15）。
 """
 
 from __future__ import annotations
@@ -29,15 +33,15 @@ def _load():
     return module
 
 
-def _tracked_on_main(rel: str) -> bool:
+def _tracked(rel: str, ref: str) -> bool:
     proc = subprocess.run(
-        ["git", "ls-tree", "-r", "--name-only", "origin/main", "--", rel],
+        ["git", "ls-tree", "-r", "--name-only", ref, "--", rel],
         cwd=ROOT,
         capture_output=True,
         text=True,
         check=False,
     )
-    return bool(proc.stdout.strip())
+    return proc.returncode == 0 and bool(proc.stdout.strip())
 
 
 def test_core_files_has_no_retired_entries() -> None:
@@ -51,12 +55,18 @@ def test_core_files_has_no_retired_entries() -> None:
     assert "bin/gac/gac-ingest-legacy.py" not in module.CORE_FILES.values()
 
 
-def test_main_repo_core_files_are_tracked_on_origin_main() -> None:
-    """清单里每条主仓路径都必须在 origin/main 上被跟踪 —— 否则这条红是假的。"""
+def test_main_repo_core_files_are_tracked_in_the_delivered_tree() -> None:
+    """清单里每条主仓路径都必须在**交付树**里被跟踪 —— 否则那条红是假的。
+
+    用 `HEAD` 而不是 `origin/main`：`governance-verify` 的 checkout 是
+    `ref: <pull_request.head.sha>` + `fetch-depth: 0`，**`origin/main` 这个 ref
+    未必存在**（2026-11-15 实测：本用例在 CI 当场挂, 本地过）。判据要落在
+    一定存在的那棵树上。
+    """
     module = _load()
     untracked = {
         name: rel
         for name, rel in module.CORE_FILES.items()
-        if not rel.startswith("projects/") and not _tracked_on_main(rel)
+        if not rel.startswith("projects/") and not _tracked(rel, "HEAD")
     }
-    assert untracked == {}, f"CORE_FILES 指向 origin/main 上不存在的主仓路径: {untracked}"
+    assert untracked == {}, f"CORE_FILES 指向交付树里不存在的主仓路径: {untracked}"
