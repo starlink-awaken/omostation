@@ -205,7 +205,7 @@ Runtime 是实际执行，AetherForge 是模型与算力，知识层保存可复
 
 路线图的目标仍是“收敛执行面 → 兑现蜂群 → 跃迁个人大脑”。当前应以运行态与验收文档为准：
 
-- 当前阶段、波次、健康状态与下一里程碑：[`.omo/state/system.yaml`](../.omo/state/system.yaml)。
+- 当前阶段、波次、健康状态与下一里程碑：[`.omo/state/system.yaml`](../.omo/state/system.yaml)（未跟踪的生成文件 —— 干净检出上先跑 `python3 bin/gac/materialize-system-state.py`）。
 - 多智能体协作优先、物理多机延后：[`ADR-0247`](../.omo/_knowledge/decisions/0247-strategic-pivot-collab-first-physical-deferred.md)。
 - Phase 46 的 Registry、同步与故障转移验收：[`projects/runtime/src/runtime/registry/README.md`](../projects/runtime/src/runtime/registry/README.md)。
 - 用户价值主流程与验收口径：[`PROJECT-COMPLETE-GUIDE.md`](PROJECT-COMPLETE-GUIDE.md) 和 [`G-DEL-PHASE2-BOARD.md`](G-DEL-PHASE2-BOARD.md)。

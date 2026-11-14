@@ -49,7 +49,7 @@ eCOS 已经完成从零散工具集合到受治理 AI 操作系统骨架的跨�
 
 | 事实 | 权威来源 |
 |---|---|
-| 当前 Phase、任务、健康与运行状态 | [`.omo/state/system.yaml`](../.omo/state/system.yaml) |
+| 当前 Phase、任务、健康与运行状态 | [`.omo/state/system.yaml`](../.omo/state/system.yaml)（未跟踪的生成文件 —— 干净检出上先跑 `python3 bin/gac/materialize-system-state.py`） |
 | 当前目标 | [`.omo/goals/current.yaml`](../.omo/goals/current.yaml) |
 | 项目元数据 | [`docs/project-registry.yaml`](project-registry.yaml) |
 | BOS 能力与路由 | [`projects/agora/etc/bos-services.yaml`](../projects/agora/etc/bos-services.yaml) |

@@ -249,6 +249,10 @@ jobs:
           # 已退役条目」—— opc-closeout-crontab(2026-08-22 退役) 与 gac-ingest-legacy.py
           # (#1839 归档) 曾让该项恒红, 而红的原因不是交付缺文件。实测 2 pass;
           # 变异对照: 加回退役条目 ⇒ 2 failed, 移除 ⇒ 2 passed。
+          # 2026-11-15 追加: test_frontdoor_docs_caveatless_gitignored_links 钉「前门文档
+          # 不得无说明地链接 gitignored 路径」—— .omo/state/system.yaml 未跟踪, 前门 6 条
+          # 链接曾在干净检出里全是死链(LAYER-INDEX 有说明, 其余 5 处没有)。实测 2 pass;
+          # 变异对照: 去掉 README 说明 ⇒ 1 failed, 恢复 ⇒ 2 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -291,6 +295,7 @@ jobs:
             ../../tests/unit/test_ssot_usage_age_is_content_age.py \
             ../../tests/unit/test_healthcheck_m1_drift_not_vacuous.py \
             ../../tests/unit/test_healthcheck_core_files_not_stale.py \
+            ../../tests/unit/test_frontdoor_docs_caveatless_gitignored_links.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
