@@ -514,7 +514,7 @@ aliases:
     anchor: compute_diff
     evidence:
       l0_constraints: "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml (governance_closure_constraints)"
-      bin_executor: "bin/gac/gac-m1-sync.py (compute_diff: missing/orphan/stale drift) + gac-healthcheck.py 第13项 + CI gate"
+      bin_executor: "bin/gac/gac-m1-sync.py (compute_diff: missing/orphan/stale drift) + bin/gac/gac-healthcheck.py 第13项（由 Makefile 目标 gac-healthcheck / bootstrap 触发；不在 CI —— 2026-11-14 核实 .github/workflows/ 与 Makefile/cron 均无调用点）"
 
   - canonical: CR-KOS-CONSENSUS-RAG-01
     aliases: [CR-KOS-CONSENSUS-RAG-01, gac-consensus-inject]
