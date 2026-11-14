@@ -59,7 +59,7 @@ note: >
 
 | 事实 | SSOT |
 |---|---|
-| 当前 Phase、任务与健康 | [`.omo/state/system.yaml`](../.omo/state/system.yaml) |
+| 当前 Phase、任务与健康 | [`.omo/state/system.yaml`](../.omo/state/system.yaml)（未跟踪的生成文件 —— 干净检出上先跑 `python3 bin/gac/materialize-system-state.py`） |
 | 当前目标 | [`.omo/goals/current.yaml`](../.omo/goals/current.yaml) |
 | 项目元数据 | [`project-registry.yaml`](project-registry.yaml) |
 | BOS 服务 | [`projects/agora/etc/bos-services.yaml`](../projects/agora/etc/bos-services.yaml) |
