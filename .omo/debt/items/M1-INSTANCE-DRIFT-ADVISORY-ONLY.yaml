@@ -1,0 +1,78 @@
+id: "M1-INSTANCE-DRIFT-ADVISORY-ONLY"
+title: "GaC 规则 registry(86) 与 M1 实例(137) 大幅漂移：69 个 M1 孤儿 + 18 条 registry 规则无实例 + 5 条字段过期 —— 而同步器是 advisory 且无人接线"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/governance-checks.yaml
+- projects/ecos/src/ecos/ssot/mof/m1/governance
+- bin/gac/gac-m1-sync.py
+evidence_refs:
+- bin/gac/gac-m1-sync.py
+- .omo/_truth/registry/governance-checks.yaml
+- bin/gac/gac-healthcheck.py
+mitigation_refs: []
+opened_at: "2026-11-14"
+last_reviewed_at: "2026-11-14"
+next_review_at: "2026-12-14"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `gac-m1-sync.py` 从 `governance-checks.yaml::gac.rules` 派生 M1 `GAC-RULE-*.yaml`
+  实例（实例在 **ecos 子模块** `src/ecos/ssot/mof/m1/governance/`）。2026-11-14 实测
+  （主仓检出 + 子模块已检出，两个不同的子模块提交下 M1 文件数都是 **137**，
+  所以读数**不随子模块检出状态变**）：
+
+  | 项 | 数 |
+  |---|---|
+  | registry 规则 | **86** |
+  | M1 实例 | **137** |
+  | 孤儿（M1 有、registry 无） | **69** |
+  | 缺失（registry 有、M1 无） | **18** |
+  | 过期（字段不一致） | **5** |
+
+  **孤儿多是 legacy X 系规则**：`CR-HYG-01/02`、`CR-AGE-BOS/EVENT/MEMORY/POLICY/REPLAY-01`、
+  `CR-ADVERSARIAL-EFFECTIVENESS`、`CR-BASELINE-REPLAYED`、`CR-CROSS-REPO-CHECK`、
+  `CR-DEPRECATED-PORT`、`CR-DUAL-TRACK-PURITY`、`CR-L0-BOS-DOMAIN-NORM` …
+  —— 正是 `gac-ingest-legacy.py`（已归档，见 `GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED`）
+  当年要收敛的那批。**收敛没做完，工具被归档了。**
+
+  **缺失的 18 条**是 registry 里较新的规则（`CR-AGE-*`、`CR-BIN-RETIREMENT-CHECKLIST`、
+  `CR-EVIDENCE-SHA-FRESHNESS`、`CR-GIT-STAGE-SUBMODULE-PIN` …），最后一次 `--write`
+  之后新增的。
+
+  **两层问题**：① 同步器**默认 advisory** —— 写操作要 `GAC_M1_SYNC_WRITE=1` 显式确认，
+  否则只报不写，drift 只会累积；② 它**无人接线** —— `.github/workflows/`、`Makefile`、
+  `.omo/cron/registry.yaml` 里**一次都没出现**（#5349 已把 `registry-alias-map.yaml`
+  里「+ CI gate」那句假声明改掉）。`gac-healthcheck.py` 第 13 项会报 `❌`，
+  但 healthcheck 本身也只是个 Makefile 目标，**不在 CI**。
+decision_needed: >-
+  先回答「registry 与 M1 实例之间，允许不允许漂移」：
+  (a) **不允许** —— 把 `gac-m1-sync --write` 接进一个定期入口（CI 或 cron），
+  并把 69 个孤儿逐条定性（是 legacy 残留该删、还是 registry 该补）。
+  (b) **允许** —— 那就该把 `gac-healthcheck` 第 13 项与 `gac-m1-sync` 的退出码
+  从「红」降级为「告知」，别让它长期占用 healthcheck 的红。
+  **注意**：69 个孤儿的定性是 (a) 的前置 —— 其中一批是 legacy X 规则，
+  而收敛那件事的工具已经被归档了（`GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED` 的
+  decision_needed (a) 也指向同一批文件）。
+  **本条不代决。**
+history:
+- at: "2026-11-14T03:00:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：#5349 核实 alias-map 的「CI gate」声称时, 顺带查了 `gac-m1-sync`
+    的接线, 发现它哪儿都没有; 于是跑了一遍 `gac-healthcheck`, 看到第 13 项
+    `❌ registry=86 M1=136 缺=18 多余=68 过期=5`。
+    **判据**：一条**默认 advisory** 的同步器 + **无人接线**, 组合起来意味着
+    「drift 只会累积, 而且没有人会看到」—— 两个单独看都「可以」的决定,
+    合在一起就是一条**结构性不发霉的债**。**纪律**：看到 `advisory` /
+    `需显式 env 才写` 的工具时, 要同时问「谁在什么频率上跑它」——
+    「有开关」不等于「有人开」。
+  actor: "governance-agent"

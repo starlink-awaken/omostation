@@ -92,3 +92,4 @@ seed_items:
 - .omo/debt/items/CRON-REGISTRY-REALITY-NO-PRODUCER.yaml
 - .omo/debt/items/RUNTIME-PROJECTIONS-GENERATOR-SHAPE-MIXED.yaml
 - .omo/debt/items/GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED.yaml
+- .omo/debt/items/M1-INSTANCE-DRIFT-ADVISORY-ONLY.yaml
