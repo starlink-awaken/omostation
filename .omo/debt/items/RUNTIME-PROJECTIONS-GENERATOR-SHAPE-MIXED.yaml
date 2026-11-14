@@ -1,0 +1,72 @@
+id: "RUNTIME-PROJECTIONS-GENERATOR-SHAPE-MIXED"
+title: "`runtime-projections.yaml` 的 `generator` 字段混着四种形状（散文 / 带参命令 / 裸文件名 / 符号引用），消费者无法按同一口径解析 —— 裸名 `predictive-governance.py` 曾匹配两个文件"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/runtime-projections.yaml
+evidence_refs:
+- .omo/_truth/registry/runtime-projections.yaml
+- bin/gac/predictive-governance.py
+- bin/ssot/predictive-governance.py
+mitigation_refs: []
+opened_at: "2026-11-14"
+last_reviewed_at: "2026-11-14"
+next_review_at: "2026-12-14"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `runtime-projections.yaml` 的 `generator` 字段**不是机器可读的引用**，而是四种
+  形状混用（2026-11-14 实测，9 条）：
+
+  | 形状 | 例子 | 条数 |
+  |---|---|---|
+  | 散文 | `omo state sync` / `MOSBeliefManager._update_registry_summary` | 4 |
+  | 散文 + 附注 | `omo state refresh (implemented, active after ...)` | 1 |
+  | 带参命令 | `gac-local-gate --metrics / metrics-store.py` | 1 |
+  | 裸文件名 | `anomaly-detector.py` / `cross-domain-trend.py` / `predictive-governance.py` | 3 |
+
+  **后果一（已修）**：裸名 `predictive-governance.py` 在仓里匹配**两个**文件 ——
+  `bin/gac/predictive-governance.py`（写 `.omo/state/runtime/predictive-governance.json`，
+  即本 projection 的 canonical 路径）与 `bin/ssot/predictive-governance.py`
+  （**只打印不落盘**）。任何按裸名解析的消费者都可能跑到错的那个。
+  已把该条改成完整路径 `bin/gac/predictive-governance.py`（#5346）。
+
+  **后果二（未修）**：另外 4 条散文 + 1 条带参命令**无法被任何自动消费者解析** ——
+  它们是人读的说明，不是引用。于是一半条目可机读、一半不可，
+  「projection 有没有生成者」这件事**没有统一判据**。
+
+  **附一条佐证**：`metrics_store` 那条写的是
+  `gac-local-gate --metrics / metrics-store.py` —— 它把「写者需要 `--metrics`」
+  这层信息编进了散文里。而这正是 `METRICS-STORE-PIPELINE-UNWIRED`
+  （#5339）查出的问题：那个 flag 从不传。**登记面自己写下了前提，
+  只是没人按它核对**。
+decision_needed: >-
+  (a) **把 `generator` 统一成可解析的引用**（如 `script: bin/gac/x.py` +
+  可选 `args: [...]`），并把 4 条散文逐条翻成引用 —— 代价是要逐条确认
+  真实入口（`omo state sync` 实际由 omo 子模块的哪个命令承载，需要查），
+  收益是「projection 有没有生成者」变成可自动核对的。
+  (b) **承认它是说明字段** —— 那就在字段名或注释里写明「人读，非引用」，
+  并**不要**让任何消费者按它解析（现状下也没有消费者，所以这条其实是
+  「保持现状 + 写清楚」）。
+  **本条不代决**。已做的只是把唯一有歧义的那条改成完整路径。
+history:
+- at: "2026-11-14T01:50:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：扫 `runtime-projections.yaml` 的 `generator` 是否有唯一可解析的
+    目标 —— 第一版判据写成「按 `bin/<generator>` 找文件」, 读出 7 条「不存在」,
+    逐条看全是**判据错**（那 7 条本来就是散文）。改成「先分类形状再验路径」后,
+    真正的问题浮出来: 裸名那 3 条里 `predictive-governance.py` **匹配两个文件**。
+    **判据**：核对一个 registry 字段时, 先确认**它是什么类型**（引用 / 说明 /
+    命令）, 再决定判据 —— 拿「路径存在性」去量散文, 量出的是自己的判据错。
+    **纪律**：同一字段出现两种以上形状时, 歧义不是例外而是**必然** ——
+    要么统一形状, 要么在注释里写明「非引用」。
+  actor: "governance-agent"
