@@ -112,18 +112,40 @@ last_reviewed: "2026-08-24"
     print(f"Registered: {rel} -> {out}")
 
 
-def validate() -> None:
+def collect_registrations(registry_dir: Path) -> tuple[set, dict]:
+    """读登记面, 返回 (唯一 id 集合, id -> [来源 yaml 路径])。"""
     import yaml
 
-    errors = []
     registered = set()
-    for f in REGISTRY_DIR.rglob("*.yaml"):
+    sources = {}
+    for f in Path(registry_dir).rglob("*.yaml"):
         try:
             data = yaml.safe_load(f.read_text())
             if data and "id" in data:
-                registered.add(data["id"])
-        except Exception as e:
-            errors.append(f"{f}: {e}")
+                sid = data["id"]
+                registered.add(sid)
+                sources.setdefault(sid, []).append(str(f))
+        except Exception:
+            continue
+    return registered, sources
+
+
+def find_duplicates(sources: dict) -> dict:
+    """id -> [来源路径]，只保留被登记超过一次的。
+
+    2026-11-14: 重复 id 此前被静默折叠进 set —— 于是同一脚本被两个 yaml 登记时
+    校验照绿, 而「哪一份是权威」无人知道 (实测 3 组, 其中两组只是同名不同详细度,
+    一组逐字节相同)。显式报错, 让重复变成要处理的事而不是要发现的事。
+    """
+    return {sid: fs for sid, fs in sorted(sources.items()) if len(fs) > 1}
+
+
+def validate() -> None:
+    errors = []
+    registered, sources = collect_registrations(REGISTRY_DIR)
+
+    for sid, fs in find_duplicates(sources).items():
+        errors.append(f"DUPLICATE_REGISTRATION: {sid} -> {', '.join(sorted(fs))}")
 
     actual_scripts = set()
     # 只验证 git tracked 脚本 (2026-08-27 深度复盘: iterdir 扫文件系统会把并行
