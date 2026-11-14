@@ -72,14 +72,32 @@ def check_files() -> tuple[list[str], list[str]]:
 
 
 def run_tool(script: str, args: list[str]) -> tuple[int, str]:
-    """跑 bin/ 脚本, 返回 (exit_code, stdout)."""
+    """跑 bin/ 脚本, 返回 (exit_code, stdout)。脚本文件缺失时返回 (127, "")。"""
+    path = WORKSPACE / script
+    if not path.exists():
+        return 127, ""
     result = subprocess.run(
-        [sys.executable, str(WORKSPACE / script), *args],
+        [sys.executable, str(path), *args],
         capture_output=True,
         text=True,
         cwd=WORKSPACE,
     )
     return result.returncode, result.stdout
+
+
+def parse_json_output(out: str) -> tuple[dict | None, str | None]:
+    """解析 `--json` 输出。
+
+    解析失败返回 `(None, 原因)` 而不是 `({}, None)` —— 后者会让调用方把
+    「工具没跑起来 / 输出不是 JSON」读成「跑起来且什么都没发现」。
+    """
+    if not out or not out.strip():
+        return None, "empty output"
+    try:
+        data = json.loads(out)
+    except json.JSONDecodeError as exc:
+        return None, f"non-JSON output: {exc}"
+    return (data if isinstance(data, dict) else None), None
 
 
 def load_rules() -> list[dict]:
@@ -163,6 +181,32 @@ def probe_legacy_drift(script: str = "bin/gac/gac-ingest-legacy.py") -> dict:
         "indexed_count": None if missing else data.get("indexed_count", 0),
         "missing": None if missing else len(data.get("missing", [])),
         "ghost": None if missing else len(data.get("ghost", [])),
+    }
+
+
+def probe_m1_instance_drift(script: str = "bin/gac/gac-m1-sync.py") -> dict:
+    """M1 实例 drift 项的读数。
+
+    2026-11-15: 原 `ok = m1_drift == 0` **不看退出码**，于是工具没跑起来时
+    diff 为空 ⇒ drift=0 ⇒ 报 ✅ 全 0。实测缺子模块的检出里 `gac-m1-sync`
+    输出的是**人类可读报错（非 JSON）** ⇒ 读成 `✅ registry=0 M1=0`，
+    而同一份检出在子模块齐全时是 `❌ registry=86 M1=136` ——
+    **同一条检查、相反结论**。现在要求「退出码 0 且输出是 JSON 且 drift=0」才算 ✅。
+    """
+    code, out = run_tool(script, ["--tracked", "--json"])
+    data, error = parse_json_output(out)
+    diff = data.get("diff", {}) if data else {}
+    drift = (
+        len(diff.get("missing_in_m1", [])) + len(diff.get("orphan_in_m1", [])) + len(diff.get("stale", []))
+    )
+    return {
+        "ok": code == 0 and error is None and drift == 0,
+        "tool_error": error,
+        "registry_rules": data.get("registry_rules", 0) if data else None,
+        "m1_instances": data.get("m1_instances", 0) if data else None,
+        "missing_in_m1": len(diff.get("missing_in_m1", [])),
+        "orphan_in_m1": len(diff.get("orphan_in_m1", [])),
+        "stale": len(diff.get("stale", [])),
     }
 
 
@@ -323,23 +367,7 @@ def healthcheck() -> dict:
     # 13. GaC M1 实例 drift (机制7深化: registry↔M1 双向校验, Phase 4B)
     # ADR-0376 G9: --tracked — 基于 git HEAD 提交态而非 working tree,
     # 并发 agent 的 untracked M1 / 分支切换噪声不应误报 health red.
-    m1_code, m1_out = run_tool("bin/gac/gac-m1-sync.py", ["--tracked", "--json"])
-    try:
-        m1_json = json.loads(m1_out) if m1_out else {}
-    except json.JSONDecodeError:
-        m1_json = {}
-    m1_diff = m1_json.get("diff", {})
-    m1_drift = (
-        len(m1_diff.get("missing_in_m1", [])) + len(m1_diff.get("orphan_in_m1", [])) + len(m1_diff.get("stale", []))
-    )
-    report["m1_instance_drift"] = {
-        "ok": m1_drift == 0,
-        "registry_rules": m1_json.get("registry_rules", 0),
-        "m1_instances": m1_json.get("m1_instances", 0),
-        "missing_in_m1": len(m1_diff.get("missing_in_m1", [])),
-        "orphan_in_m1": len(m1_diff.get("orphan_in_m1", [])),
-        "stale": len(m1_diff.get("stale", [])),
-    }
+    report["m1_instance_drift"] = probe_m1_instance_drift()
 
     # 14. CI 平面可观测性 (ADR-0379 E-3): ci-surfaces SSOT vs 实际接线
     # unregistered/gate-parity/double-trigger = error; orphan/overlap = warn.
@@ -494,9 +522,13 @@ def print_report(report: dict) -> None:
     # M1 实例 drift (机制7深化: registry↔M1 双向校验)
     m1 = report["m1_instance_drift"]
     m1_status = "✅" if m1["ok"] else "❌"
-    print(
-        f"▶ M1实例drift (机制7): {m1_status} registry={m1['registry_rules']} M1={m1['m1_instances']} 缺={m1['missing_in_m1']} 多余={m1['orphan_in_m1']} 过期={m1['stale']}"
-    )
+    if m1.get("tool_error"):
+        print(f"▶ M1实例drift (机制7): {m1_status} 读数不可用 —— {m1['tool_error']}")
+    else:
+        print(
+            f"▶ M1实例drift (机制7): {m1_status} registry={m1['registry_rules']} M1={m1['m1_instances']} "
+            f"缺={m1['missing_in_m1']} 多余={m1['orphan_in_m1']} 过期={m1['stale']}"
+        )
 
     # CI 平面可观测性 (ADR-0379 E-3: ci-surfaces SSOT vs 实际接线)
     ci = report["ci_plane"]
