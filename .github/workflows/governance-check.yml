@@ -237,6 +237,10 @@ jobs:
           # 并加守卫用例(模块导入时取快照, 跑完必须逐字节不变)。
           # 实测 4 pass; 变异对照: 撤销修复 ⇒ 守卫 1 failed 且真实产物被创建(562 字节),
           # 恢复 ⇒ 4 passed 且不创建。
+          # 2026-11-14 追加: test_ssot_usage_age_is_content_age 钉「SSOT 年龄来自内容
+          # (最后一次提交) 而非 checkout 的 mtime」—— 原读法在干净 worktree 上全绿
+          # (age=0)、在旧检出上 56/68 假红, 且几十个文件 age 完全相同(= checkout 时间)。
+          # 实测 4 pass; 变异对照: 改回 mtime ⇒ 3 failed, 恢复 ⇒ 4 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -276,6 +280,7 @@ jobs:
             ../../tests/unit/gac/test_cross_domain_trend.py \
             ../../tests/unit/test_script_registry_duplicates.py \
             ../../tests/unit/test_healthcheck_missing_tool_reported.py \
+            ../../tests/unit/test_ssot_usage_age_is_content_age.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
