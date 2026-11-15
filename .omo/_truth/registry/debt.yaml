@@ -94,3 +94,4 @@ seed_items:
 - .omo/debt/items/GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED.yaml
 - .omo/debt/items/M1-INSTANCE-DRIFT-ADVISORY-ONLY.yaml
 - .omo/debt/items/GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD.yaml
+- .omo/debt/items/CR-AGE-RULES-NO-BASIS-NO-EXECUTION.yaml

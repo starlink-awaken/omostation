@@ -1,0 +1,83 @@
+id: "CR-AGE-RULES-NO-BASIS-NO-EXECUTION"
+title: "5 条 CR-AGE-*-01 规则（enforcement: required，executor: ci_gate/gac_local_gate）引用的 ADR-0401 已退役，且仓里找不到任何执行面"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/governance-checks.yaml
+- .omo/_knowledge/decisions/0401-reserved.md
+evidence_refs:
+- .omo/_knowledge/decisions/0401-reserved.md
+- .omo/_truth/registry/governance-checks.yaml
+- bin/gac/gac-validate.py
+- bin/ssot/rule_engine.py
+mitigation_refs: []
+opened_at: "2026-11-15"
+last_reviewed_at: "2026-11-15"
+next_review_at: "2026-12-15"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  5 条 AGE-v2 Cell 规则 —— `CR-AGE-BOS-01` / `CR-AGE-POLICY-01` /
+  `CR-AGE-MEMORY-01` / `CR-AGE-REPLAY-01` / `CR-AGE-EVENT-01` —— 都声明
+  `enforcement: required`、`executor: [ci_gate, gac_local_gate]`、`adr: ADR-0401`。
+  两条都站不住：
+
+  **① ADR-0401 是退役的保留号**。`.omo/_knowledge/decisions/0401-reserved.md`
+  全文：「status: reserved … **This ADR number is retired** (signal-tier migration:
+  unhealthy_service moved to .omo/_knowledge/signals/2026-08-30-unhealthy-service.md);
+  **numbers are never reused**.」—— 引用它等于没有依据。
+
+  **② 找不到执行面**。逐处核过：
+  - `source_ref` 指的 `bin/gac/check-age-{bos,policy,memory,replay,event}.py`
+    —— `git ls-tree origin/main` 全部为 0（不存在，也无同名替代）；
+  - `check_type` 是 `bos_resolve` / `ssot_lint` / `file_exists`，而
+    `projects/ecos/src/ecos/l0/governance/checkers.py` 里只有
+    `X1AuditChainChecker` / `X2StalenessChecker` / `X3ValueChecker` /
+    `X4ConsistencyChecker` / `SwarmBrainStructureChecker`，**没有**对应的 checker，
+    该文件里也**从不读 `check_type`**；
+  - omo CLI 的 `lint` 子命令只有 gate / sensitive-governed / ingress-registry /
+    mutation-surfaces / internal-write-profiles / state-plane-assets /
+    c2g-omo-boundary / ingress-artifacts / mutation-ledger / doc-lifecycle
+    —— 没有这些名字；
+  - `bin/ssot/rule_engine.py` 只支持 `file_exists` / `fm_field_exists`，
+    且读的是**另一套 schema**（`.omo/standards/rules/*.yaml` 的 `predicate`），
+    不是 `gac.rules`；
+  - `bin/gac/gac-validate.py` **不分发 `check_type`**（只做必填字段校验与重复检测），
+    `gac-healthcheck` 的 `覆盖` 项也只是把规则**按维度/层计数**。
+  - 唯一的旁证是 `bin/_archive/gac-execution-gap.py` 的**注释**写着
+    「有执行实现: ssot_lint/…/bos_resolve 等 (有对应 gate 脚本)」——
+    但那个脚本实际只特判 `DECLARED_ONLY_CHECK_TYPES = {mesh_routing, memory_rag}`，
+    其余一律当「有实现」——**那是假设，不是核对**。
+
+  **结论**：这 5 条规则既无 ADR 依据、也无执行面，而登记面上写着 `required`。
+decision_needed: >-
+  先回答「AGE-v2 Cell 这套规则还要不要」：
+  (a) **要** —— 那要补三样：一份**新的、已接受**的 ADR（不能复用 0401），
+  一个实现（`check_type` 的分发器或 L0 checker），以及把 `source_ref` 指过去；
+  (b) **不要** —— 那就把 5 条降为 `lifecycle: retired`（或删除），
+  别让它们以 `required` 的身份长期挂在登记面上 —— 一条 `required` 却无实现的规则,
+  会让「required」这个词失去意义, 也会让 `gac-validate` 的通过变成分母问题。
+  **注意**：`CR-AGE-EVENT-01` 的描述提到「禁止选择性订阅」, 属于**真实工程约束** ——
+  若选 (b), 要确认这条约束是否已被别的机制覆盖(否则是净丢约束)。
+  **本条不代决。**
+history:
+- at: "2026-11-15T05:20:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：#5355 余下 6 条死 source_ref 里, 5 条同属 AGE-v2 家族, 于是一查到底 ——
+    先发现 `adr: ADR-0401` 指向一份 **retired** 的保留号, 再逐层找执行面(L0 checkers /
+    omo lint 子命令 / rule_engine / gac-validate)全部落空。
+    **判据**：一条规则声称 `required` 之前, 至少要有**依据**(ADR 真实存在)与
+    **执行面**(谁来做)两样; 查依据时别只看「引用的编号在不在」, 要看**它是不是
+    reserved/retired** —— 保留号会永久占位, 引用它比引用不存在的编号更难发现。
+    **纪律**：`source_ref` 死了可以修; **`adr` 指向保留号 + 无执行面**是另一类问题,
+    别用「修个路径」糊过去。
+  actor: "governance-agent"
