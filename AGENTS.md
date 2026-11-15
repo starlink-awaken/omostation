@@ -223,6 +223,7 @@ bash bin/gac/gac-worktree.sh release <session>   # 释放 worktree + 清 PASW �
   （`bin/gac/gac-worktree.sh:504`，措辞见 `:484`）；完整 init 要 `claim --full` 或
   `GAC_FULL_SUBMODULE_INIT=1`（`:373`），`SKIP_SUBMODULE_INIT=1` 则只做 root worktree 不建子模块
   （`:473`）。`SKIP_SUBMODULE_INIT=1` 快速路径与 `git worktree add` 直创路径由 post-checkout 守卫兜底——对 pin 不一致的子模块做本地无网络 `submodule update --init --no-fetch` 对齐（只动子模块工作树，**不改根指针**）。本地缺 pin 对象时打印修复命令，不联网。
+- **这道守卫的 CLI 入口曾被「新增分支」顺手覆盖掉，空转 7 周**（2026-09-28 PR #4513 `23417b502`；2026-11-16 修复，#5373）：`gac-worktree.sh` 的派发 `case` 里，`guard-submodules)` 分支被**替换**成 `release-diagnose)`（diff 是 `-guard-submodules) / +release-diagnose)`，不是新增）。此后 `.githooks/post-checkout:61` 的 `guard-submodules --fix >/dev/null 2>&1 || true` 一直落进 `*)` 打用法再 `exit 1`，被 `|| true` 吞掉 —— **函数本体与 `bump-fast` 的内部调用一直都在，只有 CLI 入口没了**。**纪律**：① 给这类「有实现、有测试、却没人调用」的守卫补用例时，用例必须走**真实入口**（CLI / 钩子），`tests/unit/test_gac_guard_submodules.py` 原本**从生产脚本抽函数体直接调**，所以派发死了它全程绿 —— **测试绕过接线就钉不住接线**；② 加新子命令时看一眼 `case` 的 diff 是不是**替换**了既有分支（`git show <sha> -- <script>` 里 `-旧)` / `+新)` 相邻就是警报）；③ 守卫类脚本的 `*)` 分支若只剩用法文本，`|| true` 会让整条钩子静默失效，值得定期 `bash <script> <子命令> >/dev/null 2>&1; echo $?` 抽查。
 - **本机是浅历史，且 worktree 子模块深浅不定 —— 可达性判据必须换地方验**（2026-09-27 实测，BET-Y2Q4-T10-210）：
   主仓 `git rev-parse --is-shallow-repository` = `true`，`.git/shallow` 只有一个边界 `6ba6bf28e`（2026-08-01），
   本地可达 commit 8,326 个（历史从这里截断，不是整仓）。子模块侧更 tricky：canonical `projects/omo` 非浅
