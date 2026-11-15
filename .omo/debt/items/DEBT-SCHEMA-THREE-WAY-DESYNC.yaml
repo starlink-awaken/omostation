@@ -81,10 +81,20 @@ decision_needed: >-
     `resolution_evidence` >= 20 字符）已经依赖它们，让 kernel 看不见才是异常。
     配套加 `_as_text`：列表形态的 `resolution_evidence` 换行拼接而非裸 `str()`
     （裸 `str()` 会写成 Python repr，是静默损坏），并接收等价的 `closed_evidence`。
-  - (3) **broker 路径要不要保留**：7/86 的使用率说明它事实上已被绕过。
-    若保留，得先让它产出的文件**能通过本仓自己的 debt 工具**（否则官方入口
-    名存实亡）；若废弃，应显式退役并说明立案入口改成什么。
-  **本条不代决。** 三问都跨 `projects/omo` 子模块与主仓工具，属治理规范变更。
+  - (3) **broker 路径要不要保留** —— **前置事实已实测（2026-11-15），「名存实亡」不成立**：
+    在一次性根（`tmp`，含 `.omo/`）上实跑官方入口
+    `python -m omo.cli governance ingress-debt payload.yaml --ingress-plane probe`
+    ⇒ `rc=0`，`ingress debt upserted DEBT-ENTRY-PROBE`，产出 26 键条目；
+    再用主仓自己的工具验它：`fix-debt-fields.py --root <该根>` ⇒ **`conflict_count: 0`**。
+    即 (1)(2) 修完后，**官方立案入口产出的文件能通过本仓的债务工具** ——
+    (3) 不再被「先修可达性/合规性」阻塞，可以单纯按「要不要保留这条路径」来裁。
+    **验证时的陷阱（本轮踩到）**：canonical `projects/omo` 检出在 `81185df`，
+    而父仓 pin 是 `8bc86c1a` —— **落后 8 个 commit**。第一次实测因此拿到
+    「仍写 `status`」的错误结论（那是陈旧检出，不是修复没生效）。
+    **纪律**：验子模块行为前，先 `git -C <sub> log --oneline -1` 与父仓 pin
+    对一遍；`git -C <sub> fetch` 后 `git worktree add <tmp> <pin>` 用**本地对象**
+    起一棵含修复的检出，比改共享检出安全。
+  **本条不代决。** (3) 是纯政策题（使用率 7/86 且 7/7 全终态）。
 history:
 - at: "2026-11-15T12:10:00+00:00"
   action: identify
@@ -112,4 +122,19 @@ history:
     `assert payload["status"] == "open"` 改成 `assert "status" not in payload`
     把新契约钉住。**纪律**：跨仓改一行之前，先把「谁读这个键」在**两个仓**
     里都 grep 一遍 —— 只在本仓找不到读者不等于对端没有。
+  actor: "governance-agent"
+- at: "2026-11-15T15:20:00+00:00"
+  action: evaluate
+  note: >-
+    **(3) 前置事实实测完成, 「官方入口名存实亡」不成立。** 一次性根上实跑
+    `omo governance ingress-debt` ⇒ rc=0, 产出 26 键条目; 主仓
+    `fix-debt-fields.py --root <该根>` ⇒ `conflict_count: 0`。
+    **踩到的陷阱**: canonical `projects/omo` 停在 `81185df`, 父仓 pin 是
+    `8bc86c1a`, **落后 8 个 commit** —— 第一次实测因此拿到「仍写 status」的
+    错误结论, 那是**陈旧检出**不是「修复没生效」。
+    **判据**: 验证「某个修复是否生效」时, 先确认**被测检出含该修复**;
+    子模块场景的判据是 `git -C <sub> rev-parse HEAD` 对父仓 pin
+    (`git ls-tree origin/main projects/omo`)。**纪律**: 用
+    `git -C <sub> fetch` + `git worktree add <tmp> <pin>` 从**本地对象**起
+    含修复的检出, 比改共享检出安全, 也不用联网。
   actor: "governance-agent"

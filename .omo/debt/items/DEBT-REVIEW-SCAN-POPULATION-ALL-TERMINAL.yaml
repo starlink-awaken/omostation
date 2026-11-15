@@ -119,6 +119,10 @@ decision_needed: >-
   闭局证据三键）。Q2 若裁「broker-only」，必须先让 broker 产出能通过
   本仓自己的 debt 工具，否则官方入口名存实亡（实测使用率 7/86，且 7/7 全终态）。
   **裁决前不要直写 registry/debt.yaml** —— 该文件由 broker 维护。
+  **2026-11-15 补一条前置事实**: broker 入口本身**可达且合规** ——
+  `omo governance ingress-debt` 实跑 rc=0, 产出文件过主仓
+  `fix-debt-fields.py` ⇒ `conflict_count: 0`（详见 `DEBT-SCHEMA-THREE-WAY-DESYNC`
+  的 (3)）。所以 Q2 不必先等「修入口」, 可直接按去留裁决。
 history:
 - at: '2026-11-09T03:26:00+00:00'
   action: identify
