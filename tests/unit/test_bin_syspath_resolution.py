@@ -187,10 +187,19 @@ def test_syspath_arith_is_correct_at_every_site():
     assert [b[4] for b in bugs] == [], "\n".join(b[4] for b in bugs)
     # gitlink 侧的算数错**必须逐条对上名单**：多一条 = 新缺陷要指认归属，
     # 少一条 = 上游已修、名单该删。两种情况都不许静默通过。
+    #
+    # 唯一例外: 名单里那条**文件本身不在这次检出里** (projects/omo 未 init / 干净检出)
+    # —— 那是检出形态, 不是「上游已修」。此时按**在册文件**过滤后再比对, 否则任何
+    # 新 worktree 跑本文件都会红这一条, 而 CI 递归检出子模块所以绿。
+    # 文件**在**而没测到 ⇒ 照旧红 (那才是真回归)。
     measured = {(b[0], b[1], b[2], b[3]) for b in owned}
-    assert measured == GITLINK_OWNED_ARITH_BUGS, (
-        f"新增未裁定的依赖缺陷: {sorted(measured - GITLINK_OWNED_ARITH_BUGS)}; "
-        f"已消失的陈旧豁免: {sorted(GITLINK_OWNED_ARITH_BUGS - measured)}")
+    expected = {
+        entry for entry in GITLINK_OWNED_ARITH_BUGS if (ROOT / entry[0]).is_file()
+    }
+    assert measured == expected, (
+        f"新增未裁定的依赖缺陷: {sorted(measured - expected)}; "
+        f"已消失的陈旧豁免: {sorted(expected - measured)}"
+    )
 
 
 def test_subtree_worktree_sites_are_attributed_to_their_gitlink():
@@ -222,7 +231,13 @@ def test_dependency_allowlist_cannot_exempt_root_plane():
     for rel, idx, sub, name in GITLINK_OWNED_ARITH_BUGS:
         assert _under_gitlink(rel), f"{rel} 不在任何 gitlink 下，不许进名单"
         site = ROOT / rel
-        assert site.is_file(), f"{rel} 已不存在，名单陈旧"
+        if not site.is_file():
+            # 区分两种缺席: ① gitlink 根本没检出 (目录不在) ⇒ **检出形态**, 跳过;
+            # ② gitlink 检出了但文件不在 ⇒ 那才是「名单陈旧」, 照旧红。
+            # 不区分的话, 任何未 init 子模块的新检出都会红这一条, 而 CI 递归检出所以绿。
+            owner = next((g for g in gitlinks if _under_gitlink(rel)), None)
+            assert owner is None or (ROOT / owner).exists(), f"{rel} 已不存在，名单陈旧"
+            continue
         hits = [(i, s, n) for p, i, s, n in _sites(site) if p == site]
         assert (idx, sub, name) in hits, f"{rel} 的这条站点已变，名单要跟着改"
         assert _classify(site, idx, sub, name) == "arith-bug", f"{rel} 不再是缺陷"

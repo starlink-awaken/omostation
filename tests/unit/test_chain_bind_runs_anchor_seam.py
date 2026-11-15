@@ -58,7 +58,14 @@ def _install_seam(monkeypatch) -> None:
     about the seam. Loading the copy that lives in the checkout under test and registering it
     for the duration of one test keeps ISC-1 measuring the seam instead of the venv layout.
     """
-    assert SEAM_SOURCE.is_file(), f"seam source absent from this checkout: {SEAM_SOURCE}"
+    if not SEAM_SOURCE.is_file():
+        # 缺席 (projects/omo 未 init / 干净检出) 属**检出形态**: 没有 seam 源码可装载,
+        # 本文件 7 条断言都测不了, 跳过并指名备齐命令 —— 而不是报 7 条 error。
+        # 注意判据取「文件在不在」: **文件在但内容陈旧**时仍照跑, 该红的还会红。
+        pytest.skip(
+            f"seam 源码缺席: {SEAM_SOURCE} —— 先 `git submodule update --init projects/omo` "
+            "(缺席属检出形态, 不是回归; 文件在但陈旧时本文件照旧全跑)"
+        )
     package = types.ModuleType("omo")
     package.__path__ = []  # type: ignore[attr-defined]
     workflow = types.ModuleType("omo.workflow")
