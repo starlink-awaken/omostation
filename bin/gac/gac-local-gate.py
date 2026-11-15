@@ -1250,6 +1250,64 @@ def _apply_adaptive_thresholds(
     return tuple(result)
 
 
+GENERATED_INPUTS = (Path(".omo") / "state" / "system.yaml",)
+
+
+def _uninitialized_submodules() -> list[str]:
+    """未初始化的子模块名 (`git submodule status` 里 `-` 前缀那些)。"""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(WORKSPACE), "submodule", "status"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    names: list[str] = []
+    for line in proc.stdout.splitlines():
+        if not line.startswith("-"):
+            continue
+        parts = line[1:].strip().split()
+        if len(parts) >= 2:
+            names.append(parts[1])
+    return names
+
+
+def preflight_report() -> dict[str, object]:
+    """这棵树的门禁输入是否备齐（子模块 / SGF policy / 生成态）。
+
+    **这不是「跳过检查」**：所有 check 照跑、`hard_fails` 与退出码语义不变。
+    它只把「检出未备齐」变成一个结构化字段，让那些**由缺输入造成的红**
+    不再与真缺陷同形 —— 2026-11-15 实测（origin/main 的 fresh worktree）：
+    `gac-local-gate --strict` 的 16/87 hard fail 全部由缺输入引起
+    （子模块未初始化 15 + 生成态未物化 1），而 canonical 检出上是 0。
+    没有这个字段时，agent 只能手工把 16 条红逐条定性，本轮被踩到三次。
+    """
+    reasons: list[str] = []
+    sgf_loaded = SGF_POLICY_YAML.is_file()
+    if not sgf_loaded:
+        reasons.append(
+            f"SGF policy 缺失: {SGF_POLICY_YAML.relative_to(WORKSPACE)}"
+            "（projects/ecos 未初始化？gate 集合已退回 DEFAULT_POLICY）"
+        )
+    submodules = _uninitialized_submodules()
+    if submodules:
+        shown = ", ".join(submodules[:5]) + ("…" if len(submodules) > 5 else "")
+        reasons.append(f"{len(submodules)} 个子模块未初始化: {shown}")
+    missing = [str(p) for p in GENERATED_INPUTS if not (WORKSPACE / p).is_file()]
+    if missing:
+        reasons.append(f"生成态缺失: {', '.join(missing)}（跑 make state-materialize 供一份）")
+    return {
+        "complete": not reasons,
+        "sgf_policy_loaded": sgf_loaded,
+        "uninitialized_submodules": submodules,
+        "missing_generated_inputs": missing,
+        "reasons": reasons,
+    }
+
+
 def run_gate(
     scope: str = "staged",
     files: list[str] | None = None,
@@ -1282,8 +1340,10 @@ def run_gate(
 
     # Concurrent-write isolation: 比对所有 check 跑完后的 fingerprint
     drift = _check_drift(_state_fingerprint_snapshot)
+    preflight = preflight_report()
     report = {
         "ok": ok,
+        "preflight": preflight,
         "hard_fails": hard_fails,
         "soft_warns": soft_warns,
         "scope": scope,
@@ -1310,6 +1370,23 @@ def _print_broken_skips(checks_list: list[dict]) -> None:
         print(f"  ⚠️  {len(skipped)} broken/known-unavailable checks skipped (use --strict to include): {', '.join(skipped)}")
 
 
+def _print_preflight(report: dict[str, object]) -> None:
+    """检出未备齐时打出显式横幅 —— 让缺输入造成的红不被读成仓库缺陷。"""
+    preflight = report.get("preflight")
+    if not isinstance(preflight, dict) or preflight.get("complete"):
+        return
+    print(
+        "⚠️  检出未备齐 —— 本次结果里的红**可能全部由缺输入造成**，不是仓库缺陷：",
+        file=sys.stderr,
+    )
+    for reason in preflight.get("reasons") or []:
+        print(f"    · {reason}", file=sys.stderr)
+    print(
+        "    备齐后再跑：git submodule update --init --recursive && make state-materialize",
+        file=sys.stderr,
+    )
+
+
 def print_human(
     report: dict[str, object],
     verbose: bool = False,
@@ -1323,6 +1400,7 @@ def print_human(
     is_ok: bool = report["ok"]  # type: ignore[assignment]
     checks_count = len(checks_list)
     soft_list: list[dict] = report.get("soft_warns") or []  # type: ignore[assignment]
+    _print_preflight(report)
 
     if is_ok and terminal_mode == "slim" and not verbose:
         print("═══ GaC local gate ═══")
