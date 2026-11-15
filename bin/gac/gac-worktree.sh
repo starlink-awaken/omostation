@@ -1261,7 +1261,7 @@ except Exception: print('')" 2>/dev/null || true)"
         exit 1
       fi
       echo "✅ PR #$pr_number 已启用 auto-merge (GitHub 将在 CI+review 过后自动 squash 合并)"
-      echo "   合并后手动 release: bash bin/gac-worktree.sh release $session"
+      echo "   合并后手动 release: bash bin/gac/gac-worktree.sh release $session"
     else
       echo "🔗 合并 PR #$pr_number ($branch → main, squash)..."
       # squash merge + 删远程分支. 失败即停 (冲突/constraint 失败等).
