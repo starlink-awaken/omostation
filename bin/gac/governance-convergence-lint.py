@@ -316,6 +316,13 @@ def lint(rule_filter: str | None = None) -> tuple[list[str], list[str]]:
         "rules-count": check_rules_count,
         "matrix": check_matrix_consistency,
     }
+    # 2026-11-15: 未知 --rule 此前**空跑** —— 循环体一次都不执行 ⇒ errors/warnings
+    # 都是空 ⇒ `ok:true` + exit 0。于是 `--rule <拼错>` 永远绿, 而
+    # `governance-checks.yaml` 的 `CR-L0-SSOT-PATH-NORM` 描述正好写着
+    # 「实现: … --rule ssot-path-norm」—— 那个名字根本不存在, 这条「实现」指路
+    # 指向一次空跑。未知名字必须报错。
+    if rule_filter and rule_filter not in checks:
+        return [f"UNKNOWN_RULE: --rule {rule_filter!r} 不是已知规则 {sorted(checks)}"], []
     all_errors: list[str] = []
     all_warnings: list[str] = []
     for name, check_fn in checks.items():
