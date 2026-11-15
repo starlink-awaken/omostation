@@ -78,3 +78,26 @@ history:
     (本轮 executor-drift 就差点被当成 35 条规则的缺口)。**纪律**：判据里带
     「子模块未初始化」分支的项, 必须在**子模块齐全的检出**上复算再定性。
   actor: "governance-agent"
+- at: "2026-11-15T04:40:00+00:00"
+  action: review
+  note: >-
+    **已修 4 条, 余 6 条**（#5356: `indexed缺` 10 → 6）。
+    **已修**: `CR-SEC-YAML-BYPASS` / `CR-SEC-SENSITIVE-WRITE` / `CR-SEC-EVAL-EXEC` /
+    `CR-PY-MUTABLE-DEFAULT` —— 规则描述自己写着「执行面 hook 内置 PR#190 / PR#196」,
+    实测 `bin/gac/gac-hook-pre-edit.py` 有 `_check_yaml_bypass` / `_check_sensitive_write` /
+    `_check_eval_exec` / `_check_mutable_default`(docstring: 「内置, 非 rule-driven」)。
+    四条 source_ref 已指向该 hook。**这条给 (a) 提供了样板**: 修 source_ref 之前
+    先读**规则自己的描述** —— 它常常已经写明实现搬到哪去了。
+    **余 6 条的定性**:
+    - `CR-L0-SSOT-PATH-NORM` → `.omo/standards/ssot-path-norm.md`(文档, 不存在);
+    - `CR-AGE-BOS-01`(`bos_resolve`) / `CR-AGE-POLICY-01`(`ssot_lint`) /
+      `CR-AGE-MEMORY-01`(`file_exists`) / `CR-AGE-REPLAY-01`(`ssot_lint`) /
+      `CR-AGE-EVENT-01`(`ssot_lint`) → `bin/gac/check-age-*.py`(都不存在)。
+    **关键观察**: 这 5 条 AGE 规则的 `target` 全是 `projects/omo/src/omo/resident/*.py`
+    (子模块文件), 而 `check_type` 是 `bos_resolve` / `ssot_lint` / `file_exists` ——
+    **L0 checkers 里没有这三个类型**(只有 X1AuditChain / X2Staleness / X3Value /
+    X4Consistency / SwarmBrainStructure)。所以它们要么由别的机制执行,
+    要么**根本没有执行面** —— 后者就是「规则无实现」, 应单独登记而不是当引用陈旧修。
+    **纪律**: 修一类「引用指向不存在」的缺陷前, 先把**已经修好的那批**拿来当样板
+    (读规则描述), 再把剩下的逐条定性 —— 别用同一把扳手敲所有钉子。
+  actor: "governance-agent"
