@@ -658,14 +658,17 @@ gac:
       从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 【无执行面】2026-11-15 核实:
       描述原写「实现: bin/gac/governance-convergence-lint.py --rule ssot-path-norm」—— 该
       --rule 名不存在(合法名只有 registration/score/loop/rules-count/matrix), 且该脚本原先对
-      未知 --rule 静默空跑报 ok:true(#5358 已修). 需补实现或降级, 见债条目
-      GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD / CR-AGE-RULES-NO-BASIS-NO-EXECUTION.'
+      未知 --rule 静默空跑报 ok:true(#5358 已修). 【已降级】来源 ADR-0121 §1.2 把本条标为
+      「待加」(与 CR-META-CI-SKIP-MATRIX 并列), 而登记面曾按 active 注册 —— 登记面是派生、
+      ADR 是依据, 故 2026-11-15 改为 draft (LIFECYCLE_ENUM 里表示「已声明未激活」).
+      executor 字段按 schema 必填(gac-validate 要求非空 list)故保留原通道名, 但**无对应实现**
+      —— 别把该字段读成执行面. 见债条目 ADR-0121-PENDING-RULES-REGISTERED.'
     check_type: ssot_lint
     target: .omo/_truth/ + broker 写入路径
     executor:
     - ci_gate
     - radar_cron
-    lifecycle: active
+    lifecycle: draft
     version: 1.0.0
     created_at: '2026-07-02'
     adr: ADR-0121
@@ -677,7 +680,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-29'
-    justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐)'
+    justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐); 2026-11-15 按 ADR-0121 §1.2「待加」降为 draft'
   - id: CR-X4-TEST-COVERAGE
     dimension: X3
     layer: L2
