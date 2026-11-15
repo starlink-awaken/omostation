@@ -73,11 +73,14 @@ decision_needed: >-
     `lifecycle_state` 缺席时把 `status` 当 fallback；`omo_debt_cli.py:53` 的
     `[status]` 是本地算的显示值。测试由原 `assert payload["status"] == "open"`
     改为 `assert "status" not in payload`。
-  - (2) **闭局证据要不要进 kernel**：把 `closed_at` / `close_reason` /
-    `resolution_evidence` 加进 `DebtItem`（带默认值，构造点只有
-    `omo_debt_registry.py:123` 与两个测试文件，向后兼容），
-    还是明确宣告「闭局证据只属于文件层，kernel 不读」并写进 schema 文档。
-    现状是**两边都没说**，而闭局证据已经被三处判据依赖。
+  - (2) **闭局证据要不要进 kernel** —— **已修（子模块 PR omostation-omo#253，
+    合并 `8bc86c1a`；主仓 gitlink bump 随本批交付）**：`DebtItem` 末尾加
+    `closed_at` / `close_reason` / `resolution_evidence` 三键（带默认值，向后兼容；
+    构造点只有 `_parse_debt_item` 与测试）。取「进 kernel」这一侧 —— 三处判据
+    （主仓闭环节律要 `closed_at`；`omo_audit_freshness` / `omo_audit_checks` 要
+    `resolution_evidence` >= 20 字符）已经依赖它们，让 kernel 看不见才是异常。
+    配套加 `_as_text`：列表形态的 `resolution_evidence` 换行拼接而非裸 `str()`
+    （裸 `str()` 会写成 Python repr，是静默损坏），并接收等价的 `closed_evidence`。
   - (3) **broker 路径要不要保留**：7/86 的使用率说明它事实上已被绕过。
     若保留，得先让它产出的文件**能通过本仓自己的 debt 工具**（否则官方入口
     名存实亡）；若废弃，应显式退役并说明立案入口改成什么。
