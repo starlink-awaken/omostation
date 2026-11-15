@@ -99,3 +99,4 @@ seed_items:
 - .omo/debt/items/DOCLINK-GITIGNORED-PERMA-RED.yaml
 - .omo/debt/items/GATE-CLEAN-CHECKOUT-NOISE.yaml
 - .omo/debt/items/DEBT-SCHEMA-THREE-WAY-DESYNC.yaml
+- .omo/debt/items/TESTS-UNIT-CLEAN-CHECKOUT-RED.yaml

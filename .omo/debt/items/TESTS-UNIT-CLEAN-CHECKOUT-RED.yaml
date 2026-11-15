@@ -1,0 +1,84 @@
+id: "TESTS-UNIT-CLEAN-CHECKOUT-RED"
+title: "tests/unit 在「未 init 子模块」的检出上红 36 条（29 failed + 7 errors / 7 个文件），逐条确认**全部是检出形态** —— 与门禁那条红是同一个病"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- tests/unit
+evidence_refs:
+- tests/unit/test_repo_root_profile.py
+- tests/unit/test_resident_write_plane_split.py
+- tests/unit/test_gac_bootstrap_layers.py
+- .github/workflows/governance-check.yml
+mitigation_refs: []
+opened_at: "2026-11-16"
+last_reviewed_at: "2026-11-16"
+next_review_at: "2026-12-16"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  2026-11-16 在 `origin/main` 的 **fresh worktree**（不 init 子模块、不物化生成态）上跑
+  `pytest tests/unit -q -p no:randomly -o addopts=""`：
+
+  **2928 passed / 29 failed / 7 errors / 66 skipped**（248s）。
+
+  7 个失败文件（按条数）：
+
+  | 文件 | 条数 | 首因（逐条抽验） |
+  |---|---|---|
+  | `test_resident_write_plane_split.py` | 21 | 扫描结果为空/缺子模块文件（如 `projects/omo/src/omo/workflow/lock_graph.py`） |
+  | `test_chain_bind_runs_anchor_seam.py` | 7 (error) | `seam source absent from this checkout: projects/omo/src/omo/workflow/delivery_anchor.py`（用例自己印的） |
+  | `test_repo_root_profile.py` | 4 | `FileNotFoundError: projects/omo/src/omo/omo_paths.py` |
+  | `test_gac_bootstrap_layers.py` | 2 | `runtime 平面读的是 DEFAULT_POLICY 降级副本, 不是 sgf-policy 执行面`（`projects/ecos` 未检出） |
+  | `test_bin_syspath_resolution.py` | 2 | 「已消失的陈旧豁免」—— 豁免清单里的 `projects/omo/tests/unit/...` 因未检出而不在 |
+  | `test_omo_state_plane_ignore_invariants.py` | 1 | state 写目录清单读自 omo 子模块，缺席即空 |
+  | `test_projection_reader_resolution.py` | 1 | `FileNotFoundError: projects/omo/src/omo/omo_doctor.py` |
+
+  **逐条抽验后：36/36 全部是检出形态，没有一条是真缺陷。**
+
+  **CI 都在跑**：这 7 个文件**全部**在 `.github/workflows/governance-check.yml` 里被逐文件
+  点名（独立 `pytest <file>` 步骤，共 119 个 `tests/unit` 文件），且 CI 递归检出子模块
+  ⇒ **CI 全绿**。所以这不是「CI 失明」，而是更准确的一句：
+
+  > **这些用例只在「子模块齐备」的树上被验证过。**
+
+  与 `GATE-CLEAN-CHECKOUT-NOISE` 完全同构：门禁在干净检出上 16/87 红、测试在干净检出上
+  36 红 —— **两边的红都是「输入没备齐」，却都长得和真回归一模一样**。
+  本仓已把那一条量化并做了机制（`preflight` / `not_measured`），**测试面还没有对应的东西**。
+decision_needed: >-
+  三选一（本条不代决）：
+
+  - (a) **加一个「检出未备齐」的总信号**：在 `tests/unit` 的 `conftest.py` 里探测
+    子模块是否齐（复用 `gac-local-gate.py::preflight_report` 的判据），未备齐时给一条
+    显式的 session 级提示，并把这些用例标成 `skipped(reason="子模块未检出")`。
+    与门禁的 `not_measured` 对称 —— **不做「无条件跳过」**，只在输入确实缺席时跳。
+    代价: 要小心别把真回归一起跳过（判据必须是「被测文件是否真的不在」，不是「子模块没 init」
+    这个粗条件）。
+  - (b) **逐个补齐**：给这 36 条各自加「输入缺席则分支/跳过」，像 #5380 对
+    `test_check_sfop_slots` / `test_codex_worker_adapter` 做的那样。准、但面广。
+  - (c) **维持现状 + 写进验收约定**：明确「`pytest tests/unit` 需要在子模块齐备的树上跑」，
+    写进 AGENTS.md §8 的验收表。最省，但 36 条红仍会误导每个新检出。
+
+  **注意**：`test_repo_root_profile.py::test_projection_falls_back_to_committed_legacy_path`
+  此前已被 AGENTS.md §7 记为「在 T10-221 基线上按构造不可满足」—— 本轮它在 fresh
+  worktree 上红的原因**也是一样的**（legacy 面不在），不是新问题，别重复立案。
+history:
+- at: "2026-11-16T05:20:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：#5380 修完两条非 hermetic 的门禁用例后，把同一把尺推到**全仓 tests/unit**：
+    在 fresh worktree 上整跑一遍。36 条红。
+    **量完先别急着修** —— 逐条抽验首因，36/36 都是「子模块未检出 / 生成态未物化」。
+    **踩到的一次自我更正**：我先用 `grep -oE '\.\./\.\./tests/unit/…'` 提白名单，得出
+    「5 个文件不在 CI 里」的结论，**是错的** —— 它们以独立 `pytest <file>` 步骤被点名，
+    换 `grep -oE 'tests/unit/[a-z0-9_]+\.py'` 重提后 7/7 全在 CI 里。
+    **纪律**：提名单的正则**形状**决定了结论；只匹配一种写法就会得出「不在」的假结论,
+    而「不在」是**要拿去说别人失明的重话**, 必须先换一种形状复核。
+  actor: "governance-agent"
