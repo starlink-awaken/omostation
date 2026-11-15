@@ -66,11 +66,13 @@ description: >-
 decision_needed: >-
   三问，建议按此顺序：
 
-  - (1) **`status` 这个键要不要**：broker 注入它、而 `fix-debt-fields.py` 把它与
-    `lifecycle_state` 的并存判为冲突 —— 两者必须有一个让路。要么 broker 不再写
-    `status`（它不在 22 键权威里，且 `lifecycle_state` 已承载同一语义），
-    要么 `fix-debt-fields.py` 的 `dual_fields` 判据改为不把 `status` 当冲突。
-    **判据**：以 `DebtItem` 的 22 键为准 —— 不在其中的键不该有「与权威键冲突」的地位。
+  - (1) **`status` 这个键要不要** —— **已修（子模块 PR omostation-omo#252，合并
+    a22df739；主仓 gitlink bump 随本条目的这一批交付）**：broker 不再写 `status`。
+    取「以 `DebtItem` 的 22 键为准」这一侧 —— 不在权威键里的字段不该有
+    「与权威键冲突」的地位。**已核无真实读者**：`omo_debt_registry.py:133` 只在
+    `lifecycle_state` 缺席时把 `status` 当 fallback；`omo_debt_cli.py:53` 的
+    `[status]` 是本地算的显示值。测试由原 `assert payload["status"] == "open"`
+    改为 `assert "status" not in payload`。
   - (2) **闭局证据要不要进 kernel**：把 `closed_at` / `close_reason` /
     `resolution_evidence` 加进 `DebtItem`（带默认值，构造点只有
     `omo_debt_registry.py:123` 与两个测试文件，向后兼容），
@@ -94,4 +96,17 @@ history:
     （broker 产出 / 文件 / kernel 视图）再谈修哪一处。
     **纪律**：自证要做 —— 光读 `fix-debt-fields.py` 的代码得出「broker 形态会被判冲突」
     是不够的，造一份最小 broker 形态文件实跑，才排除「判据其实有豁免」的可能。
+  actor: "governance-agent"
+- at: "2026-11-15T12:50:00+00:00"
+  action: mitigate
+  note: >-
+    **(1) 已修**：子模块 PR starlink-awaken/omostation-omo#252 删掉
+    `upsert_debt_item` 里的 `payload["status"] = ...`（已合并为 `a22df739`），
+    主仓 gitlink 同步 bump。取「以 `DebtItem` 22 键为准」这一侧。
+    **动手前先做的核实**：`status` 没有真实读者 —— `omo_debt_registry.py:133`
+    只把它当 `lifecycle_state` 的 fallback，`omo_debt_cli.py:53` 的 `[status]`
+    是本地算的显示值；子模块测试里唯一的断言
+    `assert payload["status"] == "open"` 改成 `assert "status" not in payload`
+    把新契约钉住。**纪律**：跨仓改一行之前，先把「谁读这个键」在**两个仓**
+    里都 grep 一遍 —— 只在本仓找不到读者不等于对端没有。
   actor: "governance-agent"
