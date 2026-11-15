@@ -24,20 +24,28 @@ _SCENE_CANDIDATES_PATH = Path(__file__).with_name("scene-card-candidates.py")
 
 
 class CoherenceInputError(ValueError):
-    """Raised when a required SSOT input is missing or malformed."""
+    """Raised when a required SSOT input is missing or malformed.
+
+    `kind` 让调用方（尤其门禁）能**结构化**地说明「这条检查没测成」，
+    而不必去匹配报错文本 —— 门禁据此把该项归入 `not_measured`。
+    """
+
+    def __init__(self, message: str, *, kind: str = "input_error") -> None:
+        super().__init__(message)
+        self.kind = kind
 
 
 def _load_yaml_documents(path: Path) -> list[dict[str, Any]]:
     try:
         import yaml
     except ImportError as exc:  # pragma: no cover - environment error
-        raise CoherenceInputError("pyyaml is required") from exc
+        raise CoherenceInputError("pyyaml is required", kind="dependency_missing") from exc
     if not path.is_file():
-        raise CoherenceInputError(f"missing input: {path}")
+        raise CoherenceInputError(f"missing input: {path}", kind="missing_input")
     try:
         documents = list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
     except (OSError, yaml.YAMLError) as exc:
-        raise CoherenceInputError(f"cannot read YAML: {path}") from exc
+        raise CoherenceInputError(f"cannot read YAML: {path}", kind="unreadable_input") from exc
     return [document for document in documents if isinstance(document, dict)]
 
 
@@ -280,6 +288,24 @@ def main(argv: list[str] | None = None) -> int:
         report = build_report(args.root)
     except CoherenceInputError as exc:
         print(f"current-state-coherence: {exc}", file=sys.stderr)
+        if args.json:
+            # 结构化「我没测成」: 门禁据此归入 `not_measured`, 与「测了但有问题」
+            # 分开 —— 后者是发现, 前者不是 (见债条目 GATE-CLEAN-CHECKOUT-NOISE)。
+            print(
+                json.dumps(
+                    {
+                        "ok": False,
+                        "measured": False,
+                        "reason": exc.kind,
+                        "detail": str(exc),
+                        "status": "not_measured",
+                        "schema": SCHEMA,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
         return 2
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
