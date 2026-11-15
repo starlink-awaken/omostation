@@ -57,6 +57,21 @@ DEFAULT_OMO_SRC = ROOT / "projects" / "omo" / "src" / "omo"
 REPO_ROOT_PY = ROOT / "bin" / "lib" / "repo_root.py"
 OMO_PATHS_PY = OMO_SRC / "omo_paths.py"
 
+# 判据需要**真实的写面源码**。目录整个缺席 (projects/omo 未 init / 干净检出) 时, 本文件
+# 的断言只能读到空集 —— 那是检出形态, 不是回归, 故整模块跳过并指名备齐命令。
+#
+# 判据刻意取「目录在不在」而不是「子模块 init 了没」: **目录在但内容陈旧** (没 bump
+# gitlink) 时本模块照旧全跑, `test_omo_checkout_carries_the_write_plane_mechanism`
+# 那条反向保护必须保持能红。加这道守卫前, 未 init 子模块的检出上本文件红 21 条。
+pytestmark = pytest.mark.skipif(
+    not OMO_SRC.is_dir(),
+    reason=(
+        f"omo 写面源码目录缺席: {OMO_SRC} —— 先 `git submodule update --init projects/omo`; "
+        "开发期可用 OMO_RESIDENT_SRC 指向 .subtrees/omo/src/omo "
+        "(缺席属检出形态, 不是回归; 目录在但陈旧时本文件照旧全跑)"
+    ),
+)
+
 # ── 解析器 (被测面) ───────────────────────────────────────────────────────
 
 RESOLVERS = frozenset({"write_path", "state_root", "event_ledger_path", "state_file_read"})
