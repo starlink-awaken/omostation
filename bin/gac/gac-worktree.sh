@@ -732,6 +732,14 @@ if [ "${GAC_WORKTREE_LIB_ONLY:-0}" = "1" ]; then
 fi
 
 case "$cmd" in
+  guard-submodules)
+    # T10-161: gitlink 新鲜度 + remote 完整性守卫 (advisory)。
+    # 2026-09-28 的 #4513 把**这一个分支**覆盖成了 release-diagnose (不是新增,
+    # 是替换), 于是 .githooks/post-checkout:61 的 `guard-submodules --fix` 连了
+    # 7 周空转 —— 它照 `*)` 打用法再 `exit 1`, 被钩子的 `|| true` 吞掉。
+    # 函数本体 (guard_submodules) 与 bump-fast 的内部调用一直都在, 只有 CLI 入口没了。
+    guard_submodules "${session:-}"
+    ;;
   release-diagnose)
     if [ "$session" = "--help" ]; then
       echo "用法: release-diagnose <session>  (只读, 不修改 worktree)"
@@ -1704,8 +1712,9 @@ PYEOF
   *)
     echo "GaC worktree per session (ADR-0106 P2)"
     echo ""
-    echo "用法: gac-worktree.sh {claim|submit [--strict]|merge|release|release-diagnose|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
+    echo "用法: gac-worktree.sh {guard-submodules [--fix]|claim|submit [--strict]|merge|release|release-diagnose|bump-fast|bump-pointer|list|agents|onboard|cleanup} [args]"
     echo ""
+    echo "  guard-submodules [--fix]  子模块 gitlink 新鲜度 + remote 完整性 (advisory)"
     echo "  claim <session>      创建 worktree + 分支 work/<session>"
     echo "  submit [--strict] <session>  proposal-only → MANAGED_SUCCESSOR_REQUIRED"
     echo "                       --strict: 子模块 pointer 不可达时阻止提案 (默认仅 warning)"
