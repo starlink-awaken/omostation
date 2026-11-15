@@ -42,7 +42,7 @@ case "$MODE" in
   --check)
     if [ "$COUNT" -gt "$MAX_WORKTREES" ]; then
       echo "❌ 超限: $COUNT > $MAX_WORKTREES" >&2
-      echo "运行 'bash bin/gac/gac-worktree-prune.sh' 清理" >&2
+      echo "运行 'bash bin/gac/gac-branch-prune.sh' 清理 (已合并/过期 work 分支及其 worktree)" >&2
       exit 1
     elif [ "$COUNT" -gt "$WARN_THRESHOLD" ]; then
       echo "⚠️ 接近上限: $COUNT > $WARN_THRESHOLD"
@@ -52,7 +52,10 @@ case "$MODE" in
   --enforce)
     if [ "$COUNT" -gt "$MAX_WORKTREES" ]; then
       echo "🔧 自动清理..."
-      bash "$(dirname "$0")/gac-worktree-prune.sh" --apply
+      # gac-worktree-prune.sh 已归档 (bin/_archive/), 现行等价物是
+      # bin/gac/gac-branch-prune.sh (= make worktree-prune): 清已合并/过期 work 分支
+      # 及其 worktree。它只认 --dry-run, 没有 --apply。
+      bash "$(dirname "$0")/gac-branch-prune.sh"
     else
       echo "✅ 无需清理 ($COUNT <= $MAX_WORKTREES)"
     fi
