@@ -95,3 +95,4 @@ seed_items:
 - .omo/debt/items/M1-INSTANCE-DRIFT-ADVISORY-ONLY.yaml
 - .omo/debt/items/GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD.yaml
 - .omo/debt/items/CR-AGE-RULES-NO-BASIS-NO-EXECUTION.yaml
+- .omo/debt/items/ADR-0121-PENDING-RULES-REGISTERED.yaml

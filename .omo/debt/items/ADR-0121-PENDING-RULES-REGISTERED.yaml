@@ -1,0 +1,72 @@
+id: "ADR-0121-PENDING-RULES-REGISTERED"
+title: "ADR-0121 明写「2 条待加」规则，其中 CR-L0-SSOT-PATH-NORM 却以 lifecycle: active 注册、executor 指向一个不存在的 --rule"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_knowledge/decisions/0121-governance-convergence-initiative.md
+- .omo/_truth/registry/governance-checks.yaml
+evidence_refs:
+- .omo/_knowledge/decisions/0121-governance-convergence-initiative.md
+- .omo/_truth/registry/governance-checks.yaml
+- bin/gac/governance-convergence-lint.py
+mitigation_refs: []
+opened_at: "2026-11-15"
+last_reviewed_at: "2026-11-15"
+next_review_at: "2026-12-15"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `ADR-0121`（status: active）第 38 行明写：
+
+  > P71 Phase 4 要求「每根因 → 1 条 GaC 规则」，但 P0 recovery 新增的 4 条规则中，
+  > **2 条待加**（`CR-L0-SSOT-PATH-NORM`、`CR-META-CI-SKIP-MATRIX`）
+
+  §1.2 进一步给出这两条的完整定义，执行者都写
+  `bin/gac/governance-convergence-lint.py --rule <name>`。
+
+  **实测与 ADR 相反**：
+  - `CR-L0-SSOT-PATH-NORM` **已注册**，`lifecycle: active`，描述里写着
+    「实现: `bin/gac/governance-convergence-lint.py --rule ssot-path-norm`」——
+    而该脚本的合法 `--rule` 只有 `registration` / `score` / `loop` /
+    `rules-count` / `matrix`（`--help` 与源码一致）。**这个 executor 不存在。**
+  - `CR-META-CI-SKIP-MATRIX` **没注册**（这一条与「待加」一致）。
+
+  **放大**：#5358 之前，该脚本对未知 `--rule` **静默空跑**并报 `ok:true` ——
+  也就是说这条规则的「实现」指路指向一次空跑，而空跑还报绿。#5358 已让未知
+  `--rule` 报错（`UNKNOWN_RULE`, exit 1），这条假指路现在会**响**，但登记的
+  `lifecycle` 仍是 `active`。
+
+  **这条规则不是孤例**：同一轮的 `CR-AGE-*-01`（5 条）也是「`required` 但无执行面」
+  —— 见 `CR-AGE-RULES-NO-BASIS-NO-EXECUTION`；`CR-L0-SSOT-PATH-NORM` 的
+  `source_ref`（`.omo/standards/ssot-path-norm.md`）也不存在 —— 见
+  `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD`。
+decision_needed: >-
+  (a) **补实现**：给 `governance-convergence-lint.py` 加 `ssot-path-norm` 与
+  `ci-skip-matrix` 两个 rule（前者比对 SSOT 声明路径与 broker 实际写入路径，
+  后者核对 `CI_SKIP_CHECKS ∪ CI_ONLY_CHECKS` 的覆盖）—— ADR 已经把这两条
+  定义写好了，缺的是实现。
+  (b) **先正名**：把 `CR-L0-SSOT-PATH-NORM` 的 `lifecycle` 降为 `pending`
+  （与 ADR 的「待加」一致），并把描述里的假实现指路删掉，等实现落地再转 `active`。
+  **本条不代决。** 注意 (b) 单独做会让 `R-GOV-1`（ADR 引用 ↔ 登记）仍成立，
+  但 `source_ref` 仍指向不存在的标准文档 —— 那条要么补文档、要么一并改指。
+history:
+- at: "2026-11-15T06:10:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：核 #5355 余下 6 条死 source_ref 里的最后一条（`.omo/standards/
+    ssot-path-norm.md`）时, 顺着规则描述里的「实现: … --rule ssot-path-norm」
+    查那个 `--rule` —— 它不存在; 再往上翻, 发现 **ADR-0121 自己第 38 行就写着
+    这两条是「待加」**, 而登记面把其中一条当 `active` 注册了。
+    **判据**：一条规则的「实现」指路与它的**来源 ADR** 冲突时, ADR 里那些
+    「待加 / 计划中 / P71 Phase 4」字样的权重高于登记面的 `lifecycle: active`
+    —— 登记面是派生, ADR 是依据。**纪律**：把 `lifecycle: active` 当「已实现」
+    之前, 先查它的**来源 ADR 有没有把它标成待加**; 两者的时间差就是腐烂窗口。
+  actor: "governance-agent"
