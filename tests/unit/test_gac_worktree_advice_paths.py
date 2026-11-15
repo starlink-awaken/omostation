@@ -101,17 +101,47 @@ def test_advice_paths_exist() -> None:
     assert missing == [], "输出行里的路径在仓里不存在: " + "; ".join(missing)
 
 
-SIBLING_EXEC_RE = re.compile(
-    r'bash\s+"\$\(dirname\s+"\$0"\)/([A-Za-z0-9_.-]+\.sh)"'
+# (名字, 正则, 解析基址) —— 覆盖「机器要执行的脚本」的三种同族写法。
+# 2026-11-16 实测: 非归档 bin/**/*.sh 里共 6 处 (dirname-$0 ×1 / SCRIPT_DIR ×1 /
+# $ROOT/bin ×4)，扩之前只有第一种被覆盖。
+EXEC_TARGET_PATTERNS: tuple[tuple[str, re.Pattern[str], str], ...] = (
+    (
+        "dirname-$0",
+        re.compile(
+            r'(?:bash|source|\.|sh)\s+"\$\(dirname\s+"\$0"\)/([A-Za-z0-9_./-]+\.(?:sh|py))"'
+        ),
+        "sibling",
+    ),
+    (
+        "SCRIPT_DIR",
+        re.compile(
+            r'(?:bash|source|\.|sh)\s+"\$\{?SCRIPT_DIR\}?/([A-Za-z0-9_./-]+\.(?:sh|py))"'
+        ),
+        "sibling",
+    ),
+    (
+        "ROOT-rel",
+        re.compile(
+            r'(?:bash|source|\.|sh)\s+"\$\{?ROOT\}?/bin/([A-Za-z0-9_./-]+\.(?:sh|py))"'
+        ),
+        "root-bin",
+    ),
 )
 
 
-def test_sibling_script_executions_exist() -> None:
-    """`bash "$(dirname "$0")/<脚本>"` 是**实际执行**，目标必须存在。
+def _resolve_exec_target(base: str, path: Path, target: str) -> Path:
+    if base == "root-bin":
+        return ROOT / "bin" / target
+    return path.parent / target
 
-    与 `test_advice_paths_exist` 分开: 那把尺查的是**给人抄的文本**里的
-    `bin/...` 路径；这把查的是**机器要跑的同目录脚本**。
-    `gac-worktree-guard.sh --enforce` 的 bug 正是这一类 —— 它执行了一个
+
+def test_executed_script_targets_exist() -> None:
+    """**机器要执行**的脚本目标必须存在（与「给人抄的文本」分开）。
+
+    `test_advice_paths_exist` 查输出行里的 `bin/...` 字面量；这把查
+    `bash|source "$(dirname "$0")/…` / `$SCRIPT_DIR/…` / `$ROOT/bin/…` ——
+    它们不含 `bin/...` 字面量，前一把握看不见。
+    `gac-worktree-guard.sh --enforce` 的 bug 正是这一类: 它**执行**了一个
     已归档的 `gac-worktree-prune.sh`，而不只是建议错。
     """
     missing: list[str] = []
@@ -124,10 +154,26 @@ def test_sibling_script_executions_exist() -> None:
         for lineno, line in enumerate(lines, 1):
             if line.strip().startswith("#"):
                 continue
-            for match in SIBLING_EXEC_RE.finditer(line):
-                if not (path.parent / match.group(1)).exists():
-                    missing.append(f"{rel}:{lineno}: {match.group(1)}")
-    assert missing == [], "要执行的同目录脚本不存在: " + "; ".join(missing)
+            for name, pattern, base in EXEC_TARGET_PATTERNS:
+                for match in pattern.finditer(line):
+                    target = match.group(1)
+                    if not _resolve_exec_target(base, path, target).exists():
+                        missing.append(f"{rel}:{lineno}: [{name}] {target}")
+    assert missing == [], "要执行的脚本目标不存在: " + "; ".join(missing)
+
+
+def test_exec_ruler_covers_all_three_forms() -> None:
+    """自证: 三种写法都真的被这把尺看到（否则扩了等于没扩）。"""
+    seen: set[str] = set()
+    for path in tracked_shell_scripts():
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        for name, pattern, _base in EXEC_TARGET_PATTERNS:
+            if pattern.search(text):
+                seen.add(name)
+    assert seen == {"dirname-$0", "SCRIPT_DIR", "ROOT-rel"}, f"只覆盖到 {seen}"
 
 
 def test_extractor_finds_advice_lines() -> None:
