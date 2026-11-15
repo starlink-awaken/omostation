@@ -108,12 +108,17 @@ next_review_at: '2026-11-16T00:00:00+00:00'
 gate_level: none
 x1_policy_ref: ''
 x3_tier: Principle
-decision_needed: '三问分开裁决。(1) **复审总体以哪一面为准**: ① 目录为准 (`items/*.yaml` 全量 glob, registry 退化为元数据/加速索引) —— 一处改动即覆盖 9
-  条, 但要确认没有「故意不登记」的项 (实测面外 19 条 yaml 里 10 条终态、9 条非终态, 说明历史上登记与落盘本就不同步); ② 登记面为准 + 立案入口唯一 (broker-only) —— 语义清楚但先要解决 broker 产出形态与
-  22 键权威不一致 (见 evidence 第 8 条), 否则「走 broker」等于「换一种文件形状」; ③ 两面取并集 + 反向门禁 (磁盘有而登记面无 = 失败) —— 最省改动, 但会让 `debt-integrity-check.py`
-  从单向变双向, 现有 19 条历史欠登记立刻成红。(2) **立案入口是否强制**: 若裁 broker-only, 需要同时给出 broker 的 22 键模式 (现实现会注入 schema 外键并追加 seen_again
-  历史), 否则合规的直写会持续发生。(3) **seed_items 里 25 条全终态是否清出**: 保留则扫描面恒为 0 可办项, `needs_reassessment=0 / overdue=0` 将永远是真但无意义的读数。**裁决前不要直写
-  registry/debt.yaml** —— 该文件由 broker 维护, 手工补登 19 条（yaml 单位）会与 broker 的 upsert 语义竞争。'
+decision_needed: >-
+  **Q1 已裁（PR #5212, 2026-11-10）：两面双向同步** —— 目录与登记面互检，
+  磁盘有而登记面无 = 失败。Q3 的前提已消失：登记面 86 条 == 磁盘 86 份，
+  非终态 47 条，扫描面不再「恒为 0 可办项」（2026-11-15 复算）。
+  **Q2（立案入口是否强制 broker-only）仍开放**，且 2026-11-15 多了一条实测：
+  broker 形态与 22 键权威的不一致**比本条立案时更严重** —— 见
+  `DEBT-SCHEMA-THREE-WAY-DESYNC`（broker 注入 `status` 会被本仓
+  `fix-debt-fields.py` 判为 `dual_fields` 冲突；kernel `DebtItem` 丢弃
+  闭局证据三键）。Q2 若裁「broker-only」，必须先让 broker 产出能通过
+  本仓自己的 debt 工具，否则官方入口名存实亡（实测使用率 7/86，且 7/7 全终态）。
+  **裁决前不要直写 registry/debt.yaml** —— 该文件由 broker 维护。
 history:
 - at: '2026-11-09T03:26:00+00:00'
   action: identify
