@@ -1190,6 +1190,31 @@ def _declared_not_measured(item: dict[str, object]) -> str | None:
     return None
 
 
+def _missing_entrypoint(name: str, command: object, item: dict[str, object]) -> str | None:
+    """check 的**入口本身**不在这棵树里 ⇒ 它根本没跑起来 (如子模块脚本未检出)。
+
+    与 `_declared_not_measured` 互补: 那一类是「跑起来了但输入缺失」(由 check
+    自报), 这一类是「连跑都没跑起来」—— 没有 check 代码可改, 只能由门禁按
+    **命令自己的入口路径**判定 (结构性判据, 不是匹配报错文本)。
+
+    实测 (2026-11-15, fresh worktree): 87 个 check 里 2 个属这一类 ——
+    `mof-schema-validate` / `mof-state-bridge` (入口在 projects/ecos 子模块)。
+    """
+    if item.get("ok"):
+        return None
+    if _declared_not_measured(item):
+        return None
+    tokens = [str(t) for t in (command or [])]
+    for token in tokens:
+        if not token or token.startswith("-"):
+            continue
+        if not token.startswith(("bin/", "projects/", "tests/", "runtime/", "protocols/", "docs/", ".omo/")):
+            continue
+        if not (WORKSPACE / token).exists():
+            return token
+    return None
+
+
 def extract_finding_topics(results: list[dict[str, object]]) -> list[dict[str, object]]:
     """Expand A6 checks into classified finding topics for agents/dashboards.
 
@@ -1351,11 +1376,21 @@ def run_gate(
         checks = _apply_adaptive_thresholds(checks, metrics_file)
     results = run_checks(checks)
     finding_topics = extract_finding_topics(results)
-    not_measured = [
-        {"name": r["name"], "reason": reason, "command": r.get("command")}
-        for r in results
-        if (reason := _declared_not_measured(r))
-    ]
+    not_measured: list[dict[str, object]] = []
+    for (name, command), result in zip(checks, results):
+        if not isinstance(result, dict):
+            continue
+        reason = _declared_not_measured(result)
+        detail: dict[str, object] = {}
+        if reason is None:
+            entrypoint = _missing_entrypoint(name, command, result)
+            if entrypoint is None:
+                continue
+            reason = "entrypoint_missing"
+            detail = {"entrypoint": entrypoint}
+        not_measured.append(
+            {"name": name, "reason": reason, "command": result.get("command"), **detail}
+        )
 
     # HARD/SOFT 分离: soft checks 不翻转 gate. 条件性 SKIP (exit 78) 同样不阻断,
     # 但被归入 soft_warns —— 让它以 [SKIP]/SOFT WARN 显形, 而不是算作 PASS.
