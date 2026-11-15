@@ -1166,6 +1166,30 @@ def run_checks(checks: Any) -> list[dict[str, object]]:
     return results
 
 
+def _declared_not_measured(item: dict[str, object]) -> str | None:
+    """check **自己**声明「我没测成」时返回原因, 否则 None。
+
+    契约: check 在没能测量它该测的东西时, 输出 JSON
+    `{"measured": false, "reason": "<kind>", ...}`。由 check 自己声明,
+    **不让门禁去猜报错文本** —— 那是匹配拼写, 与本仓「判据与被检对象
+    不共享失效模式」的纪律相反。
+
+    典型: `current-state-coherence` 在输入 (.omo/state/system.yaml) 缺失时
+    输出 `{"measured": false, "reason": "missing_input"}` —— 这不是发现,
+    是「这棵树没备齐输入」。见债条目 GATE-CLEAN-CHECKOUT-NOISE。
+    """
+    stdout = str(item.get("stdout") or "").lstrip()
+    if not stdout.startswith("{"):
+        return None
+    try:
+        payload = json.loads(stdout)
+    except json.JSONDecodeError:
+        return None
+    if isinstance(payload, dict) and payload.get("measured") is False:
+        return str(payload.get("reason") or "unspecified")
+    return None
+
+
 def extract_finding_topics(results: list[dict[str, object]]) -> list[dict[str, object]]:
     """Expand A6 checks into classified finding topics for agents/dashboards.
 
@@ -1327,6 +1351,11 @@ def run_gate(
         checks = _apply_adaptive_thresholds(checks, metrics_file)
     results = run_checks(checks)
     finding_topics = extract_finding_topics(results)
+    not_measured = [
+        {"name": r["name"], "reason": reason, "command": r.get("command")}
+        for r in results
+        if (reason := _declared_not_measured(r))
+    ]
 
     # HARD/SOFT 分离: soft checks 不翻转 gate. 条件性 SKIP (exit 78) 同样不阻断,
     # 但被归入 soft_warns —— 让它以 [SKIP]/SOFT WARN 显形, 而不是算作 PASS.
@@ -1346,6 +1375,7 @@ def run_gate(
         "preflight": preflight,
         "hard_fails": hard_fails,
         "soft_warns": soft_warns,
+        "not_measured": not_measured,
         "scope": scope,
         "run_id": run_id or None,
         "change_lane_files": change_lane_files,
@@ -1387,6 +1417,20 @@ def _print_preflight(report: dict[str, object]) -> None:
     )
 
 
+def _print_not_measured(report: dict[str, object]) -> None:
+    """列出「自报没测成」的 check —— 它们不是发现, 别混进 findings。"""
+    items = report.get("not_measured")
+    if not isinstance(items, list) or not items:
+        return
+    print(
+        f"⏸  {len(items)} 个 check **自报没测成**（缺输入, 不是仓库缺陷, 也不是通过）:",
+        file=sys.stderr,
+    )
+    for item in items:
+        if isinstance(item, dict):
+            print(f"    · {item.get('name')}: {item.get('reason')}", file=sys.stderr)
+
+
 def print_human(
     report: dict[str, object],
     verbose: bool = False,
@@ -1401,6 +1445,7 @@ def print_human(
     checks_count = len(checks_list)
     soft_list: list[dict] = report.get("soft_warns") or []  # type: ignore[assignment]
     _print_preflight(report)
+    _print_not_measured(report)
 
     if is_ok and terminal_mode == "slim" and not verbose:
         print("═══ GaC local gate ═══")
