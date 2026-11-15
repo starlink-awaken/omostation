@@ -1,0 +1,96 @@
+id: "GATE-CLEAN-CHECKOUT-NOISE"
+title: "gac-local-gate --strict 在干净检出上 16/87 红，逐条实测**全部**是「子模块未初始化 / 生成态未物化」—— 门禁把环境噪声当 findings"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/gac/gac-local-gate.py
+evidence_refs:
+- bin/gac/gac-local-gate.py
+- bin/gac/check-evidence-freshness.py
+- .omo/_delivery/evidence-smoke/2026-11-15.json
+mitigation_refs: []
+opened_at: "2026-11-15"
+last_reviewed_at: "2026-11-15"
+next_review_at: "2026-12-15"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  2026-11-15 在 `origin/main` 的 **fresh worktree**（`git worktree add`，不 init 子模块、
+  不物化生成态）上跑 `gac-local-gate.py --strict --json`：**87 个 check 里 16 个 hard fail**
+  （另 2 个 soft warn）。逐条定性：
+
+  | # | check | 报错首行 | 定性 |
+  |---|---|---|---|
+  | 1 | `check-cockpit-ui-dist` | `cockpit-ui static assets (dist/index.html) missing` | 子模块未 init |
+  | 2 | `capability-ownership` | `注册能力 ecos-ssot-tools 实现缺失: projects/ecos/src/ecos/ssot/tools` | 子模块未 init |
+  | 3 | `auto-fix-loop` | `注册表 path 指向缺失实现: ecos-ssot-tools` | 子模块未 init |
+  | 4 | `mof-schema-validate` | `can't open file projects/ecos/src/ecos/ssot/tools/mof-schema-validate.py` | 子模块未 init |
+  | 5 | `mof-state-bridge` | `can't open file …/mof-state-bridge.py` | 子模块未 init |
+  | 6 | `m4-bootstrap-reflex` | `Traceback …` | 子模块未 init |
+  | 7 | `doc-ssot-lint` | `L0 约束源缺失: projects/ecos/.omo/_derived/…` | 子模块未 init |
+  | 8 | `governance-semantic-gate` | `gac-mof-validate` / `mof-schema-validate` 均 rc=1 | 子模块未 init |
+  | 9 | `mof-capabilities-drift-check` | `tool_path_exists: ecos-ssot-tools … MISSING` | 子模块未 init |
+  | 10 | `test-gac-engine` | `sgf-policy.yaml metadata registry not found` | 子模块未 init |
+  | 11 | `check-severity-registry` | `primary lock 'doc-claims-check' not declared in sgf-policy.yaml` | 子模块未 init |
+  | 12 | `governance-evolution` | `missing file: projects/agora/etc/bos-services.yaml` + cockpit CLI | 子模块未 init |
+  | 13 | `dependency-baseline-drift` | `74 项 drift`（pyproject 在子模块里） | 子模块未 init |
+  | 14 | `test-collection` | `pytest rc=4`，无测试可收集 | 子模块未 init |
+  | 15 | `doc-link-check` | 14 条死链 | 子模块未 init + 生成态未物化 |
+  | 16 | `check-evidence-freshness` | `score=62.6 < 90.0` | 生成态（自生成报告） |
+
+  **16/16 全部是检出形态，没有一条是仓库缺陷。**
+
+  **决定性对拍**：`check-evidence-freshness` 在无报告时会**自己跑一次 evidence-smoke**
+  （`:96-104`），所以它量的是「这棵树的 BOS 可解析率」。同一份 `services.yaml`（295 条声明）：
+
+  | 检出 | score | resolvable | gap |
+  |---|---|---|---|
+  | canonical（子模块齐） | **94.0** | 295 | **0** |
+  | fresh worktree（子模块缺） | **62.6** | 111 | **184** |
+
+  差值 184 全部落在 `module pkg not found` / `script not found` / `module path not found`
+  —— 即**声明指向子模块里的实现，而实现没被检出**。
+
+  **门禁已经有一半自诊断**：`load_sgf_policy()` 在 `projects/ecos/.../sgf-policy.yaml`
+  缺失时打印 `[WARN] … falling back to the hardcoded DEFAULT_POLICY … do not read this
+  run as full gate coverage`（`:44-46`）。但它只覆盖**gate 集合**这一个面，且只走 stderr、
+  不进 JSON —— 于是上面 16 条红仍然以 `hard_fails` 的身份出现，看起来与真缺陷同形。
+
+  **代价**：任何 agent 在 fresh clone / 新 worktree 上跑 `make gac-local-gate-strict`，
+  都要手工把 16 条红逐条定性一遍。本轮这个坑被踩到三次
+  （`executor-drift` / `doc-links` / 本条），每次都得重跑一遍才敢下结论。
+decision_needed: >-
+  (a) **给门禁加结构化 preflight**：在跑 check 之前探测「子模块是否齐 / 生成态是否在」，
+  未备齐时把结果放进 JSON 的 `preflight` 块（`complete: false` + 缺失清单），
+  并把这些 check 的红从 `hard_fails` 里分出来（例如 `invalidated_fails`）——
+  **退出码仍为失败**（没测完不等于通过），只是不再让环境噪声与真缺陷同形。
+  这条与 `test-mcp-kos` 已有的 `exit 78 = skipped`、`current-state-coherence` 的
+  `missing input` 软告警是同一套语义，属于把它推广到全 gate。
+  (b) **只把现有那条 WARN 挪进 JSON**（`preflight.sgf_policy_loaded: false`），
+  不做红/噪声分流 —— 成本最低，但 16 条红仍然同形，只是多了一个机器可读的提示。
+  (c) **在 `make gac-local-gate-strict` 前加物化/子模块前置** —— 治标，
+  且 `git submodule update --init` 在网络受限时会半途留下更糟的检出（见
+  BET-Y2Q4-T10-252 的守卫退化记录）。
+  **本条不代决。** 注意 (a) 不得做成「跳过即绿」—— 那正是本仓反复出事的空绿形状。
+history:
+- at: "2026-11-15T09:50:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：本轮已两次把「检出形态」误读成治理缺口（`executor-drift`、`doc-links`），
+    于是做一次权威测量：fresh worktree 上跑 `--strict --json`，把 16 条 hard fail
+    逐条看首行报错。结果 16/16 都指向「子模块未 init / 生成态未物化」。
+    **判据**：定性一条红之前，先找**同一事实在两个检出上的对拍**——
+    `check-evidence-freshness` 会自跑 evidence-smoke，同一份 295 条 BOS 声明在
+    canonical 是 94.0/gap 0、在 fresh worktree 是 62.6/gap 184，差值全部落在
+    「实现在子模块里」这一类，这就是最干净的一次对拍。
+    **纪律**：门禁的红必须**先被定性再被采信**；`hard_fails` 这个字段名本身
+    不区分「仓库有问题」与「输入没备齐」，而两者对 agent 的行动含义相反。
+  actor: "governance-agent"
