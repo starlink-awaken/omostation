@@ -15,6 +15,7 @@ import json
 import pathlib
 import re
 
+import pytest
 import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -218,6 +219,13 @@ def test_l6_run_position_is_what_counts(tmp_path: pathlib.Path) -> None:
     assert "bin/gac/ghost.py" not in bodies, "文案里的路径不能被判成已接线"
 
 
+@pytest.mark.skipif(
+    not (ROOT / "projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml").is_file(),
+    reason=(
+        "sgf-policy 不在 (projects/ecos 未 init / 干净检出) —— 本条测的是 runtime 平面"
+        "与 sgf-policy 执行面的接线, 降级副本下无执行面可测 (检出形态, 不是回归)"
+    ),
+)
 def test_l6_text_regex_mutation_would_go_green() -> None:
     """变异钉: 把平面比对换成"扫源码文本", 真缺席者就从点名清单消失 —— 证明本层价值.
 
@@ -237,6 +245,13 @@ def test_l6_text_regex_mutation_would_go_green() -> None:
     assert not (UNREACHED <= mutated), "文本正则口径把它们当成已接线 —— 正是本层要防的假绿"
 
 
+@pytest.mark.skipif(
+    not (ROOT / "projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml").is_file(),
+    reason=(
+        "sgf-policy 不在 (projects/ecos 未 init / 干净检出) —— 本条测的是 runtime 平面"
+        "与 sgf-policy 执行面的接线, 降级副本下无执行面可测 (检出形态, 不是回归)"
+    ),
+)
 def test_l6_real_population_is_measured_with_denominators() -> None:
     b = _boot()
     r = b.check_plane_coverage()

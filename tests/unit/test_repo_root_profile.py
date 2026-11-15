@@ -30,6 +30,17 @@ RUNTIME_PROJECTIONS_SRC = (
     REPO / ".omo" / "_truth" / "registry" / "runtime-projections.yaml"
 )
 
+# 下面这 4 条断言都要读**被测检出**的 `omo_paths`（`_probe` 把它插到 sys.path[0]，
+# `_fake_checkout` 逐字节复制它）。该文件在 `projects/omo` 子模块里:
+#
+#   · 子模块**在** ⇒ sys.path[0] 命中被测检出, 判据成立;
+#   · 子模块**不在** ⇒ import 会**静默落到 canonical 工作区**那份
+#     (`~/Workspace/projects/omo/src/omo`, 由 user-site 的 .pth 提供) ——
+#     于是读侧那条会量到 `~/Workspace/.omo`。那是**判据泄漏 host 状态**:
+#     有规范检出的开发机红, CI 没有 ~/Workspace 所以绿。
+#
+# 故这 4 条在源文件缺席时逐个跳过（本文件其余用例不依赖它, 实测 887 条照常跑）。
+
 
 def _ledger_path_joins(path: Path) -> list[int]:
     """返回以 `/` 拼接出 ledger 文件的行号 (纯字符串常量不算)。"""
@@ -77,6 +88,7 @@ def test_ledger_env_wins_over_profile(monkeypatch: pytest.MonkeyPatch) -> None:
 # ── 契约只能有一个变量名 ────────────────────────────────
 
 
+@pytest.mark.skipif(not OMO_PATHS_SRC.is_file(), reason="probe")
 def test_state_root_env_name_matches_kernel_contract() -> None:
     """omo 包不能反向 import 父仓, 所以两处各自声明同一个 env 名 — 这里钉住它。"""
     src = OMO_PATHS_SRC.read_text(encoding="utf-8")
@@ -156,6 +168,13 @@ def _fake_checkout(root: Path) -> Path:
     return root
 
 
+@pytest.mark.skipif(
+    not OMO_PATHS_SRC.is_file(),
+    reason=(
+        f"被测检出的 omo_paths 不在: {OMO_PATHS_SRC} —— 先 `git submodule update --init projects/omo`。"
+        "缺席时 import 会静默落到 canonical 工作区那份, 判据量到的不是这棵检出 (host 状态泄漏)"
+    ),
+)
 def test_kernel_read_plane_stays_on_checkout(tmp_path: Path) -> None:
     """profile 只搬写侧; 治理 SSOT 读取必须跟随当前检出, 否则 worktree 会去主仓取真值。"""
     state_root = tmp_path / "dev-state"
@@ -171,6 +190,13 @@ def test_kernel_read_plane_stays_on_checkout(tmp_path: Path) -> None:
     assert truth_dir == str(REPO / ".omo" / "_truth")
 
 
+@pytest.mark.skipif(
+    not OMO_PATHS_SRC.is_file(),
+    reason=(
+        f"被测检出的 omo_paths 不在: {OMO_PATHS_SRC} —— 先 `git submodule update --init projects/omo`。"
+        "缺席时 import 会静默落到 canonical 工作区那份, 判据量到的不是这棵检出 (host 状态泄漏)"
+    ),
+)
 def test_projection_falls_back_to_committed_legacy_path(tmp_path: Path) -> None:
     """兜底成立的条件是"检出里真有 legacy 那份文件", 不是这台机器跑过写者。
 
@@ -194,6 +220,13 @@ def test_projection_falls_back_to_committed_legacy_path(tmp_path: Path) -> None:
     assert not canonical.exists()  # 兜底不是因为 canonical 也有值
 
 
+@pytest.mark.skipif(
+    not OMO_PATHS_SRC.is_file(),
+    reason=(
+        f"被测检出的 omo_paths 不在: {OMO_PATHS_SRC} —— 先 `git submodule update --init projects/omo`。"
+        "缺席时 import 会静默落到 canonical 工作区那份, 判据量到的不是这棵检出 (host 状态泄漏)"
+    ),
+)
 def test_projection_without_legacy_reports_missing_canonical(tmp_path: Path) -> None:
     """两面皆无时返回 canonical 原样 (给写者的落点), 不静默兜到别处。
 
