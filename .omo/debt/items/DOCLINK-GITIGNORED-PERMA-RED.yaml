@@ -9,6 +9,20 @@ weight: 0.1
 entropy_class: "low"
 lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-15"
+close_reason: >-
+  订正结案：初版把它读成「gitignored 永久红」，实测不成立 —— 14 条死链里指向
+  `.omo/state/system.yaml` 的只有 3 条，其余 11 条是子模块未初始化；而 CI 在
+  strict gate 之前有 `Materialize generated state input` 步骤且递归检出子模块，
+  所以 CI 上这条判据是绿的。它量的是**检出形态**，不是缺陷。
+  `decision_needed` 的 (a)（教检查器认说明）与 gac-gate.yml「判据语义一律不动」的
+  在案决定相反，作废；(b) 降级 advisory 也不取（CI 已用物化输入更准确地解决）。
+resolution_evidence: >-
+  `doc-link-check --json` 在 origin/main 的 fresh worktree 上复算：14 条 =
+  6 agora + 4 ecos + 1 projects/AGENTS.md + 3 system.yaml（归类读数直接来自 JSON）。
+  删去 .omo/state/system.yaml 后重跑 → 14；物化后重跑 → 11，证明那 3 条随生成态
+  有无而增减。`gac-gate.yml` 的 `Materialize generated state input for the strict gate`
+  步骤与 `submodules: recursive` checkout 共同保证 CI 侧为零。
 affected_roots:
 - bin/ssot/doc-link-check.py
 - .github/workflows/gac-gate.yml
