@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import textwrap
 from pathlib import Path
@@ -188,3 +189,27 @@ def test_isc6_remote_pollution_detection_unchanged(tmp_path: Path):
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))
+
+
+def test_cli_dispatch_is_wired(tmp_path: Path) -> None:
+    """CLI 派发必须真的接住 `guard-submodules` —— 不能掉进 `*)` 打用法。
+
+    2026-09-28 的 #4513 把 `guard-submodules)` 这个分支**覆盖**成了
+    `release-diagnose)`（不是新增），于是 `.githooks/post-checkout:61` 的
+    `guard-submodules --fix` 空转了 7 周：照 `*)` 打用法 + `exit 1`,
+    再被钩子的 `|| true` 吞掉。本文件其余用例都从生产脚本**抽取函数体直接调**，
+    绕过了派发，所以全程绿 —— 这条钉的是**接线**本身。
+    """
+    sub = tmp_path / "sub"
+    make_sub_repo(sub, ["v1"])
+    super_repo, _ = make_super(tmp_path, sub_url=str(sub))
+    proc = subprocess.run(
+        ["bash", str(SCRIPT), "guard-submodules"],
+        capture_output=True,
+        text=True,
+        cwd=str(super_repo),
+        env={**os.environ, "WS_ROOT": str(super_repo), "WS_PARENT": str(tmp_path)},
+    )
+    combined = proc.stdout + proc.stderr
+    assert "用法: gac-worktree.sh" not in combined, combined
+    assert proc.returncode == 0, combined
