@@ -16,6 +16,7 @@ evidence_refs:
 - .omo/_knowledge/decisions/0121-governance-convergence-initiative.md
 - .omo/_truth/registry/governance-checks.yaml
 - bin/gac/governance-convergence-lint.py
+- bin/gac/gac-validate.py
 mitigation_refs: []
 opened_at: "2026-11-15"
 last_reviewed_at: "2026-11-15"
@@ -24,39 +25,57 @@ gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
 description: >-
-  `ADR-0121`（status: active）第 38 行明写：
+  `ADR-0121`（frontmatter `status: active`）§1.2 给出两条「P71 Phase 4 待加」规则：
 
-  > P71 Phase 4 要求「每根因 → 1 条 GaC 规则」，但 P0 recovery 新增的 4 条规则中，
-  > **2 条待加**（`CR-L0-SSOT-PATH-NORM`、`CR-META-CI-SKIP-MATRIX`）
+  > - `CR-L0-SSOT-PATH-NORM`（executor: `… --rule ssot-path-norm`）
+  > - `CR-META-CI-SKIP-MATRIX`（executor: `… --rule ci-skip-matrix`）
 
-  §1.2 进一步给出这两条的完整定义，执行者都写
-  `bin/gac/governance-convergence-lint.py --rule <name>`。
+  而第 38 行更早处也写着「P0 recovery 新增的 4 条规则中，**2 条待加**
+  （`CR-L0-SSOT-PATH-NORM`、`CR-META-CI-SKIP-MATRIX`）」。
 
   **实测与 ADR 相反**：
-  - `CR-L0-SSOT-PATH-NORM` **已注册**，`lifecycle: active`，描述里写着
-    「实现: `bin/gac/governance-convergence-lint.py --rule ssot-path-norm`」——
-    而该脚本的合法 `--rule` 只有 `registration` / `score` / `loop` /
-    `rules-count` / `matrix`（`--help` 与源码一致）。**这个 executor 不存在。**
-  - `CR-META-CI-SKIP-MATRIX` **没注册**（这一条与「待加」一致）。
+  - `CR-L0-SSOT-PATH-NORM` **已注册**，`lifecycle: active` —— 与「待加」矛盾；
+    描述里那句「实现: `bin/gac/governance-convergence-lint.py --rule ssot-path-norm`」
+    指向的 `--rule` 名**不存在**（合法名只有 `registration` / `score` / `loop` /
+    `rules-count` / `matrix`）。
+  - `CR-META-CI-SKIP-MATRIX` **没注册**（与「待加」一致，无需处理）。
 
   **放大**：#5358 之前，该脚本对未知 `--rule` **静默空跑**并报 `ok:true` ——
   也就是说这条规则的「实现」指路指向一次空跑，而空跑还报绿。#5358 已让未知
-  `--rule` 报错（`UNKNOWN_RULE`, exit 1），这条假指路现在会**响**，但登记的
-  `lifecycle` 仍是 `active`。
+  `--rule` 报错（`UNKNOWN_RULE`, exit 1），这条假指路现在会**响**。
 
   **这条规则不是孤例**：同一轮的 `CR-AGE-*-01`（5 条）也是「`required` 但无执行面」
-  —— 见 `CR-AGE-RULES-NO-BASIS-NO-EXECUTION`；`CR-L0-SSOT-PATH-NORM` 的
-  `source_ref`（`.omo/standards/ssot-path-norm.md`）也不存在 —— 见
+  —— 见 `CR-AGE-RULES-NO-BASIS-NO-EXECUTION`；本条的 `source_ref`
+  （`.omo/standards/ssot-path-norm.md`）也不存在 —— 见
   `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD`。
 decision_needed: >-
-  (a) **补实现**：给 `governance-convergence-lint.py` 加 `ssot-path-norm` 与
-  `ci-skip-matrix` 两个 rule（前者比对 SSOT 声明路径与 broker 实际写入路径，
-  后者核对 `CI_SKIP_CHECKS ∪ CI_ONLY_CHECKS` 的覆盖）—— ADR 已经把这两条
-  定义写好了，缺的是实现。
-  (b) **先正名**：把 `CR-L0-SSOT-PATH-NORM` 的 `lifecycle` 降为 `pending`
-  （与 ADR 的「待加」一致），并把描述里的假实现指路删掉，等实现落地再转 `active`。
-  **本条不代决。** 注意 (b) 单独做会让 `R-GOV-1`（ADR 引用 ↔ 登记）仍成立，
-  但 `source_ref` 仍指向不存在的标准文档 —— 那条要么补文档、要么一并改指。
+  **2026-11-15 复裁：(b) 正名这条路被仓里两道在案硬门堵死，本条维持 identified。**
+
+  试过把 `lifecycle` 由 `active` 降为 `draft`（`draft` 是 `gac-validate` 的
+  `LIFECYCLE_ENUM` 里「已声明未激活」的合法值；条目初版写的 `pending` 不在 enum 里，
+  照抄会被拦），结果同时踩两道门：
+  - `check-governance-trend`：**draft 超 90 天判硬失败**（本条 `created_at=2026-07-02`，
+    已 136 天）—— 这条门就是专门防「draft 烂在登记面」的；
+  - `gac-validate --gate`：**只要有任何警告即 rc=1**，而 draft 必然产生
+    「待 radar 验证激活」警告 ⇒ `governance-orchestrator` 的
+    `compliance_check` 与 `gac-gate` 同时红（实测 `governance-verify` 1 failed）。
+
+  于是结论翻转：**governance-checks 的 lifecycle 词汇里根本不存在「已声明未实现」这个态**。
+  一条还没实现的规则只能挤进 `active`（保留声明，但 `active` 成了假声明）
+  或 `removed`（去掉假声明，但丢掉「待加」这件事实）。这不是本条独有的问题 ——
+  `CR-AGE-RULES-NO-BASIS-NO-EXECUTION` 的 5 条 `required` 无执行面规则是同一形状。
+
+  **要裁的是这个态怎么补**：
+  - (a) **给 lifecycle 加一个「已声明未实现」态**（如 `declared`），并让它
+    **不受** `check-governance-trend` 的 90 天硬失败约束、也不触发 gac-validate 警告；
+    代价是要同时改 `gac-validate` 的 enum、`check-governance-trend` 的计数口径、
+    以及 `R-GOV-1`（ADR 引用 ↔ 登记）的判据 —— 属治理规范变更，需独立授权。
+  - (b) **维持现状**：`active` + 描述里写明「无执行面」（已做），
+    代价是 `active` 这个词继续被这类规则稀释。
+  - (c) **补实现**（`ssot-path-norm` 的判据面）：ADR-0121 §1.2 只有一句话定义，
+    比对哪些 SSOT 声明、哪些 broker 写入路径、什么算违规都没写；
+    凭空写一个 lint rule 只会造出第二把与 ADR 措辞不完全对齐的尺。
+  **本条不代决。**
 history:
 - at: "2026-11-15T06:10:00+00:00"
   action: identify
@@ -69,4 +88,17 @@ history:
     「待加 / 计划中 / P71 Phase 4」字样的权重高于登记面的 `lifecycle: active`
     —— 登记面是派生, ADR 是依据。**纪律**：把 `lifecycle: active` 当「已实现」
     之前, 先查它的**来源 ADR 有没有把它标成待加**; 两者的时间差就是腐烂窗口。
+  actor: "governance-agent"
+- at: "2026-11-15T10:20:00+00:00"
+  action: revise
+  note: >-
+    **试 (b) 正名, 被在案硬门拒下, 结论翻转。** 把 `lifecycle` 降为 `draft` 后
+    两道门同时红：`check-governance-trend` 的「draft 超 90 天」硬失败, 与
+    `gac-validate --gate` 的「有警告即 rc=1」（draft 必带警告）。
+    **判据（一条通用的）**：**给一条规则降态之前, 先把目标值在「谁会因此变红」
+    的面上过一遍** —— 值本身合法(`LIFECYCLE_ENUM` 里有)不等于这个态在
+    **其它门禁**的口径下活着；`draft` 就是「schema 欢迎你、但 trend 门专杀 draft」。
+    **纪律**：`gac-validate --gate` 的退出码**不能经过管道读** ——
+    本轮第一次跑用 `| tail` 取 `$?`, 读到 0, 与 CI 的 1 相反,
+    正是本仓 §7「取退出码不要经过管道」那条的同一个坑。
   actor: "governance-agent"
