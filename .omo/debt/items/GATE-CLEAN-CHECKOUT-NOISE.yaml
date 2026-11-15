@@ -68,18 +68,23 @@ description: >-
   都要手工把 16 条红逐条定性一遍。本轮这个坑被踩到三次
   （`executor-drift` / `doc-links` / 本条），每次都得重跑一遍才敢下结论。
 decision_needed: >-
-  (a) **给门禁加结构化 preflight**：在跑 check 之前探测「子模块是否齐 / 生成态是否在」，
-  未备齐时把结果放进 JSON 的 `preflight` 块（`complete: false` + 缺失清单），
-  并把这些 check 的红从 `hard_fails` 里分出来（例如 `invalidated_fails`）——
-  **退出码仍为失败**（没测完不等于通过），只是不再让环境噪声与真缺陷同形。
-  这条与 `test-mcp-kos` 已有的 `exit 78 = skipped`、`current-state-coherence` 的
-  `missing input` 软告警是同一套语义，属于把它推广到全 gate。
-  (b) **只把现有那条 WARN 挪进 JSON**（`preflight.sgf_policy_loaded: false`），
-  不做红/噪声分流 —— 成本最低，但 16 条红仍然同形，只是多了一个机器可读的提示。
-  (c) **在 `make gac-local-gate-strict` 前加物化/子模块前置** —— 治标，
-  且 `git submodule update --init` 在网络受限时会半途留下更糟的检出（见
-  BET-Y2Q4-T10-252 的守卫退化记录）。
-  **本条不代决。** 注意 (a) 不得做成「跳过即绿」—— 那正是本仓反复出事的空绿形状。
+  **(b) 已落地（#5364），(a) 仍开放。**
+
+  - (b) **把「检出未备齐」做成结构化字段** —— **已做**：`run_gate` 的报告里新增
+    `preflight`（`complete` / `sgf_policy_loaded` / `uninitialized_submodules` /
+    `missing_generated_inputs` / `reasons`），未备齐时向 stderr 打横幅。
+    **判定语义刻意不动**：`hard_fails` 与退出码不变，它只做定性、不做「跳过即绿」。
+  - (a) **把缺输入造成的红从 `hard_fails` 里分出来**（例如 `invalidated_fails`）——
+    **仍未做**，这是本条剩下的部分。难点是**逐条定性**：一条 check 的红是不是
+    缺输入造成的，不能用「报错文本里有没有某个词」来判（那是匹配拼写，
+    与本仓「判据与被检对象不共享失效模式」的纪律相反）。可行方向是让
+    **check 自己**声明「我没测成」（`test-mcp-kos` 的 `exit 78`、
+    `current-state-coherence` 的 `missing input` 已经是这个形状），
+    再由门禁汇总 —— 但那是逐个 check 的改造，不是一次 PR 能收的。
+  - (c) **在 `make gac-local-gate-strict` 前加物化/子模块前置** —— 治标，
+    且 `git submodule update --init` 在网络受限时会半途留下更糟的检出（见
+    BET-Y2Q4-T10-252 的守卫退化记录）。
+  **本条不代决。**
 history:
 - at: "2026-11-15T09:50:00+00:00"
   action: identify
@@ -93,4 +98,16 @@ history:
     「实现在子模块里」这一类，这就是最干净的一次对拍。
     **纪律**：门禁的红必须**先被定性再被采信**；`hard_fails` 这个字段名本身
     不区分「仓库有问题」与「输入没备齐」，而两者对 agent 的行动含义相反。
+  actor: "governance-agent"
+- at: "2026-11-15T11:10:00+00:00"
+  action: mitigate
+  note: >-
+    **(b) 已落地**（#5364）：`run_gate` 报告新增 `preflight` 块 + 未备齐横幅。
+    **刻意不做的事**：没有把那些红从 `hard_fails` 里分出去 —— 那需要逐条定性，
+    而逐条定性的唯一可靠来源是 **check 自己声明「我没测成」**，
+    不是门禁去猜报错文本。把 (b) 当成分流方案其实会制造「看起来分过类了」的假象。
+    **纪律**：一个只解决「看得见」而不解决「分得开」的改动，要与它的成本相称 ——
+    本条选 (b) 是因为它便宜且**不假装**分流过了；剩下 (a) 的难度写在条目里，
+    不再用「加个字段」糊过去。
+  actor: "governance-agent"
   actor: "governance-agent"
