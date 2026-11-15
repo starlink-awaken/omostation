@@ -1,0 +1,80 @@
+id: "GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD"
+title: "10 条 GaC 规则的 source_ref 指向不存在的文件（gac-bootstrap 层4 每次运行都报 indexed缺=10，当前只算 advisory）"
+dimension: "governance"
+subdimension: "ssot"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/governance-checks.yaml
+evidence_refs:
+- bin/gac/gac-bootstrap.py
+- .omo/_truth/registry/governance-checks.yaml
+mitigation_refs: []
+opened_at: "2026-11-15"
+last_reviewed_at: "2026-11-15"
+next_review_at: "2026-12-15"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `bin/gac/gac-bootstrap.py` 的**层4 `check_indexed_integrity()`** 检查每条规则的
+  `source_ref`（按路径形状取）在仓里是否存在。2026-11-15 实测：**10 条规则的
+  `source_ref` 指向 origin/main 上不存在的文件**（`git ls-tree` 逐条核过，
+  且都是**主仓**路径，不是子模块缺席）：
+
+  | 规则 | source_ref |
+  |---|---|
+  | CR-L0-SSOT-PATH-NORM | `.omo/standards/ssot-path-norm.md` |
+  | CR-SEC-YAML-BYPASS | `bin/ssot/check-yaml-bypass.py` |
+  | CR-SEC-SENSITIVE-WRITE | `bin/ssot/check-sensitive-write.py` |
+  | CR-SEC-EVAL-EXEC | `bin/ssot/check-eval-exec.py` |
+  | CR-PY-MUTABLE-DEFAULT | `bin/ssot/check-mutable-default.py` |
+  | CR-AGE-BOS-01 | `bin/gac/check-age-bos.py` |
+  | CR-AGE-POLICY-01 | `bin/gac/check-age-policy.py` |
+  | CR-AGE-MEMORY-01 | `bin/gac/check-age-memory.py` |
+  | CR-AGE-REPLAY-01 | `bin/gac/check-age-replay.py` |
+  | CR-AGE-EVENT-01 | `bin/gac/check-age-event.py` |
+
+  **影响面**：`gac-bootstrap` 的 `indexed_integrity.ok=False`（missing_count=10），
+  而 `gac-healthcheck` 每次运行都打印 `indexed缺=10`。
+
+  **但它是 advisory**：`hard_fail` 只算 `indexed_missing_count`（`source_type == indexed`
+  的子集），这 10 条是 `other` 类 ⇒ 只进 `advisory_fail`，而 `advisory_fail`
+  仅在 `blocking` 为真时才翻转 `ok`。**这是刻意设计**（`gac-bootstrap.py` 的
+  `hard_fail` 注释：「始终阻断: … 层4 indexed 子集」），不是缺陷。
+
+  **已知一条的归宿**：`CR-SEC-YAML-BYPASS` 的实现已搬进 omo 子模块 ——
+  `projects/omo/src/omo/omo_lint_yaml_bypass.py`（`omo_lint.py:73-76` 引用，
+  注释写明「2026-08-28: yaml bypass commands extracted to omo_lint_yaml_bypass.py」），
+  而 `.github/workflows/governance-check.yml` 跑的是 `python -m omo.cli lint yaml-bypass`。
+  其余 9 条的实现位置**未查**（`omo_lint*` 现有模块只有 doc / schemas /
+  task_policy / yaml_bypass 四个，对不上 sensitive-write / eval-exec /
+  mutable-default / 五个 check-age-*）。
+decision_needed: >-
+  两条：
+  (a) **逐条把 `source_ref` 修到真实实现** —— 1 条已知（`omo_lint_yaml_bypass.py`），
+  9 条要先查清「这条规则的检查现在由谁做」。若确实**没有实现**，那问题就不是
+  「引用陈旧」而是「规则无实现」——那是更大的一条，应单独登记。
+  (b) **或者修判定口径** —— 现在 `source_ref` 被当成「实现文件路径」来验证，
+  但相当一部分规则的实现是**内联在 gate 脚本里**或**在子模块 CLI 子命令里**，
+  未必对应一个独立文件。若确实如此，`check_indexed_integrity` 的路径判据就该
+  放宽（例如允许 `omo.cli lint <name>` 这种命令形态），否则这 10 条会永远报。
+  **本条不代决。**
+history:
+- at: "2026-11-15T04:00:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：在 origin/main 的干净检出上跑 `gac-healthcheck` 取权威读数, 逐条
+    定性那些 ❌ —— `executor-drift 3/35` 与 `doc-ssot 1 冲突` 都是**子模块未初始化**
+    的检出形态问题(canonical 上分别 ✅ 与 0), 而 `indexed缺=10` 是**主仓路径**、
+    与子模块无关, 是真的。
+    **判据**：给 healthcheck 的每条红定性时, **先分清「检出形态」与「真缺陷」** ——
+    同一个 healthcheck 里两类混在一起报, 不逐条复算就会把环境噪声当成治理缺口
+    (本轮 executor-drift 就差点被当成 35 条规则的缺口)。**纪律**：判据里带
+    「子模块未初始化」分支的项, 必须在**子模块齐全的检出**上复算再定性。
+  actor: "governance-agent"
