@@ -1,0 +1,97 @@
+id: "DEBT-SCHEMA-THREE-WAY-DESYNC"
+title: "债务条目的「权威 schema」有三处互不一致：broker 注入 8 个 schema 外键（其中 status 会被本仓工具判为冲突）、kernel DebtItem 丢弃 closed_at/close_reason/resolution_evidence、\"22 键为权威\"的表述已过期"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- projects/omo/src/omo/omo_ingress_debt.py
+- projects/omo/src/omo/omo_debt_registry.py
+- bin/gac/fix-debt-fields.py
+- bin/gac/check-debt-closure-discipline.py
+evidence_refs:
+- projects/omo/src/omo/omo_ingress_debt.py
+- projects/omo/src/omo/omo_debt_registry.py
+- bin/gac/fix-debt-fields.py
+- bin/gac/check-debt-closure-discipline.py
+mitigation_refs: []
+opened_at: "2026-11-15"
+last_reviewed_at: "2026-11-15"
+next_review_at: "2026-12-15"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  债务条目文件里「什么算权威 schema」有三个互不一致的版本，各自都有消费者：
+
+  **① broker 产出的文件带 8 个 schema 外键。** `omo_ingress_debt.py` 的 `upsert_debt_item`
+  会 `payload.setdefault(...)` / 直接赋值一批字段：`description` / `source` /
+  `registered_at` / `opened_at` / `first_seen_at` / `last_seen_at` /
+  `occurrence_count` / `status` / `source_ref` / `lifecycle_state`。其中
+  **`status` 与 `lifecycle_state` 并存** —— 而本仓 `bin/gac/fix-debt-fields.py`
+  的 `scan_debt_items` 恰把「同时有 `status` 与 `lifecycle_state`」判为
+  `dual_fields` **冲突**。**自证**：造一份 broker 形态的最小文件
+  （`id/title/lifecycle_state/status/owner`）跑 `fix-debt-fields.py --root <tmp>`
+  ⇒ `conflict_count: 1`（`has_status: true, has_lifecycle_state: true`）。
+  即**官方立案入口现在会产出被本仓自己的债务工具标记为冲突的文件**。
+
+  **② kernel 的 `DebtItem` 只有 22 个字段，静默丢弃闭局证据。**
+  `omo_debt_registry.py:10-33` 的 `@dataclass(frozen=True) DebtItem` 字段为
+  id/title/dimension/subdimension/domain/scope/severity/weight/entropy_class/
+  lifecycle_state/owner/affected_roots/evidence_refs/mitigation_refs/opened_at/
+  last_reviewed_at/next_review_at/gate_level/history/x1_policy_ref/x2_freshness/x3_tier
+  —— **没有** `closed_at` / `close_reason` / `resolution_evidence`。
+  实测（`load_debt_ledger(Path(".omo"))` 读一份 resolved 条目）：文件 23 键，
+  `kernel 丢弃的键: ['close_reason', 'closed_at', 'resolution_evidence']`。
+  而 `bin/gac/check-debt-closure-discipline.py` 要求终态项**必须有** `closed_at`
+  才合规 —— 判据读原始 YAML，所以门禁是绿的；但任何走 `load_debt_ledger`
+  的消费者**看不到闭局证据**。
+
+  **③ 「22 键为权威」的表述已过期。** 债条目
+  `DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL` 的 evidence 写着
+  「`omo_debt_registry.py:10-33` 为权威」，而实际文件 schema 比它多至少 3 个
+  被两处 omo 审计（`omo_audit_checks.py:122`、`omo_audit_freshness.py:45`）
+  与闭环节律共同使用的键。
+
+  **broker 路径近期根本没被用**：origin/main 86 份条目里仅 **7 份**带 broker 键
+  （6 份 `registered_at+source` 的 closed 项 + `DOC_CLAIMS_SCOPE.yaml` 一份带
+  完整 5 键的 resolved 项），**7/7 全是终态** ⇒ 现存 79 份非 broker 条目都是
+  直接落盘写的。这与 `DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL` 的记录一致：
+  broker 形态与 22 键权威不一致，正是「直接写文件」被反复选用的机制原因。
+decision_needed: >-
+  三问，建议按此顺序：
+
+  - (1) **`status` 这个键要不要**：broker 注入它、而 `fix-debt-fields.py` 把它与
+    `lifecycle_state` 的并存判为冲突 —— 两者必须有一个让路。要么 broker 不再写
+    `status`（它不在 22 键权威里，且 `lifecycle_state` 已承载同一语义），
+    要么 `fix-debt-fields.py` 的 `dual_fields` 判据改为不把 `status` 当冲突。
+    **判据**：以 `DebtItem` 的 22 键为准 —— 不在其中的键不该有「与权威键冲突」的地位。
+  - (2) **闭局证据要不要进 kernel**：把 `closed_at` / `close_reason` /
+    `resolution_evidence` 加进 `DebtItem`（带默认值，构造点只有
+    `omo_debt_registry.py:123` 与两个测试文件，向后兼容），
+    还是明确宣告「闭局证据只属于文件层，kernel 不读」并写进 schema 文档。
+    现状是**两边都没说**，而闭局证据已经被三处判据依赖。
+  - (3) **broker 路径要不要保留**：7/86 的使用率说明它事实上已被绕过。
+    若保留，得先让它产出的文件**能通过本仓自己的 debt 工具**（否则官方入口
+    名存实亡）；若废弃，应显式退役并说明立案入口改成什么。
+  **本条不代决。** 三问都跨 `projects/omo` 子模块与主仓工具，属治理规范变更。
+history:
+- at: "2026-11-15T12:10:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：给 `DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL` 做结案复测时，
+    顺着它 evidence 里「22 键为权威」这句话去 `load_debt_ledger` 实跑了一遍，
+    才看到 ① broker 注入键 ② kernel 丢键 两处分裂 —— 它们都**不报任何错**：
+    闭局证据缺失时 `check-debt-closure-discipline` 会红，但**字段被 kernel 丢弃**
+    这件事没有任何判据会红（`DebtItem` 只是构造时不抄那几个键）。
+    **判据**：一个 schema 的「权威」版本若只存在于**文档表述**里，而三处实现
+    各自多退少补，那么「合规」这个词就没有稳定所指 —— 必须先**三处对拍**
+    （broker 产出 / 文件 / kernel 视图）再谈修哪一处。
+    **纪律**：自证要做 —— 光读 `fix-debt-fields.py` 的代码得出「broker 形态会被判冲突」
+    是不够的，造一份最小 broker 形态文件实跑，才排除「判据其实有豁免」的可能。
+  actor: "governance-agent"
