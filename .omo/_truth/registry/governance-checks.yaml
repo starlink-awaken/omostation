@@ -1078,7 +1078,7 @@ gac:
     adr: ADR-0123
     source_type: native
     enforcement: required
-    source_ref: bin/ssot/check-yaml-bypass.py
+    source_ref: bin/gac/gac-hook-pre-edit.py
     owner: omo-team
     expected: Check CR-SEC-YAML-BYPASS must pass without violations
     remediation: Investigate check failure and apply targeted fix
@@ -1102,7 +1102,7 @@ gac:
     adr: ADR-0106
     source_type: native
     enforcement: required
-    source_ref: bin/ssot/check-sensitive-write.py
+    source_ref: bin/gac/gac-hook-pre-edit.py
     owner: governance-team
     expected: Check CR-SEC-SENSITIVE-WRITE must pass without violations
     remediation: Investigate check failure and apply targeted fix
@@ -1150,7 +1150,7 @@ gac:
     adr: ADR-0106
     source_type: native
     enforcement: required
-    source_ref: bin/ssot/check-eval-exec.py
+    source_ref: bin/gac/gac-hook-pre-edit.py
     owner: governance-team
     expected: Check CR-SEC-EVAL-EXEC must pass without violations
     remediation: Investigate check failure and apply targeted fix
@@ -1174,7 +1174,7 @@ gac:
     adr: ADR-0171
     source_type: native
     enforcement: required
-    source_ref: bin/ssot/check-mutable-default.py
+    source_ref: bin/gac/gac-hook-pre-edit.py
     owner: governance-team
     expected: Check CR-PY-MUTABLE-DEFAULT must pass without violations
     remediation: Investigate check failure and apply targeted fix
