@@ -1623,8 +1623,8 @@ PYEOF
     echo "── 4. 快速开始 ──"
     echo "   编辑文件: cd $wt"
     echo "   提交改动: git add . && git commit -m '...'"
-    echo "   推送 PR:  bash bin/gac-gac-worktree.sh submit $session"
-    echo "   查看状态: bash bin/gac-gac-worktree.sh agents"
+    echo "   推送 PR:  bash bin/gac/gac-worktree.sh submit $session"
+    echo "   查看状态: bash bin/gac/gac-worktree.sh agents"
     echo ""
     echo "✅ 入职完成! 祝编码愉快 🎉"
     ;;
