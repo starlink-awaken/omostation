@@ -97,3 +97,4 @@ seed_items:
 - .omo/debt/items/CR-AGE-RULES-NO-BASIS-NO-EXECUTION.yaml
 - .omo/debt/items/ADR-0121-PENDING-RULES-REGISTERED.yaml
 - .omo/debt/items/DOCLINK-GITIGNORED-PERMA-RED.yaml
+- .omo/debt/items/GATE-CLEAN-CHECKOUT-NOISE.yaml
