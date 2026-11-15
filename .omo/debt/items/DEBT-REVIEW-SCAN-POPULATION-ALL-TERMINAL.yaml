@@ -8,8 +8,29 @@ scope: workspace
 severity: high
 weight: 0.2
 entropy_class: medium
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
+closed_at: "2026-11-15"
+close_reason: >-
+  三半缺陷逐条复测后全部不再成立，本条结案。
+  ① 「扫描总体 = seed_items 且全是终态」—— 登记面已补齐：2026-11-15 实测
+     `seed_items` 86 条 == 磁盘 `.omo/debt/items/*.yaml` 86 份，孤儿 0、悬空 0，
+     其中非终态 47 条；调度器实跑 `total_items: 86`（不再是 25）。
+  ② 「反向 (磁盘→登记) 无门禁」—— `debt-integrity-check.py` 已补反向
+     （items 目录 → seed_items），本条就是被它拦下来的那条形状。
+  ③ 「两条复审道日期口径不同」—— 已修：调度器改为优先读 `next_review_at`
+     （与 kernel `build_review_queue` 同一字段），缺失才回退 severity 间隔，
+     输出加 `due_at` / `overdue_days` / `basis`。改后两道**逐条一致**：
+     kernel `due_now` = bin `overdue` = 同样 8 条，集合差双向为空。
+resolution_evidence: >-
+  2026-11-15 在 origin/main 的 fresh worktree 复算：
+  `debt-review-scheduler.py --json` → `total_items: 86 / needs_reassessment: 2 /
+  overdue: 8`（口径全为 `next_review_at`）；同一次运行里用 kernel 的判据
+  （非终态 ∧ `next_review_at <= today`）独立算出 8 条，与 bin 的 8 条**集合相等**。
+  改前同一棵树上 bin 道只报 1 条（`STORAGE-MINI-INTERNAL-NO-RECURRING-BACKUP`，
+  按 high=30 间隔），而 kernel 会报 8 条 —— 这就是「同一份案面两个到期日」的实测。
+  变异对照：把 `due = parse_date(item.get("next_review_at"))` 改成 `due = None`
+  ⇒ 两条 `next_review_at` 用例当场红，复原后 5 passed。
 affected_roots:
 - bin/gac/debt-review-scheduler.py
 - .omo/_truth/registry/debt.yaml
@@ -129,3 +150,16 @@ history:
     (15 条开放项全部缺证据指针或 refs 晚于 last_reviewed —— 真实数据质量缺口,
     非度量缺陷, 见 pointer_entropy)。Q2/Q3 仍未裁决。'
   actor: governance-agent
+- at: "2026-11-15T11:50:00+00:00"
+  action: resolve
+  note: >-
+    **三半复测，全部不再成立。** ① 登记面补齐到 86 条 == 磁盘 86 份（非终态 47），
+    调度器 `total_items` 从 25 变 86；② 反向门禁已存在（`debt-integrity-check.py`
+    的 items→seed 方向）；③ 日期口径分裂已修 —— 调度器改读 `next_review_at`。
+    **判据**：一条「结构上永远报无可办」的结论，必须**重跑一次调度器**才算复测，
+    不能只看代码改了没 —— 本条立案时的 25 与今天的 86 就是「人口变了」而不是
+    「代码变了」，两者都会让旧读数失效。**纪律**：两条道各读各的日期字段时，
+    「同一份案面两个到期日」不会报错，只会让两边轮流说对方错了 ——
+    对齐口径的判据是**集合相等**（本条用 kernel 判据独立算一遍再对集合），
+    不是「两边都跑通了」。
+  actor: "governance-agent"

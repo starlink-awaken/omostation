@@ -20,7 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -100,29 +100,48 @@ def assess(items: list[dict], root: Path, now: datetime) -> dict:
                 )
             continue
         interval = INTERVAL_DAYS.get(str(item.get("severity") or "").lower(), 30)
-        last = parse_date(item.get("last_reviewed_at")) or parse_date(item.get("opened_at"))
-        if last is None:
+        # 到期日口径必须与 kernel 对齐: `omo_debt_review_queue.build_review_queue`
+        # 读的是条目自带的 `next_review_at`。此前本函数只按 `last_reviewed_at` +
+        # severity 间隔重算, 于是**同一份案面两条复审道给出两个到期日** ——
+        # 2026-11-15 实测 45 条非终态里 44 条不同 (差 16~60 天), cron 日志说
+        # 「没到期」而 dashboard 的 review queue 说「已到期」, 反之亦然。
+        # `next_review_at` 缺失时才回退到间隔口径 (输出里的 `basis` 标明用了哪套)。
+        due = parse_date(item.get("next_review_at"))
+        if due is not None:
+            basis = "next_review_at"
+        else:
+            last = parse_date(item.get("last_reviewed_at")) or parse_date(item.get("opened_at"))
+            if last is None:
+                overdue.append(
+                    {
+                        "id": iid,
+                        "file": item.get("_file"),
+                        "state": state,
+                        "days_since_review": None,
+                        "overdue_days": None,
+                        "interval_days": interval,
+                        "due_at": None,
+                        "basis": "none",
+                        "reason": "从未复审 (next_review_at 与 last_reviewed_at 都缺)",
+                    }
+                )
+                continue
+            due = last + timedelta(days=interval)
+            basis = "last_reviewed_at+interval"
+        overdue_days = (now - due).days
+        if overdue_days > 0:
+            last = parse_date(item.get("last_reviewed_at")) or parse_date(item.get("opened_at"))
             overdue.append(
                 {
                     "id": iid,
                     "file": item.get("_file"),
                     "state": state,
-                    "days_since_review": None,
+                    "days_since_review": (now - last).days if last else None,
+                    "overdue_days": overdue_days,
                     "interval_days": interval,
-                    "reason": "从未复审",
-                }
-            )
-            continue
-        days = (now - last).days
-        if days > interval:
-            overdue.append(
-                {
-                    "id": iid,
-                    "file": item.get("_file"),
-                    "state": state,
-                    "days_since_review": days,
-                    "interval_days": interval,
-                    "reason": f"超过复审间隔 ({days}d > {interval}d)",
+                    "due_at": due.date().isoformat(),
+                    "basis": basis,
+                    "reason": f"超过复审到期日 ({overdue_days}d, 口径 {basis})",
                 }
             )
     return {
