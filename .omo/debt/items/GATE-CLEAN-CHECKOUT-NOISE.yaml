@@ -111,3 +111,17 @@ history:
     不再用「加个字段」糊过去。
   actor: "governance-agent"
   actor: "governance-agent"
+- at: "2026-11-15T14:10:00+00:00"
+  action: mitigate
+  note: >-
+    **(a) 第一块已落地**（#5370）：确立「check 自报没测成」契约
+    `{"measured": false, "reason": "<kind>"}`，由 `current-state-coherence`
+    首个实现（缺输入 ⇒ `reason: missing_input`），门禁新增 `_declared_not_measured`
+    聚合成 `not_measured` 并在人读输出里打 ⏸ 块。**判定语义刻意不动**：
+    不改 `hard_fails` 与退出码。
+    **为什么从这一个开始**：它是唯一已经在输出「缺输入」的 check
+    （`missing input: <path>` + rc=2），契约化改动最小、且能立刻验证
+    「自报 vs 猜文本」的差别。**纪律**：推广到其余 15 条时，判据是
+    **check 自己声明**，不是门禁按 check 名或报错文本分类 ——
+    后者会变成「维护一张豁免名单」，正是本条要消除的形状。
+  actor: "governance-agent"
