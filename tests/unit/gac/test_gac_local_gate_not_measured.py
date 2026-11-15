@@ -65,7 +65,11 @@ def test_declared_not_measured_reads_marker() -> None:
 
 def test_run_gate_collects_not_measured(monkeypatch: pytest.MonkeyPatch) -> None:
     module = _load_gate()
-    monkeypatch.setattr(module, "gate_checks", lambda *a, **k: ())
+    monkeypatch.setattr(
+        module,
+        "gate_checks",
+        lambda *a, **k: (("current-state-coherence", ["bin/ssot/current-state-coherence.py", "--json"]),),
+    )
     monkeypatch.setattr(
         module,
         "run_checks",
@@ -121,3 +125,48 @@ def test_print_human_lists_not_measured(monkeypatch: pytest.MonkeyPatch, capsys)
     err = capsys.readouterr().err
     assert "没测成" in err
     assert "x: missing_input" in err
+
+
+def _failing(result_name: str = "x", stdout: str = "", entrypoint: str = "projects/ecos/x.py"):
+    return {
+        "name": result_name,
+        "command": f"{entrypoint} --json",
+        "ok": False,
+        "returncode": 2,
+        "skipped": False,
+        "stdout": stdout,
+        "stderr": "",
+        "duration_ms": 1,
+    }
+
+
+def test_missing_entrypoint_flags_submodule_script(tmp_path: Path, monkeypatch) -> None:
+    module = _load_gate()
+    monkeypatch.setattr(module, "WORKSPACE", tmp_path)  # 入口必然不在
+    assert module._missing_entrypoint("mof-schema-validate", ["projects/ecos/x.py", "--json"], _failing()) == "projects/ecos/x.py"
+
+
+def test_missing_entrypoint_silent_when_entry_exists(tmp_path: Path, monkeypatch) -> None:
+    module = _load_gate()
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "bin" / "x.py").write_text("# x\n", encoding="utf-8")
+    monkeypatch.setattr(module, "WORKSPACE", tmp_path)
+    assert module._missing_entrypoint("x", ["bin/x.py", "--json"], _failing(entrypoint="bin/x.py")) is None
+
+
+def test_missing_entrypoint_ignores_passing_and_self_reported(tmp_path: Path, monkeypatch) -> None:
+    module = _load_gate()
+    monkeypatch.setattr(module, "WORKSPACE", tmp_path)
+    passing = {**_failing(), "ok": True}
+    assert module._missing_entrypoint("x", ["projects/ecos/x.py"], passing) is None
+    self_reported = _failing(stdout=json.dumps({"measured": False, "reason": "missing_input"}))
+    assert module._missing_entrypoint("x", ["projects/ecos/x.py"], self_reported) is None
+
+
+def test_missing_entrypoint_ignores_absolute_and_bare_commands(tmp_path: Path, monkeypatch) -> None:
+    module = _load_gate()
+    monkeypatch.setattr(module, "WORKSPACE", tmp_path)
+    # 绝对路径不是入口（且它不会中断扫描: 后面那个缺失的相对入口仍要被认出）
+    assert module._missing_entrypoint("x", ["/usr/bin/python3", "bin/x.py"], _failing(entrypoint="bin/x.py")) == "bin/x.py"
+    # 纯裸命令没有入口可言
+    assert module._missing_entrypoint("y", ["make", "test"], _failing(entrypoint="")) is None
