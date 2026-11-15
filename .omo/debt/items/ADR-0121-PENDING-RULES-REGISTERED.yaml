@@ -7,26 +7,8 @@ scope: "workspace"
 severity: "low"
 weight: 0.1
 entropy_class: "low"
-lifecycle_state: "resolved"
+lifecycle_state: "identified"
 owner: "governance-team"
-closed_at: "2026-11-15"
-close_reason: >-
-  取 (b) 正名：`CR-L0-SSOT-PATH-NORM` 的 `lifecycle` 由 `active` 降为 `draft`。
-  依据是来源 ADR-0121 §1.2 —— 它把本条与 `CR-META-CI-SKIP-MATRIX` 并列标为「待加」，
-  而登记面是派生、ADR 是依据，冲突时以 ADR 为准。`draft` 是 `gac-validate` 的
-  `LIFECYCLE_ENUM` 里「已声明未激活」的合法值（不是条目初版写的 `pending` ——
-  那个值不在 enum 里，照抄会当场被 gac-validate 拦下）。
-  未取 (a) 补实现：`ssot-path-norm` 的实现面并未定义清楚（比对哪些声明、
-  哪些 broker 写入路径、判据从哪来），凭空写一个 lint rule 只会造出第二把
-  与 ADR 措辞不完全对齐的尺；而 `omo-state-projection-guard.py` 只覆盖
-  projection 注册表这一个面，不足以承载本条的完整语义。
-resolution_evidence: >-
-  改前 `gac-validate --gate`：`lifecycle 分布: {active: 87, removed: 3}`，
-  `0 error, 0 warning`。改后：`{active: 86, draft: 1, removed: 3}`，
-  `0 error, 1 warning` —— 唯一警告是「CR-L0-SSOT-PATH-NORM: draft 超 136 天
-  (>7 天 draft_to_active), 待 radar 验证激活」，即这条规则真实的腐烂时长，
-  是本条要显形的东西而不是新缺陷。`governance-convergence-lint --rule registration`
-  与 `--rule rules-count` 均 rc=0。
 affected_roots:
 - .omo/_knowledge/decisions/0121-governance-convergence-initiative.md
 - .omo/_truth/registry/governance-checks.yaml
@@ -67,19 +49,33 @@ description: >-
   （`.omo/standards/ssot-path-norm.md`）也不存在 —— 见
   `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD`。
 decision_needed: >-
-  **已裁决（2026-11-15）：取 (b) 正名，本条结案。**
+  **2026-11-15 复裁：(b) 正名这条路被仓里两道在案硬门堵死，本条维持 identified。**
 
-  - (a) **补实现** —— **未取**：`ssot-path-norm` 的判据面并未定义清楚
-    （比对哪些 SSOT 声明、哪些 broker 写入路径、冲突时什么算违规），
+  试过把 `lifecycle` 由 `active` 降为 `draft`（`draft` 是 `gac-validate` 的
+  `LIFECYCLE_ENUM` 里「已声明未激活」的合法值；条目初版写的 `pending` 不在 enum 里，
+  照抄会被拦），结果同时踩两道门：
+  - `check-governance-trend`：**draft 超 90 天判硬失败**（本条 `created_at=2026-07-02`，
+    已 136 天）—— 这条门就是专门防「draft 烂在登记面」的；
+  - `gac-validate --gate`：**只要有任何警告即 rc=1**，而 draft 必然产生
+    「待 radar 验证激活」警告 ⇒ `governance-orchestrator` 的
+    `compliance_check` 与 `gac-gate` 同时红（实测 `governance-verify` 1 failed）。
+
+  于是结论翻转：**governance-checks 的 lifecycle 词汇里根本不存在「已声明未实现」这个态**。
+  一条还没实现的规则只能挤进 `active`（保留声明，但 `active` 成了假声明）
+  或 `removed`（去掉假声明，但丢掉「待加」这件事实）。这不是本条独有的问题 ——
+  `CR-AGE-RULES-NO-BASIS-NO-EXECUTION` 的 5 条 `required` 无执行面规则是同一形状。
+
+  **要裁的是这个态怎么补**：
+  - (a) **给 lifecycle 加一个「已声明未实现」态**（如 `declared`），并让它
+    **不受** `check-governance-trend` 的 90 天硬失败约束、也不触发 gac-validate 警告；
+    代价是要同时改 `gac-validate` 的 enum、`check-governance-trend` 的计数口径、
+    以及 `R-GOV-1`（ADR 引用 ↔ 登记）的判据 —— 属治理规范变更，需独立授权。
+  - (b) **维持现状**：`active` + 描述里写明「无执行面」（已做），
+    代价是 `active` 这个词继续被这类规则稀释。
+  - (c) **补实现**（`ssot-path-norm` 的判据面）：ADR-0121 §1.2 只有一句话定义，
+    比对哪些 SSOT 声明、哪些 broker 写入路径、什么算违规都没写；
     凭空写一个 lint rule 只会造出第二把与 ADR 措辞不完全对齐的尺。
-    仓里已有的 `bin/gac/omo-state-projection-guard.py` 只覆盖 projection
-    注册表这一个面，承载不了本条的完整语义。
-  - (b) **正名** —— **已做**：`lifecycle: active` → `draft`。
-    注意 `draft` 是 `gac-validate` 的 `LIFECYCLE_ENUM` 合法值，
-    而条目初版写的 `pending` **不是**（照抄会被 gac-validate 拦下）。
-  - `source_ref` 仍指向不存在的 `.omo/standards/ssot-path-norm.md` ——
-    那是 `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD` 的处置面，**不在本条范围**，
-    本条不动它（避免两条债各改一半）。
+  **本条不代决。**
 history:
 - at: "2026-11-15T06:10:00+00:00"
   action: identify
@@ -94,13 +90,15 @@ history:
     之前, 先查它的**来源 ADR 有没有把它标成待加**; 两者的时间差就是腐烂窗口。
   actor: "governance-agent"
 - at: "2026-11-15T10:20:00+00:00"
-  action: resolve
+  action: revise
   note: >-
-    **取 (b) 正名**。两条被否的出路各有具体理由：(a) 补实现被否是因为
-    **判据面没定义**（哪些声明、哪些 broker 路径、什么算违规都没写），
-    写出来就是第二把尺；(c) 类的前置物化与本条无关。
-    **判据**：`decision_needed` 里给的枚举值必须先过一遍**在案 schema** ——
-    初版写 `pending`，而 `gac-validate` 的 `LIFECYCLE_ENUM` 是
-    `{draft, active, deprecated, superseded, removed}`，照抄会当场红。
-    **纪律**：给「降态」类建议时，值要从**校验器**里取，不要从措辞直觉里取。
+    **试 (b) 正名, 被在案硬门拒下, 结论翻转。** 把 `lifecycle` 降为 `draft` 后
+    两道门同时红：`check-governance-trend` 的「draft 超 90 天」硬失败, 与
+    `gac-validate --gate` 的「有警告即 rc=1」（draft 必带警告）。
+    **判据（一条通用的）**：**给一条规则降态之前, 先把目标值在「谁会因此变红」
+    的面上过一遍** —— 值本身合法(`LIFECYCLE_ENUM` 里有)不等于这个态在
+    **其它门禁**的口径下活着；`draft` 就是「schema 欢迎你、但 trend 门专杀 draft」。
+    **纪律**：`gac-validate --gate` 的退出码**不能经过管道读** ——
+    本轮第一次跑用 `| tail` 取 `$?`, 读到 0, 与 CI 的 1 相反,
+    正是本仓 §7「取退出码不要经过管道」那条的同一个坑。
   actor: "governance-agent"
