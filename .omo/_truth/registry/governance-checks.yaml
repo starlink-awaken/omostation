@@ -683,7 +683,7 @@ gac:
     related_runbooks: []
     added_at: '2026-08-28'
     review_before: '2026-12-29'
-    justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐); 2026-11-15 按 ADR-0121 §1.2「待加」降为 draft'
+    justification: '[ADR-0431 D2] CR-L0-SSOT-PATH-NORM — 待补存在理由 (90 天内补齐); 2026-11-15 试降 draft 被 trend/validate 两道门拒下, 维持 active'
   - id: CR-X4-TEST-COVERAGE
     dimension: X3
     layer: L2
