@@ -378,7 +378,12 @@ class TestShippedCli:
         assert proc.returncode == 0, proc.stderr + proc.stdout
         data = json.loads(proc.stdout)
         assert data["ok"] is True
-        assert data["s_holders"] == ["COMP-WS-omo"]
+        # s_holders 是**live 快照**: COMP-WS-omo 的声明在 projects/ecos 子模块的
+        # nodes 目录里 (DEFAULT_NODES)。未 init 子模块 / 干净检出时该目录不存在
+        # ⇒ s_holders=[] —— 那是检出形态, 不是缺陷。与下面 vacant_slots 同类
+        # (那处已经因为 live 快照断言失效过一次, 见下)。
+        nodes_dir = REPO_ROOT / "projects/ecos/src/ecos/ssot/mof/nodes"
+        assert data["s_holders"] == (["COMP-WS-omo"] if nodes_dir.is_dir() else [])
         # vacant_slots 是**派生值** (VACANT_ALLOWED 减去已占用槽)。此前断言
         # `"P" in vacant_slots` 属 live 快照 —— P 现由 COMP-WS-ecos /
         # COMP-WS-observability 合法占用 (CR-SFOP-04 只规定 P/O **可**空缺,
