@@ -655,8 +655,11 @@ gac:
     layer: meta
     name: SSOT 路径与 broker 写入路径一致
     description: '防 P71 Class A (路径错位): SSOT 声明路径必须与 broker 实际写入路径一致. 案例: dependency-baseline
-      从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 实现: bin/gac/governance-convergence-lint.py
-      --rule ssot-path-norm'
+      从 .omo/ 迁到 runtime/omo/ (gitignored) 导致 CI 拿不到. 【无执行面】2026-11-15 核实:
+      描述原写「实现: bin/gac/governance-convergence-lint.py --rule ssot-path-norm」—— 该
+      --rule 名不存在(合法名只有 registration/score/loop/rules-count/matrix), 且该脚本原先对
+      未知 --rule 静默空跑报 ok:true(#5358 已修). 需补实现或降级, 见债条目
+      GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD / CR-AGE-RULES-NO-BASIS-NO-EXECUTION.'
     check_type: ssot_lint
     target: .omo/_truth/ + broker 写入路径
     executor:
