@@ -1,5 +1,5 @@
 id: "DOCLINK-GITIGNORED-PERMA-RED"
-title: "doc-link-check 对 gitignored 目标永久报红（前门 5 条 `.omo/state/system.yaml`）—— 与 #5354 的判据不一致，是一条永远不会清零的红"
+title: "doc-link-check 在**不完整检出**上报红（实测 14 条）—— 初版误记为「gitignored 永久红」，实为检出形态，CI 物化后清零"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -7,12 +7,28 @@ scope: "workspace"
 severity: "low"
 weight: 0.1
 entropy_class: "low"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-15"
+close_reason: >-
+  订正结案：初版把它读成「gitignored 永久红」，实测不成立 —— 14 条死链里指向
+  `.omo/state/system.yaml` 的只有 3 条，其余 11 条是子模块未初始化；而 CI 在
+  strict gate 之前有 `Materialize generated state input` 步骤且递归检出子模块，
+  所以 CI 上这条判据是绿的。它量的是**检出形态**，不是缺陷。
+  `decision_needed` 的 (a)（教检查器认说明）与 gac-gate.yml「判据语义一律不动」的
+  在案决定相反，作废；(b) 降级 advisory 也不取（CI 已用物化输入更准确地解决）。
+resolution_evidence: >-
+  `doc-link-check --json` 在 origin/main 的 fresh worktree 上复算：14 条 =
+  6 agora + 4 ecos + 1 projects/AGENTS.md + 3 system.yaml（归类读数直接来自 JSON）。
+  删去 .omo/state/system.yaml 后重跑 → 14；物化后重跑 → 11，证明那 3 条随生成态
+  有无而增减。`gac-gate.yml` 的 `Materialize generated state input for the strict gate`
+  步骤与 `submodules: recursive` checkout 共同保证 CI 侧为零。
 affected_roots:
 - bin/ssot/doc-link-check.py
+- .github/workflows/gac-gate.yml
 evidence_refs:
 - bin/ssot/doc-link-check.py
+- .github/workflows/gac-gate.yml
 - README.md
 - LAYER-INDEX.md
 mitigation_refs: []
@@ -23,35 +39,48 @@ gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
 description: >-
-  `doc-link-check.py` 在**子模块齐全的检出**上实测 **11 条死链**，逐条看只有三类：
+  `doc-link-check.py` 的扫描集（`AGENTS.md` / `CLAUDE.md` / `README.md` /
+  `ARCHITECTURE.md` / `LAYER-INDEX.md` / `projects/*/AGENTS.md` / `projects/*/CLAUDE.md`）
+  在**干净检出**上实测 **14 条死链**。逐条归类（2026-11-15 在 `origin/main` 的 fresh
+  worktree 上复算，读数可重现）：
 
   | 类别 | 条数 | 性质 |
   |---|---|---|
-  | `projects/agora/etc/bos-services.yaml` | 4 | agora 子模块未初始化 ⇒ **环境性** |
-  | `.omo/state/system.yaml`（主仓 README ×2、LAYER-INDEX ×1 等） | 5 | **gitignored 生成文件** —— 干净检出里必然不存在 |
-  | `projects/{omo,ecos}/AGENTS.md` 里的 `../../.omo/state/system.yaml` | 2 | 同上，但在**子模块**里，主仓改不了 |
+  | `projects/agora/etc/bos-services.yaml` | 6 | agora 子模块未初始化 ⇒ **检出形态** |
+  | `projects/ecos/src/ecos/ssot/**`（L0-constraints / m3 / m1/governance / tools） | 4 | ecos 子模块未初始化 ⇒ **检出形态** |
+  | `projects/AGENTS.md:83` → `omo/CLAUDE.md` | 1 | omo 子模块未初始化 ⇒ **检出形态** |
+  | `.omo/state/system.yaml`（README ×2、LAYER-INDEX ×1） | 3 | gitignored 生成文件，干净检出必然不存在 |
 
-  **问题**：#5354 已经给前门那 5 处补了说明（「未跟踪的生成文件 —— 干净检出上先跑
-  `materialize-system-state.py`」），并且新用例
-  `tests/unit/test_frontdoor_docs_caveatless_gitignored_links.py` 把
-  「有说明就算合规」钉住了 —— 但 **`doc-link-check` 自己仍把它们算作 broken**。
-  也就是说：**同一条规则，两把尺读数不同**，而体检面板上永远留着一条红。
+  **先订正本条初版的错记**：初版写「子模块齐全的检出上 11 条，其中 5 条 `system.yaml`」，
+  两处都不成立 —— ① 扫描集里指向 `system.yaml` 的**链接只有 3 条**（全仓 16 处引用中，
+  其余 13 处在 `.omo/`、`docs/` 的非扫描集文档里，或是纯文本不是 Markdown 链接）；
+  ② 「11 条」那次读数本身就是**子模块未齐**的读数，与「子模块齐全」的自述矛盾。
 
-  **为什么这条红不该留**：`.omo/state/system.yaml` 被 gitignore 是**设计**（ADR-0456
-  的 state 面，本机生成）。指向它的链接不是「写错了」，而是「指向一个本机才有的文件」——
-  这正是 #5354 要求写说明的那种链接。检查器把它算 broken，等于让一个**刻意的、已文档化
-  的**设计选择永久占用体检的红。
+  **这条红不是「永远不会清零」**：`.github/workflows/gac-gate.yml` 在 strict gate 之前
+  有一步 `Materialize generated state input for the strict gate`
+  （`python3 bin/gac/materialize-system-state.py --json`），且 CI 递归检出全部子模块
+  ⇒ **CI 上这条判据是绿的**。它量的是**检出形态**，不是缺陷（与 `executor-drift`
+  同类：判据本身没错，错在检出没备齐输入）。
 
-  **另注**：`projects/{omo,ecos}/AGENTS.md` 的两条在子模块里 —— 主仓改不动，
-  要么让子模块自己加说明，要么检查器直接跳过 `projects/**` 下的 `.omo/state/**` 链接。
+  **`#5354` 与 `doc-link-check` 并不冲突**：`#5354` 管「前门文档不得**无说明地**链接
+  gitignored 路径」（自描述面），`doc-link-check` 管「链接在**当前检出**里可解析」
+  （可解析面）。CI 对后者用「先物化、**判据语义一律不动**」处理（见 gac-gate.yml
+  该步原注释），因此**不该**改 `doc-link-check` 的判据去认说明 —— 初版
+  `decision_needed` 的 (a) 与这条在案决定相反，作废。
 decision_needed: >-
-  (a) **教检查器认这条规则**：链接目标被 `.gitignore` 命中时，若**同一行**含
-  `materialize` / `untracked` / `未跟踪` 之一则跳过（与 #5354 用例同一判据），
-  否则仍报。这样前门 5 条不再红，而真正写错的 gitignored 链接仍会被抓。
-  (b) **保持红但降级**：把它从 ❌ 降为 ⚠️（advisory），别让它占用体检的红。
-  (c) **把 `.omo/state/system.yaml` 从 gitignore 里放出来**（纳入跟踪）—— 那是
-  ADR-0456 state 面的政策决定，**不在本条范围**，但它是唯一能让链接「真的不坏」的路。
-  **本条不代决。** 注意 (a) 的判据要**与 #5354 的用例逐字一致**，否则两把尺又会分叉。
+  **已裁决（2026-11-15）：不改判据，本条按「检出形态」结案。**
+
+  - (a) 教检查器认说明 —— **作废**：与 `gac-gate.yml`「先物化，判据语义一律不动」的
+    在案决定相反；且会让「链接可解析」这个判据失去意义。
+  - (b) 降级为 advisory —— **不取**：CI 已用更准确的方式（物化输入）解决，
+    降级只会把一条真信息涂成噪声。
+  - (c) 纳入跟踪 —— 仍属 ADR-0456 state 面的政策决定，不在本条范围。
+
+  **残留的真实缺口（本条不处理，另行推进）**：本地 `make gac-local-gate-strict` 的
+  docstring 声称「与 CI 的 gac-gate 对等」，但**没有** CI 那道物化前置 ⇒ 干净检出上
+  跑就是红的，且红得说不清原因。两条路：给本地入口补同一条前置（注意 `state_root()`
+  在声明 profile 后不落检出，前置未必奏效），或把「对等」措辞改成
+  「需先 `make state-materialize`」。
 history:
 - at: "2026-11-15T06:50:00+00:00"
   action: identify
@@ -64,4 +93,22 @@ history:
     「有说明就合规」, `doc-link-check` 说「不存在就 broken」, 两把尺对同一事实相反时,
     其中一把必须改, 否则体检面板上永远有一条说不清的红。**纪律**：跨工具的一致性
     要**显式对拍**(同一条链接, 两个工具各自什么结论), 别让它们各自演进。
+  actor: "governance-agent"
+- at: "2026-11-15T09:10:00+00:00"
+  action: resolve
+  note: >-
+    **订正 + 结案**。初版两条关键读数都错了, 而结论也因此反转。
+    **订正 1（条数）**：扫描集里指向 `.omo/state/system.yaml` 的链接是 **3 条**
+    （README:54 / README:147 / LAYER-INDEX:18）, 不是 5 条 —— 全仓 16 处引用里
+    其余 13 处在非扫描集文档或是纯文本。干净检出实测 **14 条** = 6 agora + 4 ecos
+    + 1 `projects/AGENTS.md:83` + 3 system.yaml。
+    **订正 2（性质）**：`gac-gate.yml` 在 `gac-local-gate --strict` 之前有一步
+    `Materialize generated state input for the strict gate`, 且 CI 递归检出子模块
+    ⇒ **CI 上这条判据是绿的**。所以「永远不会清零的红」不成立, 它是**检出形态**。
+    **作废 (a)**：gac-gate.yml 该步注释写着「先由创建者从已提交真源物化一次,
+    **判据语义一律不动**」—— 这是**在案决定**, 改 `doc-link-check` 去认说明与它相反。
+    **判据（复用本轮已固化的方法论）**：给每条红定性「检出形态 vs 真缺陷」时,
+    **必须在子模块齐全 + 生成态物齐的检出上复算**, 否则会把环境噪声登记成治理缺口 ——
+    本条初版正是如此。**纪律**：`decision_needed` 里给的选项, 先查**在案决定**
+    （CI 步骤注释 / ADR / retro）再写, 否则会给一条与在案决定相反的「出路」。
   actor: "governance-agent"
