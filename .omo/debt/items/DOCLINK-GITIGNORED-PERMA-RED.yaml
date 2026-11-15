@@ -1,0 +1,67 @@
+id: "DOCLINK-GITIGNORED-PERMA-RED"
+title: "doc-link-check 对 gitignored 目标永久报红（前门 5 条 `.omo/state/system.yaml`）—— 与 #5354 的判据不一致，是一条永远不会清零的红"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/ssot/doc-link-check.py
+evidence_refs:
+- bin/ssot/doc-link-check.py
+- README.md
+- LAYER-INDEX.md
+mitigation_refs: []
+opened_at: "2026-11-15"
+last_reviewed_at: "2026-11-15"
+next_review_at: "2026-12-15"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `doc-link-check.py` 在**子模块齐全的检出**上实测 **11 条死链**，逐条看只有三类：
+
+  | 类别 | 条数 | 性质 |
+  |---|---|---|
+  | `projects/agora/etc/bos-services.yaml` | 4 | agora 子模块未初始化 ⇒ **环境性** |
+  | `.omo/state/system.yaml`（主仓 README ×2、LAYER-INDEX ×1 等） | 5 | **gitignored 生成文件** —— 干净检出里必然不存在 |
+  | `projects/{omo,ecos}/AGENTS.md` 里的 `../../.omo/state/system.yaml` | 2 | 同上，但在**子模块**里，主仓改不了 |
+
+  **问题**：#5354 已经给前门那 5 处补了说明（「未跟踪的生成文件 —— 干净检出上先跑
+  `materialize-system-state.py`」），并且新用例
+  `tests/unit/test_frontdoor_docs_caveatless_gitignored_links.py` 把
+  「有说明就算合规」钉住了 —— 但 **`doc-link-check` 自己仍把它们算作 broken**。
+  也就是说：**同一条规则，两把尺读数不同**，而体检面板上永远留着一条红。
+
+  **为什么这条红不该留**：`.omo/state/system.yaml` 被 gitignore 是**设计**（ADR-0456
+  的 state 面，本机生成）。指向它的链接不是「写错了」，而是「指向一个本机才有的文件」——
+  这正是 #5354 要求写说明的那种链接。检查器把它算 broken，等于让一个**刻意的、已文档化
+  的**设计选择永久占用体检的红。
+
+  **另注**：`projects/{omo,ecos}/AGENTS.md` 的两条在子模块里 —— 主仓改不动，
+  要么让子模块自己加说明，要么检查器直接跳过 `projects/**` 下的 `.omo/state/**` 链接。
+decision_needed: >-
+  (a) **教检查器认这条规则**：链接目标被 `.gitignore` 命中时，若**同一行**含
+  `materialize` / `untracked` / `未跟踪` 之一则跳过（与 #5354 用例同一判据），
+  否则仍报。这样前门 5 条不再红，而真正写错的 gitignored 链接仍会被抓。
+  (b) **保持红但降级**：把它从 ❌ 降为 ⚠️（advisory），别让它占用体检的红。
+  (c) **把 `.omo/state/system.yaml` 从 gitignore 里放出来**（纳入跟踪）—— 那是
+  ADR-0456 state 面的政策决定，**不在本条范围**，但它是唯一能让链接「真的不坏」的路。
+  **本条不代决。** 注意 (a) 的判据要**与 #5354 的用例逐字一致**，否则两把尺又会分叉。
+history:
+- at: "2026-11-15T06:50:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：为了给「healthcheck 能否进 CI」取权威读数, 我把子模块补齐后重跑 ——
+    结果 executor-drift / 核心文件 / doc-ssot 三条**自己消失了**(确认是检出形态),
+    而 `doc-links` 从 14 降到 11 但仍红。逐条看才发现: 主仓那几条正是 #5354 刚加过
+    说明的, 而**检查器不看说明**。
+    **判据**：一条「修好了」的判据必须**在两把尺上同时成立** —— #5354 的用例说
+    「有说明就合规」, `doc-link-check` 说「不存在就 broken」, 两把尺对同一事实相反时,
+    其中一把必须改, 否则体检面板上永远有一条说不清的红。**纪律**：跨工具的一致性
+    要**显式对拍**(同一条链接, 两个工具各自什么结论), 别让它们各自演进。
+  actor: "governance-agent"

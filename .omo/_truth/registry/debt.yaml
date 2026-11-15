@@ -96,3 +96,4 @@ seed_items:
 - .omo/debt/items/GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD.yaml
 - .omo/debt/items/CR-AGE-RULES-NO-BASIS-NO-EXECUTION.yaml
 - .omo/debt/items/ADR-0121-PENDING-RULES-REGISTERED.yaml
+- .omo/debt/items/DOCLINK-GITIGNORED-PERMA-RED.yaml
