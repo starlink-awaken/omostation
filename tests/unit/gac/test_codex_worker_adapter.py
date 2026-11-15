@@ -1329,6 +1329,11 @@ def test_shared_validator_reconciles_matching_workflow_and_mesh_identity(
 
 
 def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None:
+    # 同文件第二个用例的既有惯例: 缺 ecos/omo 属**环境性** (未 init 子模块 / 干净检出),
+    # 不是断言失败 —— 见文件头 `_INTEGRATION_ENV_REASON`。没有这道守卫时,
+    # 任何新 worktree 跑本文件都会红一条, 而 CI 递归检出子模块所以绿。
+    if not _INTEGRATION_ENV_READY:
+        pytest.skip(_INTEGRATION_ENV_REASON)
     workspace = tmp_path / "workspace"
     spec_path = workspace / "docs/superpowers/specs/worker-binding.md"
     instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
