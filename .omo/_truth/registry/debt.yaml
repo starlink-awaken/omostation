@@ -101,3 +101,4 @@ seed_items:
 - .omo/debt/items/DEBT-SCHEMA-THREE-WAY-DESYNC.yaml
 - .omo/debt/items/TESTS-UNIT-CLEAN-CHECKOUT-RED.yaml
 - .omo/debt/items/CR-X1-AGENT-AUDIT-STUB-CLAIMED-AS-IMPL.yaml
+- .omo/debt/items/TESTCOLLECTION-ENV-MISCLASSIFIED.yaml
