@@ -26,7 +26,33 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_SMOKE = ROOT / "bin" / "gac" / "evidence-smoke.py"
 
 
+def _checkout_materialized() -> bool:
+    """`.gitmodules` 声明的每个子模块都要**有内容**。
+
+    evidence-smoke 量的就是**这棵树**的 BOS 可解析率: 声明指向 `projects/*` 里的实现,
+    子模块未检出时它们一律 resolve 不了。同一份 295 条声明, canonical 检出
+    `score 94.0 / gap 0`, 干净检出 `62.6 / gap 184` —— 差值就是**检出形态**。
+    故 `gap == 0` 这条不变量只在齐备检出上可验。
+    """
+    gm = ROOT / ".gitmodules"
+    if not gm.is_file():
+        return True
+    for line in gm.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line.startswith("path"):
+            continue
+        rel = line.split("=", 1)[1].strip()
+        if not any((ROOT / rel).iterdir()):
+            return False
+    return True
+
+
 def _run_evidence_smoke() -> dict:
+    if not _checkout_materialized():
+        pytest.skip(
+            "子模块未全部检出 —— evidence-smoke 量的是这棵树的 BOS 可解析率, "
+            "未检出时 gap 必然非零（检出形态, 不是回归）。先 `git submodule update --init --recursive`"
+        )
     """运行 evidence-smoke.py 拿回 JSON 报告 (无副作用模式)."""
     result = subprocess.run(
         [sys.executable, str(EVIDENCE_SMOKE), "--quiet"],
