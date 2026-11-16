@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "bc-os" / "north_star_meter_v2.py"
 SPEC = importlib.util.spec_from_file_location("north_star_meter_v2", SCRIPT)
@@ -45,6 +47,16 @@ def _observation(*, readiness: str = "collecting") -> dict:
         ],
         "gate_gaps": ["need four consecutive qualifying weeks"],
     }
+
+
+def _require_omo_runtime() -> None:
+    """脚本内部 `uv run --project projects/omo …`；子模块未检出时 uv 建不出环境 ⇒ rc!=0。"""
+    probe = ROOT / "projects/omo/pyproject.toml"
+    if not probe.is_file():
+        pytest.skip(
+            f"omo 子模块缺席: {probe} —— 先 `git submodule update --init projects/omo`"
+            "（检出形态, 不是回归）"
+        )
 
 
 def test_direct_recording_is_retired_without_creating_legacy_state(tmp_path, monkeypatch):
@@ -313,6 +325,7 @@ def test_wal_source_files_are_byte_identical_after_measurement(tmp_path):
 
 
 def test_system_python39_reexecs_in_omo_runtime_for_valid_ledger(tmp_path):
+    _require_omo_runtime()
     system_python = Path("/usr/bin/python3")
     if not system_python.exists():
         return
@@ -354,6 +367,7 @@ def test_system_python39_reexecs_in_omo_runtime_for_valid_ledger(tmp_path):
 
 
 def test_cli_keeps_python39_compatible_timezone_imports():
+    _require_omo_runtime()
     source = SCRIPT.read_text(encoding="utf-8")
 
     assert "from datetime import UTC" not in source
