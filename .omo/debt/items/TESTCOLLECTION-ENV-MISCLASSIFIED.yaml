@@ -7,8 +7,24 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-17T00:00:00Z"
+close_reason: >-
+  (1) 已修（零分母分因，#5399）；(2) 复核后确认**无需新增代码** ——
+  本地入口早已点名 `uv sync --group test`。
+resolution_evidence: >-
+  (1) `bin/gac/check-test-collection.py` 零分母分支先做「清掉 addopts 再收一次」
+  差分探针，归 `env_skipped`（不 FAIL）+ `collection_not_run: true`。
+  (2) 实测（2026-11-17，用**未 sync test 组**的 `/Users/xiamingxing/Workspace/.venv`
+  跑 `check-test-collection.py --paths tests/test_rule_wiring_coverage.py`）：
+  `collected: None` / `collection 错误: 0` / 一条
+  `⏭ [环境依赖] … 先 uv sync --group test` / `status: pass_with_env_skips` /
+  末行 `PASS`。即「环境缺失 → 报告但不 FAIL」的契约**与工具自己的口径表一致**，
+  且修复命令被点名。
+  另核 `make ci-preflight` 第 3 步就是 `gac-local-gate --strict`，而
+  `gac-local-gate.py:596-600` 无条件把 `test-collection` 加进 GATES_LIST
+  ⇒ push 前快检必经此门，(2) 的「本地入口」已存在，不必再加一步。
 affected_roots:
 - bin/gac/check-test-collection.py
 - pyproject.toml
@@ -89,4 +105,16 @@ history:
     现在 `status: pass_with_env_skips` + `collection_not_run: true` +
     `collected: null` + 一条指名备齐命令的 `env_skipped`, 不是 `pass`/`collected` 有值,
     意图保留; 用例已按新口径更新。
+  actor: "governance-agent"
+- at: "2026-11-17T00:00:00Z"
+  action: close
+  note: >-
+    **(2) 复核后结案：无需新增代码。** 用未 sync test 组的 venv 实跑
+    `check-test-collection.py --paths tests/test_rule_wiring_coverage.py` ⇒
+    环境分支如实命中并点名 `uv sync --group test`，末行 PASS（不 FAIL）。
+    又核 `make ci-preflight` 第 3 步 = `gac-local-gate --strict`，而
+    `test-collection` 在 `gac-local-gate.py:596-600` 被**无条件**加入 GATES_LIST
+    ⇒ 「push 前本地入口」这条路已经存在，(2) 提问的「在哪点名」已有答案。
+    **纪律**: 答复「要不要加 X」之前先找「X 是否已存在」—— 本条 (2) 若不动手
+    复核就会白加一步 ci-preflight，而它与 `gac-local-gate-strict` 重复。
   actor: "governance-agent"

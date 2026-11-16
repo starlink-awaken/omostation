@@ -7,8 +7,29 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
+closed_at: "2026-11-17T00:00:00Z"
+close_reason: >-
+  (1)(2) 已修（broker 停写 status；闭局证据进 kernel）；(3) 裁「保留 broker 路径」。
+resolution_evidence: >-
+  **(1)** 子模块 `starlink-awaken/omostation-omo#252`（合并 `a22df739`）：broker
+  不再写 `status`，主仓 gitlink 同步 bump。
+  **(2)** 子模块 `starlink-awaken/omostation-omo#253`（合并 `8bc86c1a`）：
+  `DebtItem` 末尾加 `closed_at` / `close_reason` / `resolution_evidence`（默认值，
+  向后兼容），并加 `_as_text` 处理列表形态的 `resolution_evidence`。
+  **(3) 保留**。理由：① 它是**官方立案入口**，且 `.omo/_truth/x1-governance-policies.yaml:130`
+  与 `x4-consistency-rules.yaml:89,138` 明文要求债务修复走
+  `omo governance ingress-debt` broker —— 删掉入口会让政策变成空指；
+  ② (1)(2) 之后它**可达且合规**（一次性根实跑 rc=0，产出文件过主仓
+  `fix-debt-fields.py` ⇒ `conflict_count: 0`）；
+  ③ 使用率低（7/86 且 7/7 全终态）说明的是「直接写文件更方便」，不是「入口坏了」——
+  这属于 **Q2（立案是否强制 broker-only）** 的范畴，而 Q2 在
+  `DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL` 里**仍开放**，不在本条裁。
+  **③ 的处置**：`DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL`（resolved）的
+  evidence 仍写着「22 键为权威」—— 该表述已被 (2) 推翻（现 25 键）。
+  那是**已结案条目的历史记录**，按本仓「不重写历史」惯例不改其正文；
+  权威键数以本条的 resolution_evidence 为准。
 affected_roots:
 - projects/omo/src/omo/omo_ingress_debt.py
 - projects/omo/src/omo/omo_debt_registry.py
@@ -137,4 +158,15 @@ history:
     (`git ls-tree origin/main projects/omo`)。**纪律**: 用
     `git -C <sub> fetch` + `git worktree add <tmp> <pin>` 从**本地对象**起
     含修复的检出, 比改共享检出安全, 也不用联网。
+  actor: "governance-agent"
+- at: "2026-11-17T00:00:00Z"
+  action: close
+  note: >-
+    **(3) 裁决：保留 broker 路径。** 三条理由（政策明文要求它、修完后它可达且合规、
+    低使用率指向的是「直接写更方便」而非「入口坏了」）见 resolution_evidence。
+    **关键区分**: 「要不要保留这条路径」与「立案是否**强制**走这条路径」是两问 ——
+    后者是 Q2, 在 `DEBT-REVIEW-SCAN-POPULATION-ALL-TERMINAL` 里仍开放,
+    本条不代裁。把两者混为一谈会让「保留」被误读成「问题已消失」。
+    **纪律**: 一条债务结案时, 若它引用的某个前提仍开放, 必须在结案证据里
+    **点名那个开放项**, 否则下一个读者会把「本条已 resolved」读成「整件事已闭环」。
   actor: "governance-agent"
