@@ -57,7 +57,12 @@ def _seed_minimal_green(tmp_path: Path, *, with_window: bool = True) -> None:
         encoding="utf-8",
     )
     (tmp_path / "bin/gac/kos-seed-import.py").write_text("# kos seed\n", encoding="utf-8")
-    (tmp_path / "bin/ssot/write-owner-repair-draft.py").write_text("# repair\n", encoding="utf-8")
+    # 门禁 check_g_conv_5_write_owner 查的是 bin/_archive/write-owner-repair-draft.py
+    # （该脚本被 bca29b64e / #1839 归档到 bin/_archive/）。此处曾写 bin/ssot/ ——
+    # 与门禁不一致 ⇒ g-conv.5 恒 repair_draft=false、本文件 7 条恒红。
+    repair_draft = tmp_path / "bin/_archive/write-owner-repair-draft.py"
+    repair_draft.parent.mkdir(parents=True, exist_ok=True)
+    repair_draft.write_text("# repair\n", encoding="utf-8")
     (tmp_path / ".omo/_truth/registry/write-owners.yaml").write_text("version: 1\nowners: {}\n", encoding="utf-8")
     (tmp_path / ".pre-commit-config.yaml").write_text("repos: []\n# write-owner-audit\n", encoding="utf-8")
     (tmp_path / ".omo/_truth/registry/swarm-coordination.yaml").write_text(
