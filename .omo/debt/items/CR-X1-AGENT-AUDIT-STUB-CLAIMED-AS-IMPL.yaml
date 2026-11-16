@@ -1,5 +1,5 @@
 id: "CR-X1-AGENT-AUDIT-STUB-CLAIMED-AS-IMPL"
-title: "CR-X1-AGENT-AUDIT 的描述声称实现是 bin/gac/check-external-agent-audit.py —— 那是一个恒 rc=0 的桩，且桩里的 id 与规则 id 不同（检测器因此报未接线，测试恒红）"
+title: "CR-X1-AGENT-AUDIT 的 source_ref 与描述把恒 rc=0 的占位桩声称为「实现」（假门）—— 该规则的真实宿主是 ecos 的 x1-audit-chain 检查器"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -48,17 +48,30 @@ description: >-
   「实现」，等于让那条规则的「已接线」由一段永不失败的 print 支撑 —— 正是本仓
   反复出事的「声明绿/执行红」形状。
 
-  **② id 不一致，检测器因此报未接线**：桩的 docstring 写的是
-  `CR-X1-EXTERNAL-AGENT-AUDIT`，而规则 id 是 `CR-X1-AGENT-AUDIT`。
-  `bin/gac/check-rule-wiring-coverage.py` 按**规则 id 字符串**在语料里找接线，
-  两个 id 对不上 ⇒ `tests/test_rule_wiring_coverage.py` 的
-  「governance-checks 候选集必须为空」这条**恒红**（实测 got 里同时有
-  `CR-X1-AGENT-AUDIT` 与 `x1-audit-chain`）。
+  **② 原名「id 不一致 ⇒ 测试恒红」—— 该判断已被实测否证（2026-11-16 复核）**：
+  桩的 docstring 写的是 `CR-X1-EXTERNAL-AGENT-AUDIT`，那**正是** `governance-checks.yaml`
+  另一条规则自己的 id（`:1771`），两者自洽。而 `CR-X1-AGENT-AUDIT` 之所以曾被报未接线，
+  是因为 `bin/gac/registry-alias-map.yaml:108` **早已**存在
+  `canonical: CR-X1-AGENT-AUDIT / aliases: [x1-audit-chain, x1_audit_chain]` 这组映射，
+  接线判定走的是**子模块语料里的 `x1-audit-chain`**，不是根仓那个桩。
 
-  注：`x1-audit-chain` 那条**不是**本条的问题 —— 它在
-  `projects/ecos/src/ecos/l0/governance/checkers.py:15` 有真实现
-  （`super().__init__("x1-audit-chain", "X1")`），本 worktree 报它未接线是因为
-  **`projects/ecos` 未检出**（语料缺该文件），属检出形态，加守卫即可。
+  实测三处读数（同一份 origin/main 内容）：
+
+  | 检出 | 语料含 `projects/ecos` | `candidates_unwired.governance-checks` |
+  |---|---|---|
+  | canonical（子模块齐） | 是 | `[]` |
+  | ws-cr-x1（子模块未 init） | 否 | `['x1-audit-chain', 'CR-X1-AGENT-AUDIT']` |
+  | CI `governance-verify` | 是（`submodules: recursive`，`:359`） | `[]` |
+
+  而 `tests/test_rule_wiring_coverage.py` 的「候选集必须为空」那条**自带 skip 守卫**
+  （`#5393` 与本条同批加入）：探针 `projects/ecos/src/ecos/l0/governance/checkers.py`
+  缺席即 `pytest.skip`。所以在子模块未检出的树上它**skip 而非红**，在 CI 里**绿**。
+  **结论：不存在「恒红」。** 本条真正的缺陷只有 ① 假门。
+
+  **纪律（本轮固化）**：把「某条测试恒红」写进债条目前，必须在**判据实际运行的那棵树**
+  上跑一遍 —— 本次「恒红」产自一棵**子模块未检出**的 worktree，而判据的运行前提
+  （`submodules: recursive`）在 CI 里是满足的。**检出形态能伪造「恒红」**，
+  与它能伪造「恒绿」是同一枚硬币的两面。
 decision_needed: >-
   两问：
 
@@ -84,4 +97,32 @@ history:
     那「已接线」就是假的 —— 与本仓 §7「有实现、有测试、却没人调用」同族。
     **纪律**: 清红时**先分「检出形态」与「真缺陷」**, 但**别在第一批就把所有红
     都归给检出形态** —— 本条就是混在检出形态堆里的真缺陷。
+  actor: "governance-agent"
+- at: "2026-11-16T09:30:00+00:00"
+  action: mitigate
+  note: >-
+    选 (1) 的「留桩 + 摘掉实现声称」一支，并顺手校正 ② 的错误前提（见 description ②）。
+    落地三处：
+    ① `bin/gac/check-external-agent-audit.py` 重写为**诚实占位桩** —— 保留 id
+       `CR-X1-EXTERNAL-AGENT-AUDIT` 与 `rc=0`（CI 里是 `continue-on-error` 的 advisory 步,
+       退出码不承重）, 但 stdout 改印机器可读自报
+       `{"check": ..., "status": "not_implemented", "enforced": false, "reason": ...}`,
+       使「恒 0」不再能被下游读成「检查通过」。
+    ② `governance-checks.yaml` 的 `CR-X1-AGENT-AUDIT.source_ref` 由
+       `bin/gac/check-external-agent-audit.py` 改为**真实宿主**
+       `projects/ecos/src/ecos/l0/governance/checkers.py`（与 `registry-alias-map.yaml:108`
+        的 alias 组一致）。`gac-drift.py` 的 source_ref 校验只作用于
+        `source_type == indexed`（本条是 native）, `gac-bootstrap.py` 层4 对
+        `projects/` 引用在未检出时记 `device_unavailable` 而非判红 ⇒ 两处都不受影响。
+    ③ `CR-X1-EXTERNAL-AGENT-AUDIT.description` 删去「实现: …」, 改为
+       「执行体: … 占位桩, 未实现」; `bin/_registry/scripts/governance/check-external-agent-audit.yaml`
+       的 description 同步。
+    **未做（有意）**: 不把桩补成真检查 —— 真检查的前提是「哪些面算外部 agent 接入」
+    的判准, 而实测 `bin/ssot/a2a-adapter.py` 直写 `.omo/state/a2a-messages.jsonl`、
+    全仓 attach 面零 `ingress` 引用, 即「必须走 ingress」这条若照写会**当场红**。
+    那是 owner 的政策裁定, 不是 agent 该替选的 (本条 decision_needed 已写「本条不代决」)。
+    **验证**: `python3 bin/gac/check-external-agent-audit.py` ⇒ rc=0 且 JSON 自报
+    `status=not_implemented`; `python3 bin/gac/check-rule-wiring-coverage.py --json`
+    在子模块齐全的树上 `candidates_unwired.governance-checks == []`（与改前一致，
+    本次改动不触碰接线判定路径）。
   actor: "governance-agent"
