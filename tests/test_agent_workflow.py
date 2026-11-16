@@ -51,6 +51,7 @@ def _load_module_from_source(path: Path, name: str):
 
 
 def _load_root_workflow_wrapper():
+    _require_input(ROOT / "projects/omo/src/omo", "omo 内核源码")
     return _load_module_from_source(WORKFLOW_MODULE_PATH, f"agent_workflow_wrapper_{uuid.uuid4().hex}")
 
 
@@ -132,8 +133,17 @@ def _write_bet_workspace(
 @pytest.fixture(scope="session")
 def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Provide a startable ledger without depending on live BET lifecycle state."""
+    omo_src = ROOT / "projects/omo/src/omo"
+    if not omo_src.is_dir():
+        # 本 fixture 把 omo 内核 copytree 到临时检出里跑真实工作流; 目录缺席
+        # (projects/omo 未 init / 干净检出) 时本文件 56 条会全部因 copytree 失败而红
+        # —— 那是检出形态, 不是回归。fixture 里 skip ⇒ 用到它的用例整批跳过。
+        pytest.skip(
+            f"omo 内核源码不在: {omo_src} —— 先 `git submodule update --init projects/omo`"
+            "（缺席属检出形态, 不是回归）"
+        )
     workspace = tmp_path_factory.mktemp("bet-workflow-workspace")
-    shutil.copytree(ROOT / "projects/omo/src/omo", workspace / "projects/omo/src/omo")
+    shutil.copytree(omo_src, workspace / "projects/omo/src/omo")
     ecos_package = workspace / "projects/ecos/src/ecos"
     ecos_package.parent.mkdir(parents=True, exist_ok=True)
     ecos_package.symlink_to(ROOT / "projects/ecos/src/ecos", target_is_directory=True)
@@ -184,7 +194,21 @@ def _bet_workflow_workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return workspace
 
 
+def _require_omo_kernel() -> None:
+    """三个 `_run_*` 都会执行 `bin/agent-workflow.py`, 而它在模块级 `from omo.workflow import …`
+    —— omo 内核缺席 (projects/omo 未 init / 干净检出) 时 subprocess 直接
+    ModuleNotFoundError, 调用方看到的是「returncode==1 的断言失败」, 与真回归同形。
+    """
+    omo_src = ROOT / "projects/omo/src"
+    if not omo_src.is_dir():
+        pytest.skip(
+            f"omo 内核源码不在: {omo_src} —— 先 `git submodule update --init projects/omo`"
+            "（缺席属检出形态, 不是回归）"
+        )
+
+
 def _run_workflow(*args: str) -> subprocess.CompletedProcess[str]:
+    _require_omo_kernel()
     # 清 VIRTUAL_ENV: CI 里 interface-check 先 cd projects/omo + uv sync 会
     # 残留 VIRTUAL_ENV=projects/omo/.venv, uv run 在根仓跑时告警 → 断言失败.
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
@@ -205,6 +229,7 @@ def _run_root_workflow_strict(
 ) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env["AGCP_REQUIREMENT_ITERATION_GATE"] = "1"
+    _require_omo_kernel()
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     return subprocess.run(
         [
@@ -232,6 +257,7 @@ def _run_direct_omo_workflow(
 ) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    _require_omo_kernel()
     env["PYTHONPATH"] = os.pathsep.join(
         [
             str(workspace / "projects/omo/src"),
@@ -319,6 +345,20 @@ def _write_affected_receipt(tmp_path: Path, *changed_projects: str, name: str = 
     return receipt_ref
 
 
+def _require_input(path: Path, what: str) -> None:
+    """被测输入缺席 ⇒ 跳过 (检出形态, 不是回归)。
+
+    本文件大量断言是「跑一个真脚本 / 加载一个真模块」; 那些脚本在模块级 import
+    子模块包 (omo / ecos / l4_kernel)。子模块未检出时 subprocess 直接
+    ModuleNotFoundError, 调用方看到的是 returncode==1 的断言失败 —— 与真回归同形。
+    """
+    if not path.exists():
+        pytest.skip(
+            f"{what} 不在: {path} —— 先 `git submodule update --init` 对应子模块"
+            "（缺席属检出形态, 不是回归）"
+        )
+
+
 def _run_layer_index(*args: str) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env.setdefault("AGCP_REQUIREMENT_ITERATION_GATE", "0")
@@ -333,6 +373,9 @@ def _run_layer_index(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def _run_doc_ssot(*args: str) -> subprocess.CompletedProcess[str]:
+    _require_input(
+        ROOT / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml", "ecos L0 约束源"
+    )
     env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     env.setdefault("AGCP_REQUIREMENT_ITERATION_GATE", "0")
     return subprocess.run(
@@ -3118,6 +3161,7 @@ def test_status_command_exposes_agcp_control_plane_fields() -> None:
 
 def _load_workflow_core():
     import importlib.util
+    _require_input(ROOT / "projects/omo/src/omo/workflow/core.py", "omo workflow core")
 
     # Package-less load (top-level name): core.py detects __package__ == "" and
     # binds delivery_anchor itself, exercising the same fallback production uses
@@ -3455,6 +3499,7 @@ def _anchor_git(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 
 def _build_fake_linked_checkout(tmp_path: Path) -> tuple[Path, Path]:
+    _require_input(ROOT / "projects/omo/src", "omo 内核源码")
     """Build a fake canonical checkout + a REAL linked worktree of it.
 
     The worktree checkout carries only the marker; the CLI runtime content
@@ -3518,6 +3563,7 @@ def _seed_real_delivery(ws: Path) -> Path:
 
 
 def _run_anchor_cli(ws: Path, env: dict[str, str], *args: str) -> subprocess.CompletedProcess[str]:
+    _require_input(ROOT / "projects/omo/src/omo", "omo 内核源码")
     return subprocess.run(
         [sys.executable, str(ws / "bin" / "agent-workflow.py"), *args],
         cwd=ws,

@@ -310,6 +310,9 @@ def _weijian_sanyi_status_job() -> dict[str, object]:
     }
 
 
+_L4_SRC = ROOT / "projects" / "l4-kernel" / "src"
+
+
 def _run(
     domain_registry: Path,
     project_registry: Path,
@@ -317,6 +320,14 @@ def _run(
     *,
     prepare_default_gateways: bool = True,
 ) -> subprocess.CompletedProcess[str]:
+    if not _L4_SRC.is_dir():
+        # 被调的 documents-domain-project-check.py 在**模块级** import l4_kernel
+        # (它自己把 projects/l4-kernel/src 插进 sys.path)。子模块未检出时该 import
+        # 失败, 本文件 81 条会全部红 —— 那是检出形态, 不是回归。
+        pytest.skip(
+            f"l4-kernel 源码不在: {_L4_SRC} —— 先 `git submodule update --init projects/l4-kernel`"
+            "（缺席属检出形态, 不是回归）"
+        )
     if gateway_domain_ids is None and prepare_default_gateways:
         raw = yaml.safe_load(domain_registry.read_text(encoding="utf-8"))
         for entry in raw["manifests"]:
