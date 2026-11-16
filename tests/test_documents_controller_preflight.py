@@ -5,12 +5,20 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "documents-domain-owner-job.py"
 RULE_IDS = {"CR01", "CR02", "CR03", "CR05", "CR08", "CR23", "CR24", "CR25", "CR26", "CR29", "CR30"}
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
+    probe = Path(__file__).parents[1] / "projects/l4-kernel/src/l4_kernel/__init__.py"
+    if not probe.is_file():
+        pytest.skip(
+            f"l4-kernel 源码 缺席: {probe} —— 先 `git submodule update --init` 对应子模块"
+            "（检出形态, 不是回归）"
+        )
     return subprocess.run(
         [sys.executable, str(SCRIPT), "controller-preflight", *args, "--json"],
         cwd=ROOT,

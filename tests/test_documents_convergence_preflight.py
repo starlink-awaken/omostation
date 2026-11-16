@@ -5,11 +5,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "documents-domain-owner-job.py"
 
 
 def _run(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    probe = Path(__file__).parents[1] / "projects/l4-kernel/src/l4_kernel/__init__.py"
+    if not probe.is_file():
+        pytest.skip(
+            f"l4-kernel 源码 缺席: {probe} —— 先 `git submodule update --init` 对应子模块"
+            "（检出形态, 不是回归）"
+        )
     return subprocess.run(
         [sys.executable, str(SCRIPT), "convergence-preflight", *args, "--json"],
         cwd=ROOT,

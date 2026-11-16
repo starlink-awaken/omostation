@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "documents-domain-owner-job.py"
 
@@ -36,6 +38,12 @@ def _fixture(tmp_path: Path, *, markers: bool = True) -> tuple[Path, Path]:
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
+    for src in (Path(__file__).parents[1] / "projects/l4-kernel/src",):
+        if not src.is_dir():
+            pytest.skip(
+                f"l4-kernel 源码缺席: {src} —— 被调脚本在运行时 import l4_kernel;"
+                "先 `git submodule update --init projects/l4-kernel`（检出形态, 不是回归）"
+            )
     return subprocess.run(
         [sys.executable, str(SCRIPT), "bridge-preflight", *args, "--json"],
         cwd=ROOT,

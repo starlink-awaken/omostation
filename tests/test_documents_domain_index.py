@@ -5,6 +5,7 @@ import sys
 from os.path import relpath
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,6 +74,12 @@ def _registry(tmp_path: Path) -> Path:
 
 
 def _run(registry: Path, index: Path, command: str) -> subprocess.CompletedProcess[str]:
+    probe = Path(__file__).parents[1] / "projects/l4-kernel/src/l4_kernel/__init__.py"
+    if not probe.is_file():
+        pytest.skip(
+            f"l4-kernel 源码 缺席: {probe} —— 先 `git submodule update --init` 对应子模块"
+            "（检出形态, 不是回归）"
+        )
     return subprocess.run(
         [
             sys.executable,
