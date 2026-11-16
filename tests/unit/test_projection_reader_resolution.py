@@ -283,6 +283,13 @@ def test_unified_health_sync_targets_separate_state_root(tmp_path, monkeypatch, 
     assert checkout_system.read_text(encoding="utf-8") == "health_score: 20\n"
 
 
+@pytest.mark.skipif(
+    not (ROOT / "projects/omo/src/omo/omo_doctor.py").is_file(),
+    reason=(
+        "omo_doctor 不在 (projects/omo 未 init / 干净检出) —— 本条直接加载该脚本, "
+        "缺席无可测 (检出形态, 不是回归)"
+    ),
+)
 def test_omo_doctor_does_not_fail_when_health_projection_is_not_generated(tmp_path, monkeypatch):
     omo_src = ROOT / "projects/omo/src"
     monkeypatch.syspath_prepend(str(omo_src))

@@ -317,6 +317,13 @@ def test_derivation_is_not_a_no_op(tmp_path: Path) -> None:
     assert not [d for d in dirs if d.endswith(("-", "_"))], sorted(dirs)
 
 
+@pytest.mark.skipif(
+    not (ROOT / "projects/omo/src/omo").is_dir(),
+    reason=(
+        "omo 内核源码不在 (projects/omo 未 init / 干净检出) —— 本条扫的是该目录的"
+        "state 写面, 缺席无可测 (检出形态, 不是回归)"
+    ),
+)
 def test_kernel_state_write_dirs_are_the_reviewed_list(checkout_root: Path) -> None:
     """派生集合与基线**集合相等**：漏一种形状或新增长出目录都会在这里红。"""
     dirs = derive_state_write_dirs(checkout_root / KERNEL_SRC)
