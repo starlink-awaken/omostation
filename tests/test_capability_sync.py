@@ -24,6 +24,15 @@ HELPERS_PATH = ROOT / "lib" / "capability_sync_verification_helpers.py"
 GENERATOR_PATH = ROOT / "bin" / "ssot" / "gen-capability-registry.py"
 
 
+
+# 探针取**内容文件**：未初始化的子模块目录可能存在但为空, exists()/is_dir() 会为真。
+if not (Path(__file__).resolve().parents[1] / "projects/omo/src/omo/__init__.py").is_file():
+    pytest.skip(
+        f"omo 内核源码 缺席: {Path(__file__).resolve().parents[1] / 'projects/aetherforge/src'} —— "
+        "先 `git submodule update --init` 对应子模块（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
+
 def test_capability_sync_stays_below_god_module_error_threshold() -> None:
     """The compatibility CLI must remain below the hard single-file limit."""
     assert len(SYNC_PATH.read_text(encoding="utf-8").splitlines()) <= 1500
