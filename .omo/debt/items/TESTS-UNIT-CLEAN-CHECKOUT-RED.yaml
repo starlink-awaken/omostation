@@ -1,5 +1,5 @@
 id: "TESTS-UNIT-CLEAN-CHECKOUT-RED"
-title: "tests/unit 在「未 init 子模块」的检出上红 36 条（29 failed + 7 errors / 7 个文件），逐条确认**全部是检出形态** —— 与门禁那条红是同一个病"
+title: "测试面在「未 init 子模块」的检出上大面积红：tests/unit 36 条（已修完 → 0）、tests/integration 干净、顶层 tests/test_*.py **223 failed + 21 errors**（未修）—— 同一病根的三种面值"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -52,6 +52,23 @@ description: >-
   与 `GATE-CLEAN-CHECKOUT-NOISE` 完全同构：门禁在干净检出上 16/87 红、测试在干净检出上
   36 红 —— **两边的红都是「输入没备齐」，却都长得和真回归一模一样**。
   本仓已把那一条量化并做了机制（`preflight` / `not_measured`），**测试面还没有对应的东西**。
+  **2026-11-16 续测：另外两个面（同一病根的三种面值）**
+
+  | 平面 | 读数（fresh worktree，不 init 子模块） | 状态 |
+  |---|---|---|
+  | `tests/unit` | 36 红 → **0 failed / 2914 passed / 116 skipped** | **已修完**（#5382 / #5383：逐条补「输入缺席则跳过」守卫） |
+  | `tests/integration` | **0 failed / 42 passed / 6 skipped** | 本来就干净 |
+  | 顶层 `tests/test_*.py`（263 文件） | **223 failed + 21 errors / 2732 passed / 17 skipped** | **未修** |
+  | `pytest tests`（含单元）collection | 原 **5 errors → Interrupted，一条都跑不了** → 现 **3227 collected / 0 error** | 已修（#5384：模块级守卫） |
+
+  顶层平面的因与单元面同源，抽样实证：
+  `tests/test_documents_domain_project_check.py`（81 条）全部是
+  `ModuleNotFoundError: No module named 'l4_kernel'` —— 被调脚本
+  `bin/gac/documents-domain-project-check.py` 依赖 `projects/l4-kernel` 子模块。
+
+  读数可复现性说明：顶层平面单跑 >10 分钟会被 600s 后台上限砍；改为 4 分片并行，
+  再把最差的 sh4 **单独重跑对拍 —— 逐条一致（103 条）**，故并发无干扰。
+
 decision_needed: >-
   三选一（本条不代决）：
 
@@ -81,4 +98,17 @@ history:
     换 `grep -oE 'tests/unit/[a-z0-9_]+\.py'` 重提后 7/7 全在 CI 里。
     **纪律**：提名单的正则**形状**决定了结论；只匹配一种写法就会得出「不在」的假结论,
     而「不在」是**要拿去说别人失明的重话**, 必须先换一种形状复核。
+  actor: "governance-agent"
+- at: "2026-11-16T09:10:00+00:00"
+  action: evaluate
+  note: >-
+    **续测另外两个面, 并修完单元面。** `tests/unit` 36 → **0**（#5382 修 21+7+2,
+    #5383 修最后 4）; `tests/integration` 本来就 0 红; `pytest tests` 的
+    collection 从「5 errors 中断」变成 **3227 collected / 0 error**（#5384）。
+    **未修的是顶层 `tests/test_*.py`: 223 failed + 21 errors** —— 因与单元面同源
+    （被调脚本 import 未检出的子模块包, 如 `l4_kernel`）。
+    **纪律**: 大平面读数**必须可复现** —— 单跑 10 分钟以上会被后台上限砍,
+    分片并行后**必须挑最差的一片单独重跑对拍**（本次 sh4 逐条一致才采信）。
+    **判据**: 这类「修完一类」的工作, 收工前要把**同一个量的另外几个面**都量一遍,
+    否则会留下「单元面绿了、顶层 244 条红」的盲区 —— 而顶层才是最多人跑的那个。
   actor: "governance-agent"
