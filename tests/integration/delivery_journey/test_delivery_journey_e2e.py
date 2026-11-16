@@ -7,12 +7,21 @@ without generating real production mutations.
 import sys
 from pathlib import Path
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # Ensure cockpit package is accessible
 root_dir = Path(__file__).resolve().parent.parent.parent.parent
 cockpit_src = root_dir / "projects" / "cockpit" / "src"
+if not cockpit_src.is_dir():
+    # 模块级 `from cockpit... import` 需要 cockpit 子模块检出; 缺席时 import 失败
+    # 会让**整个 tests/ 平面** collection 中断。属检出形态, 不是回归。
+    pytest.skip(
+        f"cockpit 源码不在: {cockpit_src} —— 先 `git submodule update --init projects/cockpit`"
+        "（缺席属检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 if str(cockpit_src) not in sys.path:
     sys.path.insert(0, str(cockpit_src))
 

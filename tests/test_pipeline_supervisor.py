@@ -7,7 +7,19 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
+
+_GUARD_SRC = ROOT / "projects/omo/src/omo/pipeline_supervisor.py"
+if not _GUARD_SRC.is_file():
+    pytest.skip(
+        f"{_GUARD_SRC} 不在（projects/omo 未检出）—— 本模块在**模块级**加载它, "
+        "缺席会让整个 tests/ 平面 collection 中断（5 errors, 一条都跑不了）。"
+        "属检出形态, 不是回归",
+        allow_module_level=True,
+    )
+
 
 spec = importlib.util.spec_from_file_location(
     "pipeline_supervisor", ROOT / "projects/omo/src/omo/pipeline_supervisor.py"
