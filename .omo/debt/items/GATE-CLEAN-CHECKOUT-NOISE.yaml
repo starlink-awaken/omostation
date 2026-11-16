@@ -139,3 +139,18 @@ history:
     为 2 条红造一套判据是可以的（它同时是「脚本型 check 未检出」的通用信号），
     但如果量出来是 0 条，就不该造。
   actor: "governance-agent"
+- at: "2026-11-16T08:45:00+00:00"
+  action: evaluate
+  note: >-
+    **机制层终态实测**（fresh worktree，`--strict --json`）：
+    `ok=false` / **15 hard fails** / 2 soft / **3 not_measured**。
+    `preflight` 正确标注「检出未备齐」：SGF policy 缺失（gate 集合退回 DEFAULT_POLICY）
+    + 15 个子模块未初始化。`not_measured` 精确收下 3 条
+    （`mof-schema-validate` / `mof-state-bridge` = `entrypoint_missing`，
+    `current-state-coherence` = `missing_input`）。
+    **剩下 12 条 hard fail 全部是「目标在子模块里」** —— 与本条 (a) 的记录一致:
+    它们只能靠**逐 check 自报**才能分流（本条已明写「无捷径」）。
+    **结论**: 机制（preflight + not_measured）按设计工作, 红已被定性为
+    「检出未备齐」而不是「仓库缺陷」; 但**它不改变退出码**（本轮刻意如此）——
+    所以「本地 strict gate 在干净检出上仍 exit 1」是**设计选择**, 不是遗漏。
+  actor: "governance-agent"
