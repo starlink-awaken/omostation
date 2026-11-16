@@ -86,6 +86,16 @@ def test_script_registry_validation_is_bound_to_gac_gate() -> None:
     )
     assert strict["run"] == "python3 bin/gac/gac-local-gate.py --strict"
 
+    # `script-registry-validate` 是 **CI 独有的 11 个门**之一 —— 它只活在
+    # projects/ecos 的 sgf-policy.yaml 里, 不在 DEFAULT_POLICY (= GATES_LIST)。
+    # 子模块未检出时 gac-local-gate 退回 DEFAULT_POLICY, 该 id 自然缺席
+    # （债条目 GATE-SURFACE-POLICY-VS-DEFAULT-DIVERGENCE）。属检出形态, 不是回归。
+    policy = ROOT / "projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml"
+    if not policy.is_file():
+        pytest.skip(
+            f"sgf-policy 缺席: {policy} —— 门禁面退回 DEFAULT_POLICY(83 条), "
+            "CI 独有的 11 条(含 script-registry-validate)不在其中（检出形态, 不是回归）"
+        )
     gate = _load(ROOT / "bin/gac/gac-local-gate.py", "gac_local_gate_ci_binding")
     commands = {item["id"]: item["command"] for item in gate.GATES_LIST}
     assert commands["script-registry-validate"] == [
