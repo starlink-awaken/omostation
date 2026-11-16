@@ -20,6 +20,16 @@ def _load(name: str, rel: str):
     return mod
 
 
+_GUARD_SRC = ROOT / "projects/omlxc/src/omlxc/dataplane/embedding_mps.py"
+if not _GUARD_SRC.is_file():
+    pytest.skip(
+        f"{_GUARD_SRC} 不在（projects/omlxc 未检出）—— 本模块在**模块级**加载它, "
+        "缺席会让整个 tests/ 平面 collection 中断（5 errors, 一条都跑不了）。"
+        "属检出形态, 不是回归",
+        allow_module_level=True,
+    )
+
+
 EMB = _load("embedding_mps", "projects/omlxc/src/omlxc/dataplane/embedding_mps.py")
 RR = _load("reranker", "projects/omlxc/src/omlxc/dataplane/reranker.py")
 

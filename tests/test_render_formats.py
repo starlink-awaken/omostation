@@ -7,6 +7,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 COCKPIT_SRC = ROOT / "projects/cockpit/src"
 
@@ -18,6 +20,16 @@ def _load(name: str, rel: str):
     sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
+
+
+_GUARD_SRC = ROOT / "projects/cockpit/src/cockpit/renderers/gov_docx.py"
+if not _GUARD_SRC.is_file():
+    pytest.skip(
+        f"{_GUARD_SRC} 不在（projects/cockpit 未检出）—— 本模块在**模块级**加载它, "
+        "缺席会让整个 tests/ 平面 collection 中断（5 errors, 一条都跑不了）。"
+        "属检出形态, 不是回归",
+        allow_module_level=True,
+    )
 
 
 GOV = _load("gov_docx", "projects/cockpit/src/cockpit/renderers/gov_docx.py")
