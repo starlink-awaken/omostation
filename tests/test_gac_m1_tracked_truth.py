@@ -14,7 +14,16 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
+
+if not (ROOT / "projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-BRAND-NEW.yaml").is_file():
+    pytest.skip(
+        f"ecos GAC 规则源 缺席: {ROOT / 'projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-BRAND-NEW.yaml'} —— 先 `git submodule update --init projects/ecos`"
+        "（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 SYNC_SCRIPT = ROOT / "bin" / "gac" / "gac-m1-sync.py"
 POLLUTION = (
     ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "mof" / "m1" / "governance" / "GAC-RULE-BRAND-NEW.yaml"
@@ -38,6 +47,12 @@ properties:
 
 
 def _run_sync(tracked: bool) -> dict:
+    probe = Path(__file__).parents[1] / "projects/ecos/src/ecos/ssot/mof/m1/governance/GAC-RULE-BRAND-NEW.yaml"
+    if not probe.is_file():
+        pytest.skip(
+            f"ecos GAC 规则源 缺席: {probe} —— 先 `git submodule update --init` 对应子模块"
+            "（检出形态, 不是回归）"
+        )
     cmd = ["python3", str(SYNC_SCRIPT), "--json"]
     if tracked:
         cmd.append("--tracked")

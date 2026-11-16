@@ -19,15 +19,29 @@ import sys
 import textwrap
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+
+if not (ROOT / "projects/ecos/src/ecos/ssot/registry/governance/x3-value-stack.yaml").is_file():
+    pytest.skip(
+        f"ecos x3-value-stack 注册表 缺席: {ROOT / 'projects/ecos/src/ecos/ssot/registry/governance/x3-value-stack.yaml'} —— 先 `git submodule update --init projects/ecos`"
+        "（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 GATEKEEPER = ROOT / "projects/ecos/scripts/contract_gatekeeper.py"
 OMO_LINT = ROOT / "projects/omo/src/omo/omo_lint.py"
 KOS_INJECTOR = ROOT / "bin/gac/gac-consensus-inject.py"
 
 
 def _load(name: str, path: Path):
+    probe = Path(__file__).parents[1] / "projects/ecos/scripts/contract_gatekeeper.py"
+    if not probe.is_file():
+        pytest.skip(
+            f"ecos contract_gatekeeper 缺席: {probe} —— 先 `git submodule update --init` 对应子模块"
+            "（检出形态, 不是回归）"
+        )
     spec = importlib.util.spec_from_file_location(name, path)
     m = importlib.util.module_from_spec(spec)
     sys.modules[name] = m
