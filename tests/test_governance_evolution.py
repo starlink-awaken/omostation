@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "governance-evolution.py"
 
@@ -39,6 +41,12 @@ PYTHON = _python_with_yaml()
 
 
 def _run_evolution(*args: str) -> subprocess.CompletedProcess[str]:
+    probe = ROOT / "projects/agora/etc/bos-services.yaml"
+    if not probe.is_file():
+        pytest.skip(
+            f"agora 交付物缺席: {probe} —— governance-evolution 会因此 exit 1（检出形态, 不是回归）"
+            "；先 `git submodule update --init projects/agora`"
+        )
     return subprocess.run(
         [PYTHON, str(SCRIPT), *args],
         cwd=ROOT,
