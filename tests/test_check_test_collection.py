@@ -113,7 +113,13 @@ def test_live_repo_collection_is_clean() -> None:
     report = json.loads(proc.stdout)
     assert report["status"] in {"pass", "pass_with_env_skips", "env_skip"}, report
     assert report["repo_errors"] == [], f"存在仓内腐化: {report['repo_errors']}"
-    assert report["collected"], "应收集到测试"
+    if report.get("collection_not_run"):
+        # 环境缺失（典型：pytest-timeout 未装 ⇒ addopts 不认 ⇒ rc=4）。
+        # 关键是不许它**静默**：必须留一条 env_skipped 说明原因与备齐命令。
+        assert report["collected"] is None, "没跑成就是没跑成, 不能伪造计数"
+        assert report["env_skipped"], "collection_not_run 必须落成一条 env_skipped"
+    else:
+        assert report["collected"], "应收集到测试"
     assert proc.returncode == 0
 
 
@@ -163,22 +169,22 @@ def test_zero_denominator_never_reads_as_pass(monkeypatch, capsys) -> None:
     的 `assert report["collected"]` 会当场红 (本用例是它的合成版, 不依赖解释器)。
     """
     gate = _load()
-    monkeypatch.setattr(
-        gate,
-        "collect",
-        lambda paths, timeout=600: {
-            "ok": False,
-            "returncode": 4,
-            "collected": None,
-            "errors": [],
-            "timeout": False,
-        },
-    )
+
+    def _collect(paths, timeout=600, extra_opts=()):
+        # extra_opts 非空 = 「清掉 addopts」的差分探针
+        if extra_opts:
+            return {"ok": True, "returncode": 0, "collected": 12, "errors": [], "timeout": False}
+        return {"ok": False, "returncode": 4, "collected": None, "errors": [], "timeout": False}
+
+    monkeypatch.setattr(gate, "collect", _collect)
     monkeypatch.setattr(sys, "argv", ["check-test-collection.py", "--json"])
     rc = gate.main()
     out = json.loads(capsys.readouterr().out)
-    assert rc == 1, out
-    assert out["ok"] is False
-    assert out["status"] == "fail"
-    assert out["collected"] is None
-    assert out["repo_errors"], "零分母必须落成一条 repo_error, 不能静默通过"
+    # 清掉 addopts 就能收 ⇒ 因在网络/插件（环境缺失），按本工具口径「报告但不 FAIL」。
+    # 2026-11-12 把它钉成 FAIL，与工具自己口径表的「第三方包未装 → 不 FAIL」冲突。
+    assert rc == 0, out
+    assert out["ok"] is True
+    assert out["collection_not_run"] is True
+    assert out["collected"] is None, "没跑成就是没跑成, 不能伪造计数"
+    assert out["env_skipped"], "必须落成一条 env_skipped, 不能静默通过"
+    assert out["repo_errors"] == []
