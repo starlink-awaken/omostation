@@ -1,0 +1,14 @@
+- at: "2026-11-16T07:10:00+00:00"
+  action: mitigate
+  note: >-
+    **已修（1）分因**：`check-test-collection.py` 的零分母分支现在先做一次
+    **「清掉 addopts 再收一次」的差分探针** —— 清掉后能收到 ⇒ 原因是 addopts
+    （缺插件/参数不认）⇒ 归入 `env_skipped`（报告但不 FAIL），并置
+    `collection_not_run: true`；清掉后仍收不到 ⇒ 才归 `repo_errors`（FAIL）。
+    **不做拼写匹配**：判据是「同一个仓库、同一组路径，只差 addopts」的可复现差异,
+    不是去认 stderr 里的词。
+    **与 2026-11-12 那次钉住的用例的关系**：那条用例要的是「不得判绿」——
+    现在 `status: pass_with_env_skips` + `collection_not_run: true` +
+    `collected: null` + 一条指名备齐命令的 `env_skipped`, 不是 `pass`/`collected` 有值,
+    意图保留; 用例已按新口径更新。
+  actor: "governance-agent"
