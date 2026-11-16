@@ -13,6 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 TOOL = Path(__file__).resolve().parents[1] / "bin/gac/check-rule-wiring-coverage.py"
 
 
@@ -167,7 +169,7 @@ def test_ast_strip_survives_inline_and_comment_brace(tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "L0_SUBMODULE", sub / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml")
         monkeypatch.setattr(mod, "EXEC_MANIFEST", reg / "hook-manifest.yaml")
         inv = mod.inventory()
-        assert not ("CR-GOV-CLOSED-LOOP-01" in mod._exec_corpus()), "AST 剥离后不能出现在语料"
+        assert "CR-GOV-CLOSED-LOOP-01" not in mod._exec_corpus(), "AST 剥离后不能出现在语料"
 
 
 def test_genuine_implementation_still_detected(tmp_path, monkeypatch):
@@ -192,6 +194,12 @@ def test_genuine_implementation_still_detected(tmp_path, monkeypatch):
 
 
 def test_real_repo_has_declared_rules_and_exact_candidate_set():
+    probe = Path(__file__).resolve().parents[1] / "projects/ecos/src/ecos/l0/governance/checkers.py"
+    if not probe.is_file():
+        pytest.skip(
+            f"ecos L0 检查器缺席: {probe} —— 本条断言依赖 projects/*/src 语料, "
+            "未检出时连 x1-audit-chain 这类**真接线**也会被报成未接线（检出形态, 不是回归）"
+        )
     mod = _load()
     inv = mod.inventory()
     assert inv["sources"]["governance-checks"]["declared"] > 0
