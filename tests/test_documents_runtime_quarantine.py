@@ -8,11 +8,21 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "lib" / "documents_runtime_quarantine.py"
 
 
 def _load_module():
+    l4_src = ROOT / "projects" / "l4-kernel" / "src"
+    if not l4_src.is_dir():
+        # lib/documents_runtime_quarantine.py 在调用期 `from l4_kernel.content_plane import …`;
+        # 子模块未检出时该 import 失败, 本文件 7 条会全部红 —— 检出形态, 不是回归。
+        pytest.skip(
+            f"l4-kernel 源码不在: {l4_src} —— 先 `git submodule update --init projects/l4-kernel`"
+            "（缺席属检出形态, 不是回归）"
+        )
     spec = importlib.util.spec_from_file_location("documents_runtime_quarantine", SCRIPT)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)

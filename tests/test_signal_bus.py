@@ -25,6 +25,13 @@ WS_ROOT = Path(__file__).resolve().parent.parent
 EB_PATH = WS_ROOT / "projects" / "omo" / "src" / "omo" / "event_bus.py"
 SR_PATH = WS_ROOT / "bin" / "bc-os" / "signal_router.py"
 
+if not EB_PATH.is_file() or not SR_PATH.is_file():
+    pytest.skip(
+        f"被测脚本缺席: event_bus={EB_PATH} / signal_router={SR_PATH} —— "
+        "先 `git submodule update --init projects/omo`（缺席属检出形态, 不是回归）",
+        allow_module_level=True,
+    )
+
 
 def _load_module(path: Path, name: str):
     """Load a Python module from file path with sys.modules registration."""

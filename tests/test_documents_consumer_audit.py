@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 SCRIPT = Path(__file__).parents[1] / "bin" / "gac" / "documents-domain-owner-job.py"
@@ -39,6 +40,19 @@ def _registry(path: Path) -> Path:
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
+    # 被调的 documents-domain-owner-job.py 运行时 `from runtime.documents_plane.jobs import …`
+    # (它把 projects/runtime/src 与 projects/l4-kernel/src 都插进 sys.path)。
+    # 任一子模块未检出时脚本崩在 import, 输出非 JSON ⇒ 调用方看到的是
+    # JSONDecodeError, 与真回归同形。守卫判据 = 那两个 src 目录在不在。
+    for src in (
+        Path(__file__).parents[1] / "projects/runtime/src",
+        Path(__file__).parents[1] / "projects/l4-kernel/src",
+    ):
+        if not src.is_dir():
+            pytest.skip(
+                f"子模块源码缺席: {src} —— 先 `git submodule update --init projects/runtime "
+                "projects/l4-kernel`（缺席属检出形态, 不是回归）"
+            )
     return subprocess.run(
         [sys.executable, str(SCRIPT), "consumer-audit", *args, "--json"],
         check=False,
