@@ -3,7 +3,7 @@ id: bin/gac/check-external-agent-audit.py
 name: Check External Agent Audit
 category: governance
 owner: governance-team
-description: "CR-X1-EXTERNAL-AGENT-AUDIT: 外部 agent 审计检查 (advisory)"
+description: "CR-X1-EXTERNAL-AGENT-AUDIT: 外部 agent 接入审计 —— 占位桩, 未实现 (advisory, 恒 rc=0)"
 inputs: []
 outputs:
   - type: exit_code
