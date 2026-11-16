@@ -1,0 +1,78 @@
+id: "TESTCOLLECTION-ENV-MISCLASSIFIED"
+title: "check-test-collection 把「addopts 引用的插件未安装」判成仓内腐化(FAIL) —— 与它自己「环境缺失 → 报告但不 FAIL」的契约相反"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/gac/check-test-collection.py
+- pyproject.toml
+evidence_refs:
+- bin/gac/check-test-collection.py
+- pyproject.toml
+- tests/test_check_test_collection.py
+mitigation_refs: []
+opened_at: "2026-11-16"
+last_reviewed_at: "2026-11-16"
+next_review_at: "2026-12-16"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `tests/test_check_test_collection.py::test_live_repo_collection_is_clean` 在
+  **未 sync `test` 组**的 venv 里恒红（实测 `/Users/xiamingxing/Workspace/.venv`
+  就是这种），链路是：
+
+  1. `pyproject.toml:47` `addopts = "--timeout=300 --timeout-method=signal"`
+     —— 依赖 **`pytest-timeout`**；
+  2. 该插件**已声明**在 `[dependency-groups].test`（`pyproject.toml:31`），
+     所以仓没错，是本机 venv 没 `uv sync --group test`；
+  3. `pytest --collect-only` 直接 rc=4：
+     `error: unrecognized arguments: --timeout=300 --timeout-method=signal`；
+  4. `bin/gac/check-test-collection.py` 的「零分母不得判绿」分支
+     （`collected is None and not errors`）把它**无条件**归为 `repo_errors`
+     ⇒ `status: fail` ⇒ 测试红。
+
+  **矛盾点**：该工具自己的口径表写着
+  「环境缺失（子模块未 init / **第三方包未装**）→ 报告但不 FAIL」，
+  而这条恰恰是**第三方包未装**，却被判 FAIL。逐文件 import 错误已有 env 分类
+  （`_missing_path_in_uninit_submodule` / `_module_in_uninit_submodule` /
+  `_classify`），**整批收集中断这一形态没有覆盖**。
+
+  **为什么值得修**：这是**每个开发者**都会撞的 —— CI 显式装 pytest-timeout
+  （`gac-gate.yml:62,270`、`governance-check.yml:260` 用 `--with pytest-timeout`），
+  所以 CI 永远绿；本地默认 venv 没装就红，而红的原因不是仓坏了。
+  本轮我前面所有 `pytest` 读数都带 `-o addopts=""`，**恰好绕过了这一层**
+  —— 也就是说这条红一直存在，只是被我的复现口径藏住了。
+decision_needed: >-
+  两问：
+
+  - (1) **`collected is None` 分支要不要分因**：若 `stderr` 表明是 addopts/插件
+    解析失败（而不是「pyproject 参数当前解释器不认」这类仓内问题），应归入
+    `env_reasons` 不 FAIL。**判据别去匹配 stderr 拼写**（本仓纪律），
+    更稳的是：**先探 addopts 里引用的插件是否可 import**，不可 ⇒ env。
+  - (2) **要不要在本地入口提示 `uv sync --group test`**：`pyproject.toml` 的
+    `[dependency-groups].test` 注释已写明「此前靠手工 uv pip install, 环境重建即崩」，
+    但没有任何**本地**命令把这句话执行掉。可在 `make ci-preflight` 或
+    `check-test-collection` 的 env 分支里点名。
+  **本条不代决。**
+history:
+- at: "2026-11-16T06:40:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：清顶层测试红时, `test_check_test_collection` 报「无收集计数且无
+    ERROR 行 (pytest rc=4)」。**没有直接归因给子模块**, 而是把 collect 命令
+    原样跑了一遍 ⇒ 真实原因是 `pyproject.toml` 的 addopts 引用了没装的
+    pytest-timeout。再核 pyproject ⇒ 它**已声明**在 test 组 ⇒ 是环境未 sync,
+    不是仓缺陷。
+    **判据**: 门禁的**契约文本**是判定归类的最高依据 —— 它写着「第三方包未装
+    不 FAIL」, 那这条就该算 env; 判据不要从「报错长什么样」倒推。
+    **纪律**: 我用 `-o addopts=""` 跑了十几轮 pytest —— 那条 addopts 恰好是
+    **本条错误的载体**, 我的复现口径把它清掉, 于是这条红在我眼前藏了十几轮。
+    **复现口径本身也是变量**, 报告读数时必须写清用了什么口径。
+  actor: "governance-agent"
