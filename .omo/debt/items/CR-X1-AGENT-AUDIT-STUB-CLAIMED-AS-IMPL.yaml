@@ -1,0 +1,87 @@
+id: "CR-X1-AGENT-AUDIT-STUB-CLAIMED-AS-IMPL"
+title: "CR-X1-AGENT-AUDIT 的描述声称实现是 bin/gac/check-external-agent-audit.py —— 那是一个恒 rc=0 的桩，且桩里的 id 与规则 id 不同（检测器因此报未接线，测试恒红）"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/governance-checks.yaml
+- bin/gac/check-external-agent-audit.py
+- tests/test_rule_wiring_coverage.py
+evidence_refs:
+- .omo/_truth/registry/governance-checks.yaml
+- bin/gac/check-external-agent-audit.py
+- tests/test_rule_wiring_coverage.py
+- bin/gac/check-rule-wiring-coverage.py
+mitigation_refs: []
+opened_at: "2026-11-16"
+last_reviewed_at: "2026-11-16"
+next_review_at: "2026-12-16"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  `.omo/_truth/registry/governance-checks.yaml:344` 的规则 `CR-X1-AGENT-AUDIT`
+  （`lifecycle: active`，`check_type: audit_chain`），其**紧邻的下一条**
+  （`:1770` 起，name「外部 agent 接入审计」）的描述里写着：
+
+  > 扩展 CR-X1-AGENT-AUDIT 覆盖外部 agent 场景. 实现: `bin/gac/check-external-agent-audit.py`
+  > (gac-gate CI, advisory)
+
+  而那个文件是一个**恒 green 的桩**（全文 19 行）：
+
+  ```
+  def main() -> int:
+      print("[external-agent-audit] SKIP: advisory check (no external agents registered)")
+      print("[external-agent-audit] TODO: 接入外部 agent 后移入 blocking")
+      return 0
+  ```
+
+  两个独立的问题：
+
+  **① 假门**：无论仓库状态如何都 `rc=0`，且自己印着 `TODO`。把它写成某条规则的
+  「实现」，等于让那条规则的「已接线」由一段永不失败的 print 支撑 —— 正是本仓
+  反复出事的「声明绿/执行红」形状。
+
+  **② id 不一致，检测器因此报未接线**：桩的 docstring 写的是
+  `CR-X1-EXTERNAL-AGENT-AUDIT`，而规则 id 是 `CR-X1-AGENT-AUDIT`。
+  `bin/gac/check-rule-wiring-coverage.py` 按**规则 id 字符串**在语料里找接线，
+  两个 id 对不上 ⇒ `tests/test_rule_wiring_coverage.py` 的
+  「governance-checks 候选集必须为空」这条**恒红**（实测 got 里同时有
+  `CR-X1-AGENT-AUDIT` 与 `x1-audit-chain`）。
+
+  注：`x1-audit-chain` 那条**不是**本条的问题 —— 它在
+  `projects/ecos/src/ecos/l0/governance/checkers.py:15` 有真实现
+  （`super().__init__("x1-audit-chain", "X1")`），本 worktree 报它未接线是因为
+  **`projects/ecos` 未检出**（语料缺该文件），属检出形态，加守卫即可。
+decision_needed: >-
+  两问：
+
+  - (1) **桩要不要留**：留 —— 那描述里的「实现: …」必须删掉或改成
+    「占位桩，未实现」（否则「已接线」由永真的 print 支撑）；
+    不留 —— 删掉桩与那句描述，或把桩补成真检查（真读 `runtime/omo/_delivery/ingress/
+    ingress-trail.jsonl` 的 `check_type: audit_chain` 语义）。
+  - (2) **id 对齐**：桩的 docstring 用 `CR-X1-EXTERNAL-AGENT-AUDIT`，规则是
+    `CR-X1-AGENT-AUDIT`。要么给规则加 alias（`registry-alias-map.yaml`，
+    检测器认 alias），要么把桩的 id 改成规则 id —— 但**别名必须让检测器认得**
+    （`_resolve_via_alias` 是大小写不敏感的精确串匹配，不是子串）。
+  **本条不代决。**
+history:
+- at: "2026-11-16T06:05:00+00:00"
+  action: identify
+  note: >-
+    **发现经过**：清顶层测试红时, `test_rule_wiring_coverage` 报「候选漂移:
+    got=['CR-X1-AGENT-AUDIT','x1-audit-chain']」。**先按检出形态处理了一半** ——
+    确认 `x1-audit-chain` 的真实现在 projects/ecos, 本树未检出 ⇒ 加守卫即可。
+    但 `CR-X1-AGENT-AUDIT` 追下去发现**不是检出形态**: 顺着规则描述里那句
+    「实现: bin/gac/check-external-agent-audit.py」去看, 那个文件恒 rc=0 且自带 TODO,
+    桩里的 id 还与规则 id 不同。**判据**: 一条规则的「实现」若是一个**永不失败的桩**,
+    那「已接线」就是假的 —— 与本仓 §7「有实现、有测试、却没人调用」同族。
+    **纪律**: 清红时**先分「检出形态」与「真缺陷」**, 但**别在第一批就把所有红
+    都归给检出形态** —— 本条就是混在检出形态堆里的真缺陷。
+  actor: "governance-agent"
