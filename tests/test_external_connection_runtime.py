@@ -25,6 +25,14 @@ from omo.workflow_mesh import WorkflowMeshStore, new_workflow_event
 NOW = datetime(2026, 8, 2, tzinfo=UTC)
 
 
+
+if not (Path(__file__).resolve().parents[1] / "projects/runtime/src/runtime/executor.py").exists():
+    pytest.skip(
+        f"runtime executor 缺席: {Path(__file__).resolve().parents[1] / 'projects/runtime/src/runtime/executor.py'} —— "
+        "先 `git submodule update --init` 对应子模块（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
+
 def _descriptor() -> dict:
     return {
         "id": "source:mesh-test",

@@ -21,6 +21,14 @@ WORKFLOW = ROOT / "bin/agent-workflow.py"
 NORTH = "织星是夏明星一个人的业务操作系统。"
 
 
+
+if not (Path(__file__).resolve().parents[1] / "projects/omo/src/omo/__init__.py").exists():
+    pytest.skip(
+        f"omo 内核源码 缺席: {Path(__file__).resolve().parents[1] / 'projects/omo/src/omo/__init__.py'} —— "
+        "先 `git submodule update --init` 对应子模块（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
+
 def _load(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader

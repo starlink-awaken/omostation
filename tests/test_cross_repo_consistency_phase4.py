@@ -7,8 +7,18 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 WORKSPACE = Path(__file__).resolve().parents[1]
 
+
+
+if not (Path(__file__).resolve().parents[1] / "projects/ecos/src/ecos/ssot/mof/m2").exists():
+    pytest.skip(
+        f"ecos mof m2 缺席: {Path(__file__).resolve().parents[1] / 'projects/ecos/src/ecos/ssot/mof/m2'} —— "
+        "先 `git submodule update --init` 对应子模块（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(

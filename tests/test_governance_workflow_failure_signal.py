@@ -5,11 +5,20 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "governance-check.yml"
 
+
+
+if not (Path(__file__).resolve().parents[1] / "projects/omo/src/omo/cli.py").exists():
+    pytest.skip(
+        f"omo cli 缺席: {Path(__file__).resolve().parents[1] / 'projects/omo/src/omo/cli.py'} —— "
+        "先 `git submodule update --init` 对应子模块（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 
 def _steps() -> list[dict[str, object]]:
     workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))

@@ -9,6 +9,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 # 连字符文件名无法直接 import, 用 importlib 动态加载
 _BIN = Path(__file__).resolve().parent.parent / "bin" / "mof"
 _spec = importlib.util.spec_from_file_location("mof_drift", _BIN / "check-mof-capabilities-drift.py")
@@ -19,6 +21,14 @@ _spec.loader.exec_module(drift)
 
 # ─── 端到端: 当前真实注册表 (P0-1/P0-4 已修复) 必须全绿 ───
 
+
+
+if not (Path(__file__).resolve().parents[1] / "projects/ecos/src/ecos/ssot/tools").exists():
+    pytest.skip(
+        f"ecos ssot tools 缺席: {Path(__file__).resolve().parents[1] / 'projects/ecos/src/ecos/ssot/tools'} —— "
+        "先 `git submodule update --init` 对应子模块（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 
 def test_clean_current_registry_no_drift():
     """端到端: 真实 mof-capabilities.yaml (已修复) → 0 drift."""

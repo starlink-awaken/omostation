@@ -7,9 +7,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 WORKSPACE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(WORKSPACE / "bin"))
 
+
+
+if not (Path(__file__).resolve().parents[1] / "projects/agora/etc/bos-services.yaml").exists():
+    pytest.skip(
+        f"agora bos-services 缺席: {Path(__file__).resolve().parents[1] / 'projects/agora/etc/bos-services.yaml'} —— "
+        "先 `git submodule update --init` 对应子模块（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
