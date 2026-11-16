@@ -33,6 +33,7 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,6 +41,13 @@ TOOL = ROOT / "bin/gac/check-rule-wiring-coverage.py"
 ALIAS_MAP = ROOT / "bin/gac/registry-alias-map.yaml"
 L0_REGISTRY = ROOT / "projects/ecos/src/ecos/ssot/registry/L0-constraints.yaml"
 L0_NORMS = ROOT / "projects/ecos/src/ecos/ssot/registry/L0-norms.yaml"
+
+if not (ROOT / "projects/ecos/src/ecos/ssot/registry").is_dir():
+    pytest.skip(
+        f"L0 注册表缺席: {ROOT / 'projects/ecos/src/ecos/ssot/registry'} —— "
+        "先 `git submodule update --init projects/ecos`（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 
 # 评审清单 (2026-10-10 人工逐条核定): 待接线候选 = 真实不变量 (b) + 审计取下 (7 条)。
 # 2026-10-11 (本 PR, l0-final-wiring): 3 条因**建了真实宿主**而移出本候选集 (非静默

@@ -24,7 +24,34 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+# 本文件是**跨子模块的端到端管线**: embedding(omlxc) → bus(agora, 其 uv 环境按路径
+# 依赖 bus-foundation) → render(agora)。任一环节的子模块未检出, 对应站的
+# `uv run` 会以「不是 Python 项目 / ModuleNotFoundError」失败 —— 检出形态, 不是回归。
+# 判据取**内容文件**而不是 is_dir(): 未初始化的子模块目录可能存在但为空,
+# is_dir() 会为真 ⇒ 守卫空转 (本轮实测踩到)。
+_DEP_PROBE = {
+    "omo": "projects/omo/src/omo/__init__.py",
+    "agora": "projects/agora/pyproject.toml",
+    "bus-foundation": "projects/bus-foundation/pyproject.toml",
+    "omlxc": "projects/omlxc/pyproject.toml",
+}
+for _dep, _probe in _DEP_PROBE.items():
+    if not (ROOT / _probe).is_file():
+        pytest.skip(
+            f"端到端管线依赖的子模块缺席: projects/{_dep} —— "
+            "先 `git submodule update --init projects/omo projects/agora "
+            "projects/bus-foundation projects/omlxc`（检出形态, 不是回归）",
+            allow_module_level=True,
+        )
+
+
 def _uv_run(project: str, *args: str, timeout: int = 300) -> subprocess.CompletedProcess:
+    proj_src = ROOT / "projects" / project
+    if not proj_src.is_dir():
+        pytest.skip(
+            f"子模块源码缺席: {proj_src} —— 先 `git submodule update --init projects/{project}`"
+            "（检出形态, 不是回归）"
+        )
     return subprocess.run(
         ["uv", "run", "--directory", str(ROOT / "projects" / project), *args],
         capture_output=True, text=True, timeout=timeout, check=False,
@@ -32,6 +59,12 @@ def _uv_run(project: str, *args: str, timeout: int = 300) -> subprocess.Complete
 
 
 def _load_bus():
+    eb = ROOT / "projects/omo/src/omo/event_bus.py"
+    if not eb.is_file():
+        pytest.skip(
+            f"omo event_bus 缺席: {eb} —— 先 `git submodule update --init projects/omo`"
+            "（检出形态, 不是回归）"
+        )
     spec = importlib.util.spec_from_file_location("event_bus", ROOT / "projects/omo/src/omo/event_bus.py")
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)

@@ -103,6 +103,14 @@ def _run(
     job_id: str = "creative-manifest-check",
     ledger: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    for src in (
+        Path(__file__).parents[1] / "projects/l4-kernel/src",
+    ):
+        if not src.is_dir():
+            pytest.skip(
+                f"l4-kernel 源码缺席: {src} —— 被调脚本在运行时 import l4_kernel;"
+                "先 `git submodule update --init projects/l4-kernel`（检出形态, 不是回归）"
+            )
     # ⚠⚠⚥ §5.165：**账本落点必须显式点名** —— ⚠ 真账本是 **append-only**
     #   ⇒ ⇒ ⚠ 往里面塞测试行 = **编造事实** ⇒ ⇒ ⚠ 且**删不掉**
     #   ⇒ ⇒ ⚠ 这条 env 是仓内声明过的**测试隔离面**（⚠ `OMO_EVENT_LEDGER_DB`）
