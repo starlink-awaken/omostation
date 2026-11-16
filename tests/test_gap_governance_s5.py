@@ -26,6 +26,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 BIN = ROOT / "bin" / "gac"
 
@@ -83,6 +85,14 @@ def test_fast_track_empty() -> None:
 
 # ── AUTO-FIX: auto-fix-loop ─────────────────────────────────────────────────
 def test_auto_fix_detect_no_drift() -> None:
+    probe = Path(__file__).resolve().parents[1] / "projects/ecos/src/ecos/ssot/tools"
+    if not probe.is_dir():
+        # 注册表里 ecos-ssot-tools 指向 projects/ecos 的路径; 子模块未检出时
+        # auto-fix-loop 必然报 PATH-DRIFT error —— 检出形态, 不是注册表坏了。
+        pytest.skip(
+            f"ecos 源码缺席: {probe} —— 先 `git submodule update --init projects/ecos`"
+            "（检出形态, 不是回归）"
+        )
     mod = _load(AUTO_FIX)
     drifts = mod.detect_drifts()
     # PATH-DRIFT 不应有 error (当前注册表干净)
@@ -111,6 +121,13 @@ def test_auto_fix_path_drift_detection() -> None:
 
 
 def test_auto_fix_json_shape() -> None:
+    probe = Path(__file__).resolve().parents[1] / "projects/ecos/src/ecos/ssot/tools"
+    if not probe.is_dir():
+        # 同 test_auto_fix_detect_no_drift：PATH-DRIFT 来自未检出的 projects/ecos。
+        pytest.skip(
+            f"ecos 源码缺席: {probe} —— auto-fix-loop 会以 rc=1 报 PATH-DRIFT"
+            "（检出形态, 不是回归）"
+        )
     r = _run(AUTO_FIX, "--json")
     assert r.returncode == 0
     payload = json.loads(r.stdout)
