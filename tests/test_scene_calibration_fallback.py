@@ -158,6 +158,14 @@ def test_routine_eligible_still_needs_human(engine) -> None:
 # ── panorama consumption point ────────────────────────────────────────
 
 def test_verify_chain_passes_in_worktree(engine) -> None:
+    cruiser = ROOT / "projects/omo/src/omo/scene/cruiser.py"
+    if not cruiser.is_file():
+        # verify_chain 的 A 项要读 omo 子模块的 cruiser.py 取 demote 阈值;
+        # 子模块未检出时该字段为 null ⇒ threshold-agreement 必然 FAIL（检出形态, 不是回归）。
+        pytest.skip(
+            f"omo 子模块源码缺席: {cruiser} —— 先 `git submodule update --init projects/omo`"
+            "（检出形态, 不是回归）"
+        )
     result = engine.verify_chain(ROOT)
     by_name = {c["name"]: c["status"] for c in result["checks"]}
     assert by_name["threshold-agreement"] == "PASS"
