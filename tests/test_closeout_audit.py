@@ -119,6 +119,14 @@ def test_proposed_bind_project_code_change_no_bet(tool):
 
 
 def test_collect_runs_parses_real_workspace(tool):
+    runs_dir = tool.RUNS_DIR
+    if not any(runs_dir.glob("*.yaml")):
+        # 交付面是**运行态**: 干净检出/新克隆里没有 run 记录 ⇒ collect_runs() 返回空。
+        # 本条是对**真实工作区**的 smoke, 检出形态下无可验（不是回归）。
+        pytest.skip(
+            f"交付面无 run 记录: {runs_dir} —— 需在跑过 agent-workflow 的工作区上跑"
+            "（检出形态, 不是回归）"
+        )
     """Smoke test against actual .omo/_delivery/agent-workflows/runs/."""
     runs = tool.collect_runs()
     # Should find at least some runs

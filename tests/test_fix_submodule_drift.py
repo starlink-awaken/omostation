@@ -23,6 +23,21 @@ def _run_fix_submodule_drift(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_submodule_drift_detection():
+    gm = WORKSPACE / ".gitmodules"
+    if gm.is_file():
+        empty = []
+        for line in gm.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("path"):
+                rel = line.split("=", 1)[1].strip()
+                if not any((WORKSPACE / rel).iterdir()):
+                    empty.append(rel)
+        if empty:
+            # 未检出的子模块会被 detector 记成 uninitialized 漂移 —— 检出形态, 不是回归。
+            pytest.skip(
+                f"{len(empty)} 个子模块未检出 (如 {empty[0]}) —— "
+                "先 `git submodule update --init`（检出形态, 不是回归）"
+            )
     """detector 报告当前 submodule 状态 (drift 治本后应为 0)."""
     result = _run_fix_submodule_drift("--check", "--root", str(WORKSPACE))
     report = json.loads(result.stdout)
