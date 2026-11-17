@@ -6,9 +6,22 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
-spec = importlib.util.spec_from_file_location("im", ROOT / "projects/agora/src/agora/server/tools_bos/im.py")
+# 2026-11-18: 该模块属 agora 子模块。模块级无条件加载会让本文件在子模块未检出的树上
+# collection error (实测 `pytest tests` 因此 2 errors 中断) —— 本文件全部用例都以它为
+# 对象, 没有「无关用例被拖下去」的问题, 故整份 skip。
+_IM_PATH = ROOT / "projects/agora/src/agora/server/tools_bos/im.py"
+if not _IM_PATH.is_file():
+    pytest.skip(
+        f"agora 子模块未检出: {_IM_PATH} —— 本文件全部用例都以该模块为对象, "
+        "未检出时无从测起 (检出形态, 不是回归)",
+        allow_module_level=True,
+    )
+
+spec = importlib.util.spec_from_file_location("im", _IM_PATH)
 assert spec and spec.loader
 IM = importlib.util.module_from_spec(spec)
 sys.modules["im"] = IM
