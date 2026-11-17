@@ -44,3 +44,21 @@ history:
     / 整套 EnvironmentVariables / 日志落点三处分叉); 反之已登记的 com.omostation.agent-brief-materialize 却被列入 undeclared_installed_sample
     (registered_count=15 / installed_count=48 / undeclared=33). 登记 notes「只在 mini 装 (MBP 没有 zhixing-dashboard
     state root)」的前提已被本机推翻: ComputerName=mbp 且该 state root 每几分钟产新 revision.'
+- at: '2026-11-17T00:00:00Z'
+  action: review
+  actor: governance-agent
+  note: >-
+    **2026-11-17 复测: 缺口仍在, 且「选活入口」指错了根。**
+    仓根 `runtime/dashboard/agent-brief.json` mtime=11-09 19:36 (冻 8 天);
+    state 根 `~/.local/state/omostation/prod/runtime/dashboard/agent-brief.json`
+    mtime=11-17 20:52 (30 min 写方仍在跑)。而 AGENTS.md §1.8 让 agent「选活前读
+    `runtime/dashboard/agent-brief.json`」—— 在检出里解析即**仓根那份冻结件**。
+    **已做 (decision_needed 的 (2) 最小一支)**: AGENTS.md §1.8 改为显式指向
+    `<state_root()>/runtime/dashboard/agent-brief.json` (默认
+    `~/.local/state/omostation/prod/...`), 并写明仓根那份无排班写方、会冻结。
+    这不是新增机器服务, 只是把读契约指到唯一有写方的那一份; 未删旧路径 (仍可作检出内参考)。
+    **未做**: (1) 给仓根装排班写方 (机器服务变更, 需用户) 与 (3) scheduler-compile
+    比 plist 内容 (会让现存分叉立刻变红, 须与双机分工同时定)。
+    **纪律**: 一条「读哪个文件」的指引, 只有在该文件**有写方**时才是活的 ——
+    指引本身要写明写方, 否则它会静默退化成一扇通向陈旧数据的门。
+

@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-11-13
-last-reviewed: 2026-11-13
+last_updated: 2026-11-17
+last-reviewed: 2026-11-17
 lifecycle: entry
 status: active
 ---
@@ -33,9 +33,16 @@ status: active
 5. For governed state, use OMO/C2G brokers instead of direct `.omo` writes.
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
 7. All local/edge LLM inference MUST route through **AetherForge (`bos://compute/aetherforge/infer`)**.
-8. Check the Panorama Agent Brief before choosing work: `runtime/dashboard/agent-brief.json`
-   (human page: Panorama → Agent Brief). It is a read-only aggregation of authority, gates,
-   unfinished work, alerts, next actions, read interfaces, and safety boundaries.
+8. Check the Panorama Agent Brief before choosing work —— 读 **state 根**那份:
+   `<state_root()>/runtime/dashboard/agent-brief.json`，默认
+   `~/.local/state/omostation/prod/runtime/dashboard/agent-brief.json`
+   (物化作业 `com.omostation.agent-brief-materialize`, 30 min 一次; 路径用
+   `bin/lib/repo_root.py` 的 `state_root()` 解析, 不用 `__file__` 反推)。
+   **仓根 `runtime/dashboard/agent-brief.json` 没有排班写方, 会冻结** —— 实测 2026-11-17:
+   仓根停在 11-09 19:36, state 根当天 20:52 仍在更新 (债条目
+   AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER)。human page: Panorama → Agent Brief。
+   It is a read-only aggregation of authority, gates, unfinished work, alerts, next actions,
+   read interfaces, and safety boundaries.
 9. **Never hard-code the workspace root.** Resolve it: `bin/lib/repo_root.py` gives `code_root()`
    (the checkout — read planes, governance truth), `state_root()` (write targets — ledgers,
    `.omo/state/**` runtime, projections) and `install_root()` (where the runtime code lives,
