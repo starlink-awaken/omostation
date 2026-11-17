@@ -264,6 +264,14 @@ jobs:
           # …常驻族在跑旧代码」自相矛盾 (真实是落后 origin/main 206 个提交), 且无参重锚会
           # 把安装位往回降级。本用例自造 origin/install/checkout 三仓, hermetic 不读 host。
           # 实测 6 pass; 变异对照: 默认目标改回检出根 HEAD ⇒ 3 failed, 恢复 ⇒ 6 passed。
+          # 2026-11-17 追加: test_strategy_sources_state_root 钉「strategy 资产从 workspace 根
+          # 读 agent-workflows/runs, 不从 state 根读软链」—— 线上 refresh.py 同时传
+          # workspace 与 state_root, 而 state 根下该目录是指向 workspace 的镜像桥软链;
+          # BoundedReader 按构造不可穿软链 ⇒ 资产用 "state" 读恒采不到 runs, strategy 恒
+          # PARTIAL (债条目 PANORAMA-A9-SOURCES-STALE-12D)。权威源 cockpit 早已是 workspace。
+          # 本用例复刻线上拓扑 (自造三根 + 软链), hermetic 不读 host。
+          # 实测 2 passed / 1 skipped (跳过项需 cockpit 子模块, 本 job 递归检出时会跑);
+          # 变异对照: 资产改回 "state" ⇒ 2 failed, 恢复 ⇒ 2 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -309,6 +317,7 @@ jobs:
             ../../tests/unit/test_frontdoor_docs_caveatless_gitignored_links.py \
             ../../tests/unit/test_convergence_lint_unknown_rule.py \
             ../../tests/test_anchor_install_root_ref.py \
+            ../../tests/test_strategy_sources_state_root.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
