@@ -91,3 +91,30 @@ history:
     另: `workspace` facet 依赖 state 根的 delivery anchor, 而该 anchor 由 `ensure_delivery_anchor()`
     按需创建 —— 本次是我手工建的 symlink, 若被清理该 facet 会再度 UNKNOWN (可加兜底)。
   actor: "governance-agent"
+- at: "2026-11-17T00:00:00Z"
+  action: mitigate
+  note: >-
+    **新发现并修掉一个更严重的: 巡检的**基准本身错了**。**
+    `--check` 与默认重锚目标都取 **检出根 HEAD** (`~/Workspace`), 而检出根是**读平面**,
+    可能任意陈旧 —— ADR-0456 §5 原文是「detached 在**记录在案的 `origin/main` SHA**」。
+    实测 (2026-11-17): 检出根停在 `db1b13813` (**比锚点还旧 7 天**), 锚点 `5cec6612a`
+    在当时确实等于 origin/main, 但 origin/main 现已走到 `d66e65e18`。
+    旧脚本于是打印:
+
+    ```
+    锚点落后 0 个提交 (锚点距今 7 天): 锚点=5cec6612a… 目标=db1b13813…
+      → 常驻族在跑旧代码
+    ```
+
+    **同一句话里 «落后 0» 与 «在跑旧代码» 自相矛盾**, 而真实读数是**落后 206 个提交**。
+    更危险的一半: 无参重锚会把 target 解析成检出根 HEAD, 照做即把安装位**往回降级**。
+    **修法** (`bin/ssot/anchor-install-root.sh`): 默认参考与 `--check` 基准一律改为
+    `origin/main` (沿用既有的「分支名先 fetch 再解析」路径, 避免陈旧远端跟踪引用),
+    检出根 HEAD 降级为**仅参考**的诊断行; 另加**降级防护** —— 目标是当前锚点祖先时
+    `exit 5` 拒绝, 需 `ANCHOR_ALLOW_DOWNGRADE=1` 显式放行。
+    **验证**: 真实主机上 `--check` 现报 `锚点落后 origin/main 206 个提交` (rc=1);
+    新增 `tests/test_anchor_install_root_ref.py` 6 条 (自造三仓, hermetic, 不读 host),
+    变异对照: 把默认目标改回检出根 HEAD ⇒ 3 条当场红。
+    **仍未做**: `decision_needed` (2)「巡检是否要自愈」—— 本次只修了**读数**,
+    没有加自动重锚分支 (那是行为变更, 且重锚会动常驻族运行的代码, 应单独裁)。
+  actor: "governance-agent"
