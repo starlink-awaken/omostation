@@ -70,3 +70,31 @@ history:
     的 EnvironmentVariables.PYTHONPATH 提供, 但手工/其它入口直接跑会
     `ModuleNotFoundError: No module named 'repo_root'`（同一族的脆弱点）。
   actor: "governance-agent"
+- at: "2026-11-17T00:00:00Z"
+  action: mitigate
+  note: >-
+    **修了 (1) 采集侧, 且 owner 那问已由权威源回答。** 2026-11-17 复测:
+    ① **「runs 的权威面是检出还是 state 根」不用裁 —— 权威源早已裁定**。
+    `projects/cockpit/src/cockpit/observatory/strategy_sources.py:424` 的
+    `_collect_runs` 用 `reader.discover("workspace", ...)`, 自 `8fd2290`
+    (2026-09-11, cockpit#159) 起就是如此 —— 同一份逻辑的**权威实现早就选了
+    workspace**, 漂移的是资产副本。
+    ② **真正坏了的是资产副本。** 线上 `refresh.py:931-932` 调
+    `collect_strategy_sources(workspace=code_root(), state_root=state_root(), ...)`;
+    部署目录的 `strategy_sources.py` 与 `bin/panorama/assets/host/strategy_sources.py.asset`
+    **逐字节相同** (实测 diff 0 行), 而后者 `:536/:540` 用 `"state"` ⇒ 读 state 根下的
+    镜像桥软链 ⇒ `outside_allowlisted_root` ⇒ runs 恒空、strategy 恒 PARTIAL。
+    **改动**: 资产两行 `"state"` → `"workspace"`, 与权威源对齐 (最小改动;
+    reader 的 no-follow 安全边界不必重审, 原 ② 修法不需要了)。
+    ③ **标题的「两个证据源」已过期**: `source_states.documents` 现为 `OK`,
+    `last_success_at=2026-11-17T02:41:01` (立案时它是 2026-10-29 后的 PARTIAL)。
+    当前 PARTIAL 只剩 `strategy` 一项。
+    **验证**: 新增 `tests/test_strategy_sources_state_root.py` 复刻线上三根 + 软链拓扑
+    (hermetic, 不读 host): 资产改回 `"state"` ⇒ 2 failed (`runs=[]` 且报
+    `outside_allowlisted_root`), 改回 `"workspace"` ⇒ 2 passed; 另一条与权威源
+    逐字对拍 `_collect_runs` 根选择 (需 cockpit 检出, CI 递归检出时会跑)。
+    **遗留**: `refresh.py:932` 仍传 `state_root=` —— 修完它已是**闲置根**
+    (资产里再无 `"state"` 读), 但删参数属部署 API 变更, 本条不动;
+    `probe_utils` 仍只存在于部署目录、仓里无 `.asset` 副本 (测试里打桩),
+    该模块未版本化是独立缺口。
+  actor: "governance-agent"
