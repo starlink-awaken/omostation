@@ -48,3 +48,23 @@ history:
     `diagnostic command exit 2` 由 1 次归零、`scheduler.status` 转 OK。
     过程性教训已入 docs/pitfalls.md（「发布通道的 in_sync 读数在陈旧树上等于两边同为旧版」条）。
   actor: "governance-agent"
+- at: "2026-11-17T00:00:00Z"
+  action: mitigate
+  note: >-
+    **做了 decision_needed 的「至少」那一支: 让 check/plan 明说比对的是哪棵树。**
+    `zhixing-host-sync.py` 新增 `source_tree_probe()`（`git rev-parse HEAD` /
+    `origin/main` + `rev-list --count HEAD..origin/main`），字段 `source_tree`
+    `{root, head, origin_main, behind_origin_main, stale}` 进 `status()` 与
+    `_asset_plan()`（`check`/`plan` 共用后者）的 JSON。非 git 目录降级为 `null`,
+    探针本身不成为新崩溃点。
+    **实测 (2026-11-17)**: 新鲜 worktree ⇒ `behind_origin_main=0 / stale=false`;
+    陈旧的 `~/Workspace` ⇒ `behind_origin_main=278 / stale=true` —— 障碍① 描述的
+    「在陈旧树上跑就报 in_sync」从此在读数里**可见**, 不再靠人记得自己站在哪棵树。
+    **未做**: 「发布后自证」步骤（读运行时产物与发布前后指纹做定向 diff）与
+    ②（`revisions/*/manifest.json` 的 `producer.root_oid` / `collector_sha256`
+    到底指哪份代码）、③（`current` 翻转后常驻 `live_server.py` 的 cwd 仍停在旧
+    release, publish 不换它）。②③ 未动。
+    **验证**: 新增 `tests/test_zhixing_source_tree_provenance.py` 5 条
+    (自造 git 仓, hermetic); 变异对照: 摘掉 `_asset_plan` 的 `source_tree` 字段
+    ⇒ 1 failed, 恢复 ⇒ 5 passed。已纳入 governance-check 白名单。
+  actor: "governance-agent"
