@@ -257,6 +257,13 @@ jobs:
           # 原实现匹配不到 check 就空跑, errors 全空 ⇒ ok:true + exit 0, 拼错也绿;
           # governance-checks.yaml 的 CR-L0-SSOT-PATH-NORM 描述正指着这么一次空跑。
           # 实测 4 pass; 变异对照: 撤掉修复 ⇒ 2 failed, 恢复 ⇒ 4 passed。
+          # 2026-11-17 追加: test_anchor_install_root_ref 钉「安装位巡检的基准是 origin/main,
+          # 不是检出根 HEAD」—— ADR-0456 §5 说安装位 detached 在记录在案的 origin/main SHA,
+          # 而旧脚本 --check 与默认重锚目标都取检出根 HEAD (读平面, 可能任意陈旧)。实测
+          # 2026-11-17: 检出根停在 db1b13813 (比锚点旧 7 天) ⇒ 旧读数「锚点落后 0 个提交
+          # …常驻族在跑旧代码」自相矛盾 (真实是落后 origin/main 206 个提交), 且无参重锚会
+          # 把安装位往回降级。本用例自造 origin/install/checkout 三仓, hermetic 不读 host。
+          # 实测 6 pass; 变异对照: 默认目标改回检出根 HEAD ⇒ 3 failed, 恢复 ⇒ 6 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -301,6 +308,7 @@ jobs:
             ../../tests/unit/test_healthcheck_core_files_not_stale.py \
             ../../tests/unit/test_frontdoor_docs_caveatless_gitignored_links.py \
             ../../tests/unit/test_convergence_lint_unknown_rule.py \
+            ../../tests/test_anchor_install_root_ref.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
