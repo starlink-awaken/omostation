@@ -533,11 +533,15 @@ def _git_head(reader):
 
 
 def _collect_runs(reader):
-    paths = reader.discover("state", ".omo/_delivery/agent-workflows/runs", "*.yaml", required=True)
+    # 根选择须与权威源 projects/cockpit/.../strategy_sources.py 一致: "workspace"。
+    # state 根下的 `.omo/_delivery/agent-workflows` 是指向 workspace 的镜像桥软链,
+    # 而 BoundedReader 按构造不可穿软链 (resolve 后 is_relative_to 为假 ⇒
+    # outside_allowlisted_root) —— 用 "state" 读会恒采不到 runs, strategy 恒 PARTIAL。
+    paths = reader.discover("workspace", ".omo/_delivery/agent-workflows/runs", "*.yaml", required=True)
     selected = list(reversed(paths))[:MAX_RUN_FILES]
     records = []
     for relative in selected:
-        document, state = reader.yaml("state", relative)
+        document, state = reader.yaml("workspace", relative)
         if not isinstance(document, dict):
             continue
         run_id = _safe_text(document.get("run_id") or relative.stem)
