@@ -28,11 +28,42 @@ def _load_module_from_file(module_name: str, file_path: Path) -> Any:
     return mod
 
 
-env_resolver = _load_module_from_file(
-    "env_resolver",
-    WORKSPACE / "projects" / "cockpit" / "src" / "cockpit" / "env_resolver.py",
-)
-_ROOT = env_resolver.setup_workspace_paths()
+def _cockpit_missing(exc: ModuleNotFoundError) -> bool:
+    name = exc.name or ""
+    return name == "cockpit" or name.startswith("cockpit.")
+
+
+def _load_optional(module_name: str, file_path: Path) -> Any:
+    """子模块 (cockpit) 未检出时返回 None, 由依赖它的用例各自 skip。
+
+    2026-11-18: 本文件有 4 处模块级加载最终都 `import cockpit` (含两份住在校内
+    `bin/_archive/` 的归档脚本)。子模块未检出时模块级加载失败 ⇒ **整份文件**
+    collection error, 而 9 条用例里只有 5 条真的需要 cockpit —— 与 2026-09-20/21
+    那次「9 个 collection error, 含 3 个与之无关的」是同一形状, 不再重演。
+    只吞 `cockpit` 的 ModuleNotFoundError, 其余照常抛 (避免掩盖真缺陷)。
+    """
+    if not file_path.is_file():
+        return None
+    try:
+        return _load_module_from_file(module_name, file_path)
+    except ModuleNotFoundError as exc:
+        if not _cockpit_missing(exc):
+            raise
+        return None
+
+
+def _require(mod: Any, label: str) -> Any:
+    if mod is None:
+        pytest.skip(f"cockpit 子模块未检出, {label} 不可用 (检出形态, 不是回归)")
+    return mod
+
+
+# 2026-11-18: `env_resolver` 属 projects/cockpit (子模块)。模块级无条件加载会让
+# **整份文件** 在子模块未检出的树上 collection error —— 而 9 条用例里只有
+# `test_env_resolver_workspace_paths` 一条真的需要它, 其余 8 条测的是仓内脚本。
+# 这与 2026-09-20/21 那次「9 个 collection error, 含 3 个与之无关的」是同一形状。
+_ENV_RESOLVER_PATH = WORKSPACE / "projects" / "cockpit" / "src" / "cockpit" / "env_resolver.py"
+env_resolver = _load_optional("env_resolver", _ENV_RESOLVER_PATH)
 
 
 # 2026-09-20/21: 这两个脚本因 bin 配额 (add1=delete1, AGENTS.md §Step B.0.5) 被归档 ——
@@ -44,8 +75,8 @@ _SCENARIO_RUNNER_ARCHIVE = WORKSPACE / "bin" / "_archive" / "2026-09-21-bin-quot
 DAEMON_WATCHDOG_RETIRED_PATH = WORKSPACE / "bin" / "gac" / "daemon-watchdog.py"
 SCENARIO_RUNNER_RETIRED_PATH = WORKSPACE / "bin" / "ssot" / "real-scenario-runner.py"
 
-daemon_watchdog = _load_module_from_file("daemon_watchdog", _DAEMON_WATCHDOG_ARCHIVE)
-real_scenario_runner = _load_module_from_file("real_scenario_runner", _SCENARIO_RUNNER_ARCHIVE)
+daemon_watchdog = _load_optional("daemon_watchdog", _DAEMON_WATCHDOG_ARCHIVE)
+real_scenario_runner = _load_optional("real_scenario_runner", _SCENARIO_RUNNER_ARCHIVE)
 
 RETIRED_COMMANDS = ["daemon", "watchdog", "scenario", "top", "run"]
 FORBIDDEN_VALUE_KEYS = {
@@ -65,8 +96,14 @@ EXPECTED_REFUSAL = {
     "value_indicator_policy": False,
 }
 
-cockpit_globals = runpy.run_path(str(WORKSPACE / "bin" / "cockpit"), run_name="cockpit_test")
-cockpit_main = cockpit_globals["main"]
+_COCKPIT_ENTRY = WORKSPACE / "bin" / "cockpit"
+try:
+    cockpit_globals = runpy.run_path(str(_COCKPIT_ENTRY), run_name="cockpit_test")
+except ModuleNotFoundError as exc:
+    if not _cockpit_missing(exc):
+        raise
+    cockpit_globals = None
+cockpit_main = cockpit_globals["main"] if cockpit_globals else None
 
 
 def _snapshot(root: Path) -> dict[str, bytes]:
@@ -145,6 +182,7 @@ def _guard_effects(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_root_cockpit_entrypoint_help(monkeypatch, capsys):
+    _require(cockpit_main, "bin/cockpit")
     argv = ["cockpit", "--help"]
     monkeypatch.setattr(sys, "argv", argv)
     with pytest.raises(SystemExit) as exc:
@@ -155,6 +193,8 @@ def test_root_cockpit_entrypoint_help(monkeypatch, capsys):
 
 
 def test_retired_governance_scripts_refuse_before_effects(tmp_path, monkeypatch, capsys):
+    _require(daemon_watchdog, "daemon_watchdog")
+    _require(real_scenario_runner, "real_scenario_runner")
     before = _snapshot(tmp_path)
     _guard_effects(monkeypatch)
     for module, argv in (
@@ -173,6 +213,8 @@ def test_retired_governance_scripts_refuse_before_effects(tmp_path, monkeypatch,
 
 
 def test_effectful_imported_helpers_refuse_before_effects(tmp_path, monkeypatch, capsys):
+    _require(daemon_watchdog, "daemon_watchdog")
+    _require(real_scenario_runner, "real_scenario_runner")
     before = _snapshot(tmp_path)
     _guard_effects(monkeypatch)
     calls = (
@@ -196,6 +238,7 @@ def test_effectful_imported_helpers_refuse_before_effects(tmp_path, monkeypatch,
 
 
 def test_daemon_watchdog_retirement_contract():
+    _require(daemon_watchdog, "daemon_watchdog")
     assert daemon_watchdog.HEALTH_URL.endswith("/health")
     assert daemon_watchdog.STATUS_FILE.name == "daemon-watchdog.json"
 
@@ -240,6 +283,12 @@ def test_scenario_runner_defers_yaml_import():
 
 
 def test_env_resolver_workspace_paths():
+    _require(env_resolver, f"env_resolver ({_ENV_RESOLVER_PATH})")
+    # 本用例断言 setup_workspace_paths() 把这三个子模块的 src 加进 sys.path,
+    # 缺任一个都会让断言失真 —— 那时 skip 比 fail 诚实 (检出形态, 不是回归)。
+    for _proj in ("omo", "ecos", "agora"):
+        if not (WORKSPACE / "projects" / _proj / "src").is_dir():
+            pytest.skip(f"projects/{_proj} 未检出 —— 本用例断言其 src 被加进 sys.path")
     root = env_resolver.get_workspace_root()
     assert (root / "AGENTS.md").exists()
     assert (root / "projects").is_dir()
@@ -249,6 +298,7 @@ def test_env_resolver_workspace_paths():
 
 
 def test_weijian_domain_scenario_evaluation():
+    _require(real_scenario_runner, "real_scenario_runner")
     sc_path = WORKSPACE / "spaces" / "domain-scenarios" / "weijian_hospital_cloud_review.yaml"
     assert sc_path.exists()
     manifest = real_scenario_runner.load_scenario(sc_path)
@@ -265,6 +315,7 @@ def test_weijian_domain_scenario_evaluation():
 
 
 def test_tech_transfer_domain_scenario_evaluation():
+    _require(real_scenario_runner, "real_scenario_runner")
     sc_path = WORKSPACE / "spaces" / "domain-scenarios" / "tech_transfer_team_allocation.yaml"
     assert sc_path.exists()
     manifest = real_scenario_runner.load_scenario(sc_path)
