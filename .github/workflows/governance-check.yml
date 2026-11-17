@@ -272,6 +272,12 @@ jobs:
           # 本用例复刻线上拓扑 (自造三根 + 软链), hermetic 不读 host。
           # 实测 2 passed / 1 skipped (跳过项需 cockpit 子模块, 本 job 递归检出时会跑);
           # 变异对照: 资产改回 "state" ⇒ 2 failed, 恢复 ⇒ 2 passed。
+          # 2026-11-17 追加: test_zhixing_source_tree_provenance 钉「zhixing-host-sync 必须报出
+          # 源真值来自哪棵树」—— check/plan 拿运行它的树当源真值, 而共享主检出可能任意陈旧
+          # (实测 ~/Workspace 落后 origin/main 278 个提交), 此时源与运行根同为旧版 ⇒ 逐文件
+          # 比对恒 in_sync, 读数像「已同步」(债条目 ZHIXING-PUBLISH-EFFECT-PROVENANCE 障碍①,
+          # 2026-11-10 一次发布里因此连续误判四次)。用例自造 git 仓, hermetic 不读 host。
+          # 实测 5 pass; 变异对照: 摘掉 _asset_plan 的 source_tree 字段 ⇒ 1 failed, 恢复 ⇒ 5 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -318,6 +324,7 @@ jobs:
             ../../tests/unit/test_convergence_lint_unknown_rule.py \
             ../../tests/test_anchor_install_root_ref.py \
             ../../tests/test_strategy_sources_state_root.py \
+            ../../tests/test_zhixing_source_tree_provenance.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."

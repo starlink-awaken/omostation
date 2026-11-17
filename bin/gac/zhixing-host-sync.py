@@ -835,6 +835,42 @@ def migrate() -> dict:
     }
 
 
+def _git_text(repo: Path, *a: str) -> str | None:
+    try:
+        out = subprocess.run(["git", "-C", str(repo), *a],
+                             capture_output=True, text=True, timeout=15, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if out.returncode != 0:
+        return None
+    return out.stdout.strip() or None
+
+
+def source_tree_probe() -> dict:
+    """报告「源真值来自哪棵树」—— 缺了它, 在陈旧检出上跑会报 `in_sync` 假安心。
+
+    债条目 ZHIXING-PUBLISH-EFFECT-PROVENANCE 障碍①: `check`/`plan` 拿**运行它的树**
+    当源真值, 而共享主检出可能任意陈旧 (实测 `~/Workspace` 落后 origin/main 数百个
+    提交) —— 此时源与运行根**同为旧版**, 逐文件比对自然 `in_sync`, 而读数看起来
+    像「已同步」。这里把树的 HEAD / origin/main / 落后数一并报出来。
+    """
+    root = _ROOT
+    head = _git_text(root, "rev-parse", "HEAD")
+    origin_main = _git_text(root, "rev-parse", "origin/main")
+    behind = None
+    if head and origin_main:
+        counted = _git_text(root, "rev-list", "--count", f"{head}..{origin_main}")
+        if counted is not None:
+            behind = int(counted)
+    return {
+        "root": str(root),
+        "head": head,
+        "origin_main": origin_main,
+        "behind_origin_main": behind,
+        "stale": (behind > 0) if behind is not None else None,
+    }
+
+
 def _sha(path: Path) -> str | None:
     try:
         return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
@@ -993,6 +1029,7 @@ def status(dashboard_dir: Path | None = None, host_dir: Path | None = None) -> d
     return {
         "dashboard_dir": str(dash),
         "host_dir": str(host),
+        "source_tree": source_tree_probe(),
         "files": files,
         "drifted": drifted,
         "missing_repo_copy": missing_repo,
@@ -1062,6 +1099,7 @@ def _asset_plan(runtime_root: Path,
     return {
         "ok": all(item["state"] == "in_sync" for item in planned),
         "target_root": str(runtime_root),
+        "source_tree": source_tree_probe(),
         "files": planned,
         "write_performed": False,
     }

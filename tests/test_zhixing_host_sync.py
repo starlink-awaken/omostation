@@ -134,6 +134,14 @@ def _bind_running_agent(tool, monkeypatch, dash: Path, host: Path, *, command: s
     def runner(arguments, **_kwargs):
         if arguments[0] == "launchctl":
             return Result(0, "\tpid = 4321\n")
+        if arguments[0] == "git":
+            # 源树探针 (source_tree_probe): 只读 git 查询, 与 ps/launchctl 同为非写入面。
+            # 返回值按子命令给, 测试不关心真实读数。
+            if "rev-list" in arguments:
+                return Result(0, "0\n")
+            if "origin/main" in arguments:
+                return Result(0, "origin-main-sha\n")
+            return Result(0, "head-sha\n")
         assert arguments[:3] == ["ps", "-p", "4321"]
         return Result(0, command or f"/opt/homebrew/bin/python3 -B {entrypoint} --port 43191\n")
 
