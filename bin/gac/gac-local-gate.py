@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import subprocess
@@ -1357,6 +1358,44 @@ def preflight_report() -> dict[str, object]:
     }
 
 
+IMPORT_PROBE_PACKAGES = ("omo", "cockpit", "ecos", "agora")
+
+
+def interpreter_roots_report(
+    packages: tuple[str, ...] = IMPORT_PROBE_PACKAGES,
+) -> dict[str, object]:
+    """当前解释器把各子模块包解析到哪棵树 —— 防「worktree 里的读数其实来自 canonical」。
+
+    背景: 主检出 venv 装了指向 canonical 的 path hook (docs/pitfalls.md
+    「canonical venv 的 path hook 把 worktree 里的 import omo 静默指向主检出」)。
+    用该 venv 在 worktree 里跑门禁/测试时, 子模块代码其实来自 canonical ——
+    读数看着正常, 量的却是另一棵树 (2026-11-18 本轮因此污染了 #5410 的验证读数)。
+    本字段把「量的是哪棵树」写进报告, 与 `preflight` 同源: 只定性, 不改判定。
+    """
+    resolved: dict[str, str | None] = {}
+    inside: dict[str, bool | None] = {}
+    for name in packages:
+        origin = None
+        try:
+            spec = importlib.util.find_spec(name)
+        except (ImportError, ValueError):
+            spec = None
+        if spec is not None:
+            origin = spec.origin
+        resolved[name] = origin
+        inside[name] = (
+            None
+            if origin is None
+            else os.path.commonpath([origin, str(WORKSPACE)]) == str(WORKSPACE)
+        )
+    return {
+        "workspace": str(WORKSPACE),
+        "resolved": resolved,
+        "inside_workspace": inside,
+        "outside_workspace": sorted(n for n, ok in inside.items() if ok is False),
+    }
+
+
 def run_gate(
     scope: str = "staged",
     files: list[str] | None = None,
@@ -1408,6 +1447,7 @@ def run_gate(
     report = {
         "ok": ok,
         "preflight": preflight,
+        "interpreter_roots": interpreter_roots_report(),
         "hard_fails": hard_fails,
         "soft_warns": soft_warns,
         "not_measured": not_measured,
@@ -1452,6 +1492,28 @@ def _print_preflight(report: dict[str, object]) -> None:
     )
 
 
+def _print_interpreter_roots(report: dict[str, object]) -> None:
+    """有子模块包解析到本树之外时打出横幅 —— 读数可能来自别的树。"""
+    roots = report.get("interpreter_roots")
+    if not isinstance(roots, dict):
+        return
+    outside = roots.get("outside_workspace") or []
+    if not outside:
+        return
+    resolved = roots.get("resolved") or {}
+    print(
+        "⚠️  解释器把部分子模块包解析到**本工作区之外** —— 本次读数量的可能不是这棵树：",
+        file=sys.stderr,
+    )
+    for name in outside:
+        print(f"    · {name} → {resolved.get(name)}", file=sys.stderr)
+    print(
+        "    判据见 docs/pitfalls.md「canonical venv 的 path hook…」："
+        "先 python -c \"import <包>; print(<包>.__file__)\" 确认指向哪棵树。",
+        file=sys.stderr,
+    )
+
+
 def _print_not_measured(report: dict[str, object]) -> None:
     """列出「自报没测成」的 check —— 它们不是发现, 别混进 findings。"""
     items = report.get("not_measured")
@@ -1480,6 +1542,7 @@ def print_human(
     checks_count = len(checks_list)
     soft_list: list[dict] = report.get("soft_warns") or []  # type: ignore[assignment]
     _print_preflight(report)
+    _print_interpreter_roots(report)
     _print_not_measured(report)
 
     if is_ok and terminal_mode == "slim" and not verbose:

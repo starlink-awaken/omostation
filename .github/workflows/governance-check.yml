@@ -278,6 +278,11 @@ jobs:
           # 比对恒 in_sync, 读数像「已同步」(债条目 ZHIXING-PUBLISH-EFFECT-PROVENANCE 障碍①,
           # 2026-11-10 一次发布里因此连续误判四次)。用例自造 git 仓, hermetic 不读 host。
           # 实测 5 pass; 变异对照: 摘掉 _asset_plan 的 source_tree 字段 ⇒ 1 failed, 恢复 ⇒ 5 passed。
+          # 2026-11-18 追加: test_gate_interpreter_roots 钉「门禁报告自报子模块包解析到哪棵树」——
+          # 主检出 venv 的 path hook 把 import omo/cockpit 指向 canonical, 于是用该 venv 在
+          # worktree 里跑门禁时, 子模块代码其实来自 canonical (读数看着正常, 量的却是另一棵树;
+          # 本轮因此污染了 #5410 的验证读数)。实测本 worktree ⇒ outside_workspace=[agora,ecos,omo]。
+          # 实测 5 pass; 变异对照: 把 inside 判定写死为 True ⇒ 2 failed, 恢复 ⇒ 5 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -325,6 +330,7 @@ jobs:
             ../../tests/test_anchor_install_root_ref.py \
             ../../tests/test_strategy_sources_state_root.py \
             ../../tests/test_zhixing_source_tree_provenance.py \
+            ../../tests/unit/gac/test_gate_interpreter_roots.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
