@@ -363,19 +363,19 @@ wheels = [
 
 [[package]]
 name = "fastmcp"
-version = "4.1.8"
+version = "4.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastmcp-slim", extra = ["client", "server"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/de/fa/5b41ba810e250a8a9b9953e548defec7755d8c16733c4721a1fa87837926/fastmcp-4.1.8.tar.gz", hash = "sha256:1c2b4877472f3d3ad38ffe7f835d3316f9ac6eada801dcfa8db70b15da6054fd", size = 42873995, upload-time = "2026-11-10T20:44:58.336Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/48/28/5ac4bd298ca1d40a28df657a33e0dbce17dc61253512267ddbfc033232ba/fastmcp-4.2.1.tar.gz", hash = "sha256:06458edbb093e4d4ec42c99be5b65237df41648e6a2b7b3f54c5b45d561a7009", size = 41462913, upload-time = "2026-11-17T19:13:43.263Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/b3/ee4ec632fcf2dae3d252822de552017cb8f5c59306cdaa4225a6b50d2833/fastmcp-4.1.8-py3-none-any.whl", hash = "sha256:7b5e7f3aa1b7c372d7f7284c7ea686f5a6d3d1db96d4c609029b67848c083ba1", size = 8231, upload-time = "2026-11-10T20:44:54.439Z" },
+    { url = "https://files.pythonhosted.org/packages/75/34/47c70516960b9283b6ae8cf28da496bb301fcc03c3fc4b11a5398bf6d060/fastmcp-4.2.1-py3-none-any.whl", hash = "sha256:4f3f92d3a00011aea164092628ef28f3db471138f1179f756b1a1949cd6d876b", size = 8246, upload-time = "2026-11-17T19:13:39.487Z" },
 ]
 
 [[package]]
 name = "fastmcp-slim"
-version = "4.1.8"
+version = "4.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mcp-types" },
@@ -386,9 +386,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/90/fa/9cb1e558884b18ea367f3065e56cda9259efa0c4e54954f4e53a7fee9f20/fastmcp_slim-4.1.8.tar.gz", hash = "sha256:e0f194baca7f5781a554d07879cb709beed1a2d0796949e3693e0a96e291506a", size = 772710, upload-time = "2026-11-10T20:44:31.57Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/82/b215810ee1fac03983a7e098b9b63e77e36abf39828e4705ff4f83a25f1a/fastmcp_slim-4.2.1.tar.gz", hash = "sha256:bcbe48b0eeb8bb32b616d7b329832f5d03d16db02807a58457f5e2e44d1d0def", size = 808782, upload-time = "2026-11-17T19:13:14.046Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/c2/af0e49afd5037714999f98c0e064a6ac57ad421c095623d5922228e35a2f/fastmcp_slim-4.1.8-py3-none-any.whl", hash = "sha256:2686ea58fe1112816101be10892ed2028aaf774c6205546c259be6e5f0c83530", size = 956248, upload-time = "2026-11-10T20:44:30.068Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/5a/1555dc0df12bd6fbb93bfe0112335c78695191d29be558b5e13f39438f8f/fastmcp_slim-4.2.1-py3-none-any.whl", hash = "sha256:2523b2eec4886959426c9c6ca7d5f3ad978b9d7b037a2dabd912eb6f729cc429", size = 996658, upload-time = "2026-11-17T19:13:12.466Z" },
 ]
 
 [package.optional-dependencies]
@@ -1325,11 +1325,11 @@ wheels = [
 
 [[package]]
 name = "uncalled-for"
-version = "0.4.1"
+version = "0.6.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6c/54/4651e4c5fe84300f8e03c0390aaad41bcb9c7b81d7783542a3ee690b40ee/uncalled_for-0.4.1.tar.gz", hash = "sha256:6412b19d1b1e7d431981fee01f8b47be7802f48328a48cbe9603acee757ec553", size = 56971, upload-time = "2026-10-09T12:54:34.941Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/60/993a9757dc4a41727351828dc784e66fd467ed81d46cbec25d44cae69657/uncalled_for-0.6.2.tar.gz", hash = "sha256:58835db667a85408c7b6d6ad8dfdd74d7713d3be669b46396ba3d2c6a889242d", size = 73820, upload-time = "2026-11-19T01:15:30.596Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/a6/ba763e3812e572de7291676c3a41adfac1ef1209a6acda6bae055970f127/uncalled_for-0.4.1-py3-none-any.whl", hash = "sha256:b611b38879d9fe5088297e7bb28f2ddd12d2d73dad933d93da107fb63eb4058e", size = 14889, upload-time = "2026-10-09T12:54:33.596Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/fb/81dabcc9c8f4200eb5eaa600458978303f1a84ffa5ed356f70bf6c5d1f04/uncalled_for-0.6.2-py3-none-any.whl", hash = "sha256:bcac08897ceb7113b52e6c8070eead4da1610ae23e6e0d0e9f2a6c4bba7905cb", size = 20127, upload-time = "2026-11-19T01:15:29.148Z" },
 ]
 
 [[package]]
