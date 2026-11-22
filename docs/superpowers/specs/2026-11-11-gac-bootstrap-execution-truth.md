@@ -55,8 +55,13 @@ last-reviewed: 2026-11-11
 2. **层4 扩面**：存在性检查覆盖**所有**带路径型 `source_ref` 的规则（不再限 `indexed`）；`::` / `#` 锚点剥离后
    只判路径部分；子模块内路径改按 `git cat-file -e` 对 gitlink 树判定，判不了时显式标注「装置不可用」而非计入通过。
 3. **层6 新增**：执行平面缺席检测 —— 对 `ci-surfaces.yaml` 登记的每个 check 类工具，比对 runtime
-   `GATES_LIST`（`importlib` 实读，不用文本正则）∧ `.github/workflows/*` ∧ `.githooks/*` ∧ sgf-policy；
-   四平面全缺席 ⇒ 点名（实测读数：声明执行 148/157，命中 138，**点名 10 条**，其中 A 类 2 条）。
+   `GATES_LIST`（`importlib` 实读，不用文本正则）∧ `.github/workflows/*` ∧ `.githooks/*`（含其委托的
+   `bin/gac/hook-runner.sh`）∧ sgf-policy ∧ `.omo/cron/registry.yaml` 已装机作业；
+   五平面全缺席 ⇒ 点名（2026-11-11 实测读数：声明执行 148/157，命中 138，**点名 10 条**，其中 A 类 2 条；
+   2026-11-22 复核见 §3 末「交付后复核」）。
+   3b. **A 类判定（2026-11-22 补）**：层3 判死（无 `__main__` 入口）的工具被平面文本提到 ≠ 被执行 ——
+   执行它是零效果。`run_bootstrap` 把层3 死集合喂给层6，这类登记单判 `dead_tool_registered_as_executed`，
+   不计 `reached`（读数 `dead_registered=1` ⇒ `bin/gac/documents_domain_jobs.py`）。
 4. **B 类处置**：2 条规则的 `source_ref` 目录改对 + `advisory-checks-upgrade.py:45` 路径改对。
 5. **A 类与其余 10 条不可达 `source_ref` 只点名不私改**（12 条实测缺席 − B 类修掉的 2 条 = 10）：按仓内纪律登记为 debt 条目，交 principal 裁决
    （`CR-X2-CRON-INTERP-EXECUTABILITY` 已有 2026-11-10「先 warn + 限期收敛」裁决，接线方向属该裁决延续）。
@@ -81,11 +86,29 @@ last-reviewed: 2026-11-11
   （新层首月 advisory；转阻断单点是 `CR-X2-GAC-BOOTSTRAP.enforcement`，限期同规则
   `review_before: 2026-11-29` —— 不在脚本里另设 `ENFORCE_AFTER` 常量，避免两条限期口径漂移）。
 - 实机 canary：`check-gate-detail-contract` / `check-cron-interpreter-executability` 必须被层6 点名，
-  且点名理由写明「四平面缺席」；收据缺该读数视为该面未验。
+  且点名理由写明「五平面缺席」；收据缺该读数视为该面未验。
+
+### 交付后复核（2026-11-22，origin/main@e2c7d48bb，fresh worktree 实机 `--json`）
+
+`projects/ecos` 已 init，runtime 平面 `policy_source=sgf`（90 gates / 80 路径）—— 降级副本
+（`policy_source=default`）下五平面判定会整批改口 `device_unavailable`，那类读数不可当事实。
+
+- 层3 `total=326 alive=320 dead=6`（与 11-11 同）；层4 `checked=75 rules=90 missing=6`
+  （12 → 6：B 类 2 条本轮修对；C 类 4 条 SEC/PY 幻影 `source_ref` 由 #5356 改指真实执行面
+  `bin/gac/gac-hook-pre-edit.py`；余 5 条 `check-age-*.py` + 1 条标准文档，立案归
+  `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD` / `CR-AGE-RULES-NO-BASIS-NO-EXECUTION`）。
+- 层6 `surfaces=157 declared=147 reached=138 violations=9 manual_exempt=0 skipped=6 dead_registered=1`
+  （10 → 9：`log-rotate.py` 经 cron 已装机面转可达；`perception-coverage.py` 不声称任何执行方 ⇒ 落 skipped，
+  不再算谎报）。扩面两次由 #5300（hook-runner.sh 调用行）与 #5305（cron 已装机作业）完成，
+  本 spec 原句的「四平面」据此改「五平面」。
+- 用例 `tests/unit/test_gac_bootstrap_layers.py` 17 passed；变异四组各记读数：glob 退回单目录 ⇒ 层3 红 1；
+  层4 退回仅 indexed ⇒ 红 2；层6 换文本正则 ⇒ 红 1；拆掉 `run_bootstrap` 的层3→层6 接线 ⇒ 红 1
+  （最后一组是本轮新加 —— 只直接调 `check_plane_coverage(dead)` 的用例对拆接线全绿，正是「判据写了没接上」的假绿形状）。
 
 ## 4. 非目标
 
 - 不改 `DEFAULT_POLICY` 的存在合理性（它是 sgf-policy 缺席时的兜底，本 BET 只禁止「把兜底当执行平面」这一误读）。
 - 不放宽任何既有判据为模糊匹配；不做「按名字相似猜测」。
-- 不改 `check-ci-surfaces.py:121` 的文本扫描形状（那是另一条已登记债务，#5287 已在动该文件，避免撞面）。
+- 不改 `check-ci-surfaces.py` 的文本扫描形状（`_local_gate_tools()` :99 与 :123 的正则；那是另一条已登记债务
+  `CI-SURFACES-GATE-FIELD-UNDEFINED`，#5287 已在动该文件，避免撞面）。
 - 不动 `CR-AGE-*` / `CR-SEC-*` 的规则语义本体，只在层4 点名其不可达 `source_ref`。
