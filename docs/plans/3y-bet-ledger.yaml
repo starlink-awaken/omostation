@@ -47969,6 +47969,108 @@ bets:
         evidence:
           note: mint 时点只声明判据与实测读数，不宣称空绿已收敛。
     overall_state: evaluating
+- id: BET-Y2Q4-T10-348
+  title: BET-Y2Q4-T10-348 omo-status 心跳假阳性 —— healthy_count 不再信心跳文件自报 ok_count
+  goal: >-
+    cockpit swarm 可观测性健康度假阳性：SwarmStateCollector 的 healthy_count
+    直接取心跳文件自报的 ok_count（或 agent_count - failed 兜底），与 per-agent
+    的 sec_ago < 600 真判定脱钩 —— 2026-11-22 12:10 快照实测：6 个 agent SEEN
+    全部 2178608s（约 25 天）却显示 "6/6 Agents Active + HEALTHY"。修复：healthy_count
+    改为对已构造的 heartbeats 按 status 真算；swarm_cli header 徽标从
+    healthy_count > 0 收紧为全绿才 HEALTHY；新增回归测试锁定陈旧心跳 →
+    healthy_count=0 → DEGRADED。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - projects/cockpit/src/cockpit/tui/swarm_collector.py
+  - projects/cockpit/src/cockpit/tui/swarm_cli.py
+  - projects/cockpit/src/cockpit/tui/swarm_app.py
+  - projects/cockpit/src/cockpit/tests/test_swarm_heartbeat_staleness.py
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-22-omo-status-heartbeat-false-positive-bet-t10-348.md
+    spec_version: 1.0.0
+    content_digest: sha256:5ac69609bd010478305fcca21e1dfbf47deee6c66c7cbd9b22872a2330cb09a5
+    decision_ref: decision://accepted/BET-Y2Q4-T10-348
+  non_goals:
+  - 不改心跳写入方（resident daemon tick JSON 结构）与 600s 判定阈值。
+  - 不动 agent 表格的 SEEN 列与 per-agent status 显示（现状已正确）。
+  - 不处理 scene-card 69/70 blocker（治理数据缺 trial 记录，非代码缺陷，另案裁决）。
+  done_when:
+  - 心跳 ts 为 25 天前：agent 行 stale、healthy_count=0、header 显示 DEGRADED（非 HEALTHY）。
+  - 心跳新鲜（<600s）：行为与现状一致（HEALTHY、N/N Active）。
+  - collector 新增单测覆盖上述两种情形，cockpit 测试套件无回归。
+  verify:
+  - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests/ -q
+    expect: 新增测试通过且既有套件无回归。
+  - cmd: bin/omo-status --no-subprojects
+    expect: 陈旧心跳现场 header 显示 DEGRADED，不再假报 HEALTHY。
+  circuit_breaker: >-
+    若发现 healthy_count 自报语义在别处被消费（API/告警/dashboard），停止并交
+    owner 裁决是否同步调整。
+- id: BET-Y2Q4-T10-349
+  title: BET-Y2Q4-T10-349 gen-service-configs --check plist drift 假阳性 —— 注释非配置语义
+  goal: >-
+    bin/mof/gen-service-configs.py --check 的 drift 判定按逐文本对比本机 plist 与
+    services.yaml 现场生成版, 自 2026-11-10 起本机永久假红, 阻塞一切本机
+    gac-local-gate 全绿与 workflow closeout。两层根因 (实测): (1) 对比层 ——
+    2026-11-10 模板 bin/ops/launchd/*.plist 手工补解释器 NOTE 文档并整份覆盖
+    本机 (LAUNCHD-PLIST-INSTALLED-DIVERGED 的正确处置), 生成器从不产注释且
+    本机另有紧凑排版, 注释/排版差异被误报为 drift; (2) 声明层 —— 11-10 手工
+    修复新增的 WorkingDirectory / EnvironmentVariables(PATH+no_proxy) /
+    StartCalendarInterval(:05/:35) 未回填 services.yaml, 生成器也不支持渲染,
+    属真漂移。修复: --check 改用 plistlib 语义等价判定 (注释/排版自然忽略,
+    malformed 回退剥注释文本对比); 生成器补 working_directory 渲染与 calendar
+    list[dict] 多时刻支持 (单 dict 声明保持单 dict 渲染, 不破坏存量形态);
+    services.yaml 回填三字段使 SSOT 与 11-10 手工修复对齐。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - bin/mof/gen-service-configs.py
+  - tests/test_gen_service_configs.py
+  - .omo/_truth/registry/services.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-22-service-config-check-comment-false-positive-bet-t10-349.md
+    spec_version: 1.0.0
+    content_digest: sha256:4686b1442d7422b9b5a8e75742eab8b1c843150d83c220fb862577855537557e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-349
+  non_goals:
+  - 不改 gen_launchd_plist 生成行为（不产注释保持现状）。
+  - 不删 bin/ops/launchd/*.plist 模板注释（11-10 的 NOTE 文档保留）。
+  - 不处理 --write 安装路径与本机 plist 同步（部署侧另案）。
+  done_when:
+  - 本机 plist 与生成版仅注释/排版差异时 --check 语义等价不报 drift。
+  - 实质字段差异（如解释器路径）仍如实报 drift（假阴性不引入）。
+  - omo-debt-refresh 三字段回填声明后, 本机 --check 报 0 drift (78 services)。
+  - test_gen_service_configs.py 新增用例覆盖注释忽略/排版忽略/实质漂移/
+    working_directory+calendar-list 渲染四种情形。
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest tests/test_gen_service_configs.py -q
+    expect: 新增用例通过且既有用例无回归。
+  - cmd: uv run --with pyyaml python bin/mof/gen-service-configs.py --check
+    expect: 本机现状（仅注释漂移）exit 0。
+  circuit_breaker: >-
+    若剔除注释逻辑影响 --write 生成或其它消费对比结果的调用方，停止并交
+    owner 裁决。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -48107,7 +48209,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 595
+  total_bets: 597
   windows:
   - Y1Q1
   - Y1Q2
