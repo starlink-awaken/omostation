@@ -1,5 +1,5 @@
 id: "GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE"
-title: "登记说「有门禁执行」而四个执行平面全缺席：gac-bootstrap 层6 点名 10 个工具 + 层4 仍有 10 条 source_ref 指向不存在的脚本"
+title: "登记说「有门禁执行」而执行平面查无此人：gac-bootstrap 层6 点名 8 条五平面全缺席 + 1 条层3 判死仍声称执行，另有 6 个无 `__main__` 工具待裁定"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -19,80 +19,72 @@ evidence_refs:
 - bin/gac/check-ci-surfaces.py
 - docs/superpowers/specs/2026-11-11-gac-bootstrap-execution-truth.md
 mitigation_refs:
-- bin/gac/gac-bootstrap.py —— 层6 check_plane_coverage()：runtime GATES_LIST / CI workflow run: / .githooks 调用行 / sgf-policy command 四平面取并集，命中失败即点名
-- tests/unit/test_gac_bootstrap_layers.py —— 12 条，含 3 条变异钉（把 run: 位置判据退回文本包含即红）
-- docs/pitfalls.md ——「DEFAULT_POLICY 不是执行平面」「判据口径要与契约名同源」
+- bin/gac/gac-bootstrap.py —— 层6 check_plane_coverage()：runtime GATES_LIST / CI workflow run: / .githooks+hook-runner.sh 调用行 / sgf-policy command / cron 已装机作业 五平面取并集，命中失败即点名；层3 死集合喂进来后另判 `dead_tool_registered_as_executed`
+- tests/unit/test_gac_bootstrap_layers.py —— 17 条，含 4 条变异钉（文本正则口径 / 零分母 / indexed-only / 拆掉层3→层6 接线，各自当场转红）
+- docs/pitfalls.md ——「DEFAULT_POLICY 不是执行平面」「判据口径要与契约名同源」「文本字面量冒充执行平面」
 opened_at: "2026-11-11"
-last_reviewed_at: "2026-11-11"
+last_reviewed_at: "2026-11-22"
 next_review_at: "2026-11-29"
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
 decision_needed: >-
-  本条登记的是**已测出但尚无人认领**的债，不是待查现象。四层读数与三类缺陷的当前状态：
+  本条登记的是**已测出但尚无人认领**的债，不是待查现象。读数取 2026-11-22 在 origin/main@e2c7d48bb
+  的 fresh worktree 实机 `gac-bootstrap.py --json`（`projects/ecos` 已 init，runtime 平面
+  `policy_source=sgf`、90 gates / 80 路径 —— 降级副本下五平面判定会整批改口 `device_unavailable`，
+  那类读数不能当本条事实）。
 
 
   【层3 工具普查】326 个 GaC 工具里 320 有 `__main__`，6 个没有，故按入口判据算「死」：
   convergence-pulse-verify.py / documents_domain_jobs.py / gac_severity.py /
-  rule-vitality-tracker.py / test_agent_clone.py / zhixing_host_sync.py。前两条与
-  gac_severity.py、rule-vitality-tracker.py 是被别的模块 import 的库/被测试直接调的脚本，
+  rule-vitality-tracker.py / test_agent_clone.py / zhixing_host_sync.py。其中至少
+  gac_severity.py 是被别的模块 import 的库、test_agent_clone.py 是被测试直接调的脚本，
   需要逐个裁定「改成库并从普查剔除」还是「补 `__main__`」，普查口径不能靠豁免名单软化。
 
 
-  【层4 source_ref 指向不存在文件】90 条规则里 75 条是路径型引用，实测缺席 10 条（本轮修掉 2 条，
-  余 10 条 = 下面 B/C/D/E 类）。indexed 类（`governance-checks.yaml::indexed`）缺席 0，始终阻断。
+  【层6 声明执行但无人执行】157 面里 147 条声称有执行方（4 条 tool 非 .py、6 条既不声称
+  workflow 也不声称自动 trigger ⇒ 计入 skipped），五平面命中 138，点名 9：
 
 
-  【层6 声明执行但无人执行】157 面里 148 条声明了执行方，四平面命中 138，点名 10：
-  check-cron-interpreter-executability.py、check-gate-detail-contract.py、ci-local-fast.py、
-  perception-coverage.py、observability-events.py、log-rotate.py、anomaly-detector.py、
-  alert-router.py、cross-domain-trend.py、predictive-governance.py。
+  · `declared_no_execution_plane` 8 条 —— check-cron-interpreter-executability.py、
+  check-gate-detail-contract.py、ci-local-fast.py、bin/ssot/observability-events.py、
+  anomaly-detector.py、alert-router.py、cross-domain-trend.py、predictive-governance.py。
+  后四条的 cron 作业确实存在但 `reality=declared_only`（声明未验证装机），按「不把声明当执行」
+  的口径仍算缺席。裁定：接进 sgf-policy / hook-runner / workflow `run:` 任一面，或撤登记。
 
 
-  【缺陷分类与待裁定项】
-
-  A 类（2 条规则）：登记 `trigger: [gac_local_gate, per_pr]`，但工具名只出现在
-  `gac-local-gate.py` 的 `DEFAULT_POLICY` 字面量（:38-370）内 —— 本机 `load_sgf_policy()`
-  成功时 `POLICY = load_sgf_policy() or DEFAULT_POLICY`（:370）走 sgf 分支，
-  DEFAULT_POLICY **一次都不执行**。裁定：改 sgf-policy 把它们真正接进 GATES_LIST，还是把声明改成
-  「仅缺省策略兜底」。
-
-  B 类（本轮已修）：`source_ref: bin/gac/check-god-module.py` 目录写错，真实文件在 `bin/ssot/`；
-  修 `governance-checks.yaml` 两条（CR-X1-GOD-MODULE-LIMIT、CR-X2-GOD-MODULE-EDIT）+
-  `advisory-checks-upgrade.py:45`。遗留判断：同类「目录写错」是否还有其它条目 —— 层4 现在逐条查文件存在性，
-  下次 drift 会当场点名。
-
-  C 类（4 条 SEC/PY 规则）：`bin/ssot/check-{yaml-bypass,sensitive-write,eval-exec,mutable-default}.py`
-  从未存在，检查逻辑实际内联在 `.githooks/` 里。裁定：把内联逻辑抽成脚本并接线，还是把 source_ref 改指 hook。
-
-  D 类（5 条 `CR-AGE-*`）：`bin/gac/check-age-{bos,policy,memory,replay,event}.py` 全是幻影脚本。
-  裁定：这 5 条规则是否已随 AGE 面退役 —— 退役就删规则，不能留登记。
-
-  E 类（1 条）：`.omo/standards/ssot-path-norm.md` 文档缺失，被规则当 source_ref。裁定：补文档还是改引用。
-
-  F 类：`gate: true` 却无 trigger 无 workflow，或声明 `scheduled` 但 cron 平面没有登记 ——
-  cron 平面实测只有 `knowledge-foundry-cron.py`
-  （`runtime/cron/systemd/omostation-knowledge-foundry.service:13`）。裁定：逐条补齐定时登记或删除声明。
+  · `dead_tool_registered_as_executed` 1 条 —— bin/gac/documents_domain_jobs.py 被平面文本提到，
+  但层3 判它无 `__main__` 入口，执行它 = 零效果。这条判据 2026-11-22 才接上（层3 死集合喂层6），
+  之前「被提到」与「被执行」是同一件事。裁定：补入口还是撤登记。
 
 
-  【与既有判据的关系（重要，避免重复立案）】本仓已有 `bin/gac/check-ci-surfaces.py` 的 false-wiring
-  （:243-271），它用**正则扫 `gac-local-gate.py` 文本**取本地门禁工具集，因此把 DEFAULT_POLICY 里
-  的字面量也算「已执行」；且循环对 `workflow: (none)` 直接 `continue`。同一份检出里它只报 **1** 条
-  false-wiring（perception-coverage），层6 报 **10** 条 —— 9 条盲区。层6 用 importlib 真实加载
-  `gac-local-gate.py` 取运行时 `GATES_LIST`（实测 90 gates / policy_source=sgf），两者机制不同。
-  **本轮不改 check-ci-surfaces.py**（另有会话在其上作业），收敛动作是把它切到同一运行时口径，
-  届时 10 条盲区应同时消失；不能长期并存两套口径。
+  【A 类的机制根因】登记 `trigger: [gac_local_gate, per_pr]` 而工具名只出现在
+  `gac-local-gate.py` 的 `DEFAULT_POLICY` 字面量里 —— 本机 `load_sgf_policy()` 成功时
+  `POLICY = load_sgf_policy() or DEFAULT_POLICY` 走 sgf 分支，DEFAULT_POLICY **一次都不执行**。
+  同一条判据的另一半是 `check-ci-surfaces.py`：它的 `_local_gate_tools()`（:99）把 sgf-policy
+  与「正则扫 `gac-local-gate.py` 文本」（:123）并起来，因此 DEFAULT_POLICY 的字面量仍算「已执行」；
+  同一份检出它给 `ok=true / errors=0 / warnings=0 / wired_tools=143`，层6 给 9 条点名 —— 差值就是
+  两套口径的盲区。**不在本条处置范围**：把它切到与层6 同源的 importlib 运行时口径由
+  `CI-SURFACES-GATE-FIELD-UNDEFINED` 承载（`gate` 字段三种读法与消费者都在那条里谈）。
+
+
+  【层4 不在本条】层4 现在逐条查 90 条规则里 75 条路径型 `source_ref` 的存在性，当前余 6 条不可达
+  （5 条 `bin/gac/check-age-*.py` + `.omo/standards/ssot-path-norm.md`）。立案与裁定归
+  `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD`（引用口径）与 `CR-AGE-RULES-NO-BASIS-NO-EXECUTION`
+  （AGE 五则去留），本条不重复登记；2026-11-11 首版里的 B 类（`check-god-module.py` 目录写错）已由本 BET
+  修掉，C 类（4 条 SEC 规则的幻影 `source_ref`）由 #5356 改指真实执行面 `bin/gac/gac-hook-pre-edit.py`，
+  两者不再是待裁项。
 
 
   【转阻断的唯一开关】`governance-checks.yaml::CR-X2-GAC-BOOTSTRAP.enforcement`
   当前 `advisory`、`review_before: 2026-11-29`。层3 零分母、层4 indexed 子集、层2、层5 保持硬阻断；
-  加宽的层4 / 层6 / 层3-死工具走 advisory（否则 20 条无人认领的发现会把 CI 全数染红）。
-  C/D/E/F 全部收敛后把该字段单点改成 `blocking` 即转阻断 —— **不要**在脚本里加开关或硬编码。
+  加宽的层4 / 层6 / 层3-死工具走 advisory（否则这些无人认领的发现会把 CI 全数染红）。
+  本条与上述三条收敛后把该字段单点改成 `blocking` 即转阻断 —— **不要**在脚本里加开关或硬编码。
 
 
-  【附带观察，不在本条处置范围】`governance-check.yml:247-251` 的注释称
-  `bin/ssot/check-interfaces.py`「从未提交进本仓」，实测该文件存在且 ci-surfaces 登记项
-  missing-on-disk=0，注释已陈旧。属文档措辞债，单独登记或下次顺手改。
+  【附带观察，不在本条处置范围】`governance-check.yml` 里称 `bin/ssot/check-interfaces.py`
+  「从未提交进本仓」的注释已陈旧 —— 实测该文件存在且 ci-surfaces 登记项 missing-on-disk=0。
+  属文档措辞债，单独登记或下次顺手改。
 history:
 - at: "2026-11-11T10:13:00+00:00"
   action: identify
@@ -107,12 +99,32 @@ history:
   action: mitigate
   note: >-
     交付：层3  census 扩到 `bin/gac-*.py` + `bin/gac/*.py`（326 工具，零分母即 `instrument_dead` 判红）；
-    层4 改为逐条查所有路径型 `source_ref`（checked=75，缺席 10）；新增层6 四平面覆盖判据
-    （runtime GATES_LIST / CI `run:` / `.githooks` 调用行 / sgf-policy `command`，含
+    层4 改为逐条查所有路径型 `source_ref`（checked=75）；新增层6 平面覆盖判据（含
     `ci-check-runner.py --workflow` 承接面与 manual-only 豁免）；修掉 B 类 2 条目录写错 +
     `advisory-checks-upgrade.py:45`。阻断/建议分界读 registry
     `CR-X2-GAC-BOOTSTRAP.enforcement`（现 advisory，`review_before: 2026-11-29`），脚本内无开关。
-    验证：`tests/unit/test_gac_bootstrap_layers.py` 12 passed；M1/M2/M3 三条变异分别转红（1/2/1 failures）
-    后按字节还原；ruff format + check 干净；`check-pitfalls-index.py` 登记短语 45→47，不可命中 0。
-    余 10 条层4 缺席 + 10 条层6 点名 + 6 条无 `__main__` 工具 → 即本条 A/C/D/E/F 与层3 待裁定部分。
+    验证：`tests/unit/test_gac_bootstrap_layers.py` 12 passed；三条变异分别转红后按字节还原。
+  actor: "governance-agent"
+- at: "2026-11-22T12:26:00+00:00"
+  action: review
+  note: >-
+    按 2026-11-22 origin/main@e2c7d48bb 的实机读数重写本条（首版数字取自 11-11 的旧检出，main 已前进
+    122 个 commit）。变更三处：① 层6 由四平面扩到五平面（#5300 补 hook-runner.sh 调用面、#5305 补
+    cron 已装机作业面），点名 10 ⇒ 9，log-rotate.py 经 cron 面转可达、perception-coverage.py 因不声称
+    任何执行方落入 skipped；② 补上 A 类判据的实现与用例（层3 死集合喂层6，
+    `dead_registered=1` ⇒ documents_domain_jobs.py），并加第 4 条变异钉：拆掉 run_bootstrap 里的接线，
+    只调 `check_plane_coverage(dead)` 的用例全绿而生产路径用例转红 —— 17 passed；③ 层4 缺席 10 ⇒ 6，
+    其立案归 `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD` / `CR-AGE-RULES-NO-BASIS-NO-EXECUTION`，
+    `check-ci-surfaces.py` 的口径统一归 `CI-SURFACES-GATE-FIELD-UNDEFINED`，本条只留交叉引用。
+  actor: "governance-agent"
+- at: "2026-11-22T13:14:00+00:00"
+  action: review
+  note: >-
+    补一条「接线收益」的实测，给 next_review_at=2026-11-29 的裁定用：本条点名的 A 类两条
+    （`check-gate-detail-contract.py`、`check-cron-interpreter-executability.py`）各自的 `main()`
+    已按 AGENTS.md §14.2 组装六字段 `run_record`（inputs/basis/approver/result/duration_ms/model_usage），
+    但因为它们不在任何执行平面上（canary `RUNTIME_PLANES 91 False False`），那条记录从未落过盘 ——
+    实测扫 `.omo/state/**` 与 `runtime/**` 的 JSON，含 `"run_record"` 的文件数 = 0。
+    即：§14.2 的「一次运行落一条结构化记录」对这两道门是**代码在、实例为零**。
+    把它们接进平面（或撤登记）不只是消 A 类谎报，也是让 §14.2 首次真正产出记录；反之只补文档不接线 = 继续空承诺。
   actor: "governance-agent"

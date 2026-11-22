@@ -445,6 +445,35 @@ if not any(gate.get("id") == "current-state-coherence" for gate in GATES_LIST):
         }
     )
 
+# Root-owned ADR-0466 法条 2 宿主零污染守卫 (2026-11-22 接线):
+# ADR-0466 §5 法条 2 明文要求 `check-test-host-hygiene.py`「纳入门禁流水线」,
+# 但它此前只登记在 bin/_registry, 没有任何执行入口 —— 一道被声明却不存在的防线。
+# 它读**宿主**目录 (~/.local/share/omostation), 在 CI / 新克隆里那些目录不存在,
+# 故走 `--json` + `measured: false` 契约: 缺席即诚实报「没测成」, 不报 PASS (空绿)。
+if not any(gate.get("id") == "test-host-hygiene" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "test-host-hygiene",
+            "command": ["bin/gac/check-test-host-hygiene.py", "--json"],
+        }
+    )
+
+# Root-owned X2 规则健康守卫 (2026-11-22 接线):
+# ADR-0080 D1 把 `x2-rule-lint` 列为 4 个必接的 pre-commit 钩子之一, 理由是
+# 「P83-P85 新增的治理工具均无集成, 治理质量靠 agent 自觉跑」。该 ADR 写的机制
+# (`.pre-commit-config.yaml`) 在本仓是**声明表不是生效面** (见该文件顶部), 真正
+# 的本地门禁是 gac-local-gate —— 于是这条要求在本面落空。同批 4 个里
+# `adr-coverage` / `governance-dashboard` 已由 sgf-policy 纳进门禁, 这两个没有。
+# 只接不带 `--strict` 的常规档: ADR 要求的是「字段错配阻塞」( error 级 ),
+# warn 不阻塞 (当前 2 条 warn 是既有事实, 不该由接线那一刻翻红)。
+if not any(gate.get("id") == "x2-rule-lint" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "x2-rule-lint",
+            "command": ["bin/gac/x2-rule-lint.py"],
+        }
+    )
+
 # Root-owned conflict-marker guard (2026-08-07): 拦截 git 合并冲突标记 (<<<<<<< / >>>>>>>)
 # 入库, 治本 ecos `0ff6ad3` 把冲突标记 commit 进 sgf-policy.yaml → test-gac-engine YAML 解析
 # FAIL → 全仓 push 被卡. 放 root-owned 段, 防 ecos 子模块 policy 移除. 详见 ADR 见 evidence

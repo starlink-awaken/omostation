@@ -71,3 +71,37 @@ history:
     plist 文本) 闭合; 但「install 时别只抄 command 行」目前只写在 plist 注释里,
     仍无机器判据 —— 剩余风险保留。'
   actor: "governance-agent"
+- at: '2026-11-22T00:00:00Z'
+  action: review
+  actor: governance-agent
+  note: >-
+    **复测（pristine `origin/main` worktree + 本机）: 这条红仍在, 且已定位到三个具体缺口。**
+    门禁项 `service-config-drift`（`ci_skip: True` ⇒ 只在 CI 跳, 本地 `--strict` 必跑）硬失败,
+    `gen-service-configs.py --check` ⇒ `drift_count: 1`
+    （`com.omostation.omo-debt-refresh: plist 与 services.yaml 不一致`）。
+    **先确认它不是本轮的回归**: 在一棵**未经我改动**的 `origin/main` worktree 上复算, 读数相同。
+    **差异清单**（剥掉 XML 注释后仍有 19 行差异）: 已装件比注册表渲染多出
+    ① `WorkingDirectory = /Users/xiamingxing/Workspace/projects/omo`
+    ② `EnvironmentVariables{PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin, no_proxy=github.com,api.github.com,localhost,127.0.0.1}`
+    ③ `StartCalendarInterval` 为 **`<array>` 两条**（`Minute 5` / `Minute 35`）。
+    **两条根因**: (a) `services.yaml` 该条目是 `trigger: calendar` 但 `calendar: None`,
+    且无 `working_directory` / `environment` ⇒ 渲染出来**根本没有这三项**;
+    (b) E1 是**逐字节文本**比对 ⇒ 已装件那一大段说明注释也算 drift。
+    **渲染器能力缺口**: `gen_launchd_plist()` 不支持 `working_directory`;
+    `calendar` 只支持单条 `{Hour, Minute}` dict, 不支持多时刻 `<array>`。
+    **要清掉这条红, 三者缺一仍红**: (1) 渲染器补 `working_directory` + calendar 列表;
+    (2) `services.yaml` 补上三项; (3) E1 改为比对**解析后的 plist**（注释/键序不算 drift）。
+    **纪律**: 上一条记的「E1 判据恢复闭合」指的是**判据接线闭合**, 不是 `drift=0` ——
+    这两件事此前被同一句话盖住了。另: `ci_skip` 的红 CI 永远看不见, 只有装了 launchd 的
+    本机跑 `--strict` 才看得见, 所以它一直只是「本机噪音」而没被当成缺陷。
+- at: '2026-11-22T13:30:00+00:00'
+  action: review
+  actor: governance-agent
+  note: >-
+    **认领指针 (防重复劳动)**: 本条的修复已由 **BET-Y2Q4-T10-349** 认领并在途
+    (2026-11-22 实测: 其 worktree 正在改 `bin/mof/gen-service-configs.py` 与
+    `.omo/_truth/registry/services.yaml` —— 与本条开出的三缺口完全对应)。
+    **纪律**: 动手前先查**有没有 BET / 其他 agent 已经认领** —— 本轮我按本条的 spec
+    把三个缺口全部实现并验证完 (22 个 launchd 生成服务里只有目标条目渲染变化、
+    E1 `drift_count=0`), 才发现是重复交付, 只能放弃。**先查认领, 再动手**;
+    「main 上还没有」不等于「没人正在做」。

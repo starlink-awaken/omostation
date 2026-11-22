@@ -228,3 +228,20 @@ history:
     本条不越过该记录。**预期收益**：`panorama_base`（自 2026-10-28 冻结的门禁 cohort）与
     `personal_value_truth`（同日冻结的价值证据）同时解冻。
   actor: "governance-agent"
+
+- at: '2026-11-22T16:40:00+00:00'
+  action: review
+  actor: governance-agent
+  note: >-
+    **这是「读面 / 写面错位」的第三个实例, 建议合并处置。**
+    ① 本条: 读者 `state_root()/runtime/dashboard/data.json`, 生产者写
+    `PANORAMA_ROOT/runtime/dashboard/data.json` (本机两者不同根) —— 已冻 57 天;
+    ② `PANORAMA-A9-SOURCES-STALE-12D`: strategy 探针用 `repo_root.code_root()`
+    (`__file__` 派生) ⇒ 跑在安装位时读数面=安装位, 而安装位按构造没有 delivery 数据面
+    —— 2026-11-22 已修 (`#5430` 改 `canonical_root()` + plist 去掉 `OMOSTATION_ROOT`);
+    ③ 安装位本身落后 origin/main 206 提交 (既是运行面又是读数面)。
+    **共同形状**: 一个「读数根」被解析到了**运行面**或**另一个平面**, 而它要读的数据只存在于
+    **规范检出** (`~/Workspace`)。三处都表现为「无论代码修得多对, 红恒在」。
+    **另需说明**: 本次为修 ② 改了 `com.omostation.zhixing-dashboard-refresh.plist`
+    (去掉 `OMOSTATION_ROOT`) —— 这与本条修法第 (3) 步 (追加 `PANORAMA_OUTPUT_ROOT`) 是
+    **两件事**; 本条第 (3) 步仍待 principal 授权, 未执行。

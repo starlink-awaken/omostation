@@ -26,12 +26,20 @@ bin/ops/purge-test-archive-7d.py 物理销毁 (2026-10-27, 两机各 79 张)。�
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 HOST_OMOSTATION = Path.home() / ".local/share/omostation"
+
+# 这道门的**宿主侧**输入: 缺任一个都说明这不是「查过了没问题」, 而是「没东西可查」。
+# 主仓侧输入 (.omo/_truth/task-center/dispatches) 缺席是合法的 —— 没有派发目录不等于污染。
+HOST_INPUTS = (
+    HOST_OMOSTATION / "cards",
+    HOST_OMOSTATION / "patrol/night-patrol-latest.json",
+)
 
 # 单测残留的文本特征 (ADR-0466 描述的 test_resident_*.py 倾倒形态)
 _TEST_MARKERS = ("test", "mock", "chaos", "leak", "测试", "pytest", "fixture")
@@ -118,8 +126,38 @@ def check_host_hygiene() -> tuple[bool, list[str]]:
     return len(violations) == 0, violations
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="ADR-0466 宿主与主仓单测环境零污染卫生守卫")
+    parser.add_argument("--json", action="store_true", help="机器可读输出 (门禁契约)")
+    args = parser.parse_args(argv)
+
     ok, violations = check_host_hygiene()
+    # 宿主输入缺席 ⇒ 报「没测成」而不是「通过」。这道门守的是**宿主生产目录**,
+    # 在 CI / 新克隆里那些目录根本不存在 —— 那时报 PASS 就是空绿 (假绿)。
+    # 契约与 `current-state-coherence` 一致, 见债条目 GATE-CLEAN-CHECKOUT-NOISE。
+    absent = [str(p) for p in HOST_INPUTS if not p.exists()]
+    measured = not absent
+
+    if args.json:
+        payload = {
+            "check": "test-host-hygiene",
+            "measured": measured,
+            "ok": ok and measured,
+            "violations": violations,
+            "missing_host_inputs": absent,
+        }
+        if not measured:
+            payload["reason"] = "missing_input"
+        print(json.dumps(payload, ensure_ascii=False, indent=1))
+        # 没测成不是发现 ⇒ 退出码 0 (门禁据此把它归入 not_measured, 而不是 hard_fail)
+        return 0 if (payload["ok"] or not measured) else 1
+
+    if not measured:
+        print(
+            "⚠️  ADR-0466 Host & Workspace Zero-Pollution Hygiene: 未测成 —— "
+            f"宿主输入缺席 ({', '.join(absent)})，不报通过"
+        )
+        return 0
     if ok:
         print("✅ ADR-0466 Host & Workspace Zero-Pollution Hygiene: PASS")
         return 0

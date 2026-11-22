@@ -98,3 +98,71 @@ history:
     `probe_utils` 仍只存在于部署目录、仓里无 `.asset` 副本 (测试里打桩),
     该模块未版本化是独立缺口。
   actor: "governance-agent"
+
+- at: '2026-11-22T15:30:00+00:00'
+  action: mitigate
+  actor: governance-agent
+  note: >-
+    **采集器侧已修并部署（#5406）**：资产的 `_collect_runs` 从 `"state"` 根改读
+    `"workspace"` 根（state 根下该目录是指向 workspace 的镜像桥软链, BoundedReader
+    按构造不可穿软链）。2026-11-22 用 `zhixing-host-sync.py publish --file strategy_sources.py`
+    从 origin/main 检出部署（旧 release 只多这一个文件差异, 已核对）后, 用**与线上完全
+    相同的入参**复跑: `state=OBSERVED` / `hard_gaps=[]` / `runs=444`（改前 runs=0）。
+    **部署口径注意**: 必须从**含修复的检出**跑 `zhixing-host-sync.py` —— 从 canonical
+    跑会比到 canonical 的陈旧资产, 报 `in_sync` 不部署。
+    **残余（第二层, 未修）**: 线上 `source_states.strategy` 仍记 PARTIAL, 原因不在采集器,
+    而在 `refresh.py::apply_results` 的接纳判据 —— 它除了 `state == "PARTIAL"` 之外,
+    还要求 `documents` 与 `records` **非空**, 否则一律记 PARTIAL; 而 `documents` 为 0
+    是因为 `LIBRARY/.library/registry.yaml` 缺失（库侧数据缺口）。**两层的语义是矛盾的**:
+    采集器明确把「可选历史元数据缺席」归类为 soft gap（`"Absence of optional historical
+    metadata is evidence, but does not make the strategy source unavailable"`）,
+    而 refresh 把 `documents == []` 当成 PARTIAL。**要清掉这条红, 二选一**: ① 补
+    `织星主权智能操作系统文档库/.library/registry.yaml`（数据缺口）; ② 让 refresh 的
+    接纳判据与采集器的 soft/hard 分类对齐（`state == OBSERVED` 就该接纳, 不看 documents）。
+    **未擅动**: ② 是 refresh 的行为变更, 且 ① 的库文件是否该存在属 owner 裁定。
+- at: '2026-11-22T16:05:00+00:00'
+  action: correct
+  actor: governance-agent
+  note: >-
+    **订正上一条（#5428 的残余分析是错的）+ 找到真正的根因。**
+    上一条说「`documents` 为 0 是因为 `.library/registry.yaml` 缺失」—— 在**plist 的完整
+    env** 下复跑, `documents` 是 **59** 条, 那条不成立。我上次漏传了 plist 的
+    `OMOSTATION_ROOT` / `PANORAMA_*` / `PYTHONPATH`, 用错 env 得出了错结论。
+    **真正根因（三层）**:
+    ① plist 的 `EnvironmentVariables.PYTHONPATH = ~/.local/opt/omostation/bin/lib`
+       ⇒ `refresh.py::probe_strategy` 里的 `repo_root.code_root()` 是 **`__file__` 派生**
+       （ADR-0456 设计如此, 两版 `repo_root.py` 逐字节相同）⇒ 解析到**安装根**。
+    ② 安装根**没有** `.omo/_delivery/agent-workflows/`（该面 gitignored, release clone 按构造
+       没有）⇒ 采集器读 `workspace:.omo/_delivery/agent-workflows/runs` 得
+       `empty_or_missing_directory` ⇒ `runs=0` ⇒ 采集器自己判 PARTIAL。
+    ③ 于是无论资产修得多对, 线上都恒 PARTIAL。
+    **验证**: 用 plist 的完整 env 复跑探针 ⇒ `state=PARTIAL / runs=0`；把 `OMOSTATION_ROOT`
+    指向 `~/Workspace` 但 PYTHONPATH 仍指安装根 ⇒ **仍 PARTIAL**（因为 `code_root()` 是
+    `__file__` 派生, 无视该 env）。**这与「安装位落后 206 提交」是同一个病的两面** ——
+    安装位既是运行面又是读数面, 而它既旧又缺数据面。
+    **要清这条红, 只有两条路**: (a) 让安装位具备 delivery 数据面（不现实: gitignored +
+    release clone 按构造没有）; (b) **让 probe_strategy 读 canonical 检出**
+    （`canonical_root()` 或显式 `~/Workspace`）而不是 `__file__` 派生的 code_root。
+    (b) 是 `bin/panorama/assets/host/refresh.py.asset` 的一处改动 + 重新部署, **未擅动**。
+    **纪律**: 复算线上读数时, **env 必须逐项对齐 plist**（`OMOSTATION_ROOT` /
+    `OMOSTATION_STATE_ROOT` / `PANORAMA_*` / `PYTHONPATH`）—— 漏一项就会得出一个
+    看起来很像真的错结论, 而它会以「已核实」的身份进债务条目。
+- at: '2026-11-22T16:15:00+00:00'
+  action: mitigate
+  actor: governance-agent
+  note: >-
+    **已闭环 (2026-11-22 16:06Z)。** 三处改动:
+    ① 资产 `#5406` 的 `_collect_runs` 从 `"state"` 改读 `"workspace"` —— 已部署;
+    ② `refresh.py` 的 `probe_strategy` 读数面由 `code_root()` 改为 **`canonical_root()`**
+       (`#5430`): `code_root()` 由 `__file__` 派生, 跑在安装位时指向安装位, 而安装位按构造
+       没有 delivery 数据面; 采集器读的是**仓内数据面**, 属读平面的事;
+    ③ `com.omostation.zhixing-dashboard-refresh` plist 去掉 `OMOSTATION_ROOT`
+       (原值指向安装位 ⇒ `canonical_root()` 仍解析到安装位; 该 env 在本进程只被
+       `canonical_root()` 消费, `PANORAMA_ROOT` 是另一个 env, 不受影响), bootout+bootstrap。
+    **读数**: `source_states.strategy` = **OK**, `last_success_at` 由 `2026-10-28T08:18:24`
+    前进到 **2026-11-22T16:06:02**; 服务 `runs=2 / last exit code=0`; 探针
+    `state=OBSERVED / runs=444 / documents=59 / hard_gaps=[]`。
+    **部署口径两条**: `zhixing-host-sync.py` 必须从**含修复的检出**跑(从 canonical 跑会比到
+    陈旧资产而报 `in_sync`); plist 改动必须 `bootout`+`bootstrap`, `kickstart -k` 不重读。
+    **仍未 OK 的其他源**(不在本条范围): `ruflo` FAIL、`personal_value_truth` UNAVAILABLE、
+    `panorama_base` STALE_UNAVAILABLE。

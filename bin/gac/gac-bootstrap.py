@@ -9,13 +9,14 @@ GaC 治理一切, GaC 自己也要被治 (NORTH-STAR 元治理递归). 本工具
   层3 工具活/死      → bin/gac-*.py ∪ bin/gac/*.py 可解析且有 __main__ (零分母判红)
   层4 source_ref 完整 → 全部**路径型** source_ref 的存在性 (旧判据只看 indexed, 覆盖 6/90)
   层5 执行有效       → executor 真注册检测 (防声明不执行)
-  层6 执行平面       → ci-surfaces 声明的执行 vs 四平面实测 (防登记了却没人跑)
+  层6 执行平面       → ci-surfaces 声明的执行 vs 五平面实测 (防登记了却没人跑)
 
-层6 的四个平面按**结构**取, 不按文本子串取, 因为"文件里提到"≠"被执行":
+层6 的五个平面按**结构**取, 不按文本子串取, 因为"文件里提到"≠"被执行":
   runtime = gac-local-gate.py 运行时 GATES_LIST 的 command (importlib 取, 不是正则扫源码)
   ci      = .github/workflows/*.yml 里 jobs.*.steps[].run 的命令体 (排除注释与 echo 文案)
-  hooks   = .githooks/* 里含 python3/bash/run_py/*run_stage 的调用行
+  hooks   = .githooks/* + bin/gac/hook-runner.sh 里含 python3/bash/run_py/*run_stage/run_check 的调用行
   policy  = sgf-policy.yaml 的 command 列表 (经 gac-local-gate.SGF_POLICY_YAML 同源的解析结果)
+  cron    = .omo/cron/registry.yaml 里 reality 已装机 (installed / crontab_installed) 的作业 command
 
 阻断口径读 CR-X2-GAC-BOOTSTRAP 自己的 `enforcement` 字段, 不在本文件硬编码日期:
   advisory (现状) → 层3 dead / 层4 非 indexed 缺席 / 层6 平面缺席 只点名, 不改变退出码
@@ -302,12 +303,16 @@ def _runtime_plane() -> tuple[set[str], int, str, dict | None]:
     return tokens, len(gates), policy_source, policy
 
 
-def check_plane_coverage() -> dict:
-    """层6: ci-surfaces 登记声明的执行 vs 四个真实平面.
+def check_plane_coverage(dead_tools: set[str] | None = None) -> dict:
+    """层6: ci-surfaces 登记声明的执行 vs 五个真实平面.
 
-    登记面写 `workflow: gac-gate.yml` / `triggers: [gac_local_gate]` 而四平面全无,
+    登记面写 `workflow: gac-gate.yml` / `triggers: [gac_local_gate]` 而五平面全无,
     就是"登记了但没人跑" —— 旧层5 只查 executor 枚举合法性, 看不见这件事.
+
+    `dead_tools` 是层3 判死的工具名 (无 `__main__` 入口): 被平面文本提到 ≠ 被执行,
+    执行它是零效果, 所以这类登记即使 hit 也算谎报, 单独给一条判定。
     """
+    dead_tools = dead_tools or set()
     if not CI_SURFACES.is_file():
         return {
             "ok": True,
@@ -415,7 +420,7 @@ def check_plane_coverage() -> dict:
             "planes": planes,
         }
 
-    declared = reached = manual_exempt = skipped = 0
+    declared = reached = manual_exempt = skipped = dead_registered = 0
     violations: list[dict] = []
     for s in surfaces:
         if not isinstance(s, dict):
@@ -435,6 +440,22 @@ def check_plane_coverage() -> dict:
             skipped += 1
             continue
         declared += 1
+        if tool.split("/")[-1] in dead_tools:
+            # 层3 判死的工具即使被某个平面文本提到, 被执行也是零效果: 谎报执行, 不论 hit
+            dead_registered += 1
+            violations.append(
+                {
+                    "tool": tool,
+                    "reason": (
+                        f"层3 判死 (无 __main__ 入口或语法错), 但登记声称执行: workflow={wf} triggers={triggers}"
+                    ),
+                    "workflow_claim": wf,
+                    "triggers": triggers,
+                    "gate": bool(s.get("gate")),
+                    "verdict": "dead_tool_registered_as_executed",
+                }
+            )
+            continue
         hit = {
             "runtime": _norm_hit(runtime_tokens, tool),
             "ci": _norm_hit(ci_tokens, tool) or (wf in runner_covered),
@@ -481,6 +502,7 @@ def check_plane_coverage() -> dict:
         "declared": declared,
         "reached": reached,
         "manual_exempt": manual_exempt,
+        "dead_registered": dead_registered,
         "skipped": skipped,
         "violations_count": len(violations),
         "violations": violations,
@@ -493,12 +515,14 @@ def check_plane_coverage() -> dict:
 def run_bootstrap(as_json: bool = False) -> int:
     """主自举检测."""
     blocking, review_before = self_enforcement()
+    tools = check_tools_alive()
+    dead_names = {str(d).split(" ")[0] for d in tools["dead"]}
     report: dict[str, Any] = {
-        "tools": check_tools_alive(),
+        "tools": tools,
         "indexed_integrity": check_indexed_integrity(),
         "exec_effective": check_exec_effective(),
         "schema_self": check_schema_self_consistent(),
-        "plane_coverage": check_plane_coverage(),
+        "plane_coverage": check_plane_coverage(dead_names),
         "enforcement": {"blocking": blocking, "review_before": review_before},
     }
     t = report["tools"]
@@ -554,10 +578,11 @@ def run_bootstrap(as_json: bool = False) -> int:
         print(f"▶ 层6 执行平面: ⛔ {pl.get('note', '装置不可用')}")
     else:
         pn = pl["planes"]["runtime"]
+        dead_claim = f", 层3 判死仍声称执行 {pl['dead_registered']}" if pl.get("dead_registered") else ""
         print(
             f"▶ 层6 执行平面: {pl_status} 声明执行 {pl['declared']}/{pl['surfaces']} 登记项,"
             f" 命中 {pl['reached']}, 点名 {pl['violations_count']},"
-            f" manual 豁免 {pl['manual_exempt']} (runtime {pn['gates']} gates / policy={pn['policy_source']})"
+            f" manual 豁免 {pl['manual_exempt']}{dead_claim} (runtime {pn['gates']} gates / policy={pn['policy_source']})"
         )
         for v in pl["violations"][:12]:
             print(f"    {'❌' if blocking else '⚠️'} {v['tool']} — {v['reason']}")

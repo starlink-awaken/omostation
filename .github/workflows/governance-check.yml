@@ -283,6 +283,19 @@ jobs:
           # worktree 里跑门禁时, 子模块代码其实来自 canonical (读数看着正常, 量的却是另一棵树;
           # 本轮因此污染了 #5410 的验证读数)。实测本 worktree ⇒ outside_workspace=[agora,ecos,omo]。
           # 实测 5 pass; 变异对照: 把 inside 判定写死为 True ⇒ 2 failed, 恢复 ⇒ 5 passed。
+          # 2026-11-22 追加: test_gate_test_host_hygiene 钉「ADR-0466 法条 2 的宿主零污染守卫
+          # 已接进 gac-local-gate, 且宿主输入缺席时如实报『没测成』而非通过」—— 该工具此前
+          # 只登记在 bin/_registry, 没有任何执行入口 (ADR 明文要求纳入门禁流水线却未落地)。
+          # 实测 5 pass; 变异对照: 把 measured 写死为 True ⇒ 2 failed, 恢复 ⇒ 5 passed。
+          # 2026-11-22 追加: test_gate_x2_rule_lint 钉「ADR-0080 D1 的 x2-rule-lint 已接进
+          # gac-local-gate 且常规档为绿」—— 该 ADR 把 x2-rule-lint 列为 4 个必接钩子之一
+          # (理由: 新治理工具零集成, 靠 agent 自觉跑), 但它写的 `.pre-commit-config.yaml`
+          # 在本仓是**声明表不是生效面**, 于是这条要求在真门面落空。
+          # 实测 2 pass。
+          # 2026-11-22 追加: test_zhixing_probe_read_plane 钉「strategy 探针的读数面是规范检出
+          # (canonical_root), 不是 __file__ 派生的 code_root」—— 跑在安装位时 code_root 指向
+          # 安装位, 而安装位按构造没有 .omo/_delivery/agent-workflows/ ⇒ runs=0 ⇒ 恒 PARTIAL
+          # (债条目 PANORAMA-A9-SOURCES-STALE-12D)。实测 1 pass。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -330,7 +343,10 @@ jobs:
             ../../tests/test_anchor_install_root_ref.py \
             ../../tests/test_strategy_sources_state_root.py \
             ../../tests/test_zhixing_source_tree_provenance.py \
+            ../../tests/test_zhixing_probe_read_plane.py \
             ../../tests/unit/gac/test_gate_interpreter_roots.py \
+            ../../tests/unit/gac/test_gate_test_host_hygiene.py \
+            ../../tests/unit/gac/test_gate_x2_rule_lint.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
