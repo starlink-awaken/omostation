@@ -283,6 +283,10 @@ jobs:
           # worktree 里跑门禁时, 子模块代码其实来自 canonical (读数看着正常, 量的却是另一棵树;
           # 本轮因此污染了 #5410 的验证读数)。实测本 worktree ⇒ outside_workspace=[agora,ecos,omo]。
           # 实测 5 pass; 变异对照: 把 inside 判定写死为 True ⇒ 2 failed, 恢复 ⇒ 5 passed。
+          # 2026-11-22 追加: test_gate_test_host_hygiene 钉「ADR-0466 法条 2 的宿主零污染守卫
+          # 已接进 gac-local-gate, 且宿主输入缺席时如实报『没测成』而非通过」—— 该工具此前
+          # 只登记在 bin/_registry, 没有任何执行入口 (ADR 明文要求纳入门禁流水线却未落地)。
+          # 实测 5 pass; 变异对照: 把 measured 写死为 True ⇒ 2 failed, 恢复 ⇒ 5 passed。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -331,6 +335,7 @@ jobs:
             ../../tests/test_strategy_sources_state_root.py \
             ../../tests/test_zhixing_source_tree_provenance.py \
             ../../tests/unit/gac/test_gate_interpreter_roots.py \
+            ../../tests/unit/gac/test_gate_test_host_hygiene.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."

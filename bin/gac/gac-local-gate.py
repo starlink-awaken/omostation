@@ -445,6 +445,19 @@ if not any(gate.get("id") == "current-state-coherence" for gate in GATES_LIST):
         }
     )
 
+# Root-owned ADR-0466 法条 2 宿主零污染守卫 (2026-11-22 接线):
+# ADR-0466 §5 法条 2 明文要求 `check-test-host-hygiene.py`「纳入门禁流水线」,
+# 但它此前只登记在 bin/_registry, 没有任何执行入口 —— 一道被声明却不存在的防线。
+# 它读**宿主**目录 (~/.local/share/omostation), 在 CI / 新克隆里那些目录不存在,
+# 故走 `--json` + `measured: false` 契约: 缺席即诚实报「没测成」, 不报 PASS (空绿)。
+if not any(gate.get("id") == "test-host-hygiene" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "test-host-hygiene",
+            "command": ["bin/gac/check-test-host-hygiene.py", "--json"],
+        }
+    )
+
 # Root-owned conflict-marker guard (2026-08-07): 拦截 git 合并冲突标记 (<<<<<<< / >>>>>>>)
 # 入库, 治本 ecos `0ff6ad3` 把冲突标记 commit 进 sgf-policy.yaml → test-gac-engine YAML 解析
 # FAIL → 全仓 push 被卡. 放 root-owned 段, 防 ecos 子模块 policy 移除. 详见 ADR 见 evidence
