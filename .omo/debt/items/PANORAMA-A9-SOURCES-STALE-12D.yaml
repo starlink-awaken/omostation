@@ -147,3 +147,22 @@ history:
     **纪律**: 复算线上读数时, **env 必须逐项对齐 plist**（`OMOSTATION_ROOT` /
     `OMOSTATION_STATE_ROOT` / `PANORAMA_*` / `PYTHONPATH`）—— 漏一项就会得出一个
     看起来很像真的错结论, 而它会以「已核实」的身份进债务条目。
+- at: '2026-11-22T16:15:00+00:00'
+  action: mitigate
+  actor: governance-agent
+  note: >-
+    **已闭环 (2026-11-22 16:06Z)。** 三处改动:
+    ① 资产 `#5406` 的 `_collect_runs` 从 `"state"` 改读 `"workspace"` —— 已部署;
+    ② `refresh.py` 的 `probe_strategy` 读数面由 `code_root()` 改为 **`canonical_root()`**
+       (`#5430`): `code_root()` 由 `__file__` 派生, 跑在安装位时指向安装位, 而安装位按构造
+       没有 delivery 数据面; 采集器读的是**仓内数据面**, 属读平面的事;
+    ③ `com.omostation.zhixing-dashboard-refresh` plist 去掉 `OMOSTATION_ROOT`
+       (原值指向安装位 ⇒ `canonical_root()` 仍解析到安装位; 该 env 在本进程只被
+       `canonical_root()` 消费, `PANORAMA_ROOT` 是另一个 env, 不受影响), bootout+bootstrap。
+    **读数**: `source_states.strategy` = **OK**, `last_success_at` 由 `2026-10-28T08:18:24`
+    前进到 **2026-11-22T16:06:02**; 服务 `runs=2 / last exit code=0`; 探针
+    `state=OBSERVED / runs=444 / documents=59 / hard_gaps=[]`。
+    **部署口径两条**: `zhixing-host-sync.py` 必须从**含修复的检出**跑(从 canonical 跑会比到
+    陈旧资产而报 `in_sync`); plist 改动必须 `bootout`+`bootstrap`, `kickstart -k` 不重读。
+    **仍未 OK 的其他源**(不在本条范围): `ruflo` FAIL、`personal_value_truth` UNAVAILABLE、
+    `panorama_base` STALE_UNAVAILABLE。
