@@ -6,6 +6,8 @@
   2. 层4 存在性判据退回 `source_type == indexed` 早退 → 非 indexed 的路径型登记不再被看
   3. 层6 平面比对换成文本正则 (扫 gac-local-gate.py 源码) → DEFAULT_POLICY 里的字面量
      被当成"已接线", 两个执行平面缺席者从点名清单里消失 = 假绿
+  4. 层6 的 A 类判定只写在函数里、没在 run_bootstrap 里接上 层3 死集合 → 生产路径永不点名
+     (直接调 check_plane_coverage(dead) 的用例全绿, 假绿)
 """
 
 from __future__ import annotations
@@ -254,7 +256,9 @@ def test_l6_text_regex_mutation_would_go_green() -> None:
 )
 def test_l6_real_population_is_measured_with_denominators() -> None:
     b = _boot()
-    r = b.check_plane_coverage()
+    # 与 run_bootstrap 同路径: 层3 死集合必须喂给层6, 否则 A 类谎报整类隐身
+    dead = {str(d).split(" ")[0] for d in b.check_tools_alive()["dead"]}
+    r = b.check_plane_coverage(dead)
     assert r["available"] is True
     assert r["declared"] > 100, "登记面读数跌回 100 以下 = 仪器没接上"
     assert not r.get("instrument_dead")
@@ -266,8 +270,61 @@ def test_l6_real_population_is_measured_with_denominators() -> None:
         assert v["tool"].endswith(".py")
         if v.get("verdict") == "declared_no_execution_plane":
             assert "五平面全缺席" in v["reason"]
+        elif v.get("verdict") == "dead_tool_registered_as_executed":
+            assert v["tool"].split("/")[-1] in dead, "点名了不在层3 死清单里的工具 = 判定与事实脱钩"
         else:
             assert v.get("verdict") == "device_unavailable", f"未预期的判定: {v}"
+
+
+def test_l6_dead_tool_claiming_execution_is_named(tmp_path: pathlib.Path) -> None:
+    """A 类谎报: 工具被某个平面文本提到 ≠ 被执行 —— 无 __main__ 入口时执行是零效果."""
+    b = _boot()
+    _synthetic_planes(b, tmp_path, {"bin/gac/real.py"})
+    baseline = b.check_plane_coverage()
+    assert "bin/gac/real.py" not in {v["tool"] for v in baseline["violations"]}
+    assert baseline["reached"] == 2 and baseline["dead_registered"] == 0
+
+    r = b.check_plane_coverage({"real.py"})
+    named = {v["tool"]: v for v in r["violations"]}
+    assert "bin/gac/real.py" in named, "runtime 平面命中但工具已死, 仍须点名"
+    assert named["bin/gac/real.py"]["verdict"] == "dead_tool_registered_as_executed"
+    assert "层3 判死" in named["bin/gac/real.py"]["reason"]
+    assert r["dead_registered"] == 1
+    assert r["reached"] == 1, "死工具不能算 reached"
+    assert r["declared"] == baseline["declared"], "点名不改变登记面分母"
+    assert r["reached"] + len(r["violations"]) == r["declared"]
+
+
+def test_l6_real_data_names_the_dead_registration() -> None:
+    """实测钉: 真数据下 A 类谎报必须被点名, 否则本层价值不可证."""
+    b = _boot()
+    dead = {str(d).split(" ")[0] for d in b.check_tools_alive()["dead"]}
+    assert dead, "层3 死清单为空 = 仪器没接上, 本用例失去意义"
+    r = b.check_plane_coverage(dead)
+    flagged = {v["tool"].split("/")[-1] for v in r["violations"] if v["verdict"] == "dead_tool_registered_as_executed"}
+    assert flagged, f"登记面 {r['surfaces']} 项里没有任何死工具被点名 (死清单 {sorted(dead)})"
+    assert flagged <= dead
+
+
+def test_run_bootstrap_wires_layer3_dead_into_layer6(capsys: pytest.CaptureFixture[str]) -> None:
+    """生产路径钉: 层3 死集合是在 run_bootstrap 里喂给层6 的, 不只存在于函数签名上.
+
+    上一条形如"直接调 check_plane_coverage(dead)"的用例, 把 `dead_names` 接线拆掉仍然全绿
+    —— 判据写得再对, 没接上就是零效果. 本条走真实调用路径, 拆接线必红.
+    """
+    b = _boot()
+    b.run_bootstrap(as_json=True)
+    d = json.loads(capsys.readouterr().out)
+    dead = {str(x).split(" ")[0] for x in d["tools"]["dead"]}
+    assert dead, "层3 死清单为空 = 仪器没接上, 本条失去意义"
+    flagged = {
+        v["tool"].split("/")[-1]
+        for v in d["plane_coverage"]["violations"]
+        if v["verdict"] == "dead_tool_registered_as_executed"
+    }
+    assert flagged, f"生产路径没点名任何死工具 (层3 死清单 {sorted(dead)}) ⇒ 层3→层6 接线断了"
+    assert flagged <= dead
+    assert d["plane_coverage"]["dead_registered"] == len(flagged)
 
 
 def test_l6_hook_plane_covers_hook_runner() -> None:
