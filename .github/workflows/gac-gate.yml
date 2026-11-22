@@ -120,6 +120,12 @@ jobs:
         # 本仓组全是 public 仓 ⇒ Actions 分钟免费（含 macOS），成本不是这里的理由。
         # 未登记进 bin/gac/check-runner-cost.py 的 ALLOWED 即阻塞 —— 加腿前先答「它覆盖了什么」。
         run: python3 bin/gac/check-runner-cost.py
+      - name: CR-BOS-URI-STANDARD — BOS URI 域标准守门 (required)
+        # 活 URI 面（全仓 yaml/md 里的 bos://<domain>/）必须落在域标准内；未登记的域阻塞。
+        # 归档/缓存副本与 `_done/` 计划归档不在扫描面（见工具内 _SKIP_SCAN_PARTS）。
+        # 2026-11-22 接线：此前它只登记在 bin/_registry 却**没有任何 CI/门禁跑它**，
+        # 于是一处「自指假命中」（docs/pitfalls.md 逐字引用了未登记域）挂了 12 天无人知。
+        run: python3 bin/gac/check-mcp-bos-uri-completeness.py
       - name: shell 测试套件 (tests/**/*.sh)
         # 原本**没有任何执行入口** —— CI 不跑、pytest 不收集、Makefile 不调 ⇒ 回归保护为零
         # (2026-09-29 实测: 4 个已烂掉却长期无人知)。

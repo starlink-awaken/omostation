@@ -206,8 +206,9 @@ def check_mcp_completeness(workspace: Path):
 
 
 # 不扫: 版本库/依赖与虚拟环境、索引缓存、其他 worktree 与 wip 快照的副本 (同一文件多份, 可能是旧内容)、归档、
-#       以及 `_done/` 计划归档 —— 历史计划里引用的域可能从未落地 (实测 `bos://local-ai/` 全仓只出现在
-#       `Plans/_done/*.md`), 而本检查守的是**活** URI 面; 历史/遗留域归
+#       以及 `_done/` 计划归档 —— 历史计划里引用的域可能从未落地 (实测 `local-ai` 域只出现在
+#       `Plans/_done/*.md` 与记录该案的文档; 记录里**刻意不逐字写出该 URI**, 否则会被自己扫出来,
+#       见 docs/pitfalls.md「自指假命中」), 而本检查守的是**活** URI 面; 历史/遗留域归
 #       `.omo/standards/bos-uri-domain-standard.md` 的「遗留域」一节管 (该节明写「本节只减不增」,
 #       不因扫描命中而扩)。
 _SKIP_SCAN_PARTS = frozenset(
