@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-11-17
-last-reviewed: 2026-11-17
+last_updated: 2026-11-22
+last-reviewed: 2026-11-22
 lifecycle: entry
 status: active
 ---
@@ -89,7 +89,7 @@ status: active
 | Cockpit CLI 命令 | `cockpit <domain> <verb>`（详见 `docs/CLI-REFERENCE.md`） |
 | BOS 服务发现 | `.omo/_truth/registry/capability-providers.yaml` |
 | MCP 工具清单 | `docs/generated/capability-registry.yaml` |
-| MCP/BOS URI 完整性 | `python3 bin/gac/check-mcp-bos-uri-completeness.py`（`--warn` 模式审计不阻断） |
+| MCP/BOS URI 完整性 | `python3 bin/gac/check-mcp-bos-uri-completeness.py`（gac-gate 的 `CR-BOS-URI-STANDARD` 步为 **required**：活 URI 面出现未登记域即 exit 3 阻塞；`--warn` 仅供审计留痕） |
 
 ---
 
