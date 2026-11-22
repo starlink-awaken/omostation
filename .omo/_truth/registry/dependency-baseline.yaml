@@ -59,7 +59,7 @@ rules:
         - agora
         - core-models
     - name: apscheduler
-      baseline: '>=3.11.2'
+      baseline: '>=3.11.3'
       reason: 'Consumed by 2 project(s)'
       consumers:
         - minerva
@@ -85,7 +85,7 @@ rules:
       consumers:
         - kronos
     - name: croniter
-      baseline: '>=6.2.2'
+      baseline: '>=7.0.0'
       reason: 'Consumed by 2 project(s)'
       consumers:
         - minerva
@@ -106,7 +106,7 @@ rules:
       consumers:
         - kairon-observability
     - name: fastapi
-      baseline: '>=0.162.0'
+      baseline: '>=0.165.0'
       reason: 'Consumed by 5 project(s)'
       consumers:
         - agora
@@ -115,7 +115,7 @@ rules:
         - ontoderive[web]
         - runtime
     - name: fastmcp
-      baseline: '>=4.1.4'
+      baseline: '>=4.2.2'
       reason: 'Consumed by 15 project(s)'
       consumers:
         - aetherforge
@@ -145,12 +145,12 @@ rules:
       consumers:
         - minerva[tier2]
     - name: grpcio
-      baseline: '>=1.60'
+      baseline: '>=1.85.3'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - agora[grpc]
     - name: grpcio-tools
-      baseline: '>=1.85.0'
+      baseline: '>=1.85.3'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - agora[grpc]
@@ -199,7 +199,7 @@ rules:
       consumers:
         - minerva[tier2]
     - name: openai
-      baseline: '>=2.41.1'
+      baseline: '>=3.55.1'
       reason: 'Consumed by 3 project(s)'
       consumers:
         - aetherforge
@@ -236,12 +236,12 @@ rules:
       consumers:
         - omlxc
     - name: prometheus-client
-      baseline: '>=0.20'
+      baseline: '>=0.26.0'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - agora
     - name: protobuf
-      baseline: '>=4.0'
+      baseline: '>=7.36.2'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - agora[grpc]
@@ -251,7 +251,7 @@ rules:
       consumers:
         - cockpit
     - name: pydantic
-      baseline: '>=2.14.1'
+      baseline: '>=2.14.4'
       reason: 'Consumed by 10 project(s)'
       consumers:
         - aetherforge-gateway
@@ -265,7 +265,7 @@ rules:
         - omo-debt
         - runtime
     - name: pyjwt
-      baseline: '>=2.13.0'
+      baseline: '>=2.15.1'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - runtime
@@ -285,12 +285,12 @@ rules:
       consumers:
         - kos
     - name: python-multipart
-      baseline: '>=0.0.32'
+      baseline: '>=0.0.34'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - cockpit
     - name: python-pptx
-      baseline: '>=1.0'
+      baseline: '>=1.0.2'
       reason: 'Consumed by 1 project(s)'
       consumers:
         - cockpit
@@ -373,7 +373,7 @@ rules:
       consumers:
         - minerva
     - name: structlog
-      baseline: '>=25.1'
+      baseline: '>=26.1.0'
       reason: 'Consumed by 5 project(s)'
       consumers:
         - aetherforge-gateway
@@ -388,7 +388,7 @@ rules:
         - aetherforge-gateway[legacy]
         - omo-debt
     - name: textual
-      baseline: '>=1.0'
+      baseline: '>=8.2.8'
       reason: 'Consumed by 2 project(s)'
       consumers:
         - cockpit[tui]
@@ -438,13 +438,13 @@ rules:
         - 'bus-foundation[ws]'
   dev_test:
     - name: mypy
-      baseline: '>=1.0'
+      baseline: '>=2.4.1'
       reason: 'Consumed by 2 project(s)'
       consumers:
         - agora[dev]
         - minerva[dev]
     - name: pytest
-      baseline: '>=9.0'
+      baseline: '>=9.2.0'
       reason: 'Consumed by 16 project(s)'
       consumers:
         - aetherforge-gateway[dev]
@@ -464,7 +464,7 @@ rules:
         - omo[dev]
         - ontoderive[dev]
     - name: pytest-asyncio
-      baseline: '>=1.0'
+      baseline: '>=1.5.0'
       reason: 'Consumed by 4 project(s)'
       consumers:
         - agora[dev]
