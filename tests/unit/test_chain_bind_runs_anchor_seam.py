@@ -304,6 +304,28 @@ def test_seam_resolves_when_the_library_is_not_an_importable_package(bridged_pai
     assert "missing_bet_binding" not in BIND.evaluate_complete(bet, worktree).reasons
 
 
+def test_seam_resolves_from_the_owning_checkout(bridged_pair, monkeypatch):
+    """ISC-7 第二候选 —— worktree 没 init `projects/omo`, 缝在**拥有它的根检出**里。
+
+    收口场景的常态就是这个形状: `git worktree add` 之后只 init 了要动的子模块
+    (这里是 `projects/cockpit`), `projects/omo` 缺席 ⇒ 缝的两条加载路径里
+    「按路径」那条指向 worktree 与运行检出, 全断 ⇒ 读数静默退回本地空目录。
+    实测 (2026-11-23): `runs_visible=0` 而交付锚里确有 `bet_id=.../status=ok` 的 run,
+    `evaluate_complete` 报 `missing_bet_binding` —— 假红, 且看起来和真红一样。
+    """
+    canonical, worktree, bet = bridged_pair
+    _block_omo_import(monkeypatch)
+    monkeypatch.setattr(BIND, "DEFAULT_WORKSPACE", worktree.parent / "no-code-here")
+    assert not (worktree / LIBRARY_REL).exists()  # worktree 侧确实没有
+    library = canonical / LIBRARY_REL
+    library.parent.mkdir(parents=True, exist_ok=True)
+    library.write_bytes(SEAM_SOURCE.read_bytes())
+    assert BIND._owning_checkout(worktree) == canonical
+    assert BIND.runs_dir_for(worktree) == canonical / BIND.RUNS_REL
+    assert [r["run_id"] for r in BIND.iter_run_records(worktree)] == [FIXTURE_RUN_ID]
+    assert "missing_bet_binding" not in BIND.evaluate_complete(bet, worktree).reasons
+
+
 def test_no_library_copy_anywhere_degrades_to_the_pre_change_reading(bridged_pair, monkeypatch):
     """ISC-7 reverse — no package import and no library file ⇒ byte-identical old behaviour."""
     _canonical, worktree, bet = bridged_pair
