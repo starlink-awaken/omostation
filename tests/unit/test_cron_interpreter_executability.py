@@ -525,3 +525,41 @@ def test_real_registry_is_assessable() -> None:
         "gaps",
         "advisories",
     }
+
+
+def test_registry_side_bare_python3_is_counted_not_folded(tmp_path: Path) -> None:
+    """登记面裸 `python3` 要**计数可见**, 不能被「安装器会改写」折叠掉。
+
+    真因背景: `resolve_python_command` 会把裸 `python3` 改写成可用绝对路径并返回
+    `install_reason=None` —— 门禁量的是「装上去会不会死」, 不是「声明本身是否安全」。
+    cron 最小 PATH 下裸 `python3` = Xcode 3.9, 而仓内 189 个脚本顶层
+    `from datetime import UTC` 会立刻 ImportError (债务 CRON-BARE-PYTHON3-PY39-IMPORT-DEATH)。
+    已装面今天为 0, 但登记面一旦被原样重装, 死作业就回来。
+
+    本用例钉两件事: 裸写法被点名计数; 绝对路径写法**不**计入 (否则计数恒非零 = 空转)。
+    """
+    registry = _registry(
+        tmp_path,
+        dep="json",
+    )
+    root = registry.parents[2]
+    jobs = yaml.safe_load(registry.read_text(encoding="utf-8"))["jobs"]
+    # 把第一条改成绝对解释器, 留一条裸的当对照
+    jobs[0]["command"] = jobs[0]["command"].replace(" python3 ", " /usr/bin/python3 ")
+    registry.write_text(yaml.safe_dump({"jobs": jobs}, allow_unicode=True), encoding="utf-8")
+
+    abs_res = _evaluate(registry, root, candidates=[], now=datetime.date(2026, 12, 1))
+    assert abs_res["registry_bare_tokens"] == 0, abs_res["registry_bare"]
+    assert abs_res["registry_bare"] == []
+
+    # 还原成裸写法 ⇒ 必须被点名
+    jobs[0]["command"] = jobs[0]["command"].replace(" /usr/bin/python3 ", " python3 ")
+    registry.write_text(yaml.safe_dump({"jobs": jobs}, allow_unicode=True), encoding="utf-8")
+    bare_res = _evaluate(registry, root, candidates=[], now=datetime.date(2026, 12, 1))
+    assert bare_res["registry_bare_tokens"] == 1, bare_res["registry_bare"]
+    assert any("needs-missing-pkg" in row for row in bare_res["registry_bare"]), bare_res["registry_bare"]
+    # 登记面裸写法是 advisory: 不额外增加阻断缺口 (两次运行的 blocking 相等)
+    assert bare_res["blocking_gaps"] == abs_res["blocking_gaps"], (
+        bare_res["blocking_gaps"],
+        abs_res["blocking_gaps"],
+    )
