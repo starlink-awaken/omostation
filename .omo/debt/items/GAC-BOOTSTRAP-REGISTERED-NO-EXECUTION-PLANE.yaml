@@ -117,3 +117,14 @@ history:
     其立案归 `GAC-BOOTSTRAP-10-SOURCE-REFS-DEAD` / `CR-AGE-RULES-NO-BASIS-NO-EXECUTION`，
     `check-ci-surfaces.py` 的口径统一归 `CI-SURFACES-GATE-FIELD-UNDEFINED`，本条只留交叉引用。
   actor: "governance-agent"
+- at: "2026-11-22T13:14:00+00:00"
+  action: review
+  note: >-
+    补一条「接线收益」的实测，给 next_review_at=2026-11-29 的裁定用：本条点名的 A 类两条
+    （`check-gate-detail-contract.py`、`check-cron-interpreter-executability.py`）各自的 `main()`
+    已按 AGENTS.md §14.2 组装六字段 `run_record`（inputs/basis/approver/result/duration_ms/model_usage），
+    但因为它们不在任何执行平面上（canary `RUNTIME_PLANES 91 False False`），那条记录从未落过盘 ——
+    实测扫 `.omo/state/**` 与 `runtime/**` 的 JSON，含 `"run_record"` 的文件数 = 0。
+    即：§14.2 的「一次运行落一条结构化记录」对这两道门是**代码在、实例为零**。
+    把它们接进平面（或撤登记）不只是消 A 类谎报，也是让 §14.2 首次真正产出记录；反之只补文档不接线 = 继续空承诺。
+  actor: "governance-agent"
