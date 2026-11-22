@@ -397,6 +397,16 @@ surfaces:
   - push
   status: active
   note: CR-CI-RUNNER-COST — macOS(10x)/Windows(2x) GitHub-hosted runner 守门；public 仓免费、private 仓按量。三条判据，未登记即阻塞，已登记但无 workflow 级 concurrency 组同样阻塞（付费腿可无限堆叠），已登记且有 concurrency 才转 warn 留痕 (2026-11-02 补 concurrency 判据)
+- id: bin-gac-check-mcp-bos-uri-completeness-py
+  tool: bin/gac/check-mcp-bos-uri-completeness.py
+  workflow: gac-gate.yml
+  gate: true
+  triggers:
+  - manual
+  - per_pr
+  - push
+  status: active
+  note: CR-BOS-URI-STANDARD — 活 URI 面（全仓 yaml/md 里的 bos://<domain>/）必须落在 .omo/standards/bos-uri-domain-standard.md 内；未登记域 exit 3 阻塞。归档/缓存副本与 `_done/` 计划归档不在扫描面（工具内 _SKIP_SCAN_PARTS）。2026-11-22 接线：此前只登记在 bin/_registry 而**没有任何 CI/门禁入口**，于是一处「自指假命中」（docs/pitfalls.md 逐字引用了未登记域 local-ai）挂了 12 天无人知
 - id: bin-gac-check-severity-registry-py
   tool: bin/gac/check-severity-registry.py
   workflow: (none)
