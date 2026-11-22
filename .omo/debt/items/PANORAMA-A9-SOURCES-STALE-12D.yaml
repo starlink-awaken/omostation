@@ -120,3 +120,30 @@ history:
     `织星主权智能操作系统文档库/.library/registry.yaml`（数据缺口）; ② 让 refresh 的
     接纳判据与采集器的 soft/hard 分类对齐（`state == OBSERVED` 就该接纳, 不看 documents）。
     **未擅动**: ② 是 refresh 的行为变更, 且 ① 的库文件是否该存在属 owner 裁定。
+- at: '2026-11-22T16:05:00+00:00'
+  action: correct
+  actor: governance-agent
+  note: >-
+    **订正上一条（#5428 的残余分析是错的）+ 找到真正的根因。**
+    上一条说「`documents` 为 0 是因为 `.library/registry.yaml` 缺失」—— 在**plist 的完整
+    env** 下复跑, `documents` 是 **59** 条, 那条不成立。我上次漏传了 plist 的
+    `OMOSTATION_ROOT` / `PANORAMA_*` / `PYTHONPATH`, 用错 env 得出了错结论。
+    **真正根因（三层）**:
+    ① plist 的 `EnvironmentVariables.PYTHONPATH = ~/.local/opt/omostation/bin/lib`
+       ⇒ `refresh.py::probe_strategy` 里的 `repo_root.code_root()` 是 **`__file__` 派生**
+       （ADR-0456 设计如此, 两版 `repo_root.py` 逐字节相同）⇒ 解析到**安装根**。
+    ② 安装根**没有** `.omo/_delivery/agent-workflows/`（该面 gitignored, release clone 按构造
+       没有）⇒ 采集器读 `workspace:.omo/_delivery/agent-workflows/runs` 得
+       `empty_or_missing_directory` ⇒ `runs=0` ⇒ 采集器自己判 PARTIAL。
+    ③ 于是无论资产修得多对, 线上都恒 PARTIAL。
+    **验证**: 用 plist 的完整 env 复跑探针 ⇒ `state=PARTIAL / runs=0`；把 `OMOSTATION_ROOT`
+    指向 `~/Workspace` 但 PYTHONPATH 仍指安装根 ⇒ **仍 PARTIAL**（因为 `code_root()` 是
+    `__file__` 派生, 无视该 env）。**这与「安装位落后 206 提交」是同一个病的两面** ——
+    安装位既是运行面又是读数面, 而它既旧又缺数据面。
+    **要清这条红, 只有两条路**: (a) 让安装位具备 delivery 数据面（不现实: gitignored +
+    release clone 按构造没有）; (b) **让 probe_strategy 读 canonical 检出**
+    （`canonical_root()` 或显式 `~/Workspace`）而不是 `__file__` 派生的 code_root。
+    (b) 是 `bin/panorama/assets/host/refresh.py.asset` 的一处改动 + 重新部署, **未擅动**。
+    **纪律**: 复算线上读数时, **env 必须逐项对齐 plist**（`OMOSTATION_ROOT` /
+    `OMOSTATION_STATE_ROOT` / `PANORAMA_*` / `PYTHONPATH`）—— 漏一项就会得出一个
+    看起来很像真的错结论, 而它会以「已核实」的身份进债务条目。
