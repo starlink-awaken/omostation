@@ -159,6 +159,21 @@ def _paid_os(labels: set[str]) -> set[str]:
     return {lbl for lbl in labels if any(lbl.startswith(p) or f"-{p}" in lbl for p in PAID_OS)}
 
 
+def unscanned_submodules(repo: Path) -> list[str]:
+    """已声明但**未检出**的子模块路径 —— 它们的 workflow 不在扫描面内。
+
+    没有这条, 「扫描 N 个 workflow」在残缺检出与全量检出下是同一句话,
+    而两者含义不同 (同 「目录缺席」与「目录为空」在 glob 兜底下同形)。
+    判据: 路径不存在 = 未检出; 路径存在但没有 .github/workflows = 真的没有
+    workflow, 不算缺口。
+    """
+    missing: list[str] = []
+    for sub in _declared_submodule_paths(repo):
+        if not (repo / sub).exists():
+            missing.append(sub)
+    return missing
+
+
 def discover_workflows(repo: Path) -> list[Path]:
     """根仓 + 子模块（若已检出）的 workflow 文件，按相对路径排序。"""
     found: set[Path] = set()
@@ -242,6 +257,7 @@ def scan(repo: Path) -> dict:
         "warnings": len(warnings),
         "workflows": workflows,
         "scanned": len(discover_workflows(repo)),
+        "unscanned_submodules": unscanned_submodules(repo),
     }
 
 
@@ -258,6 +274,13 @@ def _render(report: dict) -> str:
         f"扫描 {report['scanned']} 个 workflow（解析 {report['workflows']} 个）: "
         f"error={report['errors']} warn={report['warnings']}"
     )
+    missing = report.get("unscanned_submodules") or []
+    if missing:
+        lines.append(
+            f"⚠️  {len(missing)} 个已声明子模块未检出, 其 workflow 不在扫描面内: "
+            + ", ".join(missing)
+            + " —— 本读数不是全量面 (CI 用 submodules: recursive, 无此缺口)"
+        )
     return "\n".join(lines)
 
 
@@ -379,6 +402,24 @@ def self_test() -> int:
         print(f"  [{'ok' if ok2 else 'FAIL'}] declared-submodule-scanned: {got2}")
         if not ok2:
             failures.append("declared-submodule-scanned")
+
+    # 「未检出子模块」信号的自证: 声明了两个, 只检出一个 ⇒ 另一个必须被点名。
+    # 没有这一条, 残缺检出下的「扫描 N 个 workflow」与全量检出下同形 (AGENTS.md §7
+    # 「目录缺席与目录为空在 glob 兜底下同形」)。
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        (root / ".gitmodules").write_text(
+            '[submodule "a"]\n\tpath = projects/a\n\turl = https://example/a.git\n'
+            '[submodule "b"]\n\tpath = projects/b\n\turl = https://example/b.git\n',
+            encoding="utf-8",
+        )
+        (root / "projects" / "a").mkdir(parents=True)
+        rep = scan(root)
+        got = rep["unscanned_submodules"]
+        ok_unscanned = got == ["projects/b"]
+        print(f"  [{'ok' if ok_unscanned else 'FAIL'}] unscanned-submodule-named: {got}")
+        if not ok_unscanned:
+            failures.append("unscanned-submodule-named")
 
     if failures:
         print(f"SELF-TEST FAILED: {failures}")
