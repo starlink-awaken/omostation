@@ -183,6 +183,36 @@ def write_run_file(path: Path, record: dict[str, Any]) -> None:
     )
 
 
+def _owning_checkout(ws: Path) -> Path | None:
+    """拥有该 linked worktree 的根检出, 读自 ``ws/.git`` 的 ``gitdir:`` 指针。
+
+    与 ``delivery_anchor._worktree_gitdir`` 同判据但**只取路径**: 本模块的定位器需要知道
+    「去哪份检出加载缝」, 而不是再调用一次缝。普通 clone 的 ``.git`` 是目录 ⇒ None。
+    """
+    git_entry = ws / ".git"
+    if not git_entry.is_file():
+        return None
+    try:
+        text = git_entry.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        return None
+    head, sep, raw = text.partition("gitdir:")
+    if not sep or head.strip():
+        return None
+    gitdir = Path(raw.strip())
+    if not gitdir.is_absolute():
+        gitdir = ws / gitdir
+    try:
+        gitdir = gitdir.resolve()
+    except OSError:
+        return None
+    worktrees = gitdir.parent
+    if worktrees.name != "worktrees" or worktrees.parent.name != ".git":
+        return None
+    root = worktrees.parent.parent
+    return root if root.is_dir() else None
+
+
 def _anchor_locator(workspace: Path) -> tuple[Any, Any] | None:
     """``(locate_anchor, is_worktree_of)`` from the delivery-anchor seam, or None.
 
@@ -206,7 +236,14 @@ def _anchor_locator(workspace: Path) -> tuple[Any, Any] | None:
     import importlib.util
     import sys
 
-    for root in (DEFAULT_WORKSPACE, workspace):
+    # 第三候选是**拥有该 worktree 的根检出**: worktree 自己只 init 了它要动的子模块时
+    # (收口场景的常态), 缝在根检出里, 而前两个候选都指向 worktree ⇒ 两条加载路径全断,
+    # 读数静默退回本地空目录 (实测 2026-11-23: runs_visible=0 却报 missing_bet_binding)。
+    candidates = [DEFAULT_WORKSPACE, workspace]
+    owning = _owning_checkout(workspace)
+    if owning is not None:
+        candidates.append(owning)
+    for root in candidates:
         source = root / "projects/omo/src/omo/workflow/delivery_anchor.py"
         if not source.is_file():
             continue
