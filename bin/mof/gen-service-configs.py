@@ -280,6 +280,26 @@ def _plist_program_args(plist_xml: str) -> list[str]:
     return re.findall(r"<string>(.*?)</string>", m.group(1), re.DOTALL)
 
 
+def _strip_xml_comments(text: str) -> str:
+    """剔除 XML 注释块 (<!-- ... --> 含多行); 注释是文档, 不参与 drift 判定."""
+    return re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+
+
+def _plist_equivalent(existing: str, generated: str) -> bool:
+    """语义等价判定: plistlib 解析后深比较.
+
+    BET-Y2Q4-T10-349: 2026-11-10 模板 bin/ops/launchd/*.plist 手工补解释器
+    NOTE 文档并整份覆盖本机 (LAUNCHD-PLIST-INSTALLED-DIVERGED 的正确处置),
+    而生成器从不产注释; 本机 plist 另用紧凑排版 —— 逐文本对比自此对所有
+    本机 --check 永久假红。plistlib 解析后注释与排版自然消失, 只比配置语义;
+    任一侧解析失败 (malformed) 回退剥注释文本对比, 保守判 drift。
+    """
+    try:
+        return plistlib.loads(existing.encode()) == plistlib.loads(generated.encode())
+    except Exception:
+        return _strip_xml_comments(existing).strip() == _strip_xml_comments(generated).strip()
+
+
 def gen_launchd_plist(svc: dict) -> str:
     label = svc["label"]
     root = service_root(svc)
@@ -324,15 +344,36 @@ def gen_launchd_plist(svc: dict) -> str:
         f"    <key>StartInterval</key>\n    <integer>{int(interval_sec)}</integer>\n"
         if trigger == "interval" and interval_sec else ""
     )
+    # BET-Y2Q4-T10-349: working_directory —— 11-10 手工修复回填 SSOT。
+    # 缺它时 bash -c 链依赖绝对路径, launchd 默认 cwd 下易踩相对路径坑。
+    wd = svc.get("working_directory")
+    wd_xml = (
+        f"    <key>WorkingDirectory</key>\n    <string>{_xml_escape(_resolve_path(wd, root))}</string>\n"
+        if wd
+        else ""
+    )
     # trigger: calendar → StartCalendarInterval(此前不支持: 每日定时的服务只能手写
     # plist, 全仓 4 个 calendar 型服务全是 generate:false 手工件 —— 2026-09-29)
+    # BET-Y2Q4-T10-349: 支持 list[dict] 多时刻 (如每小时 :05/:35)。
+    # 单 dict 声明保持单 dict 渲染 —— 与本机存量 (老生成器产物) 及 launchd
+    # 等价形态一致; 统一改 array 会让 plistlib 语义对比对存量 plist 报假 drift
+    # (dict != [dict], 尽管 launchd 运行时两者等价)。
     cal = svc.get("calendar") or {}
     start_calendar_xml = ""
-    if trigger == "calendar" and cal.get("Hour") is not None:
-        cal_items = f"        <key>Hour</key>\n        <integer>{int(cal['Hour'])}</integer>\n"
-        if cal.get("Minute") is not None:
-            cal_items += f"        <key>Minute</key>\n        <integer>{int(cal['Minute'])}</integer>\n"
-        start_calendar_xml = f"    <key>StartCalendarInterval</key>\n    <dict>\n{cal_items}    </dict>\n"
+    if trigger == "calendar" and cal:
+        def _iv_pairs(iv: dict) -> str:
+            pairs = ""
+            if iv.get("Hour") is not None:
+                pairs += f"<key>Hour</key><integer>{int(iv['Hour'])}</integer>"
+            if iv.get("Minute") is not None:
+                pairs += f"<key>Minute</key><integer>{int(iv['Minute'])}</integer>"
+            return pairs
+
+        if isinstance(cal, list):
+            items = "".join(f"        <dict>{_iv_pairs(iv)}</dict>\n" for iv in cal)
+            start_calendar_xml = f"    <key>StartCalendarInterval</key>\n    <array>\n{items}    </array>\n"
+        else:
+            start_calendar_xml = f"    <key>StartCalendarInterval</key>\n    <dict>{_iv_pairs(cal)}</dict>\n"
     run_at_load_xml = "    <key>RunAtLoad</key>\n    <true/>\n" if svc.get("run_at_load") else ""
     out = svc.get("outputs", {})
     # 与 entrypoint 同样要过 _resolve_path —— 否则 "~/Library/Logs/x.log" 会被
@@ -356,6 +397,7 @@ def gen_launchd_plist(svc: dict) -> str:
         "    <key>ProgramArguments</key>\n    <array>\n"
         f"{prog_xml}    </array>\n"
         + (f"    <key>WatchPaths</key>\n    <array>\n{watch_xml}    </array>\n" if watch else "")
+        + wd_xml
         + env_xml
         + keepalive_xml
         + throttle_xml
@@ -1069,7 +1111,9 @@ def main() -> int:
             print(f"✅ 生成 {target}")
         elif args.check:
             existing = target.read_text(encoding="utf-8") if target.exists() else ""
-            if existing.strip() != plist.strip():
+            # BET-Y2Q4-T10-349: 语义等价判定 —— 注释/排版差异不算 drift,
+            # 实质字段差异 (解释器/参数/路径/调度) 仍如实报。
+            if not _plist_equivalent(existing, plist):
                 drifts.append(f"{svc['label']}: plist 与 services.yaml 不一致 (drift)")
         else:
             print(f"--- {svc['label']} ---")

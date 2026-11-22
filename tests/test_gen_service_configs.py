@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import plistlib
 from pathlib import Path
 
 MODULE_PATH = Path(__file__).parents[1] / "bin" / "mof" / "gen-service-configs.py"
@@ -361,3 +362,67 @@ def test_generated_plist_escapes_xml_special_chars() -> None:
     assert "&&" not in xml.replace("&amp;&amp;", "")
     parser = expat.ParserCreate()
     parser.Parse(xml.encode(), True)
+
+
+def test_check_ignores_xml_comment_only_drift() -> None:
+    """BET-Y2Q4-T10-349: 仅注释差异不算 drift —— 注释是文档不是配置语义.
+
+    场景: 2026-11-10 模板手工补 NOTE 后整份覆盖本机, 生成器无注释。
+    """
+    module = _module()
+
+    generated = "<plist><string>same</string></plist>"
+    installed = (
+        "<!--\nNOTE (2026-11-10): 解释器从 python3 改为 .venv/bin/python,\n"
+        "多行文档注释。\n-->\n<plist><string>same</string></plist>"
+    )
+
+    assert module._plist_equivalent(installed, generated)
+
+
+def test_check_ignores_whitespace_layout_drift() -> None:
+    """BET-Y2Q4-T10-349: 紧凑排版 vs 多行缩进不算 drift —— 语义等价即可."""
+    module = _module()
+
+    generated = "<plist><dict><key>Minute</key><integer>5</integer></dict></plist>"
+    installed = "<plist>\n  <dict>\n    <key>Minute</key>\n    <integer>5</integer>\n  </dict>\n</plist>"
+
+    assert module._plist_equivalent(installed, generated)
+
+
+def test_check_reports_substantive_drift_after_semantic_compare() -> None:
+    """BET-Y2Q4-T10-349: 实质字段差异 (解释器路径) 语义对比后仍报 drift —— 不引入假阴性."""
+    module = _module()
+
+    generated = "<plist><string>/x/.venv/bin/python</string></plist>"
+    installed = "<!-- NOTE -->\n<plist><string>/usr/bin/python3</string></plist>"
+
+    assert not module._plist_equivalent(installed, generated)
+
+
+def test_working_directory_and_calendar_list_rendered() -> None:
+    """BET-Y2Q4-T10-349: working_directory 渲染 + calendar 多时刻 (每小时 :05/:35) 渲染."""
+    module = _module()
+    svc = {
+        "id": "omo.test-calendar",
+        "enabled": True,
+        "scheduler": "launchd",
+        "generate": True,
+        "trigger": "calendar",
+        "label": "com.omostation.test-calendar",
+        "working_directory": "/tmp",
+        "environment": {"PATH": "/usr/bin:/bin"},
+        "calendar": [{"Minute": 5}, {"Minute": 35}],
+        "program": {
+            "interpreter": "/bin/bash",
+            "entrypoint": "-c",
+            "args": ["echo hi"],
+        },
+    }
+
+    xml = module.gen_launchd_plist(svc)
+    data = plistlib.loads(xml.encode())
+
+    assert data["WorkingDirectory"] == "/tmp"
+    assert data["EnvironmentVariables"] == {"PATH": "/usr/bin:/bin"}
+    assert data["StartCalendarInterval"] == [{"Minute": 5}, {"Minute": 35}]

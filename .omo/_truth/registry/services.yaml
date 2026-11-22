@@ -5872,6 +5872,14 @@ services:
     args:
     - cd /Users/xiamingxing/Workspace/projects/omo && NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ) && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli refresh --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli dispatch --omo-dir /Users/xiamingxing/Workspace/.omo --now $NOW && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli campaign --omo-dir /Users/xiamingxing/Workspace/.omo && PYTHONPATH=src .venv/bin/python -m omo.omo_debt_cli report --omo-dir /Users/xiamingxing/Workspace/.omo
   run_at_load: true
+  # BET-Y2Q4-T10-349: 2026-11-10 手工模板修复回填 SSOT (模板整份覆盖本机时新增的字段)。
+  working_directory: /Users/xiamingxing/Workspace/projects/omo
+  environment:
+    PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+    no_proxy: github.com,api.github.com,localhost,127.0.0.1
+  calendar:
+  - Minute: 5
+  - Minute: 35
   outputs:
     stdout: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
     stderr: /Users/xiamingxing/Workspace/runtime/cron/omo-debt-refresh.log
