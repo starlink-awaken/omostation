@@ -94,3 +94,14 @@ history:
     **纪律**: 上一条记的「E1 判据恢复闭合」指的是**判据接线闭合**, 不是 `drift=0` ——
     这两件事此前被同一句话盖住了。另: `ci_skip` 的红 CI 永远看不见, 只有装了 launchd 的
     本机跑 `--strict` 才看得见, 所以它一直只是「本机噪音」而没被当成缺陷。
+- at: '2026-11-22T13:30:00+00:00'
+  action: review
+  actor: governance-agent
+  note: >-
+    **认领指针 (防重复劳动)**: 本条的修复已由 **BET-Y2Q4-T10-349** 认领并在途
+    (2026-11-22 实测: 其 worktree 正在改 `bin/mof/gen-service-configs.py` 与
+    `.omo/_truth/registry/services.yaml` —— 与本条开出的三缺口完全对应)。
+    **纪律**: 动手前先查**有没有 BET / 其他 agent 已经认领** —— 本轮我按本条的 spec
+    把三个缺口全部实现并验证完 (22 个 launchd 生成服务里只有目标条目渲染变化、
+    E1 `drift_count=0`), 才发现是重复交付, 只能放弃。**先查认领, 再动手**;
+    「main 上还没有」不等于「没人正在做」。
