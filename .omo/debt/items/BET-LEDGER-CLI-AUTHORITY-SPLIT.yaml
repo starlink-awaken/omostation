@@ -120,3 +120,8 @@ history:
   note: Closed debt item.
   actor: governance-agent/20261109T060043Z-gsm-a4649e5a
 closed_at: '2026-11-09T06:01:48.080682+00:00'
+close_reason: '已闭局 (2026-11-09): 采 declare-only —— 只读出口 (status / list / show /
+  claim-check) 经 authority_declaration_lines() 在 stderr 声明 root / HEAD / ledger blob /
+  与 origin/main 是否一致, 不拒绝、不改判定; 实现见 PR #5145 (MERGED), 实测
+  bin/plan/bet-ledger.py 含 authority_declaration_lines。fail-closed 语义与 state_root 侧
+  按 decision_needed 留作未裁项, 不在本条范围。'
