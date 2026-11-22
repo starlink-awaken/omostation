@@ -47873,7 +47873,8 @@ bets:
     B 类 2 条 `source_ref` 目录（`bin/gac/check-god-module.py` ⇒ 真实 `bin/ssot/check-god-module.py`）与
     `bin/gac/advisory-checks-upgrade.py:45` 的同一错路径；A 类（`check-gate-detail-contract.py`、`check-cron-interpreter-executability.py`
     只活在永不执行的 `DEFAULT_POLICY`）与其余不可达 `source_ref` 只点名不私改，登记为 debt 交 principal 裁决。'
-  status: in_progress
+  status: done
+  done_at: 2026-11-22
   corrected_at: 2026-11-11
   correction_note: 2026-11-11 交付前纠偏 —— 落笔时写进 goal/done_when/verify 的四个数字是未实测的预估，现按 shipped 判据的当场读数改正：
     层3 普查 324 ⇒ 326（`bin/gac/__init__.py` 是包标记，不计入）；层4 路径型 `source_ref` 63 ⇒ 75，不可达 15 ⇒ 12（11 条 bin/ 脚本类 +
@@ -47887,6 +47888,8 @@ bets:
     goal/non_goals/done_when/verify 的口径与读数改到 11-22 实测：四平面 ⇒ 五平面、层4 余 10 ⇒ 余 6、`check-ci-surfaces.py:121` ⇒
     `_local_gate_tools()` :99/:123、12 passed ⇒ 17 passed、变异三组 ⇒ 四组。`content_digest` 随 spec 的 §2 层6 / §3 验收与「交付后复核」
     小节一并重算。
+    收口腿再记一笔：变异红条数是 base 的函数 —— 工程腿 base `e2c7d48bb` 上为 1/2/1/1，合并后 main `aee01506c` 上为 3/2/2/1
+    （上游新增登记使依赖「层3 死清单非空」的用例在 glob 变异下一并转红）。两读数以 base 标注同记于收据，不互相覆盖。
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -47954,8 +47957,9 @@ bets:
       m=importlib.util.module_from_spec(s); sys.modules['g']=m; s.loader.exec_module(m);
       ids=[str(x.get('id'))+str(x.get('command')) for x in m.GATES_LIST]; print('RUNTIME_PLANES',
       len(m.GATES_LIST), 'gate-detail' in ' '.join(ids), 'cron-interp' in ' '.join(ids))"
-    expect: 实机 canary 读数必须为 `RUNTIME_PLANES 90 False False` —— 证明层6 用的是 runtime `GATES_LIST`
-      而不是文本扫描；收据缺该读数即视为该面未验。
+    expect: 实机 canary 读数必须为 `RUNTIME_PLANES <N> False False` —— `N` 是当前 runtime `GATES_LIST` 条数（2026-11-11 为 90、2026-11-22 合并后为 91，上游加 gate 会漂），
+      **判据是两个 `False`**：`check-gate-detail-contract` 与 `check-cron-interpreter-executability` 不在 runtime 执行面里 —— 证明层6 用的是 runtime
+      `GATES_LIST` 而不是文本扫描；收据缺该读数即视为该面未验。
   circuit_breaker: 若为了凑绿把层3 的 `total==0` 重新当通过、把层4 的存在性判定退回 `indexed` 子集、把层6 的平面比对换成对
     `gac-local-gate.py` 全文的正则字面量匹配（那正是本 BET 要修的盲区），或私自把 A 类 2 条从 `ci-surfaces.yaml`
     撤登记以消除点名，或开始改别人的 run 记录与锁 —— 立即停止并返回主协调。
@@ -47968,16 +47972,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-11-gac-bootstrap-execution-truth-closeout.md
+            sha256: sha256:1e8028a468c0ea81fe4dc6711f772acb1958be63fe044c7f306b8b23979d2206
+          merged_reachable_commit:
+            ref: git://origin/main@aee01506c795b1772805c0e6604f87c8ed9d2901
+          rollback:
+            ref: receipt://docs/reports/2026-11-11-gac-bootstrap-execution-truth-closeout.md#rollback
+            sha256: sha256:1e8028a468c0ea81fe4dc6711f772acb1958be63fe044c7f306b8b23979d2206
+          tests:
+            ref: receipt://docs/reports/2026-11-11-gac-bootstrap-execution-truth-closeout.md#ac-05
+            sha256: sha256:1e8028a468c0ea81fe4dc6711f772acb1958be63fe044c7f306b8b23979d2206
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-11-gac-bootstrap-execution-truth-closeout.md#operational-轴
+            sha256: sha256:1e8028a468c0ea81fe4dc6711f772acb1958be63fe044c7f306b8b23979d2206
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-11-gac-bootstrap-execution-truth-closeout.md
+            sha256: sha256:1e8028a468c0ea81fe4dc6711f772acb1958be63fe044c7f306b8b23979d2206
+          live_canary:
+            ref: receipt://docs/reports/2026-11-11-gac-bootstrap-execution-truth-closeout.md#判读要点
+            sha256: sha256:1e8028a468c0ea81fe4dc6711f772acb1958be63fe044c7f306b8b23979d2206
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-347.md
+            sha256: sha256:67d494b7f631096e66604c129c8aff5ae10b1e67ffad572d64ef958da4998544
       value:
         status: NOT_PROVEN
         evidence:
-          note: mint 时点只声明判据与实测读数，不宣称空绿已收敛。
-    overall_state: evaluating
+          note: 只证明仪器能点名且分母可读（层6 surfaces=158 / declared=148 / reached=139 / 点名 9 / 谎报 1）；9 条点名与 1 条谎报无人认领未接线、CR-X2-GAC-BOOTSTRAP 仍 advisory、层3 判死 6 条未逐个裁定 ⇒ 价值待 debt 收敛并转阻断后另案评估。
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
