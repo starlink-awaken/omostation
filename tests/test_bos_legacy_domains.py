@@ -54,8 +54,10 @@ def test_copies_and_caches_are_not_scanned(tmp_path: Path, monkeypatch: pytest.M
 def test_done_plan_archive_is_not_scanned(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """`_done/` 计划归档不扫 —— 历史计划里引用的域可能从未落地.
 
-    实测: `bos://local-ai/` 全仓只出现在 `Plans/_done/*.md`; 它是「历史规划/设想”
-     (从未落地) 的域。本检查守的是**活** URI 面, 历史/遗留域归
+    实测: `local-ai` 域只出现在 `Plans/_done/*.md` (历史规划, 从未落地) —— 以及
+     **记录该案的文档**; 后者刻意**不逐字写出该 URI**, 否则会被自己扫出来
+     (2026-11-22 的「自指假命中」, 见 docs/pitfalls.md 同条)。本检查守的是**活** URI 面,
+     历史/遗留域归
      `.omo/standards/bos-uri-domain-standard.md` 的「遗留域」一节 (该节明写「只减不增」,
      不因扫描命中而扩)。
     """
