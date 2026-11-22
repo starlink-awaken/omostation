@@ -287,6 +287,11 @@ jobs:
           # 已接进 gac-local-gate, 且宿主输入缺席时如实报『没测成』而非通过」—— 该工具此前
           # 只登记在 bin/_registry, 没有任何执行入口 (ADR 明文要求纳入门禁流水线却未落地)。
           # 实测 5 pass; 变异对照: 把 measured 写死为 True ⇒ 2 failed, 恢复 ⇒ 5 passed。
+          # 2026-11-22 追加: test_gate_x2_rule_lint 钉「ADR-0080 D1 的 x2-rule-lint 已接进
+          # gac-local-gate 且常规档为绿」—— 该 ADR 把 x2-rule-lint 列为 4 个必接钩子之一
+          # (理由: 新治理工具零集成, 靠 agent 自觉跑), 但它写的 `.pre-commit-config.yaml`
+          # 在本仓是**声明表不是生效面**, 于是这条要求在真门面落空。
+          # 实测 2 pass。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -336,6 +341,7 @@ jobs:
             ../../tests/test_zhixing_source_tree_provenance.py \
             ../../tests/unit/gac/test_gate_interpreter_roots.py \
             ../../tests/unit/gac/test_gate_test_host_hygiene.py \
+            ../../tests/unit/gac/test_gate_x2_rule_lint.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."
