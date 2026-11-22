@@ -928,7 +928,13 @@ def probe_strategy(root_resolver=None):
         # The trusted process supplies bin/lib on PYTHONPATH. A missing resolver
         # is a collection failure, never permission to guess a HOME/Workspace root.
         import repo_root as root_resolver
-    return collect_strategy_sources(workspace=root_resolver.code_root(),
+    # 读数面必须是**规范检出** (`canonical_root()`), 不是 `code_root()`。
+    # `code_root()` 由 `__file__` 派生 ⇒ 从安装位跑时它指向安装位, 而安装位按构造
+    # 没有 `.omo/_delivery/agent-workflows/`（该面 gitignored, release clone 不带）
+    # ⇒ 采集器读 runs 得 `empty_or_missing_directory` ⇒ `runs=0` ⇒ strategy 恒 PARTIAL。
+    # 采集器读的是**仓内数据面**（delivery 面 + `_truth/registry`）, 那不是运行面。
+    # 见债条目 PANORAMA-A9-SOURCES-STALE-12D (2026-11-22)。
+    return collect_strategy_sources(workspace=root_resolver.canonical_root(),
                                     state_root=root_resolver.state_root(), library=LIBRARY, app=APP)
 
 def probe_compute():
