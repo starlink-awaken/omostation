@@ -98,3 +98,25 @@ history:
     `probe_utils` 仍只存在于部署目录、仓里无 `.asset` 副本 (测试里打桩),
     该模块未版本化是独立缺口。
   actor: "governance-agent"
+
+- at: '2026-11-22T15:30:00+00:00'
+  action: mitigate
+  actor: governance-agent
+  note: >-
+    **采集器侧已修并部署（#5406）**：资产的 `_collect_runs` 从 `"state"` 根改读
+    `"workspace"` 根（state 根下该目录是指向 workspace 的镜像桥软链, BoundedReader
+    按构造不可穿软链）。2026-11-22 用 `zhixing-host-sync.py publish --file strategy_sources.py`
+    从 origin/main 检出部署（旧 release 只多这一个文件差异, 已核对）后, 用**与线上完全
+    相同的入参**复跑: `state=OBSERVED` / `hard_gaps=[]` / `runs=444`（改前 runs=0）。
+    **部署口径注意**: 必须从**含修复的检出**跑 `zhixing-host-sync.py` —— 从 canonical
+    跑会比到 canonical 的陈旧资产, 报 `in_sync` 不部署。
+    **残余（第二层, 未修）**: 线上 `source_states.strategy` 仍记 PARTIAL, 原因不在采集器,
+    而在 `refresh.py::apply_results` 的接纳判据 —— 它除了 `state == "PARTIAL"` 之外,
+    还要求 `documents` 与 `records` **非空**, 否则一律记 PARTIAL; 而 `documents` 为 0
+    是因为 `LIBRARY/.library/registry.yaml` 缺失（库侧数据缺口）。**两层的语义是矛盾的**:
+    采集器明确把「可选历史元数据缺席」归类为 soft gap（`"Absence of optional historical
+    metadata is evidence, but does not make the strategy source unavailable"`）,
+    而 refresh 把 `documents == []` 当成 PARTIAL。**要清掉这条红, 二选一**: ① 补
+    `织星主权智能操作系统文档库/.library/registry.yaml`（数据缺口）; ② 让 refresh 的
+    接纳判据与采集器的 soft/hard 分类对齐（`state == OBSERVED` 就该接纳, 不看 documents）。
+    **未擅动**: ② 是 refresh 的行为变更, 且 ① 的库文件是否该存在属 owner 裁定。
