@@ -69,3 +69,7 @@ history:
   note: Closed debt item.
   actor: governance-agent/20261109T060043Z-gsm-a4649e5a
 closed_at: '2026-11-09T06:01:21.412889+00:00'
+close_reason: '已闭局 (2026-11-09): 采结构性修法 —— registry 增加 hosts 字段 (缺省=全部机器),
+  compile_crontab / check_drift 经 _host_scoped() 按本机过滤 (主机名取自 CRON_HOST env 或
+  socket.gethostname()); 实测 bin/scheduler-compile.py 含 _host_scoped, 且 registry 的
+  work-agent-respire-mbp-watchdog 条目带 hosts: [mini, Mac-mini]。'
