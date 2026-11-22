@@ -6082,7 +6082,7 @@ services:
   enabled: true
   generate: false
   config_source: ~/Library/LaunchAgents/com.omostation.zhixing-dashboard-refresh.plist
-  content_digest: sha256:25028d443593be5cb766a9f2cc6c524bfdf73e6d41aad5944cb12065adfd72db
+  content_digest: sha256:ec994de1e8755bf121d508b4eeba69e2f43a170083f0fb6991d1182830bdfb72
   scheduler: launchd
   trigger: interval
   label: com.omostation.zhixing-dashboard-refresh
@@ -6095,7 +6095,7 @@ services:
   outputs:
     stdout: /Users/xiamingxing/.local/share/zhixing-dashboard/launchd-refresh.log
     stderr: /Users/xiamingxing/.local/share/zhixing-dashboard/launchd-refresh.log
-  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。'
+  notes: 'BET-Y2Q4-T10-206 observe-only 回填: plist 由本机手写/外部工具安装, 本仓不生成 (generate: false); 登记是为了让「已装 label == 注册表」可证。 登记时 (2026-09-27) 状态 not running。 程序路径不在规范检出内 (外部依赖或用户域脚本)。 2026-11-22: 该 plist 去掉了 OMOSTATION_ROOT（原指向安装位）—— 本进程只被 repo_root.canonical_root() 消费它, 而 probe_strategy 的读数面据此解析到规范检出 ~/Workspace（安装位按构造没有 delivery 数据面, 会让 strategy 恒 PARTIAL, 债条目 PANORAMA-A9-SOURCES-STALE-12D / #5430）。PANORAMA_ROOT 是另一个 env, 未动。'
   depends_on: []
 - id: omostation.zhixing-projection-republisher
   enabled: true
