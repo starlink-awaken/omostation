@@ -115,7 +115,7 @@ def _panorama_base_candidates() -> list[dict]:
         out.append({"role": "reader", "path": str(reader), "exists": reader.is_file()})
     except Exception:  # noqa: BLE001 — 诊断本身不得影响主流程
         pass
-    producer_root = os.environ.get("PANORAMA_ROOT")
+    producer_root = os.environ.get("PANORAMA_OUTPUT_ROOT") or os.environ.get("PANORAMA_ROOT")
     if producer_root:
         writer = Path(producer_root).expanduser() / "runtime/dashboard/data.json"
         out.append({"role": "writer", "path": str(writer), "exists": writer.is_file()})
@@ -536,7 +536,9 @@ class RefreshOrchestrator:
                 raise ValueError("managed_code_root_unavailable")
             producer_root = Path(locator).expanduser().resolve()
             ledger_root = Path(state_root()).resolve()
-            configured_state = os.environ.get("PANORAMA_ROOT")
+            # 采集器的输出根是 PANORAMA_OUTPUT_ROOT or PANORAMA_ROOT (见 panorama-collect.py);
+            # 比对的是**输出根**, 不是代码支持根 —— 后者在本机是安装位, 与 state 根不同。
+            configured_state = os.environ.get("PANORAMA_OUTPUT_ROOT") or os.environ.get("PANORAMA_ROOT")
             if configured_state and Path(configured_state).expanduser().resolve() != ledger_root:
                 raise ValueError("managed_state_root_mismatch")
             # Reload the hash/schema-bound publication each round. Its code pin
