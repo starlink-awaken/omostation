@@ -129,7 +129,8 @@ def scan_gate_level_enum(items_dir: Path) -> list[dict]:
                 "message": f"gate_level={gl!r} 不在契约值域 {sorted(valid)}",
             })
     if counts:
-        print(f"  gate_level 分布: {dict(counts)}")
+        # 诊断行：走 stderr，否则 --json 模式下 stdout 不是纯 JSON，管道解析必失败。
+        print(f"  gate_level 分布: {dict(counts)}", file=sys.stderr)
     return findings
 
 
