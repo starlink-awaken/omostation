@@ -19,8 +19,8 @@ mitigation_refs:
 - bin/panorama/materialize-agent-brief.py
 - docs/pitfalls.md
 opened_at: '2026-11-09'
-last_reviewed_at: '2026-11-09'
-next_review_at: '2026-11-16'
+last_reviewed_at: '2026-11-23'
+next_review_at: '2026-12-07'
 gate_level: none
 x1_policy_ref: ''
 x3_tier: Principle
@@ -82,24 +82,79 @@ history:
 
 
     **裁决仍属用户** (三选一: 装排班写方 / 改读契约 / 降级 plist 为按需), 本次只补实测, 不代做机器级变更。''.'
-description: '**实测补充 (2026-11-23, 基线 origin/main):**
+- at: "2026-11-23T21:40:27+00:00"
+  action: review
+  actor: governance-agent
+  note: >-
+    **2026-11-23T21:35Z 复核：核心命题成立，但 `description` 表格里的时效读数已过期，且三根的分叉比「时效」更严重——判定内容互不相同。** 全部直测。
+    ① **三根实测（`os.stat` mtime + `generated_at` 双口径，21:35Z）**：
+    仓根 mtime `2026-11-23T07:51:49Z`（age 822 min ≈ **13.7 h**）、`generated_at 07:45:03Z`；
+    状态根 mtime `21:16:40Z`（age 17.5 min）、`generated_at 21:07:23Z`；
+    安装根 `~/.local/opt/omostation/runtime/dashboard/agent-brief.json` mtime `21:31:35Z`（age 2.6 min）、
+    `generated_at 21:30:20.766066+00:00`（带微秒、格式与另两根不同）。
+    ② **`description` 表格订正**：原写仓根「mtime **2026-11-09 19:36** / **陈旧 14 天**」——该读数在写入时点（本条
+    04:30:44Z 那条 `update_description`）**为真**，但 07:51:49Z 仓根被写过一次，故表格数字已被后续事件作废，
+    不是当时的错记。现改为三根对照表（见 `description`）。
+    ③ **「仓根无排班写方」加强成立**：`~/Library/LaunchAgents/*.plist` 全量 95 条逐个 `open().read()` 扫描，
+    引用 `/Users/xiamingxing/Workspace` 的有 6 条（`omo-state-sync` / `omo-health-refresh` / `omo-debt-refresh` /
+    `ai.hermes.gateway` / `com.t3tools.t3code.service` / `ai.multica.daemon`），其中**含 `runtime/dashboard` 路径者为 0**；
+    `com.omostation.agent-brief-materialize` 活体 `launchctl print` 报 runs=119 / last exit code=0 / interval 1800，
+    其 `OMOSTATION_STATE_ROOT` 指向状态根。`bin/panorama/materialize-agent-brief.py` 默认目标
+    `default_target() = state_root()/runtime/dashboard/agent-brief.json`（`:84`），写仓根必须显式传 `--target`（`:195-209`）。
+    ④ **今天那次仓根写入的写方未定位**：81 个 `*.log`（`~/Library/Logs/omostation`、状态根 `runtime/cron`）里
+    `2026-11-23T07:4x/07:5x` 时段与 `agent-brief` 同行的命中为 0；仓根 `runtime/dashboard/` 被 `.gitignore:414`
+    忽略（`git ls-files` tracked 0 个），故 git 侧也无痕。它的 `provenance.source_path` 指向
+    `revisions/9738a18d3507eb2f…/agent-brief.json`，与 11-09 那条「手工物化一次、原样复制不重打戳」的形状一致
+    ⇒ 判定为**一次性 `--target` 物化**（不是排班恢复），但**具体发起方未证实**。
+    ⑤ **新发现（比时效更要紧）**：三根发布的门禁判定**互相矛盾**——
+    仓根（07:45Z）`gates_total 11 / gates_pass 4 / gates_failing [RF0]`；
+    状态根（21:07Z）`11 / 9 / [A3, RF0]`；
+    安装根（21:30Z）`11 / 5 / [A2, A4, A5, A6, A7, A9]`（且 `provenance` 为 `null`）。
+    即：AGENTS.md §1.8 指定的读物（状态根）说 A3 红，仓内 verifier `bin/gac/gate-health-check.py --json`
+    说全绿，而另一个每 5 min 更新的安装根说 A2/A4/A5/A6/A7/A9 六门红。这与
+    `DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN` 第八次实测（发布链代码副本落后 main 1,070 / 291 commit，
+    宿主入口副本的 A3 循环只遍历 `("A1","A2","A3","A4","A5")`）是同一根因的两个面：
+    **入口层的三个平面没有共同的判定源**，「读哪一根」的契约修复（本条 decision (2) 已做）只解决了**取哪份数**，
+    没解决**那份数是谁算的**。
+    ⑥ **对 `decision_needed` 三选一的影响**：(1) 给仓根装排班写方——若写方与状态根同源，会把「判定源是哪份代码」
+    的问题从两处复制成三处，且不能让三根一致；应先把「哪份代码负责发布面门禁判定」定下来（对应另一条的 (G)），
+    再谈仓根写方。(2) 改读契约已落 AGENTS.md §1.8，本轮复验仍指状态根（该处文字未回退）。(3) 不变。
+    ⑦ 本条 `last_reviewed_at` 由 `2026-11-09` 推进到 `2026-11-23`，`next_review_at` 由已过期的 `2026-11-16`
+    推到 `2026-12-07`；`lifecycle_state` / `gate_level` 保持 `identified` / `none`（本轮只补实测与订正时效，
+    未新增机器服务、未改读契约、未改任何门禁判定逻辑）。
+description: >-
+  **实测补充 (2026-11-23T21:35Z 订正版, 基线 origin/main `77bcf1838`)。**
+  三份 agent-brief 的时效与判定实测（`os.stat` mtime / `generated_at` / `health` 字段）：
 
 
-  三份 agent-brief 的时效实测 (stat mtime):
+  | 面 | mtime (UTC) | age | `gates_total/pass` | `gates_failing` | 结论 |
+
+  |---|---|---|---|---|---|
+
+  | 仓根 `runtime/dashboard/agent-brief.json` | 2026-11-23T07:51:49Z | 13.7 h | 11 / 4 | `[RF0]` |
+  无排班写方，今天被一次性写入过 |
+
+  | profile 状态根 `~/.local/state/omostation/prod/…` | 2026-11-23T21:16:40Z | 17.5 min | 11 / 9 | `[A3, RF0]` |
+  AGENTS.md §1.8 指定的入口，30 min 写方在跑 |
+
+  | 安装根 `~/.local/opt/omostation/…` | 2026-11-23T21:31:35Z | 2.6 min | 11 / 5 | `[A2, A4, A5, A6, A7, A9]` |
+  5 min 写方，`provenance` 为 `null` |
 
 
-  | 面 | mtime | 结论 |
-
-  |---|---|---|
-
-  | 仓根 `runtime/dashboard/agent-brief.json` | **2026-11-09 19:36** | **陈旧 14 天** |
-
-  | profile 状态根 `~/.local/state/omostation/prod/runtime/dashboard/agent-brief.json`
-  | 2026-11-23 12:16 | 新鲜 |
+  **前一版表格（本条 04:30:44Z 的 `update_description`）写仓根「mtime 2026-11-09 19:36 / 陈旧 14 天」**：
+  该读数在其写入时点为真，07:51:49Z 之后失效，故按上表订正；不改动历史条目。
 
 
-  ⇒ 本条 `decision_needed` 描述的「仓根无写者」**至今仍在**: 仓根那份 14 天未更新, 而 state 根那份是新鲜的。AGENTS.md
-  §1.8 现在让 agent 读 **state 根**那份, 所以主入口不受影响; 但任何按仓根路径读的消费者拿到的都是 14 天前的快照。
+  **本条核心命题仍成立且被加强**：95 条 `~/Library/LaunchAgents/*.plist` 全量扫描中引用仓根的有 6 条，
+  但**没有任何一条以 `runtime/dashboard` 为写目标**；`materialize-agent-brief.py` 的默认目标按 `state_root()`
+  解析（`:84`），写仓根需显式 `--target`（`:195-209`）⇒ 仓根那份是**一次性人工/agent 物化**，无排班 ⇒ 仍会再次冻结。
+  今天那次写入的**发起方未定位**（81 个 cron 日志在该时段零命中，仓根路径又被 `.gitignore:414` 忽略而无 git 痕）。
 
 
-  **裁决仍属用户** (三选一: 装排班写方 / 改读契约 / 降级 plist 为按需), 本次只补实测, 不代做机器级变更。'
+  **新增事实（比时效更要紧）**：三根的门禁判定互不相同（4/9/5 通过，红门集合无包含关系）。
+  修「读哪一根」只解决取数位置，不解决「那份数由哪份代码算出」——后者见
+  `DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN` 的发布链代码副本落后（1,070 / 291 commit）实测。
+
+
+  **裁决仍属用户**（三选一：装排班写方 / 改读契约 / 降级 plist 为按需）。代理本轮只补实测与订正时效，
+  未新增机器服务、未改读契约、未动任何门禁判定逻辑。
