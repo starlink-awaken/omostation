@@ -384,6 +384,24 @@ def check_ci_surfaces() -> dict:
         # 旧口径是 len(wiring)（含未登记工具、漏本地门禁工具）⇒ 同一份注册表读出 147，
         # 而 registered∩wired 只有 134、并上本地门禁是 138 —— 一个数字三种含义。
         "wired_tools": len((set(wiring) | local_gate_tools) & set(registered_tools)),
+        # 点名未接线的登记项: 只报总数 (wired=N/M) 时, 「哪 M-N 条没接」要人自己去差集,
+        # 而「0 error / 0 warning」的总结会让 14 条未接线看起来像仪器没接上。
+        # 每条带上它自己声明的 workflow —— 多数正是「声明了 workflow 但该 workflow
+        # 不跑 ci-check-runner」这种声明与执行面不符 (2026-11-23 实测 14 条)。
+        "unwired_count": len(
+            [tool for tool in registered_tools if tool not in (set(wiring) | local_gate_tools)]
+        ),
+        "unwired_tools": sorted(
+            [
+                {
+                    "tool": tool,
+                    "declared_workflow": str((registered_tools[tool] or {}).get("workflow") or ""),
+                }
+                for tool in registered_tools
+                if tool not in (set(wiring) | local_gate_tools)
+            ],
+            key=lambda row: row["tool"],
+        ),
     }
 
 
@@ -506,8 +524,11 @@ def main() -> int:
         return 1 if report["errors"] else 0
     print("=== CI 平面可观测性 (check-ci-surfaces.py, ADR-0379) ===")
     print(
-        f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']}/{report['surfaces']} orphan_registered={report['orphan_registered']}"
+        f"SSOT: ci-surfaces.yaml | surfaces={report['surfaces']} wired={report['wired_tools']}/{report['surfaces']} "
+        f"unwired={report['unwired_count']} orphan_registered={report['orphan_registered']}"
     )
+    for row in report["unwired_tools"]:
+        print(f"  UNWIRED  {row['tool']}  (声明 workflow: {row['declared_workflow'] or '—'})")
     if not _sgf_policy_present():
         # 缺生可见: wired_tools 来自 workflow 文本 + sgf-policy; 后者在子模块未
         # init 的检出里缺席 ⇒ 计数静默偏低 (实测 154 面里 wired 146 => 95)。
