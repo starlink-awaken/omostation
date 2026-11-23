@@ -8,7 +8,7 @@ scope: host
 severity: medium
 weight: 0.15
 entropy_class: medium
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-team
 affected_roots:
 - ~/Library/LaunchAgents/com.omostation.omo-debt-refresh.plist
@@ -112,6 +112,10 @@ history:
 
     **仍未做 (decision_needed (2) 保持开放)**: 「本仓 plist 改了 → 已安装 plist 跟着改」没有任何机制 (手工维护
     + digest 追踪)。当前 0 drift 是**事实一致**, 不是**机制保证** —— 下次手工改一边还会漂。''.'
+- at: '2026-11-23T13:47:14.777390+00:00'
+  action: close
+  note: Closed debt item.
+  actor: governance-agent
 description: '**复核 (2026-11-23, 基线 origin/main@2d2a8f099): 症状消失, decision_needed (1)
   已落地。**
 
@@ -130,3 +134,8 @@ description: '**复核 (2026-11-23, 基线 origin/main@2d2a8f099): 症状消失,
 
   **仍未做 (decision_needed (2) 保持开放)**: 「本仓 plist 改了 → 已安装 plist 跟着改」没有任何机制 (手工维护 +
   digest 追踪)。当前 0 drift 是**事实一致**, 不是**机制保证** —— 下次手工改一边还会漂。'
+closed_at: '2026-11-23T13:47:14.777234+00:00'
+close_reason: '已安装 plist 与本仓已验证 plistlib 语义完全一致 (equal: True)，动态 NOW 与 venv 解释器均已合入并由
+  PR #5213 落地重装。'
+resolution_evidence: 'PR #5213 (2026-11-10) 将解释器收敛为 .venv/bin/python 并解耦系统 Python
+  版本；已安装 plist 经 bootout+bootstrap 重装，runs=2 / exit_code=0；services.yaml 同步 digest。未做项（本仓改动自动同步至安装位）保持作为架构防腐要求。'
