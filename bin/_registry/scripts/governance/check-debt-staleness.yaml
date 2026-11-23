@@ -1,0 +1,24 @@
+schema: script-registry/v1
+id: bin/gac/check-debt-staleness.py
+name: Check Debt Staleness
+category: governance
+owner: governance-team
+description: "债务条目陈旧度信号 — affected_roots 在 last_reviewed_at 之后被改过则点名 (advisory)"
+inputs:
+  - name: --json
+    type: flag
+  - name: --self-test
+    type: flag
+outputs:
+  - type: exit_code
+  - type: json
+  - type: stdout
+dependencies:
+  - pyyaml
+triggers:
+  - gac_local_gate
+related:
+  - .omo/_truth/registry/ci-surfaces.yaml
+  - .omo/debt/items/
+maturity: draft
+last_reviewed: "2026-11-22"
