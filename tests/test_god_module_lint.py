@@ -48,9 +48,11 @@ class TestCheckGodModule:
         assert godmod.ERROR_LOC == 1500
 
     def test_default_workspace_root_resolves(self, godmod):
-        # 跨仓 import (P102 模式) → parents[3] 应是 /Users/xiamingxing/Workspace
-        assert godmod.WORKSPACE_ROOT.name == "Workspace"
+        # 跨仓 import (P102 模式) → WORKSPACE_ROOT 是「含 projects/ 与 AGENTS.md 的那个检出」,
+        # **与它叫什么名字无关**。原来这里断言 `name == "Workspace"`, 于是任何人在 worktree
+        # (agent/governance-agent/*, ws-*) 里跑都会恒红 —— 判据测的是目录名, 不是解析逻辑。
         assert (godmod.WORKSPACE_ROOT / "projects").is_dir()
+        assert (godmod.WORKSPACE_ROOT / "AGENTS.md").is_file()
 
     def test_check_god_module_returns_error_files(self, godmod, tmp_path):
         # 真实 workspace 现存超标文件已被 ADR-0155 allowlist 豁免 (实扫 error=0),

@@ -44,15 +44,26 @@ def test_station_ok_records_latency():
     assert out == 42 and states["fine"]["status"] == "ok" and "ms" in states["fine"]
 
 
+def _hermetic_state(tmp_path, monkeypatch):
+    """把状态面整体挪进 tmp_path。
+
+    这些用例原来只 patch `_ws`, 但 `_state_path()` 走的是 **state_root()**(ADR-0456 /
+    BET-Y2Q4-T10-277 的刻意设计: 代码面与状态面不同源) —— 于是 patch 对状态面无效,
+    `test_state_roundtrip` 会把 `morning_runs` 写进**开发机的真实工作区**, 再由
+    `test_status_panel_shape` 读出来, 让后一条恒红。判据: 要隔离状态就 patch 状态缝本身。
+    """
+    monkeypatch.setattr(SUP, "_state_path", lambda: tmp_path / ".omo/state/pipeline-supervisor-state.json")
+
+
 def test_state_roundtrip(tmp_path, monkeypatch):
-    monkeypatch.setattr(SUP, "_ws", lambda: tmp_path)
+    _hermetic_state(tmp_path, monkeypatch)
     SUP._save_state({"schema": SUP.SCHEMA, "morning_runs": [{"ts": "t"}], "inbound_runs": [], "alerts": []})
     loaded = SUP._load_state()
     assert loaded["morning_runs"][0]["ts"] == "t"
 
 
 def test_status_panel_shape(tmp_path, monkeypatch):
-    monkeypatch.setattr(SUP, "_ws", lambda: tmp_path)
+    _hermetic_state(tmp_path, monkeypatch)
     panel = SUP.status()
     assert panel["schema"] == SUP.SCHEMA
     assert panel["today_morning_brief"] is False and panel["morning_runs_total"] == 0
@@ -60,7 +71,7 @@ def test_status_panel_shape(tmp_path, monkeypatch):
 
 def test_inbound_degrade_on_missing_file(tmp_path, monkeypatch):
     """Bad input → degraded stations, run recorded, no crash (circuit_breaker)."""
-    monkeypatch.setattr(SUP, "_ws", lambda: tmp_path)
+    _hermetic_state(tmp_path, monkeypatch)
     result = SUP.process_inbound(Path("/tmp/nonexistent-degrade-test.png"))
     assert result["degraded"], "missing file must degrade, not crash"
     state = json.loads((tmp_path / ".omo/state/pipeline-supervisor-state.json").read_text(encoding="utf-8"))
