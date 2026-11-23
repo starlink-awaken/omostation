@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import json
 import shutil
 import subprocess
 import sys
+import types
 import venv
 from pathlib import Path
 
@@ -15,9 +17,40 @@ import pytest
 
 ASSET = Path(__file__).resolve().parents[1] / "bin/panorama/assets/host/workflow_collector.py.asset"
 RUNNER = Path(__file__).resolve().parents[1] / "bin/gac/managed-python"
+_COLLECTOR_MODULES = ("collectors", "collectors.base", "collectors.registry", "collectors.workflow")
 
 
-def _load_collector(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+@contextlib.contextmanager
+def _sandboxed_collector_modules():
+    """导入 `collectors` 族之前把既有键挪开, 退出时**连新建的一起**还原。
+
+    只靠 `monkeypatch.delitem` 是不够的: delitem 只对**原本存在**的键登记还原点,
+    而 `import_module` 会**新建** `collectors` / `.base` / `.registry` / `.workflow`
+    —— 没有任何还原点覆盖它们, 于是它们留在 `sys.modules` 里污染后续用例。
+    """
+    saved = {name: sys.modules.get(name) for name in _COLLECTOR_MODULES}
+    for name in _COLLECTOR_MODULES:
+        sys.modules.pop(name, None)
+    importlib.invalidate_caches()
+    try:
+        yield
+    finally:
+        for name in _COLLECTOR_MODULES:
+            sys.modules.pop(name, None)
+        for name, module in saved.items():
+            if module is not None:
+                sys.modules[name] = module
+
+
+@pytest.fixture
+def workflow_collector(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """导入 collectors.workflow 真身, 用完把 `sys.modules` 还原到位。
+
+    实测 (2026-11-23): 跑 `tests/` 全量选择时, `tests/unit/test_panorama_pending_authorizations.py`
+    五条用例恒红 `ModuleNotFoundError: No module named 'collectors.personal_value'` ——
+    它自己的 `deploy_collectors` 装的是含 `personal_value` 的包, 但 `sys.modules["collectors"]`
+    已被本文件的临时包占住。单独跑该文件、或只跑 `tests/unit`, 都不复现 (污染源在 `tests/`)。
+    """
     package = tmp_path / "collectors"
     package.mkdir()
     (package / "__init__.py").write_text("", encoding="utf-8")
@@ -25,12 +58,28 @@ def _load_collector(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     shutil.copy2(ASSET.parent / "collectors.registry.py.asset", package / "registry.py")
     shutil.copy2(ASSET, package / "workflow.py")
     monkeypatch.syspath_prepend(str(tmp_path))
-    monkeypatch.delitem(sys.modules, "collectors.workflow", raising=False)
-    monkeypatch.delitem(sys.modules, "collectors.registry", raising=False)
-    monkeypatch.delitem(sys.modules, "collectors.base", raising=False)
-    monkeypatch.delitem(sys.modules, "collectors", raising=False)
-    importlib.invalidate_caches()
-    return importlib.import_module("collectors.workflow")
+    with _sandboxed_collector_modules():
+        yield importlib.import_module("collectors.workflow")
+
+
+def test_sandboxed_collector_modules_restores_preexisting_entry():
+    """既有键要原样还回去。"""
+    sentinel = types.ModuleType("collectors")
+    sys.modules["collectors"] = sentinel
+    try:
+        with _sandboxed_collector_modules():
+            assert "collectors" not in sys.modules
+        assert sys.modules["collectors"] is sentinel, "既有键未还原"
+    finally:
+        sys.modules.pop("collectors", None)
+
+
+def test_sandboxed_collector_modules_drops_newly_imported_entries():
+    """新建出来的 collectors* 键一个都不准留下 —— 这正是旧实现漏的那半。"""
+    with _sandboxed_collector_modules():
+        sys.modules["collectors"] = types.ModuleType("collectors")
+    assert "collectors" not in sys.modules, "新建的键漏在了 sys.modules 里"
+
 
 
 @pytest.fixture
@@ -90,11 +139,11 @@ def _write_legacy_selector(
 
 
 def test_module_import_keeps_the_sandboxed_managed_runtime(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, managed_venv,
+    workflow_collector, managed_venv,
 ) -> None:
     root, selector, executable = managed_venv
     shutil.copy2(RUNNER, selector)
-    collector = _load_collector(tmp_path, monkeypatch)
+    collector = workflow_collector
 
     argv = collector.readonly_observe_argv(root)
 
@@ -105,11 +154,11 @@ def test_module_import_keeps_the_sandboxed_managed_runtime(
 
 @pytest.mark.parametrize("exit_code, decision", [(0, "continue"), (1, "escalate")])
 def test_current_selector_receipt_and_selected_runtime_preserve_venv_context(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, managed_venv, exit_code: int, decision: str,
+    workflow_collector, managed_venv, exit_code: int, decision: str,
 ) -> None:
     root, selector, executable = managed_venv
     shutil.copy2(RUNNER, selector)
-    collector = _load_collector(tmp_path, monkeypatch)
+    collector = workflow_collector
 
     selected = collector._select_managed_python(root)
     result = subprocess.run(
@@ -130,10 +179,10 @@ def test_current_selector_receipt_and_selected_runtime_preserve_venv_context(
 
 
 def test_legacy_realpath_receipt_uses_selector_run_metadata_context(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, managed_venv,
+    workflow_collector, managed_venv,
 ) -> None:
     root, selector, executable = managed_venv
-    collector = _load_collector(tmp_path, monkeypatch)
+    collector = workflow_collector
     _write_legacy_selector(selector, {
         "schema": "managed-python-runtime-receipt/v1",
         "profile": "pyyaml",
@@ -157,10 +206,10 @@ def test_legacy_realpath_receipt_uses_selector_run_metadata_context(
 
 
 def test_runtime_metadata_must_identify_the_probed_interpreter(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, managed_venv,
+    workflow_collector, managed_venv,
 ) -> None:
     root, selector, executable = managed_venv
-    collector = _load_collector(tmp_path, monkeypatch)
+    collector = workflow_collector
     _write_legacy_selector(selector, {
         "schema": "managed-python-runtime-receipt/v1",
         "profile": "pyyaml",
@@ -179,14 +228,14 @@ def test_runtime_metadata_must_identify_the_probed_interpreter(
 
 
 def test_observe_timeout_leaves_room_under_the_collector_budget(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    workflow_collector,
 ) -> None:
     """The sandboxed observer must not burn the whole worker budget.
 
     Regression: a hardcoded 20s inner timeout fired under host load and the
     source reported "timed out after 20 seconds" instead of an observation.
     """
-    collector = _load_collector(tmp_path, monkeypatch)
+    collector = workflow_collector
     assert collector.OBSERVE_TIMEOUT >= 30
     assert collector.OBSERVE_TIMEOUT < 48
     assert collector._run_cmd.__defaults__[0] == collector.OBSERVE_TIMEOUT
