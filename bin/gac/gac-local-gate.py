@@ -474,6 +474,19 @@ if not any(gate.get("id") == "current-state-coherence" for gate in GATES_LIST):
         }
     )
 
+# Root-owned 终态任务证据有效性守卫 (2026-11-23 接线):
+# 债务项 VERIFY-MODE-TASK-JUDGE-UNWIRED: `verify.py --mode task` 长期未接任何门禁，
+# 导致终态债务证据校验空转。先以 advisory/SOFT_CHECKS 接入，保持可见性而不阻断存量。
+if not any(gate.get("id") == "task-verify" for gate in GATES_LIST):
+    GATES_LIST.append(
+        {
+            "id": "task-verify",
+            "command": ["bin/ssot/verify.py", "--mode", "task"],
+            "timeout": 60,
+            "note": "终态任务与债务证据有效性校验 (VERIFY-MODE-TASK-JUDGE-UNWIRED 接线); advisory 不阻断",
+        }
+    )
+
 # Root-owned ADR-0466 法条 2 宿主零污染守卫 (2026-11-22 接线):
 # ADR-0466 §5 法条 2 明文要求 `check-test-host-hygiene.py`「纳入门禁流水线」,
 # 但它此前只登记在 bin/_registry, 没有任何执行入口 —— 一道被声明却不存在的防线。
@@ -741,6 +754,7 @@ SOFT_CHECKS = {
     "resident-bos-check",  # CR-RESIDENT-BOS-01: agora bos-services.yaml 缺 resident 域, 非阻断
     "pitfall-gat006-check",  # PITFALL-GAT-006: 分支与 main 等价检测, 警告不阻断
     "lane-debt-ledger",  # lane 隔离历史欠账台账自洽校验, 纯记录面不阻断
+    "task-verify",  # VERIFY-MODE-TASK-JUDGE-UNWIRED: 终态任务与债务证据校验, advisory 不阻断
 }
 
 
