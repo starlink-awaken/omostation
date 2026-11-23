@@ -175,3 +175,34 @@ history:
     群体层面没有可差分的声音。**新增一项待裁**（见 `decision_needed` 第三段），
     `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`。
   actor: "governance-agent"
+- at: "2026-11-23T20:30:00+00:00"
+  action: review
+  note: >-
+    **同一风险面的第二个实测实例（治理简报平面，非债务投影）** —— state 根
+    `runtime/dashboard/agent-brief.json`（`generated_at 2026-11-23T20:13:30Z` / mtime `20:16:40Z`）
+    发布 `health.gates_failing = [A3, A6, A7, RF0]`（`gates_total 11 / gates_pass 7`）。
+    四个 id 逐个活测后**只有 A6 站得住，3 个是假红**：
+    ① `bin/gac/gate-health-check.py --json`（20:21Z，rc=0）给 `all_ok: true` 共 7 行门禁，
+    含 `A3 Governance Python: ok / "Governance semantic gate: PASS"` ⇒ A3 已绿；
+    ② 该复检仪器**不评估 A6/A7/RF0**（7 行名单里没有）⇒ Brief 自己的
+    `next_actions.resolve-failing-gates` 用它无法闭环 —— 扫描面 ≠ 被管面；
+    ③ `bin/gac/ruflo-rf0-verify.py --json` rc=0、`ok: true`、6 项 checks 全 true
+    （`daemon.status = STOPPED` 正是只读准入要求的态）⇒ RF0 绿；
+    ④ `bin/gac/multica-as0-verify.py --json` rc=0、`ok: true`、`api 30/30 / topology 7/7 / trust 3/3`
+    （满足采集器 :1237-1239 live 报告口径的 PASS 映射 `ok and (30,7,3)==(30,7,3) and total>0`）⇒ A7 绿；
+    ⑤ `bin/gac/orca-r0-verify.py --json` rc=1、`ok: false`、`runtime_ready: false`、probes 3/6、
+    `r0_transactions` 的 `dispatch_identity` 与 `worker_done_accepted` 均为 `no sample`
+    ⇒ A6 真红，缺的是真实样本事务与运行时准入，不是代码缺陷。
+    **假红的直接机制正是本条的根因形状**：`python3 bin/panorama/panorama-collect.py --gates`
+    在 canonical 落后时 rc=1 且 stdout 为空，抛 `panorama-collect.py:478
+    projection_code_root_not_current_main`（判据 `HEAD != refs/remotes/origin/main`），
+    本次实测 canonical `01948b6b1` 落后 origin/main `45613efc8` 3 个 commit；采集整轮不出数后
+    简报落回 `NOT_ADMITTED / "verifier unavailable"` 一类 fallback，于是**已绿的门禁被写成红**
+    （与「登记了但空转」的区别：这里是整轮采集中断，不是某条检查不跑）。
+    另附同族已登记面：仓根 `runtime/dashboard/data.json` mtime 停在 `2026-10-28T08:15Z`（26.7 天无写方），
+    归 `AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER`，不在本条重复立案。
+    **结论（对 A/B/C 的代价面）**：漂移的代价不止「债务读数失真」，还包括**把 3 个已绿门禁发布成红**、
+    并把人引向修不存在的故障；(A) 的「写明来源 commit 并显式标 stale」只覆盖可见性，
+    不覆盖本实例里「整轮抛异常 ⇒ 下游用 fallback」这一失效路径，裁决时需一并考虑。
+    `lifecycle_state` / `gate_level` 仍保持 `identified` / `watchlist`。
+  actor: "governance-agent"
