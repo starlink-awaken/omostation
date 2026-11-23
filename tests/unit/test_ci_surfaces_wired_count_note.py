@@ -48,3 +48,43 @@ def test_no_note_when_policy_present(monkeypatch, capsys) -> None:
     """反过来：policy 在位时不得误导性地提示计数偏低。"""
     out = _run(monkeypatch, capsys, policy_present=True)
     assert "sgf-policy.yaml 缺席" not in out, f"policy 在位却提示缺席: {out}"
+
+
+def test_unwired_entries_are_named_not_just_counted() -> None:
+    """未接线的登记项必须**点名**, 不能只给 `wired=N/M`。
+
+    缺陷形状 (2026-11-23): 总结行报 `wired=144/158` 而 `error_count=0`
+    ⇒ 「哪 14 条没接」要人自己去差集, 而「CI 平面干净」这句会盖住它。
+    点名时每条带上**它自己声明的 workflow** —— 多数正是「声明了 workflow
+    但该 workflow 不跑 ci-check-runner」这种声明与执行面不符。
+    """
+    report = MODULE.check_ci_surfaces()
+    unwired = report["unwired_tools"]
+    assert report["unwired_count"] == len(unwired), (report["unwired_count"], len(unwired))
+    assert all(row["tool"] for row in unwired), unwired
+    # 点名的必须**确实**不在接线集里 —— 否则点名本身就是假绿
+    wiring = MODULE._discover_wiring()
+    for row in unwired:
+        assert row["tool"] not in wiring, row
+    # 总结行要带上计数, 否则等于没点名
+    assert "unwired=" in _summary_line()
+
+
+def _summary_line() -> str:
+    """总结行由 `main()` 打印 (check_ci_surfaces() 只返回 dict), 故按 CLI 路径取。"""
+    import contextlib
+    import io
+    import sys
+
+    argv = sys.argv
+    sys.argv = ["check-ci-surfaces.py"]
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            MODULE.main()
+    finally:
+        sys.argv = argv
+    for line in buf.getvalue().splitlines():
+        if line.startswith("SSOT:"):
+            return line
+    return ""
