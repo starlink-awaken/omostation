@@ -720,6 +720,55 @@ def test_resolve_failing_gates_action_stays_within_rendered_fields() -> None:
     assert "point-in-time snapshot" in action["detail"]
 
 
+def test_resolve_failing_gates_names_each_gate_authority() -> None:
+    """复检仪器必须与被检门禁同源。
+
+    2026-11-23 实测: Brief 列 `gates_failing = [A3, A6, A7, RF0]`, 而三个 verifier
+    活测全绿 (`ok: true`) —— 采集器在 canonical 落后时整轮抛异常, 简报落回
+    `NOT_ADMITTED` fallback。Brief 只点名 `gate-health-check.py`, 而它的 7 行名单
+    不覆盖 A6/A7/RF0, 照它复检既不能证真也不能证伪 ⇒ 行动项指向了错的读数来源。
+    """
+    module = _module()
+    payload = _payload()
+    payload["gates"] = [
+        {"id": "A2", "title": "Host", "verdict": "FAIL", "live": True},
+        {"id": "A6", "title": "Orca R0 准入", "verdict": "NOT_ADMITTED", "live": False},
+        {"id": "A7", "title": "Multica AS0 准入", "verdict": "NOT_ADMITTED", "live": False},
+        {"id": "RF0", "title": "Ruflo 只读协作准入", "verdict": "NOT_ADMITTED", "live": False},
+    ]
+    action = next(
+        a for a in module.collect_agent_visibility(payload)["next_actions"]
+        if a["id"] == "resolve-failing-gates"
+    )
+
+    for script in (
+        "bin/gac/orca-r0-verify.py",
+        "bin/gac/multica-as0-verify.py",
+        "bin/gac/ruflo-rf0-verify.py",
+    ):
+        assert script in action["detail"], script
+    assert "gate-health-check.py" in action["detail"]
+
+
+def test_resolve_failing_gates_omits_verifier_hint_for_unlisted_gates() -> None:
+    """只有判定源确实不同的门禁才该被点名, 否则细节会误导成「另有仪器」。"""
+    module = _module()
+    payload = _payload()
+    payload["gates"] = [
+        {"id": "A1", "title": "Workflow", "verdict": "PASS", "live": True},
+        {"id": "A2", "title": "Host", "verdict": "FAIL", "live": True},
+        {"id": "A3", "title": "Governance Python", "verdict": "FAIL", "live": True},
+    ]
+    action = next(
+        a for a in module.collect_agent_visibility(payload)["next_actions"]
+        if a["id"] == "resolve-failing-gates"
+    )
+
+    assert "orca-r0-verify.py" not in action["detail"]
+    assert "multica-as0-verify.py" not in action["detail"]
+    assert "ruflo-rf0-verify.py" not in action["detail"]
+
+
 def test_resolve_failing_gates_action_absent_when_all_gates_pass() -> None:
     module = _module()
     payload = _payload()
