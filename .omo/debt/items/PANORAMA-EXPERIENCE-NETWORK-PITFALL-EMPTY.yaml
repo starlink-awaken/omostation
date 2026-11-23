@@ -1,0 +1,69 @@
+id: PANORAMA-EXPERIENCE-NETWORK-PITFALL-EMPTY
+title: Panorama 经验网络 pitfall 子图恒空：读者 glob 打扁平路径 + 按 frontmatter 分隔线解析无分隔线的 agent-error/v1 YAML（实测采到 0/58），且坑知识三面读数不同源（3 / 58 / 162）
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- .omo
+- bin
+- projects
+evidence_refs:
+- bin/panorama/panorama-collect.py
+- bin/gac/error-knowledge.py
+- projects/ecos/src/ecos/ssot/compiler/pitfall_inspector.py
+- .omo/_knowledge/pitfalls/gate/PITFALL-GAT-017.yaml
+- .omo/_knowledge/pitfalls/INDEX.md
+mitigation_refs: []
+opened_at: '2026-11-23T16:57:12.060350+00:00'
+last_reviewed_at:
+next_review_at:
+gate_level: none
+history:
+- at: '2026-11-23T16:57:12.060350+00:00'
+  action: register
+  note: Registered debt item PANORAMA-EXPERIENCE-NETWORK-PITFALL-EMPTY.
+  actor: governance-agent
+- at: '2026-11-23T16:57:12.101021+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''**症状** —— Panorama「经验网络」的 pitfall 子图恒空：`bin/panorama/panorama-collect.py:4443 collect_experience_network()` 用 `glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml"))` 采集节点，而该平面的实际布局是**分类子目录**（`error-knowledge.py:4` 自陈「体系设计: `.omo/_knowledge/pitfalls/{category}/{slug}.yaml`」）。本轮实测两个数：读者 glob 命中 **0** 个文件，`*/PITFALL-*.yaml` 下实有 **58** 个（gate 17 / environment 10 / coordination 9 / measurement 9 / submodule 7 / cron 5 / scoring 1）。
+
+
+    **光补 glob 不够（第二因，实测）** —— 同一函数体随后按 frontmatter 解析：`fm = raw.split("---")[1] if raw.startswith("---") else ""`，再 `d = yaml.safe_load(fm) or {}`、`nid = f"PIT-{d.get(''id'','''')}"`。把 glob 换成 `*/PITFALL-*.yaml` 后实测 **58/58 个文件都不以 `---` 开头**（它们是 `schema: agent-error/v1` 起的普通单文档 YAML，无 frontmatter 分隔线），于是 `fm` 恒空串 ⇒ `d` 恒 `{}` ⇒ 解析出的非空 id 数 = **0**，58 个节点全部塌成同一个 id `PIT-`、`name` 取 `d.get("title","")` 也是空。正确读法是直接 `yaml.safe_load(整份)`：实测可拿到 58 个真实 id（`PITFALL-COO-001` … ）。
+
+
+    **第三处命名空间不同源（潜在，非本轮回归）** —— 同函数 decisions 半边用 `re.findall(r''PITFALL-(\d+)'', raw)` 造 `PIT-{数字}` 目标，而 pitfall 侧真实 id 形状是 `PIT-PITFALL-COO-001`（三段式，非纯数字）。实测当前 `.omo/_knowledge/decisions/*.md` 里 `PITFALL-\d+` 引用命中 **0** 处 ⇒ 那半边现在是空集，不是回归；但一旦有人按字面写 `PITFALL-001`（平面根下确有 5 个 legacy `PITFALL-00N-*.md`），连出的边也指不到任何节点。
+
+
+    **背景：同一类知识现有三张互不相交的表（实测计数）** —— ① `docs/pitfalls.md` **162** 条（人读正文，AGENTS.md §7 是其分类索引，仍在活跃写入；162 按 `git show origin/main:docs/pitfalls.md` 量得 —— 同一条命令在本地主检出（停在 `53a9abfbe`）只报 153，陈旧镜像会低估，不能拿工作树读数当 main 现状）；② `.omo/_knowledge/pitfalls/**` **58** 条（机器面 `agent-error/v1`，`error-knowledge.py` 读写，平面根 `INDEX.md` 自称 `type: ssot`；按 `discovered_at` 排序最晚一条是 `PITFALL-SUB-007` = `2026-11-09`（58 条里 5 条晚于 2026-10-13，`PITFALL-CRD-001` 该字段为空））；③ `projects/ecos/src/ecos/ssot/compiler/pitfall_inspector.py` 里 **3** 条硬编码 `PitfallEntry`（`ecos-constraint pitfall list` 的读数即来自它，实测 `list_pitfalls()` 返回 3 条，id 为 `PITFALL-001..003`），而 `INDEX.md` 的正文声称「通过 `ecos-constraint pitfall scan` 纳入 CI 静态门禁」—— 该命令并不读 ② 或 ①。三张表之间没有任何自动同步，`error-knowledge.py` 的 `stats` 也只数自己那 58 条。
+
+
+    **同面两处次要实测** —— ① `pitfall_inspector.py` 的模块 docstring 列了 `PITFALL-004`，而 `KNOWN_PITFALLS` 实际只有 `001..003` 三个键（同一文件内自陈与登记表漂移），`ecos-constraint pitfall list` 打印「共 3 条」；② 机器面自身的闸门 `error-knowledge.py check` 打「ok (58 pitfalls)」，而同脚本 `stats` 报 `status: {''active'': 57, ''?'': 1}` —— `coordination/PITFALL-CRD-001.yaml` 同时缺 `status` 与 `discovered_at`，check 不拦（该平面无 schema 必填校验）。
+
+
+    **影响** —— ① 面板类读者（Panorama 经验网络）在**有 58 条知识**的平面上永远显示空子图，且函数体整段包在 `try/except Exception: pass` 里，异常也不会暴露 —— 属本仓已登记的「接线 ≠ 非空转」与「假成功空转扫描法」两族的又一实例；② 判「坑有没有被固化」时，任何引用 `ecos-constraint pitfall list` 读数（3）或 `error-knowledge.py stats` 读数（58）的论证都不能代表 `docs/pitfalls.md`（162）的真实写入面，反之亦然；③ 双写会漂移：`origin/main` 的 ① 里带 2026-11-22/23 日期的条目有 **23** 条，而 ② 同窗口只有 **5** 条（`discovered_at` ≥ 2026-10-14：`PITFALL-ENV-009` 10-22、`PITFALL-COO-008` 11-06、`PITFALL-ENV-010`/`PITFALL-MEA-009`/`PITFALL-SUB-007` 11-09），两侧写入速率不成比例，且没有任何机制把 ① 的新坑搬进 ②。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '**症状** —— Panorama「经验网络」的 pitfall 子图恒空：`bin/panorama/panorama-collect.py:4443 collect_experience_network()` 用 `glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml"))` 采集节点，而该平面的实际布局是**分类子目录**（`error-knowledge.py:4` 自陈「体系设计: `.omo/_knowledge/pitfalls/{category}/{slug}.yaml`」）。本轮实测两个数：读者 glob 命中 **0** 个文件，`*/PITFALL-*.yaml` 下实有 **58** 个（gate 17 / environment 10 / coordination 9 / measurement 9 / submodule 7 / cron 5 / scoring 1）。
+
+
+  **光补 glob 不够（第二因，实测）** —— 同一函数体随后按 frontmatter 解析：`fm = raw.split("---")[1] if raw.startswith("---") else ""`，再 `d = yaml.safe_load(fm) or {}`、`nid = f"PIT-{d.get(''id'','''')}"`。把 glob 换成 `*/PITFALL-*.yaml` 后实测 **58/58 个文件都不以 `---` 开头**（它们是 `schema: agent-error/v1` 起的普通单文档 YAML，无 frontmatter 分隔线），于是 `fm` 恒空串 ⇒ `d` 恒 `{}` ⇒ 解析出的非空 id 数 = **0**，58 个节点全部塌成同一个 id `PIT-`、`name` 取 `d.get("title","")` 也是空。正确读法是直接 `yaml.safe_load(整份)`：实测可拿到 58 个真实 id（`PITFALL-COO-001` … ）。
+
+
+  **第三处命名空间不同源（潜在，非本轮回归）** —— 同函数 decisions 半边用 `re.findall(r''PITFALL-(\d+)'', raw)` 造 `PIT-{数字}` 目标，而 pitfall 侧真实 id 形状是 `PIT-PITFALL-COO-001`（三段式，非纯数字）。实测当前 `.omo/_knowledge/decisions/*.md` 里 `PITFALL-\d+` 引用命中 **0** 处 ⇒ 那半边现在是空集，不是回归；但一旦有人按字面写 `PITFALL-001`（平面根下确有 5 个 legacy `PITFALL-00N-*.md`），连出的边也指不到任何节点。
+
+
+  **背景：同一类知识现有三张互不相交的表（实测计数）** —— ① `docs/pitfalls.md` **162** 条（人读正文，AGENTS.md §7 是其分类索引，仍在活跃写入；162 按 `git show origin/main:docs/pitfalls.md` 量得 —— 同一条命令在本地主检出（停在 `53a9abfbe`）只报 153，陈旧镜像会低估，不能拿工作树读数当 main 现状）；② `.omo/_knowledge/pitfalls/**` **58** 条（机器面 `agent-error/v1`，`error-knowledge.py` 读写，平面根 `INDEX.md` 自称 `type: ssot`；按 `discovered_at` 排序最晚一条是 `PITFALL-SUB-007` = `2026-11-09`（58 条里 5 条晚于 2026-10-13，`PITFALL-CRD-001` 该字段为空））；③ `projects/ecos/src/ecos/ssot/compiler/pitfall_inspector.py` 里 **3** 条硬编码 `PitfallEntry`（`ecos-constraint pitfall list` 的读数即来自它，实测 `list_pitfalls()` 返回 3 条，id 为 `PITFALL-001..003`），而 `INDEX.md` 的正文声称「通过 `ecos-constraint pitfall scan` 纳入 CI 静态门禁」—— 该命令并不读 ② 或 ①。三张表之间没有任何自动同步，`error-knowledge.py` 的 `stats` 也只数自己那 58 条。
+
+
+  **同面两处次要实测** —— ① `pitfall_inspector.py` 的模块 docstring 列了 `PITFALL-004`，而 `KNOWN_PITFALLS` 实际只有 `001..003` 三个键（同一文件内自陈与登记表漂移），`ecos-constraint pitfall list` 打印「共 3 条」；② 机器面自身的闸门 `error-knowledge.py check` 打「ok (58 pitfalls)」，而同脚本 `stats` 报 `status: {''active'': 57, ''?'': 1}` —— `coordination/PITFALL-CRD-001.yaml` 同时缺 `status` 与 `discovered_at`，check 不拦（该平面无 schema 必填校验）。
+
+
+  **影响** —— ① 面板类读者（Panorama 经验网络）在**有 58 条知识**的平面上永远显示空子图，且函数体整段包在 `try/except Exception: pass` 里，异常也不会暴露 —— 属本仓已登记的「接线 ≠ 非空转」与「假成功空转扫描法」两族的又一实例；② 判「坑有没有被固化」时，任何引用 `ecos-constraint pitfall list` 读数（3）或 `error-knowledge.py stats` 读数（58）的论证都不能代表 `docs/pitfalls.md`（162）的真实写入面，反之亦然；③ 双写会漂移：`origin/main` 的 ① 里带 2026-11-22/23 日期的条目有 **23** 条，而 ② 同窗口只有 **5** 条（`discovered_at` ≥ 2026-10-14：`PITFALL-ENV-009` 10-22、`PITFALL-COO-008` 11-06、`PITFALL-ENV-010`/`PITFALL-MEA-009`/`PITFALL-SUB-007` 11-09），两侧写入速率不成比例，且没有任何机制把 ① 的新坑搬进 ②。'
+decision_needed: "三条修法互不等价，差别在「承认哪个平面是权威」，需 principal 裁决后 agent 才能动判据面：\n\n(a) **修读者，保住机器面** —— `panorama-collect.py:4443` 的 glob 改 `.omo/_knowledge/pitfalls/*/PITFALL-*.yaml`，解析改成 `yaml.safe_load(整份)`（不再按 `---` 切 frontmatter），并把 decisions 半边的 `PITFALL-(\\d+)` 与节点 id 命名空间对齐（现网 58 条是 `PITFALL-{CAT}-{NNN}` 三段式，非纯数字）。代价：改 `bin/panorama/` 采集代码 + 需要一次面板对拍；收益：58 条知识真正进图，实测 `try/except Exception: pass` 吞掉的异常面也一并显式化。agent 倾向此项，但它改的是消费端判据口径，不属「纯缺陷零政策变更」。\n\n(b) **宣布机器面不被消费，与 ① 收敛** —— 保留 `error-knowledge.py` 作为写入侧，把 `.omo/_knowledge/pitfalls/INDEX.md` 的 `type: ssot` 与「`ecos-constraint pitfall scan` 纳入 CI 静态门禁」两处自陈改成如实措辞（指向 `docs/pitfalls.md` 为唯一人读权威），Panorama 经验网络改读 ①。代价：58 条机器面条目变成历史资产；收益：三张表变两张，消除 INDEX.md 的虚假接线声明。\n\n(c) **只修 glob，不修解析** —— 最小改动让文件被采到。实测会产出 58 个 id 全是 `PIT-`（空 title）的塌缩节点，比现在恒空更难读，属**明确不推荐**，列出来只为记录「修一半」的形状。\n\n无论选哪条，本项都以「三张表读数不同源」为事实登记：`ecos-constraint pitfall list`=3（硬编码，两平面都不读）、`error-knowledge.py stats`=58、`docs/pitfalls.md`=162。任何引用其中单一读数的论证都不能代表另两侧。"
