@@ -409,6 +409,17 @@ cockpit harness compliance|full|status
 - 首期只覆盖工作侧三类：**项目**、**厂商**、**指标口径**；不扩到个人域与知识演化域。
 - 已有唯一 SSOT 的（如 `docs/project-registry.yaml`、`.omo/_truth/registry/**`）直接引用，不建平行副本；确需新建前先查是否已有等价 registry。
 
+**首期三类现状（2026-11-23 审计）**：
+
+| 实体 | SSOT | 状态 |
+|------|------|------|
+| 项目 | `docs/project-registry.yaml` | ✅ 已有 |
+| 指标口径 | `.omo/standards/health-metrics-semantics.md` | ✅ 已有 |
+| 厂商 | —— | ❌ **无等价 registry**（全仓检索无 vendor/厂商清单，`project-registry.yaml` 也无 vendor 字段） |
+
+厂商类的补建**未执行**：按本节「确需新建前先查是否已有等价 registry」已查（无），
+但建清单属**新面**，且「工作侧」当前没有消费者因此产生歧义 —— 留作待裁，不代为开面。
+
 ### 14.4 明确不做（四项）
 
 | 不做 | 理由 |
