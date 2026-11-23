@@ -1,0 +1,39 @@
+id: OMO-DEBT-NO-CONFIRM-FLAG-INVERTED
+title: omo-debt close --no-confirm 语义与 help 相反：带旗标反而拒绝关闭
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/omo_debt_cli.py
+evidence_refs:
+- projects/omo/src/omo/omo_debt_cli.py
+mitigation_refs: []
+opened_at: '2026-11-23T08:56:41.828324+00:00'
+last_reviewed_at: '2026-11-23'
+next_review_at: null
+gate_level: watchlist
+history:
+- at: '2026-11-23T08:56:41.828324+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-NO-CONFIRM-FLAG-INVERTED.
+  actor: governance-agent
+- at: '2026-11-23T08:58:31+00:00'
+  action: identify
+  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python
+    read-check-write 补齐。'
+  actor: governance-agent
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '子模块 pin `47d9f2b51`：`--no-confirm` 定义为 `dest="confirm", action="store_false", default=True`（`:251-256`），help
+  写 "Refuse to close without this safety flag (default: confirm)"；但 `cmd_debt_close` 的分支是 `if not confirm:
+  print("❌ 请显式传入 confirm=True 以关闭债务项"); return 1`（`:91-92`）。组合后的真语义与 help 相反：**不带旗标 = 直接关闭**，**带 `--no-confirm`
+  = 拒绝关闭**（实测 2026-11-23，rc=1，未写盘）。即：这个旗标既不是「跳过确认」也不是「需要确认」，而是一个名字反着、行为是中止的开关；而 help 承诺的 fail-closed 默认并不存在。'
+decision_needed: 二选一：(a) 删掉 `--no-confirm` 与 `confirm` 形参，承认默认即执行、无确认步；(b) 真做 fail-closed —— 默认不写盘，必须显式
+  `--confirm` 才关闭。选 (b) 会改变既有调用方（omo-debt 被 cron/常驻 agent 以无旗标方式调用），需先扫调用面再改。本条不代决。
