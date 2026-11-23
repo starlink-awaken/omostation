@@ -16,7 +16,7 @@ evidence_refs:
 - registry 条目 work-agent-respire-mbp-watchdog (reality=installed, status=active, owner=work-agent)
 mitigation_refs: []
 opened_at: '2026-11-09'
-last_reviewed_at: '2026-11-09'
+last_reviewed_at: '2026-11-23'
 next_review_at: '2026-11-16'
 gate_level: none
 x1_policy_ref: ''
@@ -26,6 +26,10 @@ decision_needed: '**已裁 (2026-11-09)**: 采**结构性修法** —— registr
   env 或 `socket.gethostname()`)。`diff_installation` 经 `compile_crontab` 自动跟随。`known_drift`
   兜底清单**未采用** —— 它是全局清单, 会在 mini 上把「该装却没装」一起放过, 等于削弱 gate。**不要**靠把条目标 proposed 来绕
   (那会让真正该装的机器也装不上)。'
+resolution_evidence: '2026-11-09 结构性修法在 2026-11-23 复核仍然生效: .omo/cron/registry.yaml
+  87 条 job 中 work-agent-respire-mbp-watchdog 带 hosts=[mini, Mac-mini]; 主机判据 bin/lib/cron_normalize.py:423
+  current_host()（CRON_HOST 可覆盖）由 bin/scheduler-compile.py:22 以 _current_host 导入, compile_crontab
+  与 check_drift 同口径过滤。实现来自 PR #5146（MERGED）。'
 history:
 - at: '2026-11-09T10:20:00+00:00'
   action: identify
@@ -68,8 +72,23 @@ history:
   action: close
   note: Closed debt item.
   actor: governance-agent/20261109T060043Z-gsm-a4649e5a
+- at: '2026-11-23T08:14:00+00:00'
+  action: review
+  note: '**补闭环证据（2026-11-23）**：同上一条同根因 —— 3 条 `evidence_refs` 里首条写成 `.omo/cron/registry.yaml
+    (87 条 job，字段只有 name/…)`, 带说明后 `Path.exists()` = False, 于是 verify.py 把一次**真实闭局**报成虚假完成。今日按原口径复核:
+
+    - `.omo/cron/registry.yaml` 实测 87 条 job, `hosts` 维度已启用, 唯一带 hosts 的条目即 `work-agent-respire-mbp-watchdog`
+    = `hosts: [mini, Mac-mini]`（与 identify 里「该条目 mini 专用」一致）；
+
+    - 判据实现 `bin/lib/cron_normalize.py:423 current_host()`（`CRON_HOST` env 覆盖, 缺省 `socket.gethostname()`）,
+    `bin/scheduler-compile.py:22` 导入为 `_current_host`, `compile_crontab` / `check_drift`
+    同口径过滤 —— 即 PR #5146 的结构性修法仍在位。
+
+    **纪律**：`evidence_refs` 是**可 stat 的锚点**字段, 说明性文字属于 `description`/`history`/`resolution_evidence`。把注解塞进
+    refs 会让闭环节律把真证据读成没证据 —— 与「声明/执行鸿沟」同源, 只是方向相反（证据在, 判据看不见）。'
+  actor: governance-agent
 closed_at: '2026-11-09T06:01:21.412889+00:00'
-close_reason: '已闭局 (2026-11-09): 采结构性修法 —— registry 增加 hosts 字段 (缺省=全部机器),
-  compile_crontab / check_drift 经 _host_scoped() 按本机过滤 (主机名取自 CRON_HOST env 或
-  socket.gethostname()); 实测 bin/scheduler-compile.py 含 _host_scoped, 且 registry 的
-  work-agent-respire-mbp-watchdog 条目带 hosts: [mini, Mac-mini]。'
+close_reason: '已闭局 (2026-11-09): 采结构性修法 —— registry 增加 hosts 字段 (缺省=全部机器), compile_crontab
+  / check_drift 经 _host_scoped() 按本机过滤 (主机名取自 CRON_HOST env 或 socket.gethostname());
+  实测 bin/scheduler-compile.py 含 _host_scoped, 且 registry 的 work-agent-respire-mbp-watchdog
+  条目带 hosts: [mini, Mac-mini]。'

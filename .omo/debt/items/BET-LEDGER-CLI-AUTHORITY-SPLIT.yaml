@@ -50,7 +50,7 @@ evidence_refs:
   树权威面无重叠'
 mitigation_refs: []
 opened_at: '2026-11-09'
-last_reviewed_at: '2026-11-09'
+last_reviewed_at: '2026-11-23'
 next_review_at: '2026-11-16'
 gate_level: none
 x1_policy_ref: ''
@@ -68,6 +68,10 @@ decision_needed: '**已裁 (2026-11-09, principal 授权下由 governance-agent 
   按 `origin/main` 判证据可达性, `agent-workflow.py` 的 packet refresh 按 `origin/main` 比 ledger
   字节, 三个出口三套口径才是问题本体; (2) 若裁 `origin/main` 为权威, 选失败即拦还是只声明 —— 已裁为后者; (3) `state_root`
   是否也在权威面内 —— 未纳入。'
+resolution_evidence: '2026-11-09 declare-only 处置在 2026-11-23 复核仍然生效: bin/plan/bet-ledger.py:73
+  authority_declaration_lines() 定义存在, :3495 在 main() 接线到 status 出口, 实现来自 PR #5145（MERGED）;
+  同日 tests/test_bet_ledger_authority_declaration.py 存在且变异对照有效。闭局范围与残留项均以 close_reason
+  为准 —— fail-closed 与 state_root 侧判据不在本条范围, 仍待 principal 裁决。'
 history:
 - at: '2026-11-09T02:47:00+00:00'
   action: identify
@@ -119,9 +123,24 @@ history:
   action: close
   note: Closed debt item.
   actor: governance-agent/20261109T060043Z-gsm-a4649e5a
+- at: '2026-11-23T08:14:00+00:00'
+  action: review
+  note: '**补闭环证据（2026-11-23）**：本条 11-09 由 run `20261109T060043Z-gsm-a4649e5a` 以 declare-only
+    闭局, `close_reason` 已把 fail-closed 与 `state_root` 侧判据**显式划出本条范围**, 故闭局本身成立、不 reopen。
+
+    但 `bin/ssot/verify.py --mode task` 一直把它报成「虚假完成」—— 根因不在闭局, 而在 `check_evidence`
+    (`bin/ssot/_shared.py:183-197`) 只认**能 stat 到的路径**或文本型 `resolution_evidence`/`closed_evidence`,
+    而本条 11 条 `evidence_refs` 全是**带行号与说明的文字**（如 `bin/plan/bet-ledger.py:47-49 (origin/main
+    \`f232e2762\`) …`）, `Path.exists()` 恒 False ⇒ 判据把「证据写法不合口径」读成「没有证据」。
+
+    今日按原口径复核 declare-only 是否仍然生效：`bin/plan/bet-ledger.py:73` `authority_declaration_lines()`
+    存在、:3495 在 `main()` 接线, 全文件无 fail-closed 分支（与 close_reason 一致）。
+
+    **未闭合的残留另计**：`decision_needed` 里的 fail-closed / `state_root` 侧判据仍是待 principal
+    裁决项, 它不属于本条闭局范围, 已在 `AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER` 与本轮报告中单独列出。'
+  actor: governance-agent
 closed_at: '2026-11-09T06:01:48.080682+00:00'
-close_reason: '已闭局 (2026-11-09): 采 declare-only —— 只读出口 (status / list / show /
-  claim-check) 经 authority_declaration_lines() 在 stderr 声明 root / HEAD / ledger blob /
-  与 origin/main 是否一致, 不拒绝、不改判定; 实现见 PR #5145 (MERGED), 实测
-  bin/plan/bet-ledger.py 含 authority_declaration_lines。fail-closed 语义与 state_root 侧
-  按 decision_needed 留作未裁项, 不在本条范围。'
+close_reason: '已闭局 (2026-11-09): 采 declare-only —— 只读出口 (status / list / show / claim-check)
+  经 authority_declaration_lines() 在 stderr 声明 root / HEAD / ledger blob / 与 origin/main
+  是否一致, 不拒绝、不改判定; 实现见 PR #5145 (MERGED), 实测 bin/plan/bet-ledger.py 含 authority_declaration_lines。fail-closed
+  语义与 state_root 侧 按 decision_needed 留作未裁项, 不在本条范围。'
