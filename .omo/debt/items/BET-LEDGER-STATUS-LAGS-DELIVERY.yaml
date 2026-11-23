@@ -1,95 +1,113 @@
-id: "BET-LEDGER-STATUS-LAGS-DELIVERY"
-title: "3 条 BET 的 spec 已在 origin/main 但台账状态仍 pending/in_progress —— 另记：spec 存在性不能当交付判据"
-dimension: "governance"
-subdimension: "ssot"
-domain: "infrastructure"
-scope: "workspace"
-severity: "low"
+id: BET-LEDGER-STATUS-LAGS-DELIVERY
+title: 3 条 BET 的 spec 已在 origin/main 但台账状态仍 pending/in_progress —— 另记：spec 存在性不能当交付判据
+dimension: governance
+subdimension: ssot
+domain: infrastructure
+scope: workspace
+severity: low
 weight: 0.1
-entropy_class: "low"
-lifecycle_state: "identified"
-owner: "governance-team"
+entropy_class: low
+lifecycle_state: closed
+owner: governance-team
 affected_roots:
 - docs/plans/3y-bet-ledger.yaml
 evidence_refs:
 - docs/plans/3y-bet-ledger.yaml
 - tests/test_gac_m1_tracked_truth.py
 mitigation_refs: []
-opened_at: "2026-11-12"
-last_reviewed_at: "2026-11-12"
-next_review_at: "2026-12-12"
+opened_at: '2026-11-12'
+last_reviewed_at: '2026-11-23'
+next_review_at: '2026-12-12'
 gate_level: none
-x1_policy_ref: ""
-x3_tier: "Tool"
-description: >-
-  2026-11-12 在 `origin/main`（`8c631df4d`）上做的一次横向核查：对台账里 454 条
-  spec 绑定，逐个 `git cat-file -e origin/main:<spec_ref>` 判存在性，再与台账
-  `status` 交叉。
+x1_policy_ref: ''
+x3_tier: Tool
+description: '2026-11-12 在 `origin/main`（`8c631df4d`）上做的一次横向核查：对台账里 454 条 spec 绑定，逐个
+  `git cat-file -e origin/main:<spec_ref>` 判存在性，再与台账 `status` 交叉。
 
   **反方向干净**：`spec 不在 main 但台账 done` = **0 条**。
 
   **正方向 3 条**（spec 已在 main，台账仍非终态）：
 
-  | BET | 台账 status | spec |
-  |---|---|---|
-  | BET-Y2Q4-T10-279 | `in_progress` | `2026-10-29-compute-i9-01-integration.md` |
-  | BET-Y2Q4-T10-344 | `pending` | `2026-11-10-cron-mini-host-alias-task-eef1cedc.md` |
-  | BET-Y2Q4-T10-347 | `in_progress` | `2026-11-11-gac-bootstrap-execution-truth.md` |
+  | BET | 台账 status | spec | |---|---|---| | BET-Y2Q4-T10-279 | `in_progress` | `2026-10-29-compute-i9-01-integration.md`
+  | | BET-Y2Q4-T10-344 | `pending` | `2026-11-10-cron-mini-host-alias-task-eef1cedc.md`
+  | | BET-Y2Q4-T10-347 | `in_progress` | `2026-11-11-gac-bootstrap-execution-truth.md`
+  |
 
-  其中 T10-347 的**实质工作已由 #5297 交付**（gac-bootstrap 层3/层4/层6 收口），
-  T10-344 的 registry / 测试 / spec 也已在 main 上（并发 agent 提交），
-  T10-279 自 2026-10-29 起 `in_progress` 已两周。
+  其中 T10-347 的**实质工作已由 #5297 交付**（gac-bootstrap 层3/层4/层6 收口）， T10-344 的 registry /
+  测试 / spec 也已在 main 上（并发 agent 提交）， T10-279 自 2026-10-29 起 `in_progress` 已两周。
 
-  **重要否定结论**：本轮最初想做的判据是「spec 在 main ⇒ BET 应推进/已完成」，
-  核查后确认**该判据不成立** —— spec 是契约文档，完全可以在 BET 尚未启动时就提交
-  （T10-344 就是：spec 已在 main，BET 还 `pending`）。**不要用 spec 存在性做交付判据。**
-decision_needed: >-
-  ① 这 3 条各自推进到与实际相符的状态（T10-347 → `done` + 补 closeout；T10-344 →
-  `in_progress` 或 `done`，取决于其 `done_when` 是否满足；T10-279 → 确认是否仍在进行），
-  还是把它们登记为「已知滞后」；② 是否需要一个**真正的**交叉判据 —— 例如
-  「台账 `status: done` 的 BET，其 `accepted_specifications[].content_digest` 必须等于
-  origin/main 上 spec 的实际 sha256」（本轮实测反方向 0 违规，说明这一条当前成立，
-  但它是**内容一致性**判据，不是存在性判据）。本条不代决。
+  **重要否定结论**：本轮最初想做的判据是「spec 在 main ⇒ BET 应推进/已完成」， 核查后确认**该判据不成立** —— spec 是契约文档，完全可以在
+  BET 尚未启动时就提交 （T10-344 就是：spec 已在 main，BET 还 `pending`）。**不要用 spec 存在性做交付判据。**'
+decision_needed: '① 这 3 条各自推进到与实际相符的状态（T10-347 → `done` + 补 closeout；T10-344 → `in_progress`
+  或 `done`，取决于其 `done_when` 是否满足；T10-279 → 确认是否仍在进行）， 还是把它们登记为「已知滞后」；② 是否需要一个**真正的**交叉判据
+  —— 例如 「台账 `status: done` 的 BET，其 `accepted_specifications[].content_digest` 必须等于
+  origin/main 上 spec 的实际 sha256」（本轮实测反方向 0 违规，说明这一条当前成立， 但它是**内容一致性**判据，不是存在性判据）。本条不代决。'
+resolution_evidence: '2026-11-23 三条滞后全部对上实际交付状态：T10-344 done(2026-11-23, PR #5459
+  合并为 c8efc46b8；更早主体交付 d284efcaa / PR #5226)、T10-347 done(2026-11-22)、T10-279 经核实为人类门内合法
+  in_progress（spec 明文禁止 Agent 自置 done）。判据出处：docs/plans/3y-bet-ledger.yaml @ origin/main
+  e3ef5e9a0；digest 交叉判据的后续工作转由 BET-DONE-SPEC-DIGEST-MASS-STALENESS 承载。'
 history:
-- at: "2026-11-12T07:35:00+00:00"
+- at: '2026-11-12T07:35:00+00:00'
   action: identify
-  note: >-
-    **核查口径**：`git cat-file -e origin/main:<path>` 逐条判存在 + 与 `status` 交叉，
-    两条方向都算。**判据**：设计「用 A 的存在性推断 B 的状态」这类判据前，先问
-    「A 在 B 之前出现是合法的吗」—— 本例合法（spec 先于交付提交），所以该判据不成立。
-    **纪律**：否定结论也要落进条目，否则下一轮会有人把同一个不成立的判据再提一遍。
-  actor: "governance-agent"
-- at: "2026-11-12T08:05:00+00:00"
+  note: '**核查口径**：`git cat-file -e origin/main:<path>` 逐条判存在 + 与 `status` 交叉， 两条方向都算。**判据**：设计「用
+    A 的存在性推断 B 的状态」这类判据前，先问 「A 在 B 之前出现是合法的吗」—— 本例合法（spec 先于交付提交），所以该判据不成立。 **纪律**：否定结论也要落进条目，否则下一轮会有人把同一个不成立的判据再提一遍。'
+  actor: governance-agent
+- at: '2026-11-12T08:05:00+00:00'
   action: review
-  note: >-
-    **自我更正**：本条 `decision_needed` 里写「台账 status: done 的 BET, 其
-    content_digest 必须等于 origin/main 上 spec 的实际 sha256 —— 本轮实测反方向
-    0 违规, 当前成立」, 那句话**只查了存在性、不是 digest 一致性**。补做真正的
-    digest 比对后真实读数是 **329/451 陈旧 / 122 一致 / 0 缺失** —— 该判据
-    **当前不成立**。成因是批量 frontmatter 补丁（典型 `fef14ccef` / #4328
-    一次改 1145 个文件）改写了 spec 而没同步台账 digest, 而 `bet-ledger.py lint`
-    把 digest 校验写在 `if status != "done"` 分支里, done BET 被刻意豁免。
-    详见 `BET-DONE-SPEC-DIGEST-MASS-STALENESS`。本条正方向那 3 条状态滞后不受影响。
-  actor: "governance-agent"
-- at: "2026-11-12T13:20:00+00:00"
+  note: '**自我更正**：本条 `decision_needed` 里写「台账 status: done 的 BET, 其 content_digest
+    必须等于 origin/main 上 spec 的实际 sha256 —— 本轮实测反方向 0 违规, 当前成立」, 那句话**只查了存在性、不是 digest
+    一致性**。补做真正的 digest 比对后真实读数是 **329/451 陈旧 / 122 一致 / 0 缺失** —— 该判据 **当前不成立**。成因是批量
+    frontmatter 补丁（典型 `fef14ccef` / #4328 一次改 1145 个文件）改写了 spec 而没同步台账 digest, 而 `bet-ledger.py
+    lint` 把 digest 校验写在 `if status != "done"` 分支里, done BET 被刻意豁免。 详见 `BET-DONE-SPEC-DIGEST-MASS-STALENESS`。本条正方向那
+    3 条状态滞后不受影响。'
+  actor: governance-agent
+- at: '2026-11-12T13:20:00+00:00'
   action: review
-  note: >-
-    **T10-344 的停滞 run 已处置，交付来源已定位**。本条原写「T10-344 的 registry /
-    测试 / spec 也已在 main 上（并发 agent 提交）」但没给出来源。补：交付 commit 是
-    **`d284efcaa`（PR #5226，2026-11-10T06:34Z 合并）**「fix(cron): 识别 Mac-mini
-    看护主机别名（BET-Y2Q4-T10-344）」。
-    **run 处置**：`20261110T033347Z-bet-execution-a24a5945`（actor
-    `codex-cron-wp-20261110`）自 `2026-11-10T03:37:48Z` 起无心跳，4 把锁全部过期
-    （`bet:` + 3 条 `path:`），是 `agent-workflow.py status` 与 `doctor` 三项 FAIL
-    的唯一来源。已按共享锁面的 documented 路径 `close --status ok --evidence …`
-    关闭（`release_locks()` 只 unlink `run_id` 等于本 run 的锁，不碰他人活锁；
-    **没有用 `prune-locks`** —— 那会把只看心跳时间的阈值套到别人的活锁上）。
-    关闭后读数：`status.ok=True / lock_count=0 / stale=0`，`doctor` `exit=0`、
-    33 PASS、仅剩 2 条 pre-existing 环境 WARN（缺 gstack / openspec 健康）。
-    **后继分支已废弃**：`agent/codex-cron-wp-20261110/bet-y2q4-t10-344-successor`
-    的 5 个 commit 已被 main 完全超越 —— registry 与 spec 逐字节相同，main 还多
-    303 行台账与 49 行测试。**不要 cherry-pick 它**（会带回旧 digest 与旧测试体）。
-    **本条的状态滞后结论不变**：`BET-Y2Q4-T10-344` 台账仍是 `status: pending`
-    而工作已交付 —— 要推进到 `done` 需先补 `completion_evidence`（当前三轴全
-    NOT_STARTED/NOT_PROVEN，`complete` 报 `derived state is evaluating`）。
-  actor: "governance-agent"
+  note: '**T10-344 的停滞 run 已处置，交付来源已定位**。本条原写「T10-344 的 registry / 测试 / spec 也已在 main
+    上（并发 agent 提交）」但没给出来源。补：交付 commit 是 **`d284efcaa`（PR #5226，2026-11-10T06:34Z 合并）**「fix(cron):
+    识别 Mac-mini 看护主机别名（BET-Y2Q4-T10-344）」。 **run 处置**：`20261110T033347Z-bet-execution-a24a5945`（actor
+    `codex-cron-wp-20261110`）自 `2026-11-10T03:37:48Z` 起无心跳，4 把锁全部过期 （`bet:` + 3 条
+    `path:`），是 `agent-workflow.py status` 与 `doctor` 三项 FAIL 的唯一来源。已按共享锁面的 documented
+    路径 `close --status ok --evidence …` 关闭（`release_locks()` 只 unlink `run_id` 等于本
+    run 的锁，不碰他人活锁； **没有用 `prune-locks`** —— 那会把只看心跳时间的阈值套到别人的活锁上）。 关闭后读数：`status.ok=True
+    / lock_count=0 / stale=0`，`doctor` `exit=0`、 33 PASS、仅剩 2 条 pre-existing 环境 WARN（缺
+    gstack / openspec 健康）。 **后继分支已废弃**：`agent/codex-cron-wp-20261110/bet-y2q4-t10-344-successor`
+    的 5 个 commit 已被 main 完全超越 —— registry 与 spec 逐字节相同，main 还多 303 行台账与 49 行测试。**不要
+    cherry-pick 它**（会带回旧 digest 与旧测试体）。 **本条的状态滞后结论不变**：`BET-Y2Q4-T10-344` 台账仍是 `status:
+    pending` 而工作已交付 —— 要推进到 `done` 需先补 `completion_evidence`（当前三轴全 NOT_STARTED/NOT_PROVEN，`complete`
+    报 `derived state is evaluating`）。'
+  actor: governance-agent
+- at: '2026-11-23T08:07:00+00:00'
+  action: review
+  note: '**滞后已实质消解（2026-11-23 从 `origin/main` @ `e3ef5e9a0` 重测）**：台账 597 条，非终态只剩 1
+    条。
+
+    | BET | 11-12 记录 | 2026-11-23 实测 |
+
+    |---|---|---|
+
+    | T10-279 | `in_progress` | 仍 `in_progress` —— `human_gate: true` + `overall_state:
+    evaluating`，其 spec 明文「Agent 自报成功不等于 `WorkflowVerified`」，**不由 Agent 置 done**，属合法非终态
+    |
+
+    | T10-344 | `pending` | `done` / `done_at: 2026-11-23`，engineering `VERIFIED`
+    |
+
+    | T10-347 | `in_progress` | `done` / `done_at: 2026-11-22`，engineering `VERIFIED`
+    |
+
+    **自我更正**：本轮先前把 T10-344 的 `merged_reachable_commit: c8efc46b8` 判成「指向 base 而非交付」。实测
+    `c8efc46b8` = PR #5459「补齐 T10-344 主机作用域七组回放并钉住组数」的 squash 合并提交，`git merge-base
+    --is-ancestor c8efc46b8 origin/main` = YES，即**它本身就是 origin/main 上的交付提交**，证据字段无缺陷，不立订正
+    PR。
+
+    **`decision_needed` ② 未随本条关闭而丢失**：digest 一致性判据已在 `BET-DONE-SPEC-DIGEST-MASS-STALENESS`（`identified`
+    / sev medium）单独登记，本条只承担状态滞后那半。
+
+    **纪律**：本条的两条否定结论（不用 spec 存在性做交付判据；先查证再宣称缺陷）留在 history 里，不随 close 蒸发。'
+  actor: governance-agent
+- at: '2026-11-23T08:08:37.243777+00:00'
+  action: close
+  note: Closed debt item.
+  actor: governance-agent
+closed_at: '2026-11-23T08:08:37.243638+00:00'
