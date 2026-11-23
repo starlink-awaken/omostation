@@ -413,6 +413,15 @@ for _root_gate in (
         "command": ["bin/ssot/bin-scripts-convergence-audit.py", "--check", "--json"],
     },
     {
+        # advisory: affected_roots 自上次复审后被 commit 碰过 ⇒ 条目说的那件事
+        # 可能已不成立。判据是**信号不是判决** (roots 变了 != 条目错了), 只报数不阻断;
+        # 但必须可达 —— 不可达的工具等于没有。读数按落在 roots 上的 commit 数降序,
+        # 二元命中在活跃期会全红、没有区分度。
+        "id": "debt-staleness",
+        "command": ["bin/gac/check-debt-staleness.py"],
+        "timeout": 120,
+    },
+    {
         "id": "omo-runtime-final-tree",
         "command": [
             "bin/gac/omo-runtime-stamp-policy.py",
