@@ -1,14 +1,15 @@
-id: "STATE-SHADOW-BIN-OMO-ORPHANED-DATA"
-title: "bin/.omo/ 影子状态面里困着 9 条 value-executions 记录（2026-10-10~10-13，全部 signal-chain），在主状态面的 34 条里一条都没有"
-dimension: "governance"
-subdimension: "ssot"
-domain: "infrastructure"
-scope: "workspace"
-severity: "low"
+id: STATE-SHADOW-BIN-OMO-ORPHANED-DATA
+title: bin/.omo/ 影子状态面里困着 9 条 value-executions 记录（2026-10-10~10-13，全部 signal-chain），在主状态面的
+  34 条里一条都没有
+dimension: governance
+subdimension: ssot
+domain: infrastructure
+scope: workspace
+severity: low
 weight: 0.1
-entropy_class: "low"
-lifecycle_state: "identified"
-owner: "governance-team"
+entropy_class: low
+lifecycle_state: closed
+owner: governance-team
 affected_roots:
 - bin/.omo/
 - .omo/state/value-executions.json
@@ -18,79 +19,97 @@ evidence_refs:
 - bin/gac/value-tracker.py
 - bin/gac/value-evolution-connector.py
 mitigation_refs: []
-opened_at: "2026-11-12"
-last_reviewed_at: "2026-11-12"
-next_review_at: "2026-12-12"
+opened_at: '2026-11-12'
+last_reviewed_at: '2026-11-12'
+next_review_at: '2026-12-12'
 gate_level: none
-x1_policy_ref: ""
-x3_tier: "Tool"
-description: >-
-  `bin/.omo/` 是一个**真实存在、被 `.gitignore:402` 单独忽略**的影子状态面 ——
-  它由一类根常量缺陷造出来：`bin/<subdir>/x.py` 用
-  `Path(__file__).resolve().parents[1]` 当 workspace 根，而 `parents[1]` 是
-  `<root>/bin`，`parents[2]` 才是 workspace。13 个脚本有此缺陷，已修（#5322）。
+x1_policy_ref: ''
+x3_tier: Tool
+description: '**已执行并复核 (2026-11-23, 基线 origin/main@323e33671)** —— `decision_needed`
+  里裁定并执行的是 (a) 合并, 本次复核三项全部落地:
 
-  影子面里现存两个文件：
 
-  | 文件 | 大小 | 最后写入 | 来源脚本 |
-  |---|---|---|---|
-  | `bin/.omo/state/value-executions.json` | 1,433 B | 2026-10-13 21:50 | `bin/gac/value-tracker.py` |
-  | `bin/.omo/_state/weekly-review-latest.json` | 1,147 B | 2026-10-13 21:50 | `bin/gac/weekly-review.py`（未接线副本） |
+  * `bin/.omo/` **已不存在** (`ls -d bin/.omo` → No such file or directory), 影子面已整目录删除;
 
-  **价值记录是困住的**：`value-executions.json` 两份都是 list。主状态面
-  `<root>/.omo/state/value-executions.json` 有 **34 条**（2026-09-21 → 2026-11-09，
-  由 `value-evolution-connector.py` 用 marker 探测的正确根写入）；影子面有
-  **9 条**（2026-10-10T08:13:51Z → 2026-10-13T13:50:09Z，`task_id` 全为
-  `signal-chain`，每条 `minutes_saved: 15.0`）。**按 timestamp 比对，9 条全部不在主日志里**
-  —— 不是子集，是纯增量。
+  * 主日志 `.omo/state/value-executions.json` = **43 条** (list), 与裁定预期的 34 + 9 = 43 一致;
 
-  `weekly-review-latest.json` 的落点 `<root>/.omo/_state/` 尚不存在；且真正接线的
-  周报脚本是 `bin/ssot/weekly-review.py`（cron `weekly-review-post-inbox`，写
-  `.omo/_control/cockpit-inbox/weekly-review-latest.json`），所以影子那份来自
-  **未接线的重复实现**，价值低于价值日志。
-decision_needed: >-
-  **已裁定并执行（2026-11-13）：走 (a) 合并，不清目录外任何东西。**
-  影子面 9 条按 timestamp 升序并入主日志（34 + 9 = 43），`bin/.omo/` 整目录
-  删除（迁完已空），`.gitignore:402` **保留**作为防御性兜底。
-  **为什么选 (a) 而不是 (b)**：那 9 条虽是自报 `minutes_saved`，但它们是
-  `value-evolution-connector` 之外**唯一**一批 `signal-chain` 执行记录，
-  删掉等于让 2026-10 那一周的价值历史出现空档；合并零风险（timestamp 微秒级
-  不重叠），删除不可逆。**数据优先保全，怀疑留待以后。**
-  **为什么保留 `.gitignore:402`**：13 个写者已修且已有 CI 判据
-  （`test_bin_root_constant_depth`），但那条 ignore 的成本是零，而「还有没被
-  判据覆盖的写法」的代价是再出一个影子面。**防御性 ignore 与「掩盖证据」的区别
-  在于：证据面（债条目 + 判据 + 本次合并记录）已经独立存在，不再依赖那个目录。**
-  另：`bin/gac/weekly-review.py` 是 `bin/ssot/weekly-review.py` 的未接线重复实现，
-  建议单独裁决去留（dup 脚本会让下一个改错）—— **仍未决**。
+  * `.gitignore` 的 `bin/.omo/` **保留** (第 402 行), 作为防御性兜底 —— 与裁定一致 (13 个写者已由 #5322
+  修好且已有 CI 判据 `test_bin_root_constant_depth`, 这条 ignore 成本为零)。
+
+
+  **残余 (未决, 不阻塞本条)**: `bin/gac/weekly-review.py` 是 `bin/ssot/weekly-review.py` 的未接线重复实现
+  (真正接线的是后者, cron `weekly-review-post-inbox`), 去留仍待裁决 —— 它与影子面数据无关, 且本条裁定明确把两件事分开。
+
+
+  **结论**: 数据已保全、影子面已清除、防御兜底保留, 转 resolved。'
+decision_needed: '**已裁定并执行（2026-11-13）：走 (a) 合并，不清目录外任何东西。** 影子面 9 条按 timestamp 升序并入主日志（34
+  + 9 = 43），`bin/.omo/` 整目录 删除（迁完已空），`.gitignore:402` **保留**作为防御性兜底。 **为什么选 (a) 而不是
+  (b)**：那 9 条虽是自报 `minutes_saved`，但它们是 `value-evolution-connector` 之外**唯一**一批 `signal-chain`
+  执行记录， 删掉等于让 2026-10 那一周的价值历史出现空档；合并零风险（timestamp 微秒级 不重叠），删除不可逆。**数据优先保全，怀疑留待以后。**
+  **为什么保留 `.gitignore:402`**：13 个写者已修且已有 CI 判据 （`test_bin_root_constant_depth`），但那条
+  ignore 的成本是零，而「还有没被 判据覆盖的写法」的代价是再出一个影子面。**防御性 ignore 与「掩盖证据」的区别 在于：证据面（债条目 + 判据
+  + 本次合并记录）已经独立存在，不再依赖那个目录。** 另：`bin/gac/weekly-review.py` 是 `bin/ssot/weekly-review.py`
+  的未接线重复实现， 建议单独裁决去留（dup 脚本会让下一个改错）—— **仍未决**。'
 history:
-- at: "2026-11-12T15:19:00+00:00"
+- at: '2026-11-12T15:19:00+00:00'
   action: identify
-  note: >-
-    **发现经过**：修根深度缺陷（#5322）时顺带查 `bin/.omo/` 里有什么 ——
-    不是空的，两份 JSON 都是脚本真实写出来的。**判据**：修一类「路径算错」的
-    缺陷时，必须同时查**错误路径下已经落了多少数据** —— 缺陷修好只保证将来
-    不再落错，已经落错的数据不会自己回来，而「写入方」与「读取方」用的根
-    不同（一个 `parents[1]`、一个 marker 探测）时，两边**各自都自洽**，
-    没有任何一侧会报错，只有把两份按 timestamp 对拍才看得见缺口。
-    **纪律**：影子状态面的存在本身（`.gitignore:402` 的 band-aid）是缺陷的
-    **症状**而不是缺陷的处置 —— 加 ignore 让脏树消失，等于把证据删掉。
-  actor: "governance-agent"
-- at: "2026-11-13T03:55:00+00:00"
+  note: '**发现经过**：修根深度缺陷（#5322）时顺带查 `bin/.omo/` 里有什么 —— 不是空的，两份 JSON 都是脚本真实写出来的。**判据**：修一类「路径算错」的
+    缺陷时，必须同时查**错误路径下已经落了多少数据** —— 缺陷修好只保证将来 不再落错，已经落错的数据不会自己回来，而「写入方」与「读取方」用的根 不同（一个
+    `parents[1]`、一个 marker 探测）时，两边**各自都自洽**， 没有任何一侧会报错，只有把两份按 timestamp 对拍才看得见缺口。
+    **纪律**：影子状态面的存在本身（`.gitignore:402` 的 band-aid）是缺陷的 **症状**而不是缺陷的处置 —— 加 ignore
+    让脏树消失，等于把证据删掉。'
+  actor: governance-agent
+- at: '2026-11-13T03:55:00+00:00'
   action: review
-  note: >-
-    **已处置：合并 + 清影子面（选 (a)）**。
-    `bin/.omo/state/value-executions.json` 的 **9 条**按 timestamp 升序并入
-    `<root>/.omo/state/value-executions.json`：**34 + 9 = 43 条**，
-    校验 0 重复 timestamp、`signal-chain` 记录 9 条全部在位、区间
-    `2026-09-21T10:21:10Z → 2026-11-09T23:43:23Z`。合并前已把两份文件备份到
-    `/tmp/value-merge-backup/`。
-    `bin/.omo/_state/weekly-review-latest.json` 迁到 `<root>/.omo/_state/`
-    （原先该目录不存在；真正接线的 `bin/ssot/weekly-review.py` 写的是
-    `.omo/_control/cockpit-inbox/` 下的同名文件，两者不是同一个）。
-    迁完 `bin/.omo/` 已空，**整目录删除**（删除前 `find` 确认只有那 2 个文件）。
-    **没有删 `.gitignore:402`** —— 13 个写者已修，但那条 ignore 留着是**防御性**的：
-    万一还有没被检测器覆盖的写法再造出 `bin/.omo/`，ignore 能让它不进脏树。
-    这属于「症状不复发」的兜底，不再是「证据被删」。
-    **验证**：合并后 `git status` 无 `bin/.omo` 条目；9 条记录在**主日志**里可查；
-    `bin/.omo/` 不存在。
-  actor: "governance-agent"
+  note: '**已处置：合并 + 清影子面（选 (a)）**。 `bin/.omo/state/value-executions.json` 的 **9 条**按
+    timestamp 升序并入 `<root>/.omo/state/value-executions.json`：**34 + 9 = 43 条**， 校验
+    0 重复 timestamp、`signal-chain` 记录 9 条全部在位、区间 `2026-09-21T10:21:10Z → 2026-11-09T23:43:23Z`。合并前已把两份文件备份到
+    `/tmp/value-merge-backup/`。 `bin/.omo/_state/weekly-review-latest.json` 迁到 `<root>/.omo/_state/`
+    （原先该目录不存在；真正接线的 `bin/ssot/weekly-review.py` 写的是 `.omo/_control/cockpit-inbox/`
+    下的同名文件，两者不是同一个）。 迁完 `bin/.omo/` 已空，**整目录删除**（删除前 `find` 确认只有那 2 个文件）。 **没有删 `.gitignore:402`**
+    —— 13 个写者已修，但那条 ignore 留着是**防御性**的： 万一还有没被检测器覆盖的写法再造出 `bin/.omo/`，ignore 能让它不进脏树。
+    这属于「症状不复发」的兜底，不再是「证据被删」。 **验证**：合并后 `git status` 无 `bin/.omo` 条目；9 条记录在**主日志**里可查；
+    `bin/.omo/` 不存在。'
+  actor: governance-agent
+- at: '2026-11-23T02:48:28.384723+00:00'
+  action: update_description
+  note: 'Updated description from ''`bin/.omo/` 是一个**真实存在、被 `.gitignore:402` 单独忽略**的影子状态面
+    —— 它由一类根常量缺陷造出来：`bin/<subdir>/x.py` 用 `Path(__file__).resolve().parents[1]` 当
+    workspace 根，而 `parents[1]` 是 `<root>/bin`，`parents[2]` 才是 workspace。13 个脚本有此缺陷，已修（#5322）。
+
+    影子面里现存两个文件：
+
+    | 文件 | 大小 | 最后写入 | 来源脚本 | |---|---|---|---| | `bin/.omo/state/value-executions.json`
+    | 1,433 B | 2026-10-13 21:50 | `bin/gac/value-tracker.py` | | `bin/.omo/_state/weekly-review-latest.json`
+    | 1,147 B | 2026-10-13 21:50 | `bin/gac/weekly-review.py`（未接线副本） |
+
+    **价值记录是困住的**：`value-executions.json` 两份都是 list。主状态面 `<root>/.omo/state/value-executions.json`
+    有 **34 条**（2026-09-21 → 2026-11-09， 由 `value-evolution-connector.py` 用 marker
+    探测的正确根写入）；影子面有 **9 条**（2026-10-10T08:13:51Z → 2026-10-13T13:50:09Z，`task_id` 全为
+    `signal-chain`，每条 `minutes_saved: 15.0`）。**按 timestamp 比对，9 条全部不在主日志里** —— 不是子集，是纯增量。
+
+    `weekly-review-latest.json` 的落点 `<root>/.omo/_state/` 尚不存在；且真正接线的 周报脚本是 `bin/ssot/weekly-review.py`（cron
+    `weekly-review-post-inbox`，写 `.omo/_control/cockpit-inbox/weekly-review-latest.json`），所以影子那份来自
+    **未接线的重复实现**，价值低于价值日志。'' to ''**已执行并复核 (2026-11-23, 基线 origin/main@323e33671)**
+    —— `decision_needed` 里裁定并执行的是 (a) 合并, 本次复核三项全部落地:
+
+
+    * `bin/.omo/` **已不存在** (`ls -d bin/.omo` → No such file or directory), 影子面已整目录删除;
+
+    * 主日志 `.omo/state/value-executions.json` = **43 条** (list), 与裁定预期的 34 + 9 = 43
+    一致;
+
+    * `.gitignore` 的 `bin/.omo/` **保留** (第 402 行), 作为防御性兜底 —— 与裁定一致 (13 个写者已由 #5322
+    修好且已有 CI 判据 `test_bin_root_constant_depth`, 这条 ignore 成本为零)。
+
+
+    **残余 (未决, 不阻塞本条)**: `bin/gac/weekly-review.py` 是 `bin/ssot/weekly-review.py` 的未接线重复实现
+    (真正接线的是后者, cron `weekly-review-post-inbox`), 去留仍待裁决 —— 它与影子面数据无关, 且本条裁定明确把两件事分开。
+
+
+    **结论**: 数据已保全、影子面已清除、防御兜底保留, 转 resolved。''.'
+- at: '2026-11-23T02:48:28.427377+00:00'
+  action: close
+  note: Closed debt item.
+  actor: governance-agent/20261123-close
+closed_at: '2026-11-23T02:48:28.427232+00:00'
