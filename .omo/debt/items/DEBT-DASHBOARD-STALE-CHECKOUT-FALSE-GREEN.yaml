@@ -54,6 +54,17 @@ decision_needed: >-
 
   **复核追加待裁 (2026-11-23，不在上述 A/B/C 内)** —— 实测「投影冻结」已有检测、只缺阻断：`state-freshness-check.py` 对该文件给 `stale:true / score:50` 却整体 `exit 0`。
   是否把「债务投影 stale/冻结」升为阻断门禁项、以及是否让 launchd 作业 `last exit code != 0` 进入某个 gate，属**门禁严格度变更**，需 principal 单独裁定，本条不代为决定。
+
+  **第二次复核追加待裁 (2026-11-23，仍不在上述 A/B/C 内，也不与上一段重复)** —— 「证据指针 stale」
+  这个信号在当前写法约定下**没有边际区分度**：实测它与 `lifecycle_state` 未闭集完全同集
+  （50 对 50，双向零差集；`closed`/`resolved` 的 47 条无一计入），因为判据是条目级 all-or-nothing
+  而开放条目的 ref 按约定就是取证散文。后果：**再混进一条真坏 ref，群体计数不会变**，
+  BET-Y2Q4-T10-350 的护栏只买到「不崩」，没买到「能看见」。
+  可选方向（都要改数据契约，不是纯缺陷修复，故不代为决定）：(D) 把指针拆成结构化字段
+  （`path` 参与解析判据 + 自由文本 `note` 不参与），代价是动 `omo_debt_metrics` 判据口径与
+  97 条存量条目共 171 条 ref 的写法；(E) 保留散文约定，把 stale 显式降级为**展示字段**并在门禁与
+  台账里声明它不是告警源，代价是放弃这个维度、需要另找能差分的探针。
+  本次只登记测量与两条代价，方向由 principal 裁定后再落地。
 history:
 - at: "2026-11-10T13:20:00+00:00"
   action: identify
@@ -146,4 +157,21 @@ history:
     **本条仍未闭**的是原判据问题而非读数问题：`decision_needed` 的 (A)/(B)/(C)（投影该读哪个检出）与
     「复核追加待裁（`state-freshness-check.py` 给 `stale:true` 却整体 exit 0，是否升为阻断门禁项）」；
     `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`（缓解 ≠ 关闭）。
+  actor: "governance-agent"
+- at: "2026-11-23T20:20:00+00:00"
+  action: review
+  note: >-
+    **护栏有效性复核（收尾之后追加的直测，不是推断）** —— BET-Y2Q4-T10-350 把「非 str / 不可解析」
+    从崩溃降成了**零边际信号**：在含护栏的检出（主仓 `45613efc8` + omo gitlink `08ce92a`）上实测
+    `omo_debt_metrics.collect_stale_evidence_item_ids(ledger.items)` 返回 50 个 id，与
+    `lifecycle_state ∈ {identified, in_progress}` 的 50 条**双向零差集**
+    （`stale − 未闭 = 0`、`未闭 − stale = 0`；`closed` 15 条与 `resolved` 32 条一条都不在 stale 里）。
+    机制是判据的**条目级 all-or-nothing**：任一 ref 解析不了就整条计 stale，而本仓开放条目的
+    `evidence_refs` 按约定写取证散文（全量 97 条里 171 条 ref 有 126 evidence + 45 mitigation 含空格/散文），
+    45 条 `identified` 中按「去掉 `repo://`/`file://` 前缀后路径存在」的口径有 39 条其实**存在**可解析指针，
+    仍被整条计入 ⇒ 「stale」在当前约定下等价于「未关闭」，**再多一条真坏 ref 也不会让计数 +1**（它已在基线里）。
+    **含义**：护栏的「不崩」有效（`runs=117 / last exit code=0` 已证），但它**不提供检测**。
+    因此本条 19:17 `mitigate` 记录里「可见降格」的说法需按此收窄——可见的是**该条目自身**被标 stale，
+    群体层面没有可差分的声音。**新增一项待裁**（见 `decision_needed` 第三段），
+    `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`。
   actor: "governance-agent"
