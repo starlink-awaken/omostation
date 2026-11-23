@@ -149,22 +149,62 @@ history:
     **仍在的**（本条真正该跟的）: 剩下三个源 —— `ruflo` **FAIL**(11-23T05:57)、`personal_value_truth`
     **UNAVAILABLE**(自 10-28T08:18)、`panorama_base` **STALE_UNAVAILABLE**(自 10-28T07:27)。后两个正是
     `panorama_base` 修法 (3)（plist 追加 `PANORAMA_OUTPUT_ROOT`）要解冻的对象 —— **该修法仍待裁**。''.'
-description: '**复测 (2026-11-23): 立案前提已不成立 —— 两个源都已恢复, A9 已 PASS。**
+- at: '2026-11-23T06:16:25.597499+00:00'
+  action: update_description
+  note: 'Updated description from ''**复测 (2026-11-23): 立案前提已不成立 —— 两个源都已恢复, A9 已 PASS。**
 
 
-  本条称「A9 的两个证据源 12 天无成功观测」。实测 (投影 `revisions/7026733c…/data.json`, mtime 11-23 13:58):
+    本条称「A9 的两个证据源 12 天无成功观测」。实测 (投影 `revisions/7026733c…/data.json`, mtime 11-23 13:58):
 
 
-  - `strategy` → **OK**, last_success_at **2026-11-23T05:57**
+    - `strategy` → **OK**, last_success_at **2026-11-23T05:57**
 
-  - `documents` → **OK**, last_success_at **2026-11-23T05:57**
+    - `documents` → **OK**, last_success_at **2026-11-23T05:57**
 
-  - A9 门 → **PASS** (`cockpit projection age 13s; ASD COMPLETE`)
-
-
-  ⇒ 「12 天无成功观测」与「A9 长期不可闭合」**都不再成立**。
+    - A9 门 → **PASS** (`cockpit projection age 13s; ASD COMPLETE`)
 
 
-  **仍在的**（本条真正该跟的）: 剩下三个源 —— `ruflo` **FAIL**(11-23T05:57)、`personal_value_truth`
-  **UNAVAILABLE**(自 10-28T08:18)、`panorama_base` **STALE_UNAVAILABLE**(自 10-28T07:27)。后两个正是
-  `panorama_base` 修法 (3)（plist 追加 `PANORAMA_OUTPUT_ROOT`）要解冻的对象 —— **该修法仍待裁**。'
+    ⇒ 「12 天无成功观测」与「A9 长期不可闭合」**都不再成立**。
+
+
+    **仍在的**（本条真正该跟的）: 剩下三个源 —— `ruflo` **FAIL**(11-23T05:57)、`personal_value_truth`
+    **UNAVAILABLE**(自 10-28T08:18)、`panorama_base` **STALE_UNAVAILABLE**(自 10-28T07:27)。后两个正是
+    `panorama_base` 修法 (3)（plist 追加 `PANORAMA_OUTPUT_ROOT`）要解冻的对象 —— **该修法仍待裁**。''
+    to ''**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
+
+
+    投影 `~/.local/share/zhixing-dashboard/revisions/*/data.json` 连续四轮 (13:58 / 14:06
+    / 14:10 / 14:14) 读数完全一致:
+
+
+    - A9 门 = **PASS** (`dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE`),
+    四轮皆然;
+
+    - `strategy` / `documents` = **OK**, last_success_at 2026-11-23T05:57, 四轮皆然。
+
+
+    ⇒ 本条立案时的「两个证据源 12 天无成功观测 / A9 长期不可闭合」**已彻底消解**, 且不是偶发单帧 —— 链路在真实调度节奏下稳定。
+
+
+    **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
+    (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
+    修法 (3) 解冻, **该修法仍待裁**。''.'
+description: '**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
+
+
+  投影 `~/.local/share/zhixing-dashboard/revisions/*/data.json` 连续四轮 (13:58 / 14:06
+  / 14:10 / 14:14) 读数完全一致:
+
+
+  - A9 门 = **PASS** (`dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE`),
+  四轮皆然;
+
+  - `strategy` / `documents` = **OK**, last_success_at 2026-11-23T05:57, 四轮皆然。
+
+
+  ⇒ 本条立案时的「两个证据源 12 天无成功观测 / A9 长期不可闭合」**已彻底消解**, 且不是偶发单帧 —— 链路在真实调度节奏下稳定。
+
+
+  **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
+  (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
+  修法 (3) 解冻, **该修法仍待裁**。'
