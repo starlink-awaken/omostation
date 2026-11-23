@@ -48296,7 +48296,8 @@ bets:
     backlog_pressure 7.45 / pointer_entropy 1.16 / watchlist 6 项`）。数据腿已由主仓 #5487 修条目引号；本
     BET 修代码： `_resolve_ref_path` 非 str 返回 None，`collect_stale_evidence_item_ids` 把该条目判
     stale（可见）后继续， 使下一个畸形条目不再有能力停摆整个平面。'
-  status: in_progress
+  status: done
+  done_at: 2026-11-23
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -48332,7 +48333,7 @@ bets:
     等于本次 `now`）。
   - 畸形 ref 条目被判 stale 且仍出现在队列里（不是静默丢弃），`backlog_pressure` 不因它归零。
   - 同文件其余条目的读数不受影响（既有用例无回归）。
-  - 变异证明：在未修树上跑同一用例必须红，且红的是生产签名 `TypeError: '... not ''dict''`。'
+  - "变异证明：在未修树上跑同一用例必须红，且红的是生产签名 `TypeError: ... not 'dict'`。"
   verify:
   - cmd: cd projects/omo && uv run pytest tests/unit/test_omo_debt_malformed_refs.py
       -q
@@ -48349,17 +48350,44 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
-        note: '铸单时点（2026-11-23）代码腿已在子模块 main（`omostation-omo@08ce92a`, PR #258 三项 CI
-          全绿）， 主仓 gitlink 与 closeout 收据未落地 ⇒ 整条交付按 NOT_STARTED 记，不提前 claim VERIFIED。'
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2e26f844177061098cd4dead808516721dfabc5c
+          tests:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#受控测试
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          diff:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          rollback:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#rollback
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#operational-轴
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-350.md
+            sha256: sha256:8a1a9cae95e2b5cd86891728a356c3bd82be872cb3ea2b72ffbec4e6e9be7c03
+          cleanup:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#operational-轴
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
       value:
         status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        evidence:
+          note: >-
+            已证平面存活与坏条目可见性在同一台机器上由真机 refresh_outputs 复现（rc=0、5 投影面、
+            backlog_pressure 1.5、BAD-REFS 可见），并由未修树变异证明判据能红。未做价值指标计量
+            （value_indicator_policy=false）；规范主检出同步前的运行面仍是旧码 —— canonical 未同步属
+            principal 动作，见收据「读数前置条件」与「未执行动作」。
+    overall_state: delivery_accepted
+
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
