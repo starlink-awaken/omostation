@@ -1,70 +1,120 @@
-id: "PANORAMA-A9-DEFERRED-UNBOUNDED"
-title: "A9 判据的年龄界不对称：DEFERRED 完全无界可永久通过，PARTIAL 界内也永不被接受"
-dimension: "governance"
-subdimension: "consistency"
-domain: "infrastructure"
-scope: "workspace"
-severity: "medium"
+id: PANORAMA-A9-DEFERRED-UNBOUNDED
+title: A9 判据的年龄界不对称：DEFERRED 完全无界可永久通过，PARTIAL 界内也永不被接受
+dimension: governance
+subdimension: consistency
+domain: infrastructure
+scope: workspace
+severity: medium
 weight: 0.1
-entropy_class: "low"
-lifecycle_state: "identified"
-owner: "governance-team"
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
 affected_roots: []
 evidence_refs:
 - bin/panorama/panorama-collect.py
 - docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
 mitigation_refs: []
-opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
-next_review_at: "2026-11-17"
+opened_at: '2026-11-10'
+last_reviewed_at: '2026-11-10'
+next_review_at: '2026-11-17'
 gate_level: none
-x1_policy_ref: ""
-x3_tier: "Principle"
-decision_needed: >-
-  判据（bin/panorama/panorama-collect.py 的 A9 cockpit 源准入段）自述意图是
-  「真正的信号是年龄而不是状态标签」，但实现是三条不对称规则：
-  ① `OK` 无条件接受；② `DEFERRED` **无任何年龄界**即接受 —— 一个长期停留在 DEFERRED
-  的源可以无限期让 A9 通过，而它的上次成功观测可能已经很久；
-  ③ `STALE_UNAVAILABLE`/`FAIL` 需 ≤21600s（6h）才接受，而 `PARTIAL` 不在接受集合里，
-  **即使年龄界内也判不合格**。需要决定：DEFERRED 是否应与 ③ 同界；PARTIAL 界内是否应被接受
-  （按自述意图应当是），以及把这三条统一成"以年龄为主判据、标签只做解释"的单一口径。
-  如实留记：本条不是 A9 当前不闭合的直接原因 —— strategy/documents 既是 PARTIAL
-  又超界（306h/287h），任何一侧规则都会拒它们；直接原因见 PANORAMA-A9-SOURCES-STALE-12D。
-  本条要防的是另一个方向：2026-11-10 实测同一对源在高负载轮显示 DEFERRED、在另一些轮显示
+x1_policy_ref: ''
+x3_tier: Principle
+decision_needed: 判据（bin/panorama/panorama-collect.py 的 A9 cockpit 源准入段）自述意图是 「真正的信号是年龄而不是状态标签」，但实现是三条不对称规则：
+  ① `OK` 无条件接受；② `DEFERRED` **无任何年龄界**即接受 —— 一个长期停留在 DEFERRED 的源可以无限期让 A9 通过，而它的上次成功观测可能已经很久；
+  ③ `STALE_UNAVAILABLE`/`FAIL` 需 ≤21600s（6h）才接受，而 `PARTIAL` 不在接受集合里， **即使年龄界内也判不合格**。需要决定：DEFERRED
+  是否应与 ③ 同界；PARTIAL 界内是否应被接受 （按自述意图应当是），以及把这三条统一成"以年龄为主判据、标签只做解释"的单一口径。 如实留记：本条不是
+  A9 当前不闭合的直接原因 —— strategy/documents 既是 PARTIAL 又超界（306h/287h），任何一侧规则都会拒它们；直接原因见
+  PANORAMA-A9-SOURCES-STALE-12D。 本条要防的是另一个方向：2026-11-10 实测同一对源在高负载轮显示 DEFERRED、在另一些轮显示
   PARTIAL，标签在轮次之间摆动；一旦摆动落在 DEFERRED 侧，A9 就无条件放行。
 history:
-- at: "2026-11-10T02:40:00+00:00"
+- at: '2026-11-10T02:40:00+00:00'
   action: identify
-  note: >-
-    BET-Y2Q4-T10-343 发布后复核 A9 时，为解释「同一源在两平面标签不同」而逐行读判据发现。
-    注释与实现之间的偏差是本仓 PITFALL 里反复出现的「声明 ≠ 执行」形状：注释给出年龄中心的
-    判据理由，实现却是标签白名单。
-  actor: "governance-agent"
-- at: "2026-11-12T01:30:00+00:00"
+  note: BET-Y2Q4-T10-343 发布后复核 A9 时，为解释「同一源在两平面标签不同」而逐行读判据发现。 注释与实现之间的偏差是本仓 PITFALL
+    里反复出现的「声明 ≠ 执行」形状：注释给出年龄中心的 判据理由，实现却是标签白名单。
+  actor: governance-agent
+- at: '2026-11-12T01:30:00+00:00'
   action: review
-  note: >-
-    **试过「按自述意图改成年龄为主判据」, 被现有测试拦下 —— 记录为决策证据, 不动手。**
-    在 `origin/main` (`4cf69d69a`) 上把 `collect_a9_gate` 的接受条件从三条标签规则
-    改成 `bounded (age is not None and age <= 21600)` 单一口径, 实跑
-    `tests/unit/test_panorama_a9_deferred.py` / `test_panorama_a9_bounded_fail.py` /
-    `test_panorama_a9_race.py` / `test_panorama_source_health.py`:
-    **改前 14 passed, 改后 5 failed** ⇒ 现有测试**明确钉住标签规则**, 不是遗漏。
-    逐个看失败点, 现行为是**混合规则**而非纯标签白名单:
-    `test_bounded_fail_is_accepted` (FAIL + 4.77h ⇒ PASS) /
-    `test_beyond_bound_fail_still_blocks` (FAIL + 48h ⇒ PARTIAL) /
-    `test_bounded_stale_unavailable_still_accepted` (STALE_UNAVAILABLE + 5h ⇒ PASS)
-    三条都符合「年龄为主」; 但 `test_unbounded_failure_still_blocks` 用
-    `compute: UNAVAILABLE` 且 fixture 默认 `age=1h`(**界内**)却断言 PARTIAL ——
-    **用例名里的 "unbounded" 与 fixture 的 1h 界内互相矛盾**, 它钉的是
-    「UNAVAILABLE 即使界内也阻断」这条标签规则。
-    ⇒ 裁决的必要证据已齐: 现行为是**刻意的混合规则**(三条年龄 + OK/DEFERRED 无条件 +
-    其余标签恒阻), 不是实现疏漏; 且其中一条用例名与自身 fixture 不符。
-    **另测实时影响**: 把 `/data.json` 实取 (`curl 127.0.0.1:43191/data.json`, 111 键)
-    喂给改前/改后两个版本, A9 的 `verdict` 与 `detail` **逐字相同**
-    (PARTIAL; `cockpit_sources, strategy=PARTIAL; workflow=DEGRADED`) ——
-    印证本条自述「不是 A9 当前不闭合的直接原因」: 14 个 required 源里
-    strategy=PARTIAL/349h、workflow=DEGRADED/18h 两条两侧规则都拒, 其余全 OK 且 ~2.3h。
-    **纪律**: 本条裁决要连带改那 4 个文件里被钉住的期望, 且先裁定
-    `test_unbounded_failure_still_blocks` 的用例名与 fixture 哪个是真意图 ——
-    不以「实现与注释不符」为由单方面改测试。
-  actor: "governance-agent"
+  note: '**试过「按自述意图改成年龄为主判据」, 被现有测试拦下 —— 记录为决策证据, 不动手。** 在 `origin/main` (`4cf69d69a`)
+    上把 `collect_a9_gate` 的接受条件从三条标签规则 改成 `bounded (age is not None and age <= 21600)`
+    单一口径, 实跑 `tests/unit/test_panorama_a9_deferred.py` / `test_panorama_a9_bounded_fail.py`
+    / `test_panorama_a9_race.py` / `test_panorama_source_health.py`: **改前 14 passed,
+    改后 5 failed** ⇒ 现有测试**明确钉住标签规则**, 不是遗漏。 逐个看失败点, 现行为是**混合规则**而非纯标签白名单: `test_bounded_fail_is_accepted`
+    (FAIL + 4.77h ⇒ PASS) / `test_beyond_bound_fail_still_blocks` (FAIL + 48h ⇒ PARTIAL)
+    / `test_bounded_stale_unavailable_still_accepted` (STALE_UNAVAILABLE + 5h ⇒ PASS)
+    三条都符合「年龄为主」; 但 `test_unbounded_failure_still_blocks` 用 `compute: UNAVAILABLE`
+    且 fixture 默认 `age=1h`(**界内**)却断言 PARTIAL —— **用例名里的 "unbounded" 与 fixture 的 1h
+    界内互相矛盾**, 它钉的是 「UNAVAILABLE 即使界内也阻断」这条标签规则。 ⇒ 裁决的必要证据已齐: 现行为是**刻意的混合规则**(三条年龄
+    + OK/DEFERRED 无条件 + 其余标签恒阻), 不是实现疏漏; 且其中一条用例名与自身 fixture 不符。 **另测实时影响**: 把 `/data.json`
+    实取 (`curl 127.0.0.1:43191/data.json`, 111 键) 喂给改前/改后两个版本, A9 的 `verdict` 与 `detail`
+    **逐字相同** (PARTIAL; `cockpit_sources, strategy=PARTIAL; workflow=DEGRADED`) ——
+    印证本条自述「不是 A9 当前不闭合的直接原因」: 14 个 required 源里 strategy=PARTIAL/349h、workflow=DEGRADED/18h
+    两条两侧规则都拒, 其余全 OK 且 ~2.3h。 **纪律**: 本条裁决要连带改那 4 个文件里被钉住的期望, 且先裁定 `test_unbounded_failure_still_blocks`
+    的用例名与 fixture 哪个是真意图 —— 不以「实现与注释不符」为由单方面改测试。'
+  actor: governance-agent
+- at: '2026-11-23T06:00:27.822617+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''**复测 (2026-11-23, 投影在 `~/.local/share/zhixing-dashboard/revisions/7026733c…/data.json`,
+    mtime 11-23 13:58): A9 已 PASS。**
+
+
+    A9 门实测: `PASS dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE;
+    oldest source success age …`。
+
+
+    源状态实测 (同一份 data.json 的 `source_states`):
+
+
+    | 源 | 状态 | last_success_at |
+
+    |---|---|---|
+
+    | documents | OK | 2026-11-23T05:57 |
+
+    | strategy | OK | 2026-11-23T05:57 |
+
+    | ruflo | FAIL | 2026-11-23T05:57 |
+
+    | personal_value_truth | UNAVAILABLE | 2026-10-28T08:18 |
+
+    | panorama_base | STALE_UNAVAILABLE | 2026-10-28T07:27 |
+
+
+    ⇒ 本条立案时的两个核心源（strategy / documents）**都已界内成功**, 它们**不再是 A9 不闭合的原因**。仍不达标的是另外三个源（ruflo
+    FAIL、personal_value_truth / panorama_base 自 10-28 起 UNAVAILABLE）。
+
+
+    **仍未裁**（本条的原始问题）: DEFERRED 是否应与 ③ 同界、PARTIAL 界内是否应被接受、三条规则是否统一成「以年龄为主判据」。A9 转
+    PASS 不改变这个裁决需求 —— 但**判据摆动的后果已经从「恒不放行」变成「摆动到 DEFERRED 侧才放行」**, 而当前源全是 OK, 摆动路径未被触发。''.'
+description: '**复测 (2026-11-23, 投影在 `~/.local/share/zhixing-dashboard/revisions/7026733c…/data.json`,
+  mtime 11-23 13:58): A9 已 PASS。**
+
+
+  A9 门实测: `PASS dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE; oldest
+  source success age …`。
+
+
+  源状态实测 (同一份 data.json 的 `source_states`):
+
+
+  | 源 | 状态 | last_success_at |
+
+  |---|---|---|
+
+  | documents | OK | 2026-11-23T05:57 |
+
+  | strategy | OK | 2026-11-23T05:57 |
+
+  | ruflo | FAIL | 2026-11-23T05:57 |
+
+  | personal_value_truth | UNAVAILABLE | 2026-10-28T08:18 |
+
+  | panorama_base | STALE_UNAVAILABLE | 2026-10-28T07:27 |
+
+
+  ⇒ 本条立案时的两个核心源（strategy / documents）**都已界内成功**, 它们**不再是 A9 不闭合的原因**。仍不达标的是另外三个源（ruflo
+  FAIL、personal_value_truth / panorama_base 自 10-28 起 UNAVAILABLE）。
+
+
+  **仍未裁**（本条的原始问题）: DEFERRED 是否应与 ③ 同界、PARTIAL 界内是否应被接受、三条规则是否统一成「以年龄为主判据」。A9 转 PASS
+  不改变这个裁决需求 —— 但**判据摆动的后果已经从「恒不放行」变成「摆动到 DEFERRED 侧才放行」**, 而当前源全是 OK, 摆动路径未被触发。'
