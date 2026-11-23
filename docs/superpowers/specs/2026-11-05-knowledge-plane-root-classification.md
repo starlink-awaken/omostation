@@ -146,10 +146,12 @@ glob `*.jsonl`」）。
   （tip sha256 前 12：`419836601de2` / `6fa5ecbac09d`）。
 - 被检对象：`<root>/bin`（pin-gate 自己的扫描面）+ 按 pin 归档的 `src/omo`（archive 源见探针打印）。
 - 反证（AGENTS.md §7③，空绿不被接受）：同一把尺在该对象上须复现它自己写下的基线 ——
-  `SPEC_MARKER_READINGS` 逐桶相等（`{_knowledge:62, _truth:163, _state:103, _delivery:78, runtime:50}`，
-  sites 456 / gated 153 / pairs 143 / files 95）⇒ **PASS**。反证不过则本轮读数一律作废。
-  （`_truth` 162→163 / sites 455→456 是 PR #5059 在 `bin/ssot/auto-pruner.py` 新点的一处钉检出根站点，
-  尺的基线与被检对象在同一次交付里同步前进；本规范裁决的 `_knowledge` 面 62 站点逐项未变，
+  `SPEC_MARKER_READINGS` 逐桶相等（`{_knowledge:62, _truth:164, _state:103, _delivery:78, runtime:47}`，
+  sites 454 / gated 170 / pairs 161 / files 107）⇒ **PASS**。反证不过则本轮读数一律作废。
+  （读数三次前进, 每次都与尺同步: #5059 在 `bin/ssot/auto-pruner.py` 新点一处钉检出根站点
+  ⇒ `_truth` 162→163 / sites 455→456；ADR-0456 AC-02 准入谓词改按族 ⇒ gated 153→173、
+  pairs 143→163、files 95→107；2026-11-23 输出根分离 `PANORAMA_OUTPUT_ROOT` ⇒ `runtime`
+  50→47、gated 173→170、pairs 163→161。本规范裁决的 `_knowledge` 面 62 站点逐项未变，
   `probe-d2c` 在两个 base 上的输出除基线行外逐字节相同。）
 - **`check-ignore` 的装置说明（两条必须连带）**：
   ① 对**目录面**提问时探针写入占位文件 `__qoder_probe__.jsonl`，好让 `*.jsonl` 这类 glob 有机会命中 ——
