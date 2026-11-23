@@ -425,6 +425,26 @@ for _root_gate in (
     if not any(gate.get("id") == _root_gate["id"] for gate in GATES_LIST):
         GATES_LIST.append(_root_gate)
 
+# Root-owned observability/contract guards. 这两条在 ci-surfaces.yaml 里声明
+# `workflow: gac-gate.yml`, 但 gac-gate.yml **不跑 ci-check-runner** ⇒ 那个声明
+# 从未被任何平面执行 (2026-11-23 实测: 运行时 GATES_LIST 90 条里没有它们,
+# 五个平面全缺席)。与 write-owner-audit 同因: 声明与执行面不符的登记项,
+# 只有真的进运行时面才算接线。两者当前都是 advisory (限期未到), 不阻断。
+for _root_gate in (
+    {
+        "id": "cron-interpreter-executability",
+        "command": ["bin/gac/check-cron-interpreter-executability.py"],
+        "timeout": 180,
+    },
+    {
+        "id": "gate-detail-contract",
+        "command": ["bin/gac/check-gate-detail-contract.py"],
+        "timeout": 120,
+    },
+):
+    if not any(gate.get("id") == _root_gate["id"] for gate in GATES_LIST):
+        GATES_LIST.append(_root_gate)
+
 # Root-owned document governance is intentionally appended outside the ecos
 # submodule policy so a submodule update cannot silently remove the gate.
 if not any(gate.get("id") == "doc-governance" for gate in GATES_LIST):
