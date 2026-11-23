@@ -96,6 +96,9 @@ def _family_of(whole: str) -> str | None:
 # 2026-11-02 T10-280 还掉 panorama-collect 的 event-ledger 站点（改挂 event_ledger_path()）：
 # `runtime` 桶 51→50，门禁三读数 154/144/95 → 153/143/95（该文件另有 3 处仍钉检出根，故文件数不变）。
 SPEC_MARKER_READINGS = {
+    # 2026-11-23 输出根分离 (PANORAMA_OUTPUT_ROOT): panorama-collect 的 OUT_DIR 改挂
+    # OUTPUT_ROOT、collect_alerts 的第二读点改挂 DATA_JSON —— 两处都不再钉检出根
+    # ⇒ `runtime` 桶 50→47 (3 站点 / 2 对)。
     # 2026-10-31 ADR-0122 历史欠账处置: 新增 .omo/_truth/registry/lane-debt-ledger.yaml
     # => `.omo/_truth` 桶 161 -> 162 (该桶是排除面, 不影响门禁管辖的 154/144/95)。
     # 2026-11-05 DEBT-20260927-RUN-REGISTRY-RACE (PR #5059): auto-pruner 新增
@@ -107,15 +110,19 @@ SPEC_MARKER_READINGS = {
     ".omo/_truth": 164,
     ".omo/state": 103,
     ".omo/_delivery": 78,
-    "runtime": 50,
+    "runtime": 47,
     ".omo/_knowledge": 62,
 }
 # 2026-11-06 BET-Y2Q4-T10-289 AC-02（准入谓词改按族，**分桶读数一条未动**）：门禁三读数
 # 153/143/95 → 173/163/107。差额 20 站点 / 20 对 / 12 个文件里 9 个是新出现的文件，逐项是
 # `.omo/_knowledge` 13 处 + `.omo/_delivery` 6 处 + `.omo/_truth` 1 处（spec §2 只裁了
 # `_knowledge` 桶，另两个 marker 的 7 处是同一判据的连带命中，逐面裁决见 ADR-0456 addendum）。
-SPEC_GATED_SITES = 173
-SPEC_GATED_PAIRS = 163
+# 2026-11-23 输出根分离 (PANORAMA_OUTPUT_ROOT): 门禁三读数 173/163/107 → 170/161/107。
+# 差额 3 站点 / 2 对全在 `bin/panorama/panorama-collect.py`，即 OUT_DIR 与 collect_alerts
+# 第二读点（`ROOT / "runtime/dashboard/data.json"` 两处）—— 它们此前钉检出根，现在跟随
+# OUTPUT_ROOT/DATA_JSON。文件数不变（该文件另有 3 处仍钉检出根）。
+SPEC_GATED_SITES = 170
+SPEC_GATED_PAIRS = 161
 SPEC_GATED_FILES = 107
 
 # 2026-10-13 由 BET-Y2Q4-T10-250 的扫描生成的登记面（(文件, 拼出的相对路径) 去重）。
@@ -235,8 +242,6 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/panorama/panorama-collect.py', '.omo/state/signal-poller-state.json'),
         ('bin/panorama/panorama-collect.py', '.omo/state/value-baselines'),
         ('bin/panorama/panorama-collect.py', 'runtime/cron/remote-hygiene.log'),
-        ('bin/panorama/panorama-collect.py', 'runtime/dashboard'),
-        ('bin/panorama/panorama-collect.py', 'runtime/dashboard/data.json'),
         ('bin/panorama/panorama-serve.py', 'runtime/dashboard'),
         ('bin/panorama/sunset_redirector.py', 'runtime/dashboard/data.json'),
         ('bin/plan/bet-ledger.py', 'runtime/omo/human-attestation-allowed-signers'),
@@ -945,7 +950,7 @@ def test_family_gate_fires_on_injected_family_not_on_container_child(tmp_path):
 
 
 def test_family_table_is_load_bearing_and_single_sourced(monkeypatch):
-    """④ 族表承重 + 单一来源：清空 `GATEABLE_FAMILIES` ⇒ 门禁读数退回 AC-02 之前（153/143/95）。
+    """④ 族表承重 + 单一来源：清空 `GATEABLE_FAMILIES` ⇒ 门禁读数退回 AC-02 之前（141/161）。
 
     同时反证「容器不作为族参与判定」与「通配项不参与判定」两条筛选都在承重 —— 把它们放回来，
     计账集合会胀到包含合法读面（44 处那一桶），正是 AC-02 禁止的退化方向。
@@ -963,7 +968,7 @@ def test_family_table_is_load_bearing_and_single_sourced(monkeypatch):
     )
     after = gated_pairs(sites)
     assert after < before, "族表清空后门禁集合没变 —— 说明那 20 处不是族表带来的"
-    assert (len(after), len(before)) == (143, 163), (len(after), len(before))
+    assert (len(after), len(before)) == (141, 161), (len(after), len(before))
 
 
 

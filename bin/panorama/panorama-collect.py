@@ -78,7 +78,13 @@ CODE_ROOT = (
     Path(_CONFIGURED_CODE_ROOT).resolve()
     if _CONFIGURED_CODE_ROOT else ROOT
 )
-OUT_DIR = ROOT / "runtime" / "dashboard"
+# PANORAMA_ROOT 承担两个用途: 代码支持根(ssot/ lib/ 只在安装位) 与输出根。同一个变量扛
+# 两个用途时, 输出落点与 base 消费者读的 state_root() 必然错位一侧 (本机实测 panorama_base
+# 与 personal_value_truth 双双冻结, PANORAMA-GATE-DETAIL-UNRELIABLE)。PANORAMA_OUTPUT_ROOT
+# 缺省即 ROOT —— 未设该变量时输出落点与改动前逐字节相同。
+_OUTPUT_CONFIGURED = os.environ.get("PANORAMA_OUTPUT_ROOT")
+OUTPUT_ROOT = Path(_OUTPUT_CONFIGURED).resolve() if _OUTPUT_CONFIGURED else ROOT
+OUT_DIR = OUTPUT_ROOT / "runtime" / "dashboard"
 DATA_JSON = OUT_DIR / "data.json"
 MULTICA_AS0_TIMEOUT_S = 300
 MULTICA_AS0_DIRECT_HOSTS = ("multica.ai", ".multica.ai", "127.0.0.1", "localhost")
@@ -3300,8 +3306,8 @@ def collect_alerts(ci: dict | None = None) -> dict:
     try:
         if ci is None:
             ci = json.loads(
-                open(str(ROOT / "runtime/dashboard/data.json")).read()
-            ) if (ROOT / "runtime/dashboard/data.json").is_file() else {}
+                open(str(DATA_JSON)).read()
+            ) if DATA_JSON.is_file() else {}
             ci = ci.get("ci", {})
         for w in (ci.get("red_workflows") or []):
             alerts.append({"severity": "high", "source": "ci", "msg": f"workflow 红源: {w['workflow']} ({w['fail']}/{w['total']})"})
