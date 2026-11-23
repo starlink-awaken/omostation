@@ -1,0 +1,61 @@
+id: DOCLINK-SCOPED-FILES-SURFACE-MISMATCH
+title: doc-link-check 的 --files 扫描面大于它自己声明的 LOCAL_DOC_GLOBS：历史档案里的正则字面量被当链接（实测 2 条假阳性，本地红 / CI 绿）
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin
+- docs
+evidence_refs:
+- bin/ssot/doc-link-check.py
+- bin/gac/gac-local-gate.py
+- .github/workflows/gac-gate.yml
+- docs/pitfalls.md
+mitigation_refs: []
+opened_at: '2026-11-23T16:25:35.938626+00:00'
+last_reviewed_at:
+next_review_at:
+gate_level: none
+history:
+- at: '2026-11-23T16:25:35.938626+00:00'
+  action: register
+  note: Registered debt item DOCLINK-SCOPED-FILES-SURFACE-MISMATCH.
+  actor: governance-agent
+- at: '2026-11-23T16:25:35.982208+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''**症状** —— 一个只碰 `docs/pitfalls.md` 与 `AGENTS.md` 的**纯追加型**文档 PR（`git diff --cached` 只有一个 hunk `@@ -425,0 +426,4 @@`，0 删除行），在 worktree 里 `make gac-local-gate` 报 `[FAIL] doc-link-check :: bin/ssot/doc-link-check.py --files AGENTS.md docs/pitfalls.md`，明细 `doc-link-check: FAIL (2 broken links)`，位置 `docs/pitfalls.md:367`（解析出的目标 `bin/[A-Za-z0-9_./-]+\.py`）与 `docs/pitfalls.md:370`（目标 `bin/...\.py`）。两条都是 2026-11-11 立案的既有条目把正则字面量写在单反引号里：`re.findall(r''["\''](bin/[A-Za-z0-9_./-]+\.py)["\'']'', …)`，其 `[` … `](` … `)` 相邻形状被链接尺当成语义链接；`git show origin/main:docs/pitfalls.md` 同两行逐字相同 ⇒ 与本 diff 零交集。
+
+
+    **装置的自陈意图与实际接线不同源** —— 尺子本体 `bin/ssot/doc-link-check.py:19` 是 `LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")`，对 inline code span 不做排除（CommonMark 规定 code span 内容不参与链接解析）；它的扫描面 `LOCAL_DOC_GLOBS`（`:20-30`，8 个 pattern：根面 5 个 + `projects/AGENTS.md` + `projects/*/AGENTS.md` + `projects/*/CLAUDE.md`）**不含 `docs/**`**，且脚本 docstring 明写意图是「scans the small, agent-facing documentation surface instead of every historical note under .omo/ … without turning archived knowledge into noisy gate failures」。而调用侧 `bin/gac/gac-local-gate.py:978-986 scoped_doc_link_command()` 分两支：`strict=True` 走默认面（即 `LOCAL_DOC_GLOBS`，历史档案不在内）；非 strict 走 `staged_files_git()` 里**全部** `.md` 原样传给 `--files`，不按 `LOCAL_DOC_GLOBS` 过滤。于是「本地门禁」实际比装置声明的面大，历史档案被拉进扫描面。
+
+
+    **覆盖面量实** —— `docs/**/*.md` 共 1111 个文件，`LINK_RE` 命中「目标含正则元字符 `[ \ ] + * ? { } |`」的伪链接共 3 处：`docs/pitfalls.md:367`、`docs/pitfalls.md:370`、以及 `docs/2026-07-10-bus-foundation-r89-r97.md:518` 的 GitHub 搜索 URL —— 后者 scheme 是 `https`，走 `IGNORED_SCHEMES`（`:31-40`）不计入假阳性 ⇒ **真实假阳性 2 处**，与门禁读数相等（3 − 1 = 2）。对照面：`LOCAL_DOC_GLOBS` 的根面文件（`AGENTS.md` / `CLAUDE.md` / `README.md` / `ARCHITECTURE.md` / `LAYER-INDEX.md`）同形状 **0 处** ⇒ 只要 `--files` 按声明面过滤，这一红不会出现。**CI 走默认面有接线为证**：`.github/workflows/gac-gate.yml:215` 跑的是 `python3 bin/gac/gac-local-gate.py --strict`，而 `scoped_doc_link_command()` 的 `strict=True` 分支返回不带 `--files` 的默认命令；实测同一份内容在 CI 全绿（PR #5481 的 `gac-gate` / `governance-verify` / `interface-check` 全 pass），本地却红 —— 分歧点就是这一支。
+
+
+    **影响** —— ① 任何触碰 `docs/**` 的交付都会在本地为**别人的历史文本**报红，本地红 / CI 绿 的分歧要靠人现场分诊才能排除（本仓同族既有坑：「生成物 CI 口径 ≠ 本地」）；② 更坏的一面是它**掩盖真信号**：同一个大于声明的面里，一条只出现在历史档案中的**真**死链与语法性假阳性同形，读数不区分真假，于是「先把真的当噪声排掉」的诱惑被固化进流程；③ 每次咬人都要多轮分诊才能排除：本轮从门禁 FAIL 走到上面的读数，依次做了「抽 FAIL 行 → 打明细 → 与 canonical 对照 → 数 staged diff hunk → 读尺子源码 → 查接线 → 查 CI 口径 → 枚举覆盖面」，没有一步是交付本身。
+
+
+    **与既有债的关系（不同面，不合并）** —— `DOCLINK-GITIGNORED-PERMA-RED`（`lifecycle_state: resolved`，2026-11-15 裁决「不改判据」）管的是「不完整检出上 `.omo/state/system.yaml` 链接报 14 条」，物化输入即清零；该条末尾自陈的第三个残留缺口是「本地 `make gac-local-gate-strict` 的 docstring 声称与 CI 的 gac-gate 对等，但没有 CI 那道物化前置」，属**strict 入口的前置缺失**，也与本条的「非 strict 分支的 `--files` 面大于声明面」不是同一件事。三条各自独立，本条不代裁前两条。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '**症状** —— 一个只碰 `docs/pitfalls.md` 与 `AGENTS.md` 的**纯追加型**文档 PR（`git diff --cached` 只有一个 hunk `@@ -425,0 +426,4 @@`，0 删除行），在 worktree 里 `make gac-local-gate` 报 `[FAIL] doc-link-check :: bin/ssot/doc-link-check.py --files AGENTS.md docs/pitfalls.md`，明细 `doc-link-check: FAIL (2 broken links)`，位置 `docs/pitfalls.md:367`（解析出的目标 `bin/[A-Za-z0-9_./-]+\.py`）与 `docs/pitfalls.md:370`（目标 `bin/...\.py`）。两条都是 2026-11-11 立案的既有条目把正则字面量写在单反引号里：`re.findall(r''["\''](bin/[A-Za-z0-9_./-]+\.py)["\'']'', …)`，其 `[` … `](` … `)` 相邻形状被链接尺当成语义链接；`git show origin/main:docs/pitfalls.md` 同两行逐字相同 ⇒ 与本 diff 零交集。
+
+
+  **装置的自陈意图与实际接线不同源** —— 尺子本体 `bin/ssot/doc-link-check.py:19` 是 `LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")`，对 inline code span 不做排除（CommonMark 规定 code span 内容不参与链接解析）；它的扫描面 `LOCAL_DOC_GLOBS`（`:20-30`，8 个 pattern：根面 5 个 + `projects/AGENTS.md` + `projects/*/AGENTS.md` + `projects/*/CLAUDE.md`）**不含 `docs/**`**，且脚本 docstring 明写意图是「scans the small, agent-facing documentation surface instead of every historical note under .omo/ … without turning archived knowledge into noisy gate failures」。而调用侧 `bin/gac/gac-local-gate.py:978-986 scoped_doc_link_command()` 分两支：`strict=True` 走默认面（即 `LOCAL_DOC_GLOBS`，历史档案不在内）；非 strict 走 `staged_files_git()` 里**全部** `.md` 原样传给 `--files`，不按 `LOCAL_DOC_GLOBS` 过滤。于是「本地门禁」实际比装置声明的面大，历史档案被拉进扫描面。
+
+
+  **覆盖面量实** —— `docs/**/*.md` 共 1111 个文件，`LINK_RE` 命中「目标含正则元字符 `[ \ ] + * ? { } |`」的伪链接共 3 处：`docs/pitfalls.md:367`、`docs/pitfalls.md:370`、以及 `docs/2026-07-10-bus-foundation-r89-r97.md:518` 的 GitHub 搜索 URL —— 后者 scheme 是 `https`，走 `IGNORED_SCHEMES`（`:31-40`）不计入假阳性 ⇒ **真实假阳性 2 处**，与门禁读数相等（3 − 1 = 2）。对照面：`LOCAL_DOC_GLOBS` 的根面文件（`AGENTS.md` / `CLAUDE.md` / `README.md` / `ARCHITECTURE.md` / `LAYER-INDEX.md`）同形状 **0 处** ⇒ 只要 `--files` 按声明面过滤，这一红不会出现。**CI 走默认面有接线为证**：`.github/workflows/gac-gate.yml:215` 跑的是 `python3 bin/gac/gac-local-gate.py --strict`，而 `scoped_doc_link_command()` 的 `strict=True` 分支返回不带 `--files` 的默认命令；实测同一份内容在 CI 全绿（PR #5481 的 `gac-gate` / `governance-verify` / `interface-check` 全 pass），本地却红 —— 分歧点就是这一支。
+
+
+  **影响** —— ① 任何触碰 `docs/**` 的交付都会在本地为**别人的历史文本**报红，本地红 / CI 绿 的分歧要靠人现场分诊才能排除（本仓同族既有坑：「生成物 CI 口径 ≠ 本地」）；② 更坏的一面是它**掩盖真信号**：同一个大于声明的面里，一条只出现在历史档案中的**真**死链与语法性假阳性同形，读数不区分真假，于是「先把真的当噪声排掉」的诱惑被固化进流程；③ 每次咬人都要多轮分诊才能排除：本轮从门禁 FAIL 走到上面的读数，依次做了「抽 FAIL 行 → 打明细 → 与 canonical 对照 → 数 staged diff hunk → 读尺子源码 → 查接线 → 查 CI 口径 → 枚举覆盖面」，没有一步是交付本身。
+
+
+  **与既有债的关系（不同面，不合并）** —— `DOCLINK-GITIGNORED-PERMA-RED`（`lifecycle_state: resolved`，2026-11-15 裁决「不改判据」）管的是「不完整检出上 `.omo/state/system.yaml` 链接报 14 条」，物化输入即清零；该条末尾自陈的第三个残留缺口是「本地 `make gac-local-gate-strict` 的 docstring 声称与 CI 的 gac-gate 对等，但没有 CI 那道物化前置」，属**strict 入口的前置缺失**，也与本条的「非 strict 分支的 `--files` 面大于声明面」不是同一件事。三条各自独立，本条不代裁前两条。'
+decision_needed: "**需要裁决：修哪一侧都改变门禁判据宽度，agent 侧只登记不代裁。**\n- (a) 让非 strict 分支的 `--files` 按 `LOCAL_DOC_GLOBS` 过滤（`bin/gac/gac-local-gate.py:983-986`）—— 与实际尺子的自陈意图同源，本轮那 2 条假阳性立刻消失；代价是 `docs/**` 里的真死链从此既不进 CI（CI 走默认面）也不进本地，1111 个文件完全脱离该尺。\n- (b) 让 `LINK_RE` 跳过 inline code span（反引号内不解析链接，这是 CommonMark 语义：code span 内容不参与链接解析）—— 不改文件面，只排除语法性假阳性；代价是「写在反引号里的真死链」一并失去被 `--files` 面捕获的机会，而本仓大量路径正是以反引号书写的，若取 (b) 须先补一个读数：默认面 5 个根文件里有多少 `[x](path)` 形态出现在反引号内（本条未量，不据此下结论）。\n- (c) 不动装置，改 `docs/pitfalls.md:367/370` 两条证据的引号形式（把正则字面量拆成不构成 `[..](..)` 相邻的写法）—— 零判据变更、覆盖面不变；代价是把装置缺陷留在原地，下一个在历史档案里写正则的人还会踩，且这是「改证据去迁就尺子」。\n倾向 (a)：改动最小且与 `doc-link-check.py` docstring 的意图一致；但「`docs/**` 到底归不归某把尺管」是面的定义问题，应与 (a) 一起在同一次裁决里写清楚，别留下第三个静默缺口。"
