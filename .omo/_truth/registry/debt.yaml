@@ -104,3 +104,4 @@ seed_items:
 - .omo/debt/items/OMO-DEBT-HISTORY-EMPTY-TIMESTAMP.yaml
 - .omo/debt/items/OMO-DEBT-NO-CONFIRM-FLAG-INVERTED.yaml
 - .omo/debt/items/VERIFY-MODE-TASK-JUDGE-UNWIRED.yaml
+- .omo/debt/items/OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT.yaml
