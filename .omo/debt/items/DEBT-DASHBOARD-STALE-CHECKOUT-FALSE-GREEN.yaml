@@ -65,6 +65,17 @@ decision_needed: >-
   97 条存量条目共 171 条 ref 的写法；(E) 保留散文约定，把 stale 显式降级为**展示字段**并在门禁与
   台账里声明它不是告警源，代价是放弃这个维度、需要另找能差分的探针。
   本次只登记测量与两条代价，方向由 principal 裁定后再落地。
+    第三次复核追加待裁（2026-11-23T21:05Z，`history` 第八次的实测 ①⑤）：发布链与修复链不在同一平面上，
+    由此产生两项新的裁决，均为 agent 不可自达：
+    (F) **宿主部署面发布授权** —— 简报由 `com.omostation.panorama-dashboard-refresh`（240s）跑
+    `~/.local/share/zhixing-dashboard/panorama-collect.py`（4,343 行旧副本，未含 `gate_reverify_hint`）产出，
+    `~/.local/opt/omostation` 安装副本停在 `5cec6612a`；`zhixing-host-sync.py status` 实测 2 个资产 `drifted`。
+    不授权 `publish` 则本条 (A)/(B)/(C) 与 #5491/#5492 的全部改进在人类页面与 agent 简报上都**读不到效果**；
+    授权即部署面写（`governance-checks.yaml` 判为 principal 权限）。
+    (G) **`projection_code_root_dirty` 的脏判据是否收窄** —— 现口径把 41 个 untracked 的
+    `.omo/_delivery/scene-outcomes/**` 运行回执计为脏，而这些回执正是采集/场景作业自己的产物（自毒循环），
+    且 untracked 文件不进入 `ls-tree -r HEAD` 的 provenance 摘要。收窄（只看 tracked，或只看受管路径）
+    会放宽发布信任的前置条件，属门禁严格度变更，不代为裁定。
 history:
 - at: "2026-11-10T13:20:00+00:00"
   action: identify
@@ -206,3 +217,45 @@ history:
     不覆盖本实例里「整轮抛异常 ⇒ 下游用 fallback」这一失效路径，裁决时需一并考虑。
     `lifecycle_state` / `gate_level` 仍保持 `identified` / `watchlist`。
   actor: "governance-agent"
+- at: "2026-11-23T21:05:00+00:00"
+  action: correction
+  note: >-
+    **订正本条 20:30 `review`（第七次记录）的因果归因，并撤回一条不可复现的口头主张。** base 追平后直测，三处结论变了：
+    ① 仓侧采集器的抛点**不是** `:478 projection_code_root_not_current_main`：canonical `HEAD == origin/main == ddb929a86`
+    （20:57:32Z `git rev-parse` 双侧同值；追平由 `gac-worktree.sh` merge 收尾的 `sync_local_main_best_effort()`
+    `:633` 单点 `:1276` 完成，reflog 实测今天 6 次 `pull --ff-only omostation-root main`），
+    但 `python3 bin/panorama/panorama-collect.py --gates` 仍 rc=1 / stdout 0 字节，抛的是
+    `panorama-collect.py:486 projection_code_root_dirty`（判据 `git status --porcelain=v1 --untracked-files=all
+    --ignore-submodules=all` 非空；实测 42 行 = 1 个 modified + 41 个 untracked 的
+    `.omo/_delivery/scene-outcomes/**` 运行回执）。⇒ **同步 base 解除不了这条路径**，(A) 的「写明来源 commit
+    并标 stale」与 principal 跑 `sync-main.sh` 都不覆盖它。
+    ② 更要紧：仓侧这条异常**根本不是发布 Brief 的写方**。发布链实测为
+    `~/Library/LaunchAgents/com.omostation.panorama-dashboard-refresh.plist`（`StartInterval 240`）运行**宿主副本**
+    `~/.local/share/zhixing-dashboard/panorama-collect.py`（4,343 行，mtime 09-22，sha256 `d7b89d63c7870133…`，
+    工作根 `~/.local/share/zhixing-dashboard/code-main`）产出 `revisions/<id>/{data.json,agent-brief.json}`，
+    再由 `com.omostation.agent-brief-materialize.plist`（`StartInterval 1800`，入口
+    `~/.local/opt/omostation/bin/panorama/materialize-agent-brief.py`，该安装副本 HEAD `5cec6612a`、collector 6,192 行）
+    抄进 state 根。故 20:30 记录里「采集整轮不出数 ⇒ 简报落回 fallback ⇒ 已绿门禁被写成红」这一句因果**未被证实，撤回**；
+    A6/A7 从红转绿发生在宿主链上，与仓侧 `:478`/`:486` 无关。
+    ③ 漂移致假红的**形状**仍被独立复现，只是换了链路：新 revision `272b9f59d3b1…`（`generated_at
+    2026-11-23T20:48:48Z`，`input_sources.portfolio.sha = d99275af2` 即已追平的数据腿）发布
+    `gates_pass 9 / gates_failing [A3, RF0]`，对比 20:40:47Z 那份的 `[A3, A6, A7, RF0]`——**A6、A7 零代码变更自行转绿**
+    （宿主侧 `orca-r0-cache.json` 04:40Z、`multica-as0-cache.json` 04:46Z 供数），与 20:30 记录 ④「A7 绿」判定一致。
+    ④ 但 20:30 记录的 ①「A3 已绿」与 ③「RF0 绿」在发布面**不可复现**：base 追平后 Brief 仍把 A3、RF0 发布为红。
+    我当时的判据是 `bin/gac/gate-health-check.py --json`（20:51:59Z 复测仍 rc=0 / `all_ok: true` /
+    `A3 Governance semantic gate: PASS`）与 `bin/gac/ruflo-rf0-verify.py --json` rc=0，
+    而发布面的 A3/RF0 由**宿主旧副本自行判定** ⇒ 同一个「扫描面 ≠ 被管面」的形状这次咬在我自己的复核上：
+    **仓侧 verifier 的绿不能推断发布面的绿**。#5492 补的 `gate_reverify_hint` 只点名仓侧 verifier，
+    它修的是建议项的措辞，不改变发布面 A3/RF0 的读数。
+    ⑤ **交付可达性（本条新暴露的面）**：`python3 bin/gac/zhixing-host-sync.py status` 实测 rc=1，26 个受管资产
+    24 `in_sync` / **2 `drifted`**：`panorama-collect-main.py`（repo `04a70097e2a38b69` 290,817B vs
+    deploy `db0b0a15c6f12903` 289,313B）、`orchestrator.py`（repo `6522cdf943891f7f` vs deploy `60fa772585914187`）。
+    deploy 侧 sha 与 #5492 **之前**的 main blob（`45613efc8`/`d99275af2` 均为 `2637ea704ee8ab0a` 289,817B）也不同
+    ⇒ 该漂移**先于我的交付存在，不是本次合并引入的红**；但结论是**本条与 #5491/#5492 的修复在发布面不可观测**，
+    除非 principal 授权 `zhixing-host-sync.py publish`（`apply`/`capture` 仍 BLOCKED，`migrate` 动 plist）。
+    ⑥ 时钟订正：本会话 20:5x 段我一度主张「终端 `date -u` 与编排器时钟相差 3h25m」，20:53:52Z 实测
+    `date -u` = `2026-11-23T20:53:52Z`、python `datetime.now(utc)` = `20:53:52.644323+00:00`、
+    reflog `2026-11-24 04:41:20 +0800` = `20:41:20Z` 三者互证一致 ⇒ 该差异**不可复现**，据此提出的
+    「时钟口径豁免」裁决项撤回、不写入 `decision_needed`；已合并七条的 `at` 均不晚于写入时的真实时钟。
+    **状态不变**：`lifecycle_state` / `gate_level` 保持 `identified` / `watchlist`（护栏与可见性都不等于关闭）；
+    `decision_needed` 追加第四段（部署面 publish 授权、脏判据是否收窄）。
