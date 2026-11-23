@@ -151,10 +151,12 @@ def main():
 
     # ---- 规则 1/2: 文档 frontmatter 值域 ----
     bad_dim, bad_surface = [], []
+    scanned_docs = 0
     for pattern in DOC_GLOBS:
         for path in glob.glob(os.path.join(ROOT, pattern), recursive=True):
             if "node_modules" in path:
                 continue
+            scanned_docs += 1
             fields = parse_frontmatter(path)
             if not fields:
                 continue
@@ -170,6 +172,12 @@ def main():
         errors.append(f"规则2: {len(bad_surface)} 文档 surface 不在值域 {sorted(l0_surfaces)} → {bad_surface[:5]}")
 
     # ---- 汇总 ----
+    # 分母自觉: 规则1/2 的总体是 DOC_GLOBS 扫出的文档; 扫描面落空时 bad_* 必为空
+    # ⇒ ``ok = not errors`` 会静默判绿 (同 「零分母不得判绿」 那族)。
+    if scanned_docs == 0:
+        errors.append(
+            f"规则1/2: DOC_GLOBS {DOC_GLOBS} 扫到 0 个文档 —— 扫描面落空, 不得判绿"
+        )
     ok = not errors
     if not args.quiet or errors:
         for e in errors:
@@ -180,7 +188,8 @@ def main():
         if ok:
             print(
                 f"[OK] doc↔L0↔MOF 映射通过 "
-                f"(L0约束={len(l0['constraints'])} dimension={sorted(l0_dims)} surface={sorted(l0_surfaces)})"
+                f"(文档={scanned_docs} L0约束={len(l0['constraints'])} "
+                f"dimension={sorted(l0_dims)} surface={sorted(l0_surfaces)})"
             )
     if args.json:
         _emit({"ok": ok, "errors": errors, "warnings": warnings}, args)
