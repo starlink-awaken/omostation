@@ -1,0 +1,74 @@
+id: DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT
+title: 'debt 度量把文件系统 mtime 当证据更新时间：worktree 内 mtime 等于 checkout 时刻，补复审无法让条目脱离 stale，且 debt_health 扣分已饱和'
+dimension: governance
+subdimension: consistency
+domain: infrastructure
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: medium
+lifecycle_state: identified
+owner: xiamingxing
+affected_roots: []
+evidence_refs:
+- projects/omo/src/omo/omo_debt_metrics.py
+- bin/gac/check-debt-staleness.py
+- .omo/_truth/registry/debt.yaml
+mitigation_refs:
+- .omo/standards/health-metrics-semantics.md
+- projects/omo/tests/test_omo_debt_metrics.py
+- projects/omo/src/omo/omo_ingress_debt.py
+opened_at: '2026-11-23'
+last_reviewed_at: '2026-11-23'
+next_review_at: '2026-12-07'
+gate_level: watchlist
+x1_policy_ref: ''
+x3_tier: Tool
+decision_needed: |-
+  三项都是指标口径变更，代理不代做，请 principal 裁决（可分别选）：
+
+  **(D1) stale 判据的时间来源**：`collect_stale_evidence_item_ids`
+  (`projects/omo/src/omo/omo_debt_metrics.py:77`) 用 `ref.stat().st_mtime > last_reviewed_at`
+  判「证据比复审新」。选项：
+  ① 换成 git 侧时间（`git log -1 --format=%ct -- <ref>`，即「证据内容何时变」）；
+  ② 保留 fs mtime 但排除「与本次 checkout 同一时刻」的批量值（worktree 检出会把所有文件打成同一秒）；
+  ③ 判据只在 canonical / CI 检出上计算，worktree 内记为 `not_measurable`（与 ADR-0456 双根契约一致）。
+  影响：50 条 stale 读数中有多少会消失，取决于所选口径，本轮不预测。
+
+  **(D2) `last_reviewed_at` 的写入口径**：97 条里 **84 条是 date-only**（`'2026-11-09'` 这类），
+  `_parse_iso8601` 补 UTC 零点 ⇒ 「当天复审」在边界上恒等于 00:00，任何当天发生的证据改动都算「比复审新」。
+  选项：① 复审写全 ISO 时间戳（含时分秒）；② 判据把 date-only 视为「当日 23:59」；③ 维持现状并接受「补复审不改变读数」。
+
+  **(D3) 分数饱和**：`debt_health = max(0, 100 − 12.5×overdue − 10×gate − 7.5×missing_pointers − 5×stale)`
+  (`:100-107`)。实测 open 50 项：overdue 14 (=175.0) + missing_pointers 8 (=60.0) + stale 50 (=250.0)
+  = **485.0 分扣分 vs 100 分预算**；即便把 stale 清零，`health_if_stale0` 仍是 **0.0**。
+  ⇒ 当前台账规模下该分数恒为 0，无法表达任何改善，`pointer_entropy` 亦为 1.16（>1 却未被任何门禁拦）。
+  选项：① 改成比率/归一化口径（并同步 `.omo/standards/health-metrics-semantics.md`）；
+  ② 保留绝对扣分但设下限告警（饱和即视为「指标失效」而非「债务为零」）；③ 明确弃用该分数，改看分项计数。
+history:
+- at: "2026-11-23T21:46:30+00:00"
+  action: identify
+  actor: governance-agent
+  note: >-
+    **立案由另一次交付的副作用测出。** 本轮给 `AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER`
+    补 `last_reviewed_at`（`2026-11-09` → `2026-11-23`）后，`collect_stale_evidence_item_ids` 的读数不变：
+    canonical 与新建 worktree 都是 `items 97 / stale_total 50`，该条目**仍在 stale 集合内**。逐 ref 直测找到原因：
+    ① worktree `/Users/xiamingxing/ws-briefplane352` 内该条目 4 个 ref
+    （`docs/pitfalls.md`、`bin/panorama/materialize-agent-brief.py`、`.omo/_truth/registry/services.yaml`、
+    `bin/scheduler-compile.py`）mtime **全部是 `2026-11-23T21:35:45Z`——同一秒**，正是本次
+    `gac-worktree.sh claim` 的检出时刻；而 canonical 同一批 ref 的 mtime 是分散的
+    （`20:41:20` / `06:02:31` / `07:09:44` / `12:12:50`）。
+    ② 判据 `:77` 是 `datetime.fromtimestamp(ref.stat().st_mtime, tz=UTC) > last_reviewed`，
+    而 date-only 的 `last_reviewed_at` 被 `_parse_iso8601`（`:36-46`）补成 **UTC 零点** ⇒
+    「今天复审」= 00:00 < 21:35:45，**判据必然为真**。
+    ③ 覆盖面：97 条中 **84 条** `last_reviewed_at` 长度为 10（date-only）。
+    ⇒ 结论：在新鲜 worktree 里，「做了复审」这件事**不可能**让条目脱离 stale；
+    同一份 YAML 在两个根里 stale 原因不同（canonical 是内容真的改过，worktree 是检出时刻），
+    但都计入同一个 `stale_total 50`。**这是「判据描述的是内容事件，实现却打在文件系统状态上」的形状**，
+    与本会话已登记的「同一文件两套权威面要声明读数来源」同类。
+    ④ 顺带量到分数饱和（见 `decision_needed` D3）：50 项 open 的扣分合计 485.0 对 100 分预算，
+    且 stale 清零后 `debt_health` 仍为 0.0 ⇒ **面板上的 0 分不是债务状况，是公式在当前规模下饱和**。
+    ⑤ 反向登记面缺口本轮**已不存在**：`.omo/_truth/registry/debt.yaml::seed_items` 97 条 vs
+    磁盘 97 个 yaml，`seed_missing_on_disk 0`、`disk_not_in_seed 0`（`docs/pitfalls.md` 里 2026-11-09
+    那条「25 vs 46」的措辞已过时，本轮只记录实测，不改那条历史文本）。
+    本轮**只立案，不改判据**：D1/D2/D3 任一项都会改变 50 条读数或面板分数，属指标口径变更。

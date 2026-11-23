@@ -1,7 +1,7 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-11
+last-reviewed: 2026-11-23
 version: 3
 items_dir: .omo/debt/items
 dashboard_ref: .omo/debt/dashboard/current.yaml
@@ -107,3 +107,5 @@ seed_items:
 - .omo/debt/items/OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT.yaml
 - .omo/debt/items/DOCLINK-SCOPED-FILES-SURFACE-MISMATCH.yaml
 - .omo/debt/items/PANORAMA-EXPERIENCE-NETWORK-PITFALL-EMPTY.yaml
+- .omo/debt/items/DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml
+- .omo/debt/items/DEBT-YAML-BYPASS-TEST-VENV-FALLBACK-FALSE-RED.yaml
