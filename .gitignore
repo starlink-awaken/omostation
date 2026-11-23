@@ -49,6 +49,11 @@
 .omo/run-continuation/
 .omo/tests/
 .omo/workers/
+# resident 运行时状态 (bin/gac/weekly-review.py 写 weekly-review-latest.json)。
+# 2026-11-13 从 bin/.omo/_state/ 迁来时丢了忽略 —— bin/.omo/ 那条是刻意保留的防御性规则
+# (STATE-SHADOW-BIN-OMO-ORPHANED-DATA), 新落点必须同等对待, 否则跑过周报脚本后
+# test_real_registry_covers_every_non_ignored_top_level_asset 恒红。
+.omo/_state/
 
 .omc/
 
