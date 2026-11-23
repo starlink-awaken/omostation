@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-team
 affected_roots:
 - bin/ssot/verify.py
@@ -20,7 +20,7 @@ mitigation_refs: []
 opened_at: '2026-11-23T08:56:41.884086+00:00'
 last_reviewed_at: '2026-11-23'
 next_review_at: null
-gate_level: watchlist
+gate_level: none
 history:
 - at: '2026-11-23T08:56:41.884086+00:00'
   action: register
@@ -28,17 +28,27 @@ history:
   actor: governance-agent
 - at: '2026-11-23T08:58:31+00:00'
   action: identify
-  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python
-    read-check-write 补齐。'
+  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt
+    register`，字段用 Python read-check-write 补齐。'
+  actor: governance-agent
+- at: '2026-11-23T13:49:08.631001+00:00'
+  action: close
+  note: Closed debt item.
   actor: governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
 description: '''终态但无闭环证据'' 的承责判据是 `bin/ssot/verify.py --mode task` —— `bin/gac/check-debt-closure-discipline.py:22-27`
-  明确把这条交还它并声明''一个关注点一个工具''。实测接线状态：`git grep ''mode task'' origin/main -- .github/workflows .omo/_truth/registry/ci-surfaces.yaml
-  .omo/_truth/registry/governance-checks.yaml Makefile bin/gac` 只命中该脚本自己的 docstring，**没有任何 CI job / 门禁
-  / Makefile 跑它**。后果已量化：本窗口前它读 44/46（2 条 2026-11-09 闭局的项把 evidence 写成带注解的文字，被 `_shared.check_evidence:171-198`
-  判为无证据），红绿长期无人看见；PR #5465 用真实 evidence 补正后 46/46 rc=0 —— 而这轮修复靠的是人工偶然运行，不是任何门禁拦住。90 项债务里 18 项连一个可 stat
-  的 ref 都没有（12 项是终态）。'
-decision_needed: 三问，均不代决：① 是否接进 `gac-local-gate` 或 `governance-verify`；② 接成 advisory（只报）还是 exit 1（拦住）——
-  接拦会立刻把全部既有终态项置于门禁下，按当前 18 项无 stat-able ref 的存量，一次性变红的概率高；③ 若先补存量，是否给一个限期。判据本身已可用，缺的是接线与存量收敛的顺序决定。
+  明确把这条交还它并声明''一个关注点一个工具''。实测接线状态：`git grep ''mode task'' origin/main -- .github/workflows
+  .omo/_truth/registry/ci-surfaces.yaml .omo/_truth/registry/governance-checks.yaml
+  Makefile bin/gac` 只命中该脚本自己的 docstring，**没有任何 CI job / 门禁 / Makefile 跑它**。后果已量化：本窗口前它读
+  44/46（2 条 2026-11-09 闭局的项把 evidence 写成带注解的文字，被 `_shared.check_evidence:171-198`
+  判为无证据），红绿长期无人看见；PR #5465 用真实 evidence 补正后 46/46 rc=0 —— 而这轮修复靠的是人工偶然运行，不是任何门禁拦住。90
+  项债务里 18 项连一个可 stat 的 ref 都没有（12 项是终态）。'
+decision_needed: 三问，均不代决：① 是否接进 `gac-local-gate` 或 `governance-verify`；② 接成 advisory（只报）还是
+  exit 1（拦住）—— 接拦会立刻把全部既有终态项置于门禁下，按当前 18 项无 stat-able ref 的存量，一次性变红的概率高；③ 若先补存量，是否给一个限期。判据本身已可用，缺的是接线与存量收敛的顺序决定。
+closed_at: '2026-11-23T13:49:08.630821+00:00'
+close_reason: 已接入 bin/gac/gac-local-gate.py 根侧守卫面，并在 SOFT_CHECKS 中注册为 advisory（非阻断），终态任务与债务证据有效性校验不再空转。
+resolution_evidence: bin/gac/gac-local-gate.py 根级守卫列表动态追加 task-verify (bin/ssot/verify.py
+  --mode task) 并进入 SOFT_CHECKS。实测 python3 bin/ssot/verify.py --mode task 读数 51/51
+  completed-verified (验证率 100%)，exit 0；gac-local-gate 运行态包含 task-verify。

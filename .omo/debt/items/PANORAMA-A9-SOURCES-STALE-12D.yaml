@@ -7,7 +7,7 @@ scope: workspace
 severity: high
 weight: 0.15
 entropy_class: medium
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-team
 affected_roots: []
 evidence_refs:
@@ -18,7 +18,7 @@ mitigation_refs: []
 opened_at: '2026-11-10'
 last_reviewed_at: '2026-11-10'
 next_review_at: '2026-11-13'
-gate_level: watchlist
+gate_level: none
 x1_policy_ref: ''
 x3_tier: Operational
 decision_needed: 先定性质再决定修哪一侧：① 查 strategy 采集器自 2026-10-28T08:18Z、documents 采集器自 2026-10-29T03:22Z
@@ -189,6 +189,10 @@ history:
     **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
     (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
     修法 (3) 解冻, **该修法仍待裁**。''.'
+- at: '2026-11-23T13:47:14.840677+00:00'
+  action: close
+  note: Closed debt item.
+  actor: governance-agent
 description: '**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
 
 
@@ -208,3 +212,9 @@ description: '**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
   **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
   (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
   修法 (3) 解冻, **该修法仍待裁**。'
+closed_at: '2026-11-23T13:47:14.840529+00:00'
+close_reason: 本条立案前提「strategy 与 documents 两大证据源 12 天无成功观测」已彻底消解。经连续实测与今日持续调度，两源状态均为
+  OK，last_success_at 保持新鲜。
+resolution_evidence: 投影 revisions/*/data.json 实测连续四轮及今日实时读数：source_states.strategy
+  = OK, source_states.documents = OK（last_success_at 2026-11-23T12:09Z）。其余三个独立源（ruflo、personal_value_truth、panorama_base）属于独立问题，已在
+  PANORAMA-A9-DEFERRED-UNBOUNDED 及 PANORAMA_OUTPUT_ROOT (#5466) 框架下跟踪，不阻塞本条结案。
