@@ -48015,7 +48015,8 @@ bets:
     改为对已构造的 heartbeats 按 status 真算；swarm_cli header 徽标从
     healthy_count > 0 收紧为全绿才 HEALTHY；新增回归测试锁定陈旧心跳 →
     healthy_count=0 → DEGRADED。
-  status: pending
+  status: done
+  done_at: 2026-11-23
   corrected_at: 2026-11-23
   correction_note: >-
     2026-11-23 收口腿（owner 当日授权「充分授权，全面推进」）。生产代码（collector `healthy_count`
