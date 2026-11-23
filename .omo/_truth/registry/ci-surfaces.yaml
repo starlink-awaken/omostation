@@ -27,6 +27,19 @@ surfaces:
     2026-11-10 principal 裁决「先 warn + 限期收敛」—— gate=false 到 2026-11-24,
     之后由脚本退出码自动转阻断 (规则 CR-X2-CRON-INTERP-EXECUTABILITY 的 review_before 同值)。
     判据复用 bin/lib/cron_normalize, 与 scheduler-compile / install-cron-plane 同源。
+- id: bin-gac-check-debt-staleness-py
+  tool: bin/gac/check-debt-staleness.py
+  workflow: gac-gate.yml
+  gate: false
+  triggers:
+  - gac_local_gate
+  status: active
+  note: >-
+    债务条目陈旧度信号 (advisory) —— affected_roots 在 last_reviewed_at 之后被 commit
+    碰过 ⇒ 条目描述的事情可能已不成立。判据是信号不是判决 (roots 变了 != 条目错了),
+    恒 exit 0。读数带梯度 (按落在 roots 上的 commit 数降序), 因为二元命中在活跃期
+    实测 21/21 全中、没有区分度。条目须有 affected_roots + last_reviewed_at 才进候选,
+    汇总行打候选分母。
 - id: bin-gac-check-gate-detail-contract-py
   tool: bin/gac/check-gate-detail-contract.py
   workflow: gac-gate.yml
