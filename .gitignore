@@ -49,6 +49,11 @@
 .omo/run-continuation/
 .omo/tests/
 .omo/workers/
+# resident 运行时状态 (bin/gac/weekly-review.py 写 weekly-review-latest.json)。
+# 2026-11-13 从 bin/.omo/_state/ 迁来 (STATE-SHADOW-BIN-OMO-ORPHANED-DATA) 时丢了忽略 ——
+# bin/.omo/ 那条是刻意保留的防御性规则 (同条债务条目), 新落点必须同等对待, 否则
+# test_l0_omo_surface_gitignore 在跑过周报脚本后恒红。
+.omo/_state/
 
 .omc/
 
