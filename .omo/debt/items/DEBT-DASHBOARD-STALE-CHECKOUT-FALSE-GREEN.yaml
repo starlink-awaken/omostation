@@ -29,12 +29,30 @@ description: >-
   `backlog_pressure: 3.15` / `debt_health: 0.0` / 3 条 watchlist。两者差了一个**落后约 279 个
   commit 的检出**。生成它的 `com.omostation.omo-debt-refresh` 每小时 :05/:35 跑，命令里
   **硬编码** `--omo-dir /Users/xiamingxing/Workspace/.omo`。
+
+  **复核 (2026-11-23, 基线 origin/main@37268397c, fresh worktree ws-debtrefs)** —— 本条假绿的主因**不是**检出落后，而是生成作业每次硬崩：
+  `launchctl print gui/$(id -u)/com.omostation.omo-debt-refresh` 给 `runs=112` / `last exit code=1` / `job state=exited`；
+  `runtime/cron/omo-debt-refresh.log` 6410 行里 **59 段 Traceback 全为同一签名** `TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'dict'`
+  （崩点 `projects/omo/src/omo/omo_debt_metrics.py:27 _resolve_ref_path` ← `collect_stale_evidence_item_ids:68` ← `compute_debt_metrics:92` ← `omo_debt.py:431 refresh_outputs`），
+  前 53 次运行打印 `refreshed/dispatched/campaigned/reported` 均成功，最后成功正对 `current.yaml::generated_at 2026-11-22T12:05:05Z` ⇒ 连续失败 ≈29.5 h（59 × 30 min）。
+  plist 用 `&&` 串四步，refresh 崩 ⇒ `dispatch/campaign/report` 一并停摆。唯一污染源实测为**一个** item：
+  `.omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml::mitigation_refs[0]` 的散文里含 ASCII `run: `，YAML 于是把该列表项解析成 mapping
+  （98 个 item 全量扫描：`evidence_refs` 295 个元素全 str；`mitigation_refs` 57 str + 1 dict）；该形状自 `abaec3429`（11-12）即在 origin/main，
+  **致命起点由作业所读检出的推进时点决定，与畸形数据的写入时点无关**。修复后同一份数据在 fresh worktree 重算：
+  `debt_health 0.0 / backlog_pressure 7.45 / state_entropy 0.1 / pointer_entropy 1.16 / time_entropy 0.3` / watchlist 6 条，
+  与冻结读数的 `100.0 / 0 / 全零 / []` 逐项相反（本条 11-10 原记的 `3.15 / 3 条` 是当时读数，现已前进）。
+  **报警其实看得见但不阻断**：`bin/gac/state-freshness-check.py --json` 对该投影给 `ok:false / stale:true / score:50 / age_hours:29.79`，
+  而脚本整体 `ok:true`、**exit 0**，故 30 h 无人处置；全仓无任何门禁读者消费 `launchctl ... last exit code`（仅 `bin/svc/service_view.py`、`bin/panorama/panorama-collect.py` 展示）。
+  交叉引用：`LAUNCHD-PLIST-INSTALLED-DIVERGED` 的 11-23 复核「症状消失」指 exit **2**（缺 `--now`）那一因，本条是 exit **1**（数据畸形）的另一因，勿据其判定作业已成功。
 decision_needed: >-
   要裁决的是：债务投影该读哪个检出？(A) 继续读 canonical，但在投影里**写明来源 commit 并在
   落后时显式标 stale**（缺省不改变行为，缺生可见）；(B) 让该作业改读一个保证跟 origin/main 的
   发布位检出（类似 publisher）；(C) 把该作业从 launchd 降为按需。注意 canonical 是**共享工作区**，
   多 agent 并发下落后是常态而非异常 —— 任何「读 canonical 派生治理读数」的作业都有同一风险面，
   本条只是其中一个实例。
+
+  **复核追加待裁 (2026-11-23，不在上述 A/B/C 内)** —— 实测「投影冻结」已有检测、只缺阻断：`state-freshness-check.py` 对该文件给 `stale:true / score:50` 却整体 `exit 0`。
+  是否把「债务投影 stale/冻结」升为阻断门禁项、以及是否让 launchd 作业 `last exit code != 0` 进入某个 gate，属**门禁严格度变更**，需 principal 单独裁定，本条不代为决定。
 history:
 - at: "2026-11-10T13:20:00+00:00"
   action: identify
@@ -75,4 +93,14 @@ history:
     **含义**：本条不是孤例，而是**一类**（读共享 canonical → 派生治理读数/写治理面）；
     canonical 在多 agent 并发下落后是常态，故这 15 条的产物**在任何时刻都可能整体偏旧**。
     裁决时建议按「是否写 `_truth/registry/` 或派生全局读数」分档：写 SSOT 的那些优先。
+  actor: "governance-agent"
+- at: "2026-11-23T18:01:00+00:00"
+  action: review
+  note: >-
+    **真因订正（把本条原「检出落后」归因降级）**：作业不是"跑了但读旧数据"，而是**每次都崩** ——
+    `runs=112 / last exit code=1`，日志 59 段同一 `TypeError ... not 'dict'`，崩点 `omo_debt_metrics.py:27`。
+    唯一污染源 `GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml::mitigation_refs[0]`（散文含 ASCII `run: ` ⇒ YAML 解析成 mapping），
+    本轮以「加双引号、正文 219 字逐字不变」修复（1 行 diff）；修复后 refresh/dispatch/campaign/report 四步 rc 全 0，
+    真实读数 `debt_health 0.0 / backlog_pressure 7.45 / watchlist 6`，与冻结的 `100.0 / 0 / []` 方向相反。
+    检出落后依然存在，但已不是当前这次假绿的直接成因。
   actor: "governance-agent"

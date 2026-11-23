@@ -19,7 +19,7 @@ evidence_refs:
 - bin/gac/check-ci-surfaces.py
 - docs/superpowers/specs/2026-11-11-gac-bootstrap-execution-truth.md
 mitigation_refs:
-- bin/gac/gac-bootstrap.py —— 层6 check_plane_coverage()：runtime GATES_LIST / CI workflow run: / .githooks+hook-runner.sh 调用行 / sgf-policy command / cron 已装机作业 五平面取并集，命中失败即点名；层3 死集合喂进来后另判 `dead_tool_registered_as_executed`
+- "bin/gac/gac-bootstrap.py —— 层6 check_plane_coverage()：runtime GATES_LIST / CI workflow run: / .githooks+hook-runner.sh 调用行 / sgf-policy command / cron 已装机作业 五平面取并集，命中失败即点名；层3 死集合喂进来后另判 `dead_tool_registered_as_executed`"
 - tests/unit/test_gac_bootstrap_layers.py —— 17 条，含 4 条变异钉（文本正则口径 / 零分母 / indexed-only / 拆掉层3→层6 接线，各自当场转红）
 - docs/pitfalls.md ——「DEFAULT_POLICY 不是执行平面」「判据口径要与契约名同源」「文本字面量冒充执行平面」
 opened_at: "2026-11-11"
