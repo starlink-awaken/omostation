@@ -74,6 +74,17 @@ pytest 没产出收集计数、也没有 ERROR 行时读成 `pass/collected=None
 | `bin/ssot/check-doc-l0-mapping.py` | 文档分母不可见，扫描面落空即判绿 | ① |
 | `bin/gac/debt-review-scheduler.py` | 「终态无实证」与「真的没问题」同形 | ② |
 
+## 全面扫描记录（2026-11-23 完成）
+
+对「扫一遍 → 下结论」类检查器做过一次横向扫描，覆盖面：`bin/gac` / `bin/mof` / `bin/ssot` / `bin/ops` / `bin/panorama` / `bin/plan` / `bin/lib`。
+
+同族命中 **7 处，全部已修**（见上表）；另查过两处**非**同族：
+
+- `bin/gac/gac-mof-validate.py` —— 有 `if not rules: return 1`（分母自觉）；
+- `bin/plan/chain_bind.py` 的 `evaluate_bind` —— 纯函数，`reasons` 由**显式条件**而非扫描填充，`reasons` 为空 ⟺ 各输入确实满足，非空集判绿。
+
+⇒ 该族在本仓**已收敛**。后续新增检查器按上面的自检清单逐条打勾即可。
+
 ## 与既有标准的关系
 
 - `.omo/standards/honest-degrade-contract.md` 管**依赖不可用时的降级**（运行时语义）；
