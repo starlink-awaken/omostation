@@ -54,6 +54,17 @@ decision_needed: >-
 
   **复核追加待裁 (2026-11-23，不在上述 A/B/C 内)** —— 实测「投影冻结」已有检测、只缺阻断：`state-freshness-check.py` 对该文件给 `stale:true / score:50` 却整体 `exit 0`。
   是否把「债务投影 stale/冻结」升为阻断门禁项、以及是否让 launchd 作业 `last exit code != 0` 进入某个 gate，属**门禁严格度变更**，需 principal 单独裁定，本条不代为决定。
+
+  **第二次复核追加待裁 (2026-11-23，仍不在上述 A/B/C 内，也不与上一段重复)** —— 「证据指针 stale」
+  这个信号在当前写法约定下**没有边际区分度**：实测它与 `lifecycle_state` 未闭集完全同集
+  （50 对 50，双向零差集；`closed`/`resolved` 的 47 条无一计入），因为判据是条目级 all-or-nothing
+  而开放条目的 ref 按约定就是取证散文。后果：**再混进一条真坏 ref，群体计数不会变**，
+  BET-Y2Q4-T10-350 的护栏只买到「不崩」，没买到「能看见」。
+  可选方向（都要改数据契约，不是纯缺陷修复，故不代为决定）：(D) 把指针拆成结构化字段
+  （`path` 参与解析判据 + 自由文本 `note` 不参与），代价是动 `omo_debt_metrics` 判据口径与
+  97 条存量条目共 171 条 ref 的写法；(E) 保留散文约定，把 stale 显式降级为**展示字段**并在门禁与
+  台账里声明它不是告警源，代价是放弃这个维度、需要另找能差分的探针。
+  本次只登记测量与两条代价，方向由 principal 裁定后再落地。
 history:
 - at: "2026-11-10T13:20:00+00:00"
   action: identify
@@ -123,4 +134,75 @@ history:
     裁定；且 `com.omostation.omo-debt-refresh` 跑的是 canonical 检出，护栏虽已在 origin/main，
     canonical 未同步前冻结读数不会自行恢复 —— 故 value 轴不主张已达成。`lifecycle_state`
     与 `gate_level` 保持 `identified` / `watchlist` 不变（缓解≠关闭），本条仍在复审队列里。
+  actor: "governance-agent"
+- at: "2026-11-23T20:05:00+00:00"
+  action: evidence
+  note: >-
+    **运行面读数订正（本条「冻结假绿」的当下状态，直测非推断）** —— 冻结已自行结束，但结束的因不是我收口的代码腿；
+    同时订正 19:17 那条 `mitigate` 记录里的原句「canonical 未同步前冻结读数不会自行恢复」——实测为**假**，恢复先于代码腿生效。
+    ① canonical 工作树 HEAD = `01948b6b1`（= PR #5487 的**数据腿**，`mitigation_refs` 加引号），
+    `.omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml` 三个元素实测 `types: ['str','str','str']`；
+    ② `launchctl print gui/$(id -u)/com.omostation.omo-debt-refresh` 给 `runs=117` / `last exit code=0`；
+    ③ 投影面 `.omo/debt/dashboard/current.yaml` 实测 `generated_at: '2026-11-23T20:05:05Z'`、
+    `debt_health: 0.0`、`backlog_pressure: 7.45` —— 与冻结期的 `100.0 / 0` 方向相反，即真实读数已恢复发布；
+    ④ `runtime/cron/omo-debt-refresh.log`（6,448 行，mtime 19:35:04Z）里最后一次 `TypeError` 在第 6,435 行，
+    **其后恰 12 行 = 3 个完整 tick 的四步全成功**（`refreshed/dispatched/campaigned/reported` 各 3 次、零异常）；
+    节拍由连续两次 `generated_at`（19:35:04Z → 20:05:05Z）实测确认为 30 min，反推首个成功 tick ≈ 18:35Z；
+    ⑤ 时间线：数据腿 PR #5487 `mergedAt 2026-11-23T18:11:03Z` → 首个成功 tick ≈ 18:35Z → 代码腿 PR #5488
+    `mergedAt 2026-11-23T18:56:32Z`（主仓 squash `2e26f8441`）⇒ **恢复早于代码腿合并 21 min**，归因于数据腿。
+    **含义**：治这次停摆的**必要且充分**动作是数据腿；代码腿（omo `08ce92a` / omo PR #258 / 主仓 `2e26f8441`）是
+    **防复发**护栏，目前在 canonical 上仍未生效（canonical HEAD `01948b6b1` 落后 origin/main `45613efc8`
+    3 个 commit，`git rev-list --count` 实测；同步仍是 principal 动作），所以「下一个畸形条目出现时会怎样」
+    在 canonical 上仍是旧行为——**这条是风险敞口，不是已闭环**。
+    **本条仍未闭**的是原判据问题而非读数问题：`decision_needed` 的 (A)/(B)/(C)（投影该读哪个检出）与
+    「复核追加待裁（`state-freshness-check.py` 给 `stale:true` 却整体 exit 0，是否升为阻断门禁项）」；
+    `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`（缓解 ≠ 关闭）。
+  actor: "governance-agent"
+- at: "2026-11-23T20:20:00+00:00"
+  action: review
+  note: >-
+    **护栏有效性复核（收尾之后追加的直测，不是推断）** —— BET-Y2Q4-T10-350 把「非 str / 不可解析」
+    从崩溃降成了**零边际信号**：在含护栏的检出（主仓 `45613efc8` + omo gitlink `08ce92a`）上实测
+    `omo_debt_metrics.collect_stale_evidence_item_ids(ledger.items)` 返回 50 个 id，与
+    `lifecycle_state ∈ {identified, in_progress}` 的 50 条**双向零差集**
+    （`stale − 未闭 = 0`、`未闭 − stale = 0`；`closed` 15 条与 `resolved` 32 条一条都不在 stale 里）。
+    机制是判据的**条目级 all-or-nothing**：任一 ref 解析不了就整条计 stale，而本仓开放条目的
+    `evidence_refs` 按约定写取证散文（全量 97 条里 171 条 ref 有 126 evidence + 45 mitigation 含空格/散文），
+    45 条 `identified` 中按「去掉 `repo://`/`file://` 前缀后路径存在」的口径有 39 条其实**存在**可解析指针，
+    仍被整条计入 ⇒ 「stale」在当前约定下等价于「未关闭」，**再多一条真坏 ref 也不会让计数 +1**（它已在基线里）。
+    **含义**：护栏的「不崩」有效（`runs=117 / last exit code=0` 已证），但它**不提供检测**。
+    因此本条 19:17 `mitigate` 记录里「可见降格」的说法需按此收窄——可见的是**该条目自身**被标 stale，
+    群体层面没有可差分的声音。**新增一项待裁**（见 `decision_needed` 第三段），
+    `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`。
+  actor: "governance-agent"
+- at: "2026-11-23T20:30:00+00:00"
+  action: review
+  note: >-
+    **同一风险面的第二个实测实例（治理简报平面，非债务投影）** —— state 根
+    `runtime/dashboard/agent-brief.json`（`generated_at 2026-11-23T20:13:30Z` / mtime `20:16:40Z`）
+    发布 `health.gates_failing = [A3, A6, A7, RF0]`（`gates_total 11 / gates_pass 7`）。
+    四个 id 逐个活测后**只有 A6 站得住，3 个是假红**：
+    ① `bin/gac/gate-health-check.py --json`（20:21Z，rc=0）给 `all_ok: true` 共 7 行门禁，
+    含 `A3 Governance Python: ok / "Governance semantic gate: PASS"` ⇒ A3 已绿；
+    ② 该复检仪器**不评估 A6/A7/RF0**（7 行名单里没有）⇒ Brief 自己的
+    `next_actions.resolve-failing-gates` 用它无法闭环 —— 扫描面 ≠ 被管面；
+    ③ `bin/gac/ruflo-rf0-verify.py --json` rc=0、`ok: true`、6 项 checks 全 true
+    （`daemon.status = STOPPED` 正是只读准入要求的态）⇒ RF0 绿；
+    ④ `bin/gac/multica-as0-verify.py --json` rc=0、`ok: true`、`api 30/30 / topology 7/7 / trust 3/3`
+    （满足采集器 :1237-1239 live 报告口径的 PASS 映射 `ok and (30,7,3)==(30,7,3) and total>0`）⇒ A7 绿；
+    ⑤ `bin/gac/orca-r0-verify.py --json` rc=1、`ok: false`、`runtime_ready: false`、probes 3/6、
+    `r0_transactions` 的 `dispatch_identity` 与 `worker_done_accepted` 均为 `no sample`
+    ⇒ A6 真红，缺的是真实样本事务与运行时准入，不是代码缺陷。
+    **假红的直接机制正是本条的根因形状**：`python3 bin/panorama/panorama-collect.py --gates`
+    在 canonical 落后时 rc=1 且 stdout 为空，抛 `panorama-collect.py:478
+    projection_code_root_not_current_main`（判据 `HEAD != refs/remotes/origin/main`），
+    本次实测 canonical `01948b6b1` 落后 origin/main `45613efc8` 3 个 commit；采集整轮不出数后
+    简报落回 `NOT_ADMITTED / "verifier unavailable"` 一类 fallback，于是**已绿的门禁被写成红**
+    （与「登记了但空转」的区别：这里是整轮采集中断，不是某条检查不跑）。
+    另附同族已登记面：仓根 `runtime/dashboard/data.json` mtime 停在 `2026-10-28T08:15Z`（26.7 天无写方），
+    归 `AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER`，不在本条重复立案。
+    **结论（对 A/B/C 的代价面）**：漂移的代价不止「债务读数失真」，还包括**把 3 个已绿门禁发布成红**、
+    并把人引向修不存在的故障；(A) 的「写明来源 commit 并显式标 stale」只覆盖可见性，
+    不覆盖本实例里「整轮抛异常 ⇒ 下游用 fallback」这一失效路径，裁决时需一并考虑。
+    `lifecycle_state` / `gate_level` 仍保持 `identified` / `watchlist`。
   actor: "governance-agent"
