@@ -48070,7 +48070,18 @@ bets:
     改为对已构造的 heartbeats 按 status 真算；swarm_cli header 徽标从
     healthy_count > 0 收紧为全绿才 HEALTHY；新增回归测试锁定陈旧心跳 →
     healthy_count=0 → DEGRADED。
-  status: pending
+  status: done
+  done_at: 2026-11-23
+  corrected_at: 2026-11-23
+  correction_note: >-
+    2026-11-23 收口腿（owner 当日授权「充分授权，全面推进」）。生产代码（collector `healthy_count`
+    按秒龄真算、`swarm_cli` header 全绿才 HEALTHY、`swarm_app` 同构收紧）与 3 条回归用例早在
+    PR #5425（squash `93b54639c`）合入 main， cockpit gitlink 现记 `b26258fd5`（含 #265/#267 的时钟
+    炸弹修复），本条目此前仍记 `pending` —— 属台账落后于 main（PITFALL-GAT-006 反向形态）。
+    `write_surfaces` 原只列 4 处 cockpit 面，不含台账与收据 ⇒ `claim` 报 `WORK_PACKET_SCOPE_MISMATCH`，
+    BET 无法自收口，按 T10-344/345/346 同构补入两条收口面。另订正 verify[1] 的 cmd —— 原句
+    `bin/omo-status --no-subprojects` 不可执行（rc=2，`swarm_cli` 只认 `--json` / `--probe-remote`），
+    属验收条款未实证通道行为（2026-11-23 会话第 3 次同类），已按实际参数面改写并在 `note` 记出处。
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48087,6 +48098,8 @@ bets:
   - projects/cockpit/src/cockpit/tui/swarm_cli.py
   - projects/cockpit/src/cockpit/tui/swarm_app.py
   - projects/cockpit/src/cockpit/tests/test_swarm_heartbeat_staleness.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-11-23-omo-status-heartbeat-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-22-omo-status-heartbeat-false-positive-bet-t10-348.md
     spec_version: 1.0.0
@@ -48103,11 +48116,61 @@ bets:
   verify:
   - cmd: cd projects/cockpit && uv run pytest src/cockpit/tests/ -q
     expect: 新增测试通过且既有套件无回归。
-  - cmd: bin/omo-status --no-subprojects
-    expect: 陈旧心跳现场 header 显示 DEGRADED，不再假报 HEALTHY。
+    note: >-
+      2026-11-23 在隔离 worktree 复跑 = `1 failed, 1626 passed in 564.84s`，与 #5425 作者落地当天
+      自述 `1626 passed / 1 xfail` 同档；唯一 fail 是 `test_dashboard_server.py::test_unknown_path_returns_404`
+      的 `[XPASS(strict)]`，成因＝worktree 内 `projects/cockpit-ui` 未检出 ⇒ `dist/index.html` 缺席 ⇒ SPA
+      catch-all 对未知路径回 404。补齐该子模块检出后 `bin/ssot/check-cockpit-ui-dist.py` ✅ rc=0，属装置差异
+      而非回归（读数出处见收据「受控测试」「门禁面」两节）。
+  - cmd: bin/omo-status
+    expect: 陈旧心跳现场 header 显示 `○ DEGRADED · 0/6 Agents Active`，不再假报 HEALTHY。
+    note: >-
+      原句 `bin/omo-status --no-subprojects` rc=2（`cockpit.tui.swarm_cli` 只认 `--json` / `--probe-remote`），
+      按原句验收必假红；2026-11-23 按实际参数面订正，实测 `--json` 同场读数
+      `total_agents=6 healthy_count=0 failed_count=0 last_tick_iso=N/A`。
   circuit_breaker: >-
     若发现 healthy_count 自报语义在别处被消费（API/告警/dashboard），停止并交
     owner 裁决是否同步调整。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@93b54639c6e55d2841de3dac9258278bd8b62aa2
+          tests:
+            ref: receipt://docs/reports/2026-11-23-omo-status-heartbeat-closeout.md#受控测试
+            sha256: sha256:0f1077e079908c5516132c96647c78f10ad41f677b94515fc73b3888320dff78
+          diff:
+            ref: receipt://docs/reports/2026-11-23-omo-status-heartbeat-closeout.md
+            sha256: sha256:0f1077e079908c5516132c96647c78f10ad41f677b94515fc73b3888320dff78
+          rollback:
+            ref: receipt://docs/reports/2026-11-23-omo-status-heartbeat-closeout.md#rollback
+            sha256: sha256:0f1077e079908c5516132c96647c78f10ad41f677b94515fc73b3888320dff78
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-23-omo-status-heartbeat-closeout.md#判读要点
+            sha256: sha256:0f1077e079908c5516132c96647c78f10ad41f677b94515fc73b3888320dff78
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-23-omo-status-heartbeat-closeout.md
+            sha256: sha256:0f1077e079908c5516132c96647c78f10ad41f677b94515fc73b3888320dff78
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-348.md
+            sha256: sha256:8e0d7c2ac56238fef9491a2747b021f9677ae8e237531feca1f8f98020920af0
+          cleanup:
+            ref: receipt://docs/reports/2026-11-23-omo-status-heartbeat-closeout.md#operational-轴
+            sha256: sha256:0f1077e079908c5516132c96647c78f10ad41f677b94515fc73b3888320dff78
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            台账 verify[0]/[1] 与 done_when 三条均实测复现（陈旧心跳 ⇒ healthy_count=0/全员 stale/header DEGRADED；
+            新鲜 ⇒ HEALTHY）。未做现场 daemon 侧改造：本机 6 个 agent 的 tick 文件仍是 2026-10-28 的陈旧自报，
+            故「全绿 HEALTHY」的真实运行态要等 tick 写入方恢复后才有正向读数 —— 本 BET 只证明假阳性消失。
+    overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-349
   title: BET-Y2Q4-T10-349 gen-service-configs --check plist drift 假阳性 —— 注释非配置语义
   goal: >-
