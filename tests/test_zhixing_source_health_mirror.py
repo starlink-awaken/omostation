@@ -118,7 +118,7 @@ def test_legacy_success_timestamp_from_failed_body_is_unknown(monkeypatch):
 # files happen to be running on this machine. A new mirror delivery updates them.
 PORTFOLIO_FREEZE = {
     "portfolio_collector.py.asset": "6d440d0b6a59dbb8c96cabb58783f0c39e40b8032b4c38bd9799929ca220385d",
-    "refresh.py.asset": "c23d790fcb90567d557e612e4fd81de370e04f0696276005873031f0b0b7043e",
+    "refresh.py.asset": "91a54cfb2a501cd6951bec57867c729cc0c21cc3f177b98134c15427a2f145ef",
     "strategy_projection.py.asset": "ad9123da7a58f10394df493b6ab6172866dd1056ff82f9ee7b76dd9ec4298648",
 }
 
