@@ -47622,7 +47622,25 @@ bets:
 - id: BET-Y2Q4-T10-344
   title: TASK-EEF1CEDC — 让 mini 的 Cron 作用域识别已登记的现场主机名
   goal: 以同一 Task 的精确三路径修正 mini 看护条目的主机别名，验证编译与安装预览的选择一致，保留其它主机与 launchd 输出。
-  status: pending
+  status: done
+  done_at: 2026-11-23
+  corrected_at: 2026-11-23
+  correction_note: >-
+    2026-11-23 收口订正（owner 当日授权「提交/合并/复盘/台账 complete」）。三处：
+    ① 主体三路径早在 2026-11-10 由 PR #5226（squash `d284efcaa`）合并进 main ——
+    `registry.yaml:1167` `hosts: [mini, Mac-mini]` + 两个测试模块，本条目此前仍记 `pending`，
+    属台账落后于 main（PITFALL-GAT-006 的反向形态：不是 main 缺，是账没跟上）。
+    ② 唯一真实工程缺口是覆盖矩阵少一组：spec §离线验收枚举 4 个原生主机名 + 3 个
+    `CRON_HOST` 覆盖 = 7 组，`test_host_scope_excludes_other_hosts_jobs` 只有 6 组且无组数断言，
+    缩水静默。补 `("Mac-mini", "mini", 1)` + `assert len(cases) == 7`，由 PR #5459
+    （squash `c8efc46b8`）落地；删该用例时新断言当场红（变异 M1 rc=1，1 failed）。
+    ③ `write_surfaces` 原只列三路径，不含台账/retro/收据 ⇒ `claim` 报
+    `WORK_PACKET_SCOPE_MISMATCH`（`bin/plan/bet-ledger.py:2410-2416` 的作用域取自本字段），
+    BET 无法自收口。按 T10-345/346/347 同构补入三条收口面。同时 `non_goals` 第 2 条的
+    「不执行…复盘写入或 BET 完成」是获批阶段（2026-11-22 认领）的边界，当日已以
+    `--status blocked` 如实入账；2026-11-23 授权解除后按原句改写为阶段限定，不改历史事实。
+    另订正 verify[0] 的 cmd —— 原句裸 `python3 -m pytest` 本机不可执行（系统解释器无 pytest 模块，rc=1），
+    已按同构口径换 uv 包装，读数出处写在该项 `note`。
   window: Y2Q4
   track: T10-TOOLING
   priority: P1
@@ -47638,6 +47656,9 @@ bets:
   - .omo/cron/registry.yaml
   - tests/test_scheduler_compile.py
   - tests/unit/gac/test_install_cron_plane.py
+  - docs/plans/3y-bet-ledger.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-344.md
+  - docs/reports/2026-11-23-cron-mini-host-alias-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-10-cron-mini-host-alias-task-eef1cedc.md
     spec_version: 1.0.0
@@ -47645,13 +47666,22 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-344
   non_goals:
   - 不改 Cron 命令、频率、解释器、已有 launchd 项、其他主机作用域或脚本。
-  - 本阶段只做精确三路径的变更与离线复核，不执行安装、部署、发布、提交、打标签、合并、复盘写入或 BET 完成。
+  - 获批阶段（2026-11-22 认领）只做精确三路径的变更与离线复核，不执行安装、部署、发布、提交、打标签、合并、复盘写入或 BET 完成；
+    2026-11-23 owner 授权全收后，提交/合并/复盘/台账收口转为已授权动作（见 `correction_note`）。
+    现场 crontab 重装与运行态修改始终未授权，不在本 BET 范围。
   done_when:
   - mini 和 Mac-mini 均恰好选中一个既有看护条目，MBP 与未知主机不选中。
   - CRON_HOST 显式覆盖与未指定主机分支遵循原策略，七组回放保持现有 launchd 段。
   - 独立验证确认受控测试、路径和 diff 范围，记录证据后停止于本次获批阶段。
   verify:
-  - cmd: python3 -m pytest -q tests/test_scheduler_compile.py tests/unit/gac/test_install_cron_plane.py
+  - cmd: >-
+      uv run --with pytest --with pyyaml --with pytest-timeout python -m pytest -q
+      tests/test_scheduler_compile.py tests/unit/gac/test_install_cron_plane.py
+      -p no:randomly -o addopts=""
+    note: >-
+      原句为裸 `python3 -m pytest`，本机 rc=1 报 python3.15 无 pytest 模块 ——
+      系统解释器未装 pytest，属测量装置未接而非回归。2026-11-23 按 T10-345/346/347 同构口径改写成
+      uv 包装（可重复执行），实测 55 passed 见收据「受控测试」小节。
     expect: 两个目标测试模块通过，七组隔离作用域回放由独立验证者记录。
   circuit_breaker: 未确认同一 Task、有效批准、可开工 BET、已接受 Spec、canonical WorkPacket 或三条受影响图路径 claim
     即停止；遇超出批准范围的后续动作交由 owner 裁决。
@@ -47659,15 +47689,40 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@c8efc46b80eb4a7c5fbe7d2ba60b6e58468112b3
+          tests:
+            ref: receipt://docs/reports/2026-11-23-cron-mini-host-alias-closeout.md#受控测试verify0
+            sha256: sha256:4ca5f55dd832f59e7a40b032a4c86f0455d85eea0aefc5f1131e3f8e7f122e3d
+          diff:
+            ref: receipt://docs/reports/2026-11-23-cron-mini-host-alias-closeout.md
+            sha256: sha256:4ca5f55dd832f59e7a40b032a4c86f0455d85eea0aefc5f1131e3f8e7f122e3d
+          rollback:
+            ref: receipt://docs/reports/2026-11-23-cron-mini-host-alias-closeout.md#rollback
+            sha256: sha256:4ca5f55dd832f59e7a40b032a4c86f0455d85eea0aefc5f1131e3f8e7f122e3d
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-23-cron-mini-host-alias-closeout.md#判读要点三条变异自证
+            sha256: sha256:4ca5f55dd832f59e7a40b032a4c86f0455d85eea0aefc5f1131e3f8e7f122e3d
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-23-cron-mini-host-alias-closeout.md
+            sha256: sha256:4ca5f55dd832f59e7a40b032a4c86f0455d85eea0aefc5f1131e3f8e7f122e3d
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-344.md
+            sha256: sha256:0a44353ebe23b209ebb8d7f7195449012b05c731b80c71cb6d977c9254a0629b
+          cleanup:
+            ref: receipt://docs/reports/2026-11-23-cron-mini-host-alias-closeout.md#operational-轴
+            sha256: sha256:4ca5f55dd832f59e7a40b032a4c86f0455d85eea0aefc5f1131e3f8e7f122e3d
       value:
         status: NOT_PROVEN
-        evidence: {}
-    overall_state: evaluating
+        evidence:
+          note: 只证明主机别名作用域在编译与安装预览两侧一致且七组回放全覆盖；本 BET 未做现场装机验证（未授权），
+            mini 侧 crontab 实际生效与看护作业运行证据待现场核验另案。
+    overall_state: delivery_accepted
 - accepted_specifications:
   - content_digest: sha256:34b8a821763780225653271d48509c7f2e65930bd0b7c43ee6a25082d4bc80f3
     decision_ref: decision://accepted/BET-Y2Q4-T10-345
