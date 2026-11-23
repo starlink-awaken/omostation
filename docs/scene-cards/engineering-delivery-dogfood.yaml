@@ -27,7 +27,7 @@ approval:
     - "trial evidence documented (schema PASS, preflight honest blocked)"
     - "fabric red line upheld: shadow observation only; activation permits evidence collection, not autonomous execution"
 scene_id: engineering-delivery
-journey_id: intent-to-evidence
+journey_id: meeting-to-delivery
 journey_unresolved: no matching file in docs/journey-specs/
 goal: 将已确认的工程意图转化为可验证、可回滚、可消费的交付证据
 trigger: 需求、缺陷或治理任务进入已确认的工程执行队列
