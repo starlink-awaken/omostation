@@ -14,7 +14,7 @@ jobs:
 
   - name: log-rotate-daily
     schedule: "0 3 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/log-rotate.py --daily >> runtime/cron/log-rotate.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/log-rotate.py --daily >> runtime/cron/log-rotate.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -57,7 +57,7 @@ jobs:
   - name: ecos-kems-freshness-daily
     schedule: "30 4 * * *"
     command: >-
-      cd $HOME/Workspace/projects/ecos && python3
+      cd $HOME/Workspace/projects/ecos && /Users/xiamingxing/Workspace/projects/ecos/.venv/bin/python3
       src/ecos/ssot/tools/mof-kems-bridge.py --freshness >>
       $HOME/Workspace/runtime/cron/kems-freshness.log 2>&1
     planes: [crontab]
@@ -70,7 +70,7 @@ jobs:
   - name: mof-sla-m0-snapshot-daily
     schedule: "35 4 * * *"
     command: >-
-      cd $HOME/Workspace/projects/ecos && python3 src/ecos/ssot/tools/mof-sla.py
+      cd $HOME/Workspace/projects/ecos && /Users/xiamingxing/Workspace/projects/ecos/.venv/bin/python3 src/ecos/ssot/tools/mof-sla.py
       --snapshot-only >> $HOME/Workspace/runtime/cron/mof-sla-m0.log 2>&1
     planes: [crontab]
     reality: installed
@@ -89,7 +89,7 @@ jobs:
 
   - name: ops-signal-drift-daily
     schedule: "20 6 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ops/cli.py check-signals >> runtime/cron/ops-signal-drift.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ops/cli.py check-signals >> runtime/cron/ops-signal-drift.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -155,7 +155,7 @@ jobs:
   # proposed = 尚未正式启用的治理巡检 backlog)。是否真装属 D4 新增自动化决策。
   - name: drift-face-daily
     schedule: "50 4 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json >> runtime/cron/drift-face-detector.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/drift-face-detector.py --json >> runtime/cron/drift-face-detector.log 2>&1'
     planes: [crontab]
     reality: pending
     status: proposed
@@ -165,7 +165,7 @@ jobs:
 
   - name: drift-prune-daily
     schedule: "55 4 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/auto-pruner.py --apply --class ephemeral --class runs >> runtime/cron/auto-pruner.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/auto-pruner.py --apply --class ephemeral --class runs >> runtime/cron/auto-pruner.log 2>&1'
     planes: [crontab]
     reality: pending
     status: proposed
@@ -176,7 +176,7 @@ jobs:
   # SH-1 weekly face-wide hygiene
   - name: drift-face-weekly
     schedule: "0 7 * * 1"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/drift-face-detector.py --json && python3 bin/ssot/auto-pruner.py --apply >> runtime/cron/drift-face-weekly.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/drift-face-detector.py --json && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/auto-pruner.py --apply >> runtime/cron/drift-face-weekly.log 2>&1'
     planes: [crontab]
     reality: pending
     status: proposed
@@ -391,7 +391,7 @@ jobs:
 
   - name: execution-environment-steward-6h
     schedule: "0 */6 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/gac/execution-environment-steward.py >> "$HOME/Workspace"/runtime/cron/execution-environment-steward.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/execution-environment-steward.py >> "$HOME/Workspace"/runtime/cron/execution-environment-steward.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -465,7 +465,7 @@ jobs:
   # ── 债务复审日调度补登 (2026-09-20, #4087 交付物) ──
   - name: debt-review-daily
     schedule: "13 7 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/gac/debt-review-scheduler.py >> runtime/cron/debt-review.log 2>&1 # omostation-debt-review (债务定期复审调度, 2026-09-20)'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/debt-review-scheduler.py >> runtime/cron/debt-review.log 2>&1 # omostation-debt-review (债务定期复审调度, 2026-09-20)'
     planes: [crontab]
     reality: installed
     status: active
@@ -525,7 +525,7 @@ jobs:
 
   - name: scene-calibration-weekly-active
     schedule: "0 6 * * 1"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -535,7 +535,7 @@ jobs:
 
   - name: scene-registry-sync-daily-active
     schedule: "15 6 * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -546,7 +546,7 @@ jobs:
   - name: zhixing-host-drift-hourly-active
     label: com.omostation.zhixing-host-drift
     schedule: "23 * * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py protect && python3 bin/gac/zhixing-host-sync.py check'
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/workspace-wip-guard.py protect && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/zhixing-host-sync.py check'
     planes: [launchd]
     reality: installed
     status: active
@@ -612,7 +612,7 @@ jobs:
 
   - name: zhixing-panel-sync-hourly-active
     schedule: "23 * * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/zhixing-panel-sync.py ensure --quiet >> runtime/cron/zhixing-panel-sync.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/zhixing-panel-sync.py ensure --quiet >> runtime/cron/zhixing-panel-sync.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -622,7 +622,7 @@ jobs:
 
   - name: wip-guard-hourly-active
     schedule: "17 * * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/gac/workspace-wip-guard.py snapshot --reason cron-hourly --quiet && python3 bin/gac/workspace-wip-guard.py protect >> runtime/cron/wip-snapshot.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/workspace-wip-guard.py snapshot --reason cron-hourly --quiet && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/workspace-wip-guard.py protect >> runtime/cron/wip-snapshot.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -632,7 +632,7 @@ jobs:
 
   - name: scene-history-daily-active
     schedule: "20 3 * * *"
-    command: 'cd /Users/xiamingxing/Workspace && python3 bin/ssot/scene-history.py export && python3 bin/ssot/scene-history.py backup && python3 bin/ssot/scene-history.py verify >> runtime/cron/scene-history.log 2>&1'
+    command: 'cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/scene-history.py export && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/scene-history.py backup && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/scene-history.py verify >> runtime/cron/scene-history.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -866,7 +866,7 @@ jobs:
 
   - name: weekly-review-post-inbox
     schedule: "35 10 * * 1"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/weekly-review.py --post-inbox >> runtime/cron/weekly-review.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/weekly-review.py --post-inbox >> runtime/cron/weekly-review.log 2>&1'
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -877,7 +877,7 @@ jobs:
     schedule: "0 9 * * 3"
     command: >-
       cd "$HOME/Workspace" && bash bin/gac/heartbeat-wrapper.sh drift-sweep
-      python3 bin/gac/drift-sweep.py --json >> runtime/cron/drift-sweep.log 2>&1
+      /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/drift-sweep.py --json >> runtime/cron/drift-sweep.log 2>&1
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -888,7 +888,7 @@ jobs:
     schedule: "30 8 * * *"
     command: >-
       cd "$HOME/Workspace" && bash bin/gac/heartbeat-wrapper.sh
-      capability-ownership python3 bin/gac/check-capability-ownership.py --json
+      capability-ownership /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/check-capability-ownership.py --json
       >> runtime/cron/capability-ownership.log 2>&1
     planes: [crontab]
     reality: declared_only
@@ -898,7 +898,7 @@ jobs:
 
   - name: observability-events-adapters-daily
     schedule: "30 8 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/observability-events.py adapters run >> runtime/cron/observability-daily.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/observability-events.py adapters run >> runtime/cron/observability-daily.log 2>&1'
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -908,8 +908,8 @@ jobs:
   - name: anomaly-alert-daily
     schedule: "45 8 * * *"
     command: >-
-      cd "$HOME/Workspace" && python3 bin/gac/anomaly-detector.py --json >>
-      runtime/cron/observability-daily.log 2>&1 && python3 bin/gac/alert-router.py
+      cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/anomaly-detector.py --json >>
+      runtime/cron/observability-daily.log 2>&1 && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/alert-router.py
       --window 20 >> runtime/cron/observability-daily.log 2>&1
     planes: [crontab]
     reality: declared_only
@@ -919,7 +919,7 @@ jobs:
 
   - name: meta-doctor-daily
     schedule: "25 9 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/gac/meta-doctor.py --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/meta-doctor.py --json >> runtime/cron/operating-rhythm-daily.log 2>&1'
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -929,7 +929,7 @@ jobs:
 
   - name: unified-health-score-sync-daily
     schedule: "30 9 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/gac/unified-health-score.py --sync >> runtime/cron/operating-rhythm-daily.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/unified-health-score.py --sync >> runtime/cron/operating-rhythm-daily.log 2>&1'
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -938,7 +938,7 @@ jobs:
 
   - name: rules-lifecycle-weekly
     schedule: "0 9 * * 1"
-    command: 'cd "$HOME/Workspace" && python3 bin/gac/rules-lifecycle.py >> .omo/_log/rules-lifecycle.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/gac/rules-lifecycle.py >> .omo/_log/rules-lifecycle.log 2>&1'
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -948,7 +948,7 @@ jobs:
 
   - name: scene-calibration-weekly
     schedule: "0 6 * * 1"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -957,7 +957,7 @@ jobs:
 
   - name: scene-registry-sync-daily
     schedule: "15 6 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
     planes: [crontab]
     reality: declared_only
     status: proposed
@@ -966,7 +966,7 @@ jobs:
 
   - name: scene-guardrail-daily
     schedule: "30 6 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-guardrail.py validate-all --allow-forward-refs >> runtime/cron/scene-guardrail.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/scene-v3-guardrail.py validate-all --allow-forward-refs >> runtime/cron/scene-guardrail.log 2>&1'
     planes: [crontab]
     reality: crontab_installed
     status: active
@@ -975,7 +975,7 @@ jobs:
 
   - name: scene-signal-poll
     schedule: "*/15 9-18 * * 1-5"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-signal-poller.py poll >> runtime/cron/scene-signal-poll.log 2>&1'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/scene-signal-poller.py poll >> runtime/cron/scene-signal-poll.log 2>&1'
     planes: [crontab]
     reality: crontab_installed
     status: active
@@ -985,7 +985,7 @@ jobs:
 
   - name: remote-hygiene-hourly
     schedule: "23 * * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/fix-remotes.py >> runtime/cron/remote-hygiene.log 2>&1 # omostation-remote-hygiene (origin 污染幂等自愈, 2026-09-13 实证事故)'
+    command: 'cd "$HOME/Workspace" && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/fix-remotes.py >> runtime/cron/remote-hygiene.log 2>&1 # omostation-remote-hygiene (origin 污染幂等自愈, 2026-09-13 实证事故)'
     planes: [crontab]
     reality: installed
     status: active
@@ -998,7 +998,7 @@ jobs:
 
   - name: zhixing-dashboard-panorama-cache-5min
     schedule: "*/5 * * * *"
-    command: 'cd /Users/xiamingxing/.local/share/zhixing-dashboard && python3 panorama_cache.py >> /tmp/panorama_cron.log 2>&1'
+    command: 'cd /Users/xiamingxing/.local/share/zhixing-dashboard && /Users/xiamingxing/.local/share/zhixing-dashboard/.venv/bin/python3 panorama_cache.py >> /tmp/panorama_cron.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
@@ -1028,7 +1028,7 @@ jobs:
 
   - name: mcptool-drift-report-daily
     schedule: '45 5 * * *'
-    command: 'cd "$HOME/Workspace" ; if [ "$(git symbolic-ref -q --short HEAD)" = main ] ; then PATH=/opt/homebrew/bin:/usr/bin:/bin python3 bin/ssot/check-mcptool-impl-drift.py --report >> runtime/cron/mcptool-drift-report.log 2>&1 ; git add .omo/_truth/registry/mcptool-drift-report.yaml 2>/dev/null ; git diff --cached --quiet || git commit -m "chore(auto): mcptool drift report sync [skip ci]" >> runtime/cron/mcptool-drift-report.log 2>&1 ; else echo "skip: HEAD != main" >> runtime/cron/mcptool-drift-report.log ; fi'
+    command: 'cd "$HOME/Workspace" ; if [ "$(git symbolic-ref -q --short HEAD)" = main ] ; then PATH=/opt/homebrew/bin:/usr/bin:/bin /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/check-mcptool-impl-drift.py --report >> runtime/cron/mcptool-drift-report.log 2>&1 ; git add .omo/_truth/registry/mcptool-drift-report.yaml 2>/dev/null ; git diff --cached --quiet || git commit -m "chore(auto): mcptool drift report sync [skip ci]" >> runtime/cron/mcptool-drift-report.log 2>&1 ; else echo "skip: HEAD != main" >> runtime/cron/mcptool-drift-report.log ; fi'
     planes: [crontab]
     reality: installed
     status: active
