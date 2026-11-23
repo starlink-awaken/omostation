@@ -17,7 +17,7 @@ evidence_refs:
 mitigation_refs: []
 opened_at: '2026-11-23T08:56:41.771829+00:00'
 last_reviewed_at: '2026-11-23'
-next_review_at: null
+next_review_at:
 gate_level: watchlist
 history:
 - at: '2026-11-23T08:56:41.771829+00:00'
@@ -26,16 +26,31 @@ history:
   actor: governance-agent
 - at: '2026-11-23T08:58:31+00:00'
   action: identify
-  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python
-    read-check-write 补齐。'
+  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python read-check-write 补齐。'
   actor: governance-agent
+- at: '2026-11-23T13:24:07.471307+00:00'
+  action: update_description
+  note: 'Updated description from ''子模块 pin `47d9f2b51`：`src/omo/omo_debt_cli.py` 的 reclassify(`:351`)/escalate(`:363`)/revalidate(`:373`) 三处调用 `append_history(payload, <action>, <note>)` **未传** `timestamp=` / `actor=`；而 `omo_debt_lifecycle.py:9-17` 的签名默认 `timestamp=""` 且 `actor` 仅在有值时才写入条目 ⇒ 这三条状态流转落盘为 `at: ''''` 的历史，审计时间线断裂。同文件 close(`:80`)/desc(`:119`)/reopen(`:410`) 是正确写法（传 `_now_iso()` + actor），可直接照抄。实测：2026-11-23 对 BET-LEDGER-STATUS-LAGS-DELIVERY 跑一次 `debt revalidate` 即产出 `at: ''''` 并把整份 YAML 重排；已 `git checkout --` 回退，未进 main。'' to ''原缺陷（子模块 pin 47d9f2b51，修复前行号）：src/omo/omo_debt_cli.py 的 reclassify(:351)/escalate(:363)/revalidate(:373) 三处调用 append_history(payload, action, note) 未传 timestamp= 与 actor=；而 omo_debt_lifecycle.py:9 的签名默认 timestamp="" 且 actor 仅在有值时才写入条目 ⇒ 这三条状态流转落盘为 at 空字符串，审计时间线断裂。同文件 close(:80)/desc(:119)/reopen(:410) 传 _now_iso() + actor，是正确写法，可直接照抄。实测复现：2026-11-23 在 /tmp/repro-at 的临时 .omo 上跑一次 escalate，history 尾项即 at 空串，rc=0 静默通过。
+
+
+    进度（2026-11-23 更新）：时间戳半边已修并交付 —— omostation-omo#257 squash 合并为 omo main d87a680df，根仓 gitlink 经 PR #5477 前进到该 commit；新增 projects/omo/tests/test_omo_debt_history_timestamp.py（in-process 驱动真实 CLI main(argv)，对三条命令各断言 at 非空、aware、且为本次运行所写；负例：回退源码后 3 failed）。勿重复修时间戳半边。
+
+
+    残余待裁（principal）：① actor 半边未做 —— reclassify/escalate/revalidate/desc 四个子命令都没有 --actor 旗标（desc 走 cmd_debt_desc 时也不传 actor），加旗标属新增 CLI 行为面；② 是否给 _write_yaml 加键序保持（broker 写一次会把整份 YAML 重排）另议。
+
+
+    附带发现（另案登记）：omo 仓 tests/test_omo_debt_cli.py 里按 scripts/omo_debt.py 起子进程的用例，该脚本全仓不存在，且 cwd=parents[2] 解析到 <root>/projects，带 --run-real-omo 必红；平时靠 requires_real_omo 默认 skip 掩盖 ⇒ 判据空转。''.'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
-description: '子模块 pin `47d9f2b51`：`src/omo/omo_debt_cli.py` 的 reclassify(`:351`)/escalate(`:363`)/revalidate(`:373`)
-  三处调用 `append_history(payload, <action>, <note>)` **未传** `timestamp=` / `actor=`；而 `omo_debt_lifecycle.py:9-17`
-  的签名默认 `timestamp=""` 且 `actor` 仅在有值时才写入条目 ⇒ 这三条状态流转落盘为 `at: ''''` 的历史，审计时间线断裂。同文件 close(`:80`)/desc(`:119`)/reopen(`:410`)
-  是正确写法（传 `_now_iso()` + actor），可直接照抄。实测：2026-11-23 对 BET-LEDGER-STATUS-LAGS-DELIVERY 跑一次 `debt revalidate`
-  即产出 `at: ''''` 并把整份 YAML 重排；已 `git checkout --` 回退，未进 main。'
-decision_needed: 三处补 `timestamp=_now_iso()`；actor 需要 reclassify/escalate 两个子命令先加 `--actor` （revalidate
-  也没有）。改动全在子模块 `projects/omo`，要走子模块 commit 三步走。是否顺带给 `_write_yaml` 加键序保持（避免整份重排）另议。
+description: '原缺陷（子模块 pin 47d9f2b51，修复前行号）：src/omo/omo_debt_cli.py 的 reclassify(:351)/escalate(:363)/revalidate(:373) 三处调用 append_history(payload, action, note) 未传 timestamp= 与 actor=；而 omo_debt_lifecycle.py:9 的签名默认 timestamp="" 且 actor 仅在有值时才写入条目 ⇒ 这三条状态流转落盘为 at 空字符串，审计时间线断裂。同文件 close(:80)/desc(:119)/reopen(:410) 传 _now_iso() + actor，是正确写法，可直接照抄。实测复现：2026-11-23 在 /tmp/repro-at 的临时 .omo 上跑一次 escalate，history 尾项即 at 空串，rc=0 静默通过。
+
+
+  进度（2026-11-23 更新）：时间戳半边已修并交付 —— omostation-omo#257 squash 合并为 omo main d87a680df，根仓 gitlink 经 PR #5477 前进到该 commit；新增 projects/omo/tests/test_omo_debt_history_timestamp.py（in-process 驱动真实 CLI main(argv)，对三条命令各断言 at 非空、aware、且为本次运行所写；负例：回退源码后 3 failed）。勿重复修时间戳半边。
+
+
+  残余待裁（principal）：① actor 半边未做 —— reclassify/escalate/revalidate/desc 四个子命令都没有 --actor 旗标（desc 走 cmd_debt_desc 时也不传 actor），加旗标属新增 CLI 行为面；② 是否给 _write_yaml 加键序保持（broker 写一次会把整份 YAML 重排）另议。
+
+
+  附带发现（另案登记）：omo 仓 tests/test_omo_debt_cli.py 里按 scripts/omo_debt.py 起子进程的用例，该脚本全仓不存在，且 cwd=parents[2] 解析到 <root>/projects，带 --run-real-omo 必红；平时靠 requires_real_omo 默认 skip 掩盖 ⇒ 判据空转。'
+decision_needed: '残余待裁（时间戳半边已由 omostation-omo#257 + 根仓 PR #5477 交付，勿重复修）：① actor 半边 —— reclassify/escalate/revalidate/desc 四个子命令都没有 --actor 旗标（desc 走 cmd_debt_desc 时也不传 actor），是否新增该 CLI 面属 principal 裁决；② 是否给 _write_yaml 加键序保持（broker 写一次会把整份 YAML 重排）另议。'
