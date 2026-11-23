@@ -258,7 +258,18 @@ def _task_orchestrator(monkeypatch, tmp_path, *, timestamp=None, tasks=None, fai
         monkeypatch.setattr(refresh, name, lambda *args, **kwargs: None)
     loader = importlib.machinery.SourceFileLoader("zhixing_task_orchestrator", str(ASSETS / "orchestrator.py.asset"))
     spec = importlib.util.spec_from_loader(loader.name, loader)
-    module = importlib.util.module_from_spec(spec); loader.exec_module(module)
+    module = importlib.util.module_from_spec(spec)
+    # orchestrator.py.asset 模块级**无条件** `sys.path.insert(0, str(APP))`, APP = 该资产所在目录。
+    # 不还原的话宿主面 bin/panorama/assets/host 会留在 sys.path 上 —— 后续用例 `import collectors`
+    # 就命中那个没有 __init__.py 的命名空间包, 而不是它们各自部署的包 (2026-11-23 实测: 单跑本
+    # 文件一个 session 就在 sys.path 上留 22 条)。同族受害: test_panorama_pending_authorizations。
+    path_snapshot = list(sys.path)
+    try:
+        loader.exec_module(module)
+        assert any("panorama/assets/host" in p for p in sys.path), "前提: 该资产确实会自我插入"
+    finally:
+        sys.path[:] = path_snapshot
+    assert not [p for p in sys.path if "panorama/assets/host" in p], "宿主面漏进了 sys.path"
     orchestrator_os = module.os
     # The delivered orchestrator defers every collector above the load budget.
     # These tests assert collection policy, not host load, so pin the probe;
