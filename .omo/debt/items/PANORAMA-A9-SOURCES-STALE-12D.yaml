@@ -16,17 +16,75 @@ evidence_refs:
 - bin/panorama/panorama-collect.py
 mitigation_refs: []
 opened_at: '2026-11-10'
-last_reviewed_at: '2026-11-10'
-next_review_at: '2026-11-13'
+last_reviewed_at: '2026-11-23'
+next_review_at: '2026-12-07'
 gate_level: watchlist
 x1_policy_ref: ''
 x3_tier: Operational
-decision_needed: 先定性质再决定修哪一侧：① 查 strategy 采集器自 2026-10-28T08:18Z、documents 采集器自 2026-10-29T03:22Z
-  之后为什么再无成功观测（进程通路失败，还是这两源在本机已无数据源）； ② 若属"结构性不可得"，则 A9 应把它们移出 required_sources 或给出显式
-  NOT_APPLICABLE 出口， 而不是让 A9 永远 PARTIAL；③ 若属"应当可得但坏了"，则修采集，并给 PARTIAL 加与 STALE_UNAVAILABLE/FAIL
-  同族的年龄界（现状是 PARTIAL 任何年龄都不接受，见 PANORAMA-A9-DEFERRED-UNBOUNDED）。判据复算： python3 -c "import
-  json;d=json.load(open('/Users/xiamingxing/.local/share/zhixing-dashboard/current.json'));print({k:(v.get('status'),v.get('last_success_at'))
-  for k,v in d['source_states'].items() if k in ('strategy','documents')})"
+decision_needed: |-
+  **裁决项已随事实变更（2026-11-23 22:12Z / 23:28Z 两次全量 revision 普查，见本条 `review` 条目）。**
+  原立案三问（① 查 strategy/documents 采集器为何再无成功观测 ② 是否移出 `required_sources`
+  ③ 修采集并给 PARTIAL 加年龄界）**已无对象**：两次取样（各 49 帧，窗口 18:00:15Z–22:12:31Z 与
+  19:28:51Z–23:27:57Z）都是 `47 PASS / 2 PARTIAL / 0 FAIL`；`strategy`/`documents` 的
+  `last_success` 年龄 ≤ 0.12 h，`oldest source success age` 峰值 632s 对年龄界 21600s 余量 34 倍。
+  原问③的 PARTIAL 侧：那两帧 PARTIAL 的原因是 `cockpit_sources` 不完整 + `portfolio=PARTIAL`，
+  与「源陈旧」不同链路，不属本条。
+
+  现在待裁的是残余三项（本轮均不代做）：
+
+  **(R1) 本条是否收口。** 选项：`closed`（命题「required sources 长期无成功观测」不成立，全过程由 history 承载）／
+  保留 `identified` 到下一轮复核（若认为「恢复」不足以证明采集链路已修）。
+  **附带项（同属 R1，需一并裁）**：`evidence_refs` 第 1 项 `~/.local/share/zhixing-dashboard/current.json`
+  实测不是可信 verdict 面（每轮刷新先进入 11/11 门 `UNKNOWN` 占位态、`live: false`），
+  第 2 项 `revisions/` 是容量 49 的滑动窗口（~4 h）⇒ 本条的历史断言在数小时内不可复算。
+  是否把 evidence 收敛为「只指 `revisions/*/data.json` 并要求复核当场取帧」由用户定（本轮不自行改 evidence）。
+
+  判据可复算（A9 准入逻辑独立重跑，23:27:56Z 帧实测输出 `bad_sources = []` ↔ 发布值 `A9 PASS`）：
+
+  ```
+  python3 - <<'PY'
+  import json,glob,os,datetime
+  p=max(glob.glob(os.path.expanduser('~/.local/share/zhixing-dashboard/revisions/*/data.json')),key=os.path.getmtime)
+  d=json.load(open(p)); gen=d['generated_at']; now=datetime.datetime.fromisoformat(gen.replace('Z','+00:00'))
+  req={"catalog","strategy","strategy-projection","environment_evidence","portfolio","workflow","resident",
+       "scheduler","references","orca","multica","ruflo","documents","compute"}   # = panorama-collect.py:1511-1515
+  ss=d['source_states']
+  def age(s):
+      v=s.get('last_success_at')
+      return None if not v else (now-datetime.datetime.fromisoformat(str(v).replace('Z','+00:00'))).total_seconds()
+  bad=[]
+  for n in sorted(req):
+      s=ss.get(n) or {}; st=s.get('status'); a=age(s)
+      ok = st=='OK' or st=='DEFERRED' or (a is not None and a<=21600 and st in ('STALE_UNAVAILABLE','FAIL'))
+      print('%-22s %-18s age_s=%s accepted=%s' % (n,st,'None' if a is None else round(a),ok))
+      if not ok: bad.append(n)
+  print('recomputed bad_sources', bad)
+  print('published A9', [(g['verdict'],g['detail'][:90]) for g in d['gates'] if g.get('id')=='A9'])
+  PY
+  ```
+
+  **(R2) 同帧仍红的两个观测是否另立案**（与本条立案前提无关，是否转为独立债务由用户定；本轮不自行新建，避免与
+  `PANORAMA-A9-DEFERRED-UNBOUNDED` 重叠）：23:27:56Z 帧 `personal_value_truth` `UNAVAILABLE`
+  last_success `2026-10-28T08:18:27Z` = **2,300,969 s（639.2 h）**；`panorama_base` `STALE_UNAVAILABLE`
+  last_success `2026-10-28T07:27:34.594591Z` = **2,304,021 s（640.0 h）**。
+  **二者都不在 A9 的 14 元 `required_sources` 内**（`:1511-1515`），故既不拦也不放行 A9；
+  若被纳入，年龄界 21600s 会直接判它们不合格（实测超界 **106 倍**）。
+  本轮反向排除的两个例子：`gantt` 在 22:04:28Z 帧还是 `DEFERRED`（`last_success_at: None`）、
+  23:27:56Z 帧已 `OK`（age 243s）；`ruflo` 是 `FAIL` 但 age 249s，属「最近一次尝试失败、上次成功很近」，
+  不是无观测。同帧 `A3` 为 `FAIL`（属其他债务，本条不裁决）。
+
+  **(R3) `panorama_base` 的修法仍待裁**（R2 里两项算「坏」还是算「结构性不可得」取决于它）。
+  本轮新测到三条硬事实（未追采集器代码，因果不下结论）：
+  ① `source_states.panorama_base`：`source: /Users/xiamingxing/Workspace/runtime/dashboard/data.json`、
+  `source_lane: CANONICAL_BASE`、`available: false`，`source_health` 侧同一条还带 `error: FileNotFoundError`；
+  ② 该仓根文件**存在、463,261 B、mtime 冻结在 2026-10-28T08:15:07Z**——与本条 640 h 无成功的时间起点吻合，
+  即 CANONICAL_BASE lane 读的是一个自 10-28 起没人写的仓根 runtime 面（与
+  `AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER` 同族，那条只覆盖 `agent-brief.json`，本条是 `data.json`）；
+  ③ state 根对应文件 `~/.local/state/omostation/prod/runtime/dashboard/data.json` **不存在**
+  （同目录 `agent-brief.json` 存在且 21:46:40Z 新鲜）⇒ 「把 CANONICAL_BASE 改指 state 根」目前无源可指。
+  候选：(1) 给仓根 `runtime/dashboard/data.json` 配排班写方（部署面写，需 principal 授权）；
+  (2) 先在 state 根造 `data.json` 写方再把 lane 改指过去；(3) 判其结构性不可得并在 `source_health` 语义里降级
+  （改判准，需 principal）；(4) 维持现状不动。
 history:
 - at: '2026-11-10T02:39:00+00:00'
   action: identify
@@ -189,22 +247,62 @@ history:
     **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
     (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
     修法 (3) 解冻, **该修法仍待裁**。''.'
-description: '**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
 
+- at: "2026-11-23T23:38:14+00:00"
+  action: review
+  actor: governance-agent
+  note: >-
+    **全量 revision 普查（两次独立取样：22:12Z 与 23:28Z，各 49 份 `revisions/*/data.json`）取代此前「连续 N 轮抽样」的说法。**
+    ① A9 verdict 分布两次一致：**47 PASS / 2 PARTIAL / 0 FAIL / 0 UNKNOWN / 0 STALE_UNAVAILABLE**；
+    两个 PARTIAL 是同一对帧 `bd867637802c`（19:44:38Z）与 `b6e84b51d4ad`（19:48:07Z），detail 原文
+    `A9 evidence incomplete: cockpit_sources, portfolio=PARTIAL`（`portfolio` 自身 PARTIAL，非源陈旧）。
+    窗口第一次 18:00:15Z–22:12:31Z（4h12m）、第二次 19:28:51Z–23:27:57Z（3h59m），目录数恒 49
+    ⇒ 投影是**容量 49 的滑动窗口、约 3.4 min 一份**。
+    ② 年龄余量：detail 里 `oldest source success age` 峰值 **632s**（22:07:58Z `62f2e1ebd38c`；20:25:36Z 一次 622s），
+    对代码年龄界 `age <= 21600`（`bin/panorama/panorama-collect.py:1530`）余量 **34 倍**；23:27:56Z 帧为 226s。
+    ⇒ 本条立案前提「required sources 陈旧 12 天」在可核验窗口内**没有一帧成立**。
+    ③ **判据可独立复算（本轮把准入逻辑重跑一遍，与发布值一致）**：对 23:27:56Z 帧 `source_states`
+    的 14 个 required 源逐条按 `:1531-1538` 重算 ⇒ `bad_sources = []`，与发布 `A9 PASS` 一致；
+    其中 `ruflo` 是 `FAIL` 但 `last_success` 年龄 249s，被规则③（界内降级视同 STALE_UNAVAILABLE）接受。
+    ④ **证据面自身的两个缺陷（比「已恢复」更该登记）**：
+    (a) 滑动窗口只有 49 帧 / ~4 h ⇒ 本条 `description` 引用的 06:00Z 那批帧**已无法从本条 point 到的 evidence 面复算**——
+    用分钟级快照支撑日级结论，历史断言必然在数小时内失去可核验性。
+    (b) **`current.json` 不是可信的 gate verdict 面**：实测 `current.json` 与 `dist/current.json`
+    在 22:13:40Z（generation `09714a5dece5012d4a15`）**11/11 道门全为 `UNKNOWN`**、
+    A9 行带 `source_verdict: PARTIAL` 且 `live: false`，而同 gen 已发布的 revision 是真实 verdict；
+    22:08:15Z（gen `97e118a8a31cf1aca778`）同样分裂（current.json `A9 UNKNOWN` vs revision `A9 PASS`）。
+    ⇒ `current.json` 每轮刷新先进入「全 UNKNOWN 占位」态、之后才发布完成的 revision；
+    本条 evidence_refs 第 1 项正是它。**复核应读 `revisions/*/data.json`，不要读 `current.json`**
+    （是否改 evidence_refs 见 R1 附带项，本轮不自行改）。
+    ⑤ 读码边界（`bin/panorama/panorama-collect.py:1511-1515`，14 元 `required_sources` 硬编码）：
+    **不含** `personal_value_truth` / `panorama_base` / `gantt` / `agent_brief` ⇒ 本条此前把这三源与
+    strategy/documents 混在同一叙事里是错的；它们 639~640 h 无成功观测不参与 A9 判定（另立 R2）。
+    ⑥ `decision_needed` 按实测重写、`description` 同步改写为普查表（原「已闭环 (连续 4 轮实测, 非单帧快照)」的
+    措辞连同其引用的 `7026733c…` 与 13:58/14:06/14:10/14:14 四帧已随窗口滚掉、不再可复算——原三问不删，
+    处置由本 history 承载，append-only 不删原文）；
+    字段一致性推进：`last_reviewed_at` `2026-11-10`→`2026-11-23`，已过期 `next_review_at` `2026-11-13`→`2026-12-07`。
+    `lifecycle_state`/`gate_level` 保持 `identified`/`watchlist`——**本轮不代关闭**，收口需 principal 认可
+    「前提不成立」这一判定（R1）。
+description: |-
+  **现状（2026-11-23T23:31Z 全量普查，非抽样）：本条立案前提不成立；是否收口由 R1 裁，本条不代关闭。**
 
-  投影 `~/.local/share/zhixing-dashboard/revisions/*/data.json` 连续四轮 (13:58 / 14:06
-  / 14:10 / 14:14) 读数完全一致:
+  | 读数 | 实测（两次独立取样 22:12Z / 23:28Z） |
+  |---|---|
+  | A9 verdict | 各 49 帧里 **47 PASS / 2 PARTIAL / 0 FAIL / 0 UNKNOWN**；两个 PARTIAL 是 `bd867637802c`（19:44:38Z）与 `b6e84b51d4ad`（19:48:07Z），detail 原文 `A9 evidence incomplete: cockpit_sources, portfolio=PARTIAL` |
+  | required 源年龄 | `oldest source success age` 峰值 **632s**（22:07:58Z）对比年龄界 `21600`（`bin/panorama/panorama-collect.py:1530`）= **34× 余量**；`strategy`/`documents` `last_success` ≤ **0.12 h** |
+  | 准入逻辑独立复算 | 23:27:56Z 帧按 `:1531-1538` 对 14 个 required 源重跑 ⇒ `bad_sources = []`，与发布值 `A9 PASS` 一致（其中 `ruflo` 是 `FAIL` 但年龄 249s，被规则③接受） |
+  | 证据面衰减 | `revisions/` 是**容量 49 的滑动窗口**（窗口实测 18:00:15Z–22:12:31Z 与 19:28:51Z–23:27:57Z，~4 h）⇒ 本条此前引用的 `7026733c…` 及 13:58/14:06/14:10/14:14 四帧**已不在盘上**，旧措辞「连续四轮读数完全一致」不再可复算 |
+  | 读数面陷阱 | `current.json` 与 `dist/current.json` 在刷新窗口内会先进入 **11/11 道门 `UNKNOWN`**（`source_verdict: PARTIAL`、`live: false`）的占位态 ⇒ 复核 A9 要读 `revisions/*/data.json`，不要读 `current.json`（本条 `evidence_refs` 是否收敛见 R1 附带项） |
 
+  ⇒ 本条立案时的「`strategy`/`documents` 两个证据源 12 天无成功观测 / A9 长期不可闭合」
+  **在可核验窗口内没有一帧成立**。`lifecycle_state` 保持 `identified`、`gate_level` 保持 `watchlist`。
 
-  - A9 门 = **PASS** (`dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE`),
-  四轮皆然;
-
-  - `strategy` / `documents` = **OK**, last_success_at 2026-11-23T05:57, 四轮皆然。
-
-
-  ⇒ 本条立案时的「两个证据源 12 天无成功观测 / A9 长期不可闭合」**已彻底消解**, 且不是偶发单帧 —— 链路在真实调度节奏下稳定。
-
-
-  **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
-  (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
-  修法 (3) 解冻, **该修法仍待裁**。'
+  **与本条立案前提无关的残余两项**（订正：这两个源**不在** A9 的 14 元 `required_sources` 内，
+  `:1511-1515`，故既不拦 A9 也不由其放行；若被纳入则按年龄界会判不合格，实测超界 **106 倍**）：
+  23:27:56Z 帧 `personal_value_truth` = `UNAVAILABLE`，`last_success` `2026-10-28T08:18:27Z`
+  = **2,300,969 s（639.2 h）**；`panorama_base` = `STALE_UNAVAILABLE`，`last_success`
+  `2026-10-28T07:27:34.594591Z` = **2,304,021 s（640.0 h）**，其 `source` 为
+  `/Users/xiamingxing/Workspace/runtime/dashboard/data.json`，该文件实测存在（463,261 B）但
+  **mtime 冻结在 `2026-10-28T08:15:07Z`**，且 state 根对应文件不存在 ⇒ 见 R3。
+  旧文本列为缺口的 `gantt` / `ruflo` 本轮反向排除：`gantt` 22:04:28Z 还是 `DEFERRED`（`last_success_at: None`）、
+  23:27:56Z 已 `OK`（年龄 243s）；`ruflo` 是 `FAIL` 但 `last_success` 仅 249s，属「最近一次尝试失败、上次成功很近」。
