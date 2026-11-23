@@ -39,12 +39,15 @@ _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT / "bin" / "lib"))
 
 from cron_normalize import (  # noqa: E402
+    active_crontab_jobs,
     closure_undetermined,
     current_host,
+    expand_workspace,
     installed_crontab_lines,
     installed_interpreter_gaps,
     interpreter_candidates,
     interpreter_executability_jobs,
+    python_call_sites,
 )
 
 DEBT_ID = "CRON-BARE-PYTHON3-PY39-IMPORT-DEATH"
@@ -106,6 +109,18 @@ def evaluate(
     # 与登记面的宿主纪律一致（CI 上不会因为「这台机器不跑 cron」而变红）。
     plane_res = installed_interpreter_gaps(jobs, installed_lines=plane, repo_root=root)
     plane_gaps = plane_res["gaps"]
+    # 登记面裸写法读数 (与已装面 `plane_bare_tokens` 对称)。
+    # 为什么单独记: `resolve_python_command` 会把裸 `python3` **改写**成可用绝对路径
+    # 并返回 install_reason=None —— 门禁量的是「安装器会不会修好」, 不是「声明本身
+    # 是否安全」。而 cron 的最小 PATH 下裸 `python3` 就是 3.9, 189 个仓内脚本顶层
+    # `from datetime import UTC` 会立刻 ImportError (见债务条目)。已装面今天为 0,
+    # 但登记面一旦被原样重装, 死作业就回来 —— 形状要留, 不能折叠。
+    registry_bare: list[str] = []
+    for j in active_crontab_jobs(jobs):
+        cmd = expand_workspace(j.get("command", ""))
+        for site in python_call_sites(cmd, repo_root=root):
+            if "/" not in site["declared"]:
+                registry_bare.append(f"{j.get('name')} -> {site['declared']}")
     # 自证：已装面有 python 调用点却一行都配不上登记面 ⇒ 配对口径坏了，此时「0 缺口」
     # 是空转出来的。仪器故障报成 advisory（不翻退出码 —— 那会把归属问题算成交付缺陷），
     # 但必须看得见。
@@ -132,6 +147,8 @@ def evaluate(
         "plane_paired_lines": plane_res["paired_lines"],
         "plane_unregistered_broken": len(plane_res["unregistered_broken"]),
         "plane_bare_tokens": plane_res["bare_tokens"],
+        "registry_bare_tokens": len(registry_bare),
+        "registry_bare": registry_bare,
         "plane_python_sites": plane_res["python_sites"],
         "plane_pairing_suspicious": pairing_suspicious,
         "closure_advisories": len(advisory),
@@ -233,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
             f"阻断缺口={result['blocking_gaps']} "
             f"(登记面={result['registry_gaps']} 已装面={result['plane_gaps']}/"
             f"扫{result['plane_lines_scanned']}行 配对{result['plane_paired_lines']}"
-            f" 未登记坏{result['plane_unregistered_broken']} 裸写法{result['plane_bare_tokens']}) "
+            f" 未登记坏{result['plane_unregistered_broken']} 裸写法{result['plane_bare_tokens']} 登记面裸写法{result['registry_bare_tokens']}) "
             f"闭包提醒={result['closure_advisories']} 判不出={result['undetermined_edges']} "
             f"已装面调用点={result['plane_python_sites']}"
             + (" ⚠配对全空(仪器自证失败)" if result["plane_pairing_suspicious"] else "") + " "
@@ -241,6 +258,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         for g in result["gaps"][:20]:
             print(f"  GAP  {g['name']}: {str(g['reason'])[:160]}")
+        for row in result['registry_bare'][:20]:
+            print(f'  REG-BARE  {row}')
         for g in result["plane_gap_details"][:20]:
             print(f"  PLANE-GAP  {g['name'] or '(未登记)'} {g['interpreter']}: {str(g['reason'])[:150]}")
         for g in result["plane_unregistered_details"][:20]:
