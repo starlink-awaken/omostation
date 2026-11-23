@@ -318,8 +318,11 @@ def test_host_scope_excludes_other_hosts_jobs(monkeypatch) -> None:
         ("mbp", None, 0),
         ("unregistered-host", None, 0),
         ("Mac-mini", "mbp", 0),
+        ("Mac-mini", "mini", 1),
         ("unregistered-host", "mini", 1),
     )
+    # Spec 的离线验收枚举 4 个原生主机名 + 3 个 CRON_HOST 覆盖 = 7 组；少一组即覆盖面缩水。
+    assert len(cases) == 7, f"主机作用域回放应为 7 组，实得 {len(cases)}"
     for hostname, override, expected in cases:
         monkeypatch.setattr("socket.gethostname", lambda hostname=hostname: hostname)
         monkeypatch.delenv("CRON_HOST", raising=False)
