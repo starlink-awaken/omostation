@@ -88,7 +88,7 @@ CENSUS_SERIAL = CENSUS_WRITE_WORKSPACE | CENSUS_NETWORK | CENSUS_EXCLUSIVE
 # docs/pitfalls.md 做字面子串核验, 不写工作区 / .omo/state / 子模块指针, 不走网络,
 # 不占独占本机资源 ⇒ A 类, 可并行。#5286 加 gate 时漏登记本账, 而本文件不在任何
 # CI 白名单里 ⇒ 缺陷在 main 上静默了 8 天 (2026-11-12 实测)。
-CENSUS_TOTAL_GATES = 100
+CENSUS_TOTAL_GATES = 101  # 2026-11-23 +debt-staleness (advisory, 债务陈旧度信号)
 
 # ── ② 全量分类账：普查中的 A 类（纯读/verification）逐一复审为「可并行」─────────
 # 维护约定：新增 gate 必须显式加入本账（或 SERIAL_ONLY），否则本文件失败。
@@ -125,6 +125,7 @@ PARALLEL_REVIEWED = frozenset(
     check-evidence-freshness check-governance-trend bus-usage-report bos-tracking-gate
     check-index-drift scene-v3-guardrail root-directory-governance bin-scripts-convergence-audit
     omo-runtime-final-tree doc-governance check-conflict-markers check-swarm-collision
+    debt-staleness
     bin-quota-diff task-field-governance test-collection
     lane-debt-ledger
     bdsk-shadow-sandbox debt-integrity-check error-knowledge-check
