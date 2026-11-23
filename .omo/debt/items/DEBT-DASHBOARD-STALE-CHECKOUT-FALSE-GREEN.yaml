@@ -124,3 +124,26 @@ history:
     canonical 未同步前冻结读数不会自行恢复 —— 故 value 轴不主张已达成。`lifecycle_state`
     与 `gate_level` 保持 `identified` / `watchlist` 不变（缓解≠关闭），本条仍在复审队列里。
   actor: "governance-agent"
+- at: "2026-11-23T20:05:00+00:00"
+  action: evidence
+  note: >-
+    **运行面读数订正（本条「冻结假绿」的当下状态，直测非推断）** —— 冻结已自行结束，但结束的因不是我收口的代码腿；
+    同时订正 19:17 那条 `mitigate` 记录里的原句「canonical 未同步前冻结读数不会自行恢复」——实测为**假**，恢复先于代码腿生效。
+    ① canonical 工作树 HEAD = `01948b6b1`（= PR #5487 的**数据腿**，`mitigation_refs` 加引号），
+    `.omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml` 三个元素实测 `types: ['str','str','str']`；
+    ② `launchctl print gui/$(id -u)/com.omostation.omo-debt-refresh` 给 `runs=117` / `last exit code=0`；
+    ③ 投影面 `.omo/debt/dashboard/current.yaml` 实测 `generated_at: '2026-11-23T20:05:05Z'`、
+    `debt_health: 0.0`、`backlog_pressure: 7.45` —— 与冻结期的 `100.0 / 0` 方向相反，即真实读数已恢复发布；
+    ④ `runtime/cron/omo-debt-refresh.log`（6,448 行，mtime 19:35:04Z）里最后一次 `TypeError` 在第 6,435 行，
+    **其后恰 12 行 = 3 个完整 tick 的四步全成功**（`refreshed/dispatched/campaigned/reported` 各 3 次、零异常）；
+    节拍由连续两次 `generated_at`（19:35:04Z → 20:05:05Z）实测确认为 30 min，反推首个成功 tick ≈ 18:35Z；
+    ⑤ 时间线：数据腿 PR #5487 `mergedAt 2026-11-23T18:11:03Z` → 首个成功 tick ≈ 18:35Z → 代码腿 PR #5488
+    `mergedAt 2026-11-23T18:56:32Z`（主仓 squash `2e26f8441`）⇒ **恢复早于代码腿合并 21 min**，归因于数据腿。
+    **含义**：治这次停摆的**必要且充分**动作是数据腿；代码腿（omo `08ce92a` / omo PR #258 / 主仓 `2e26f8441`）是
+    **防复发**护栏，目前在 canonical 上仍未生效（canonical HEAD `01948b6b1` 落后 origin/main `45613efc8`
+    3 个 commit，`git rev-list --count` 实测；同步仍是 principal 动作），所以「下一个畸形条目出现时会怎样」
+    在 canonical 上仍是旧行为——**这条是风险敞口，不是已闭环**。
+    **本条仍未闭**的是原判据问题而非读数问题：`decision_needed` 的 (A)/(B)/(C)（投影该读哪个检出）与
+    「复核追加待裁（`state-freshness-check.py` 给 `stale:true` 却整体 exit 0，是否升为阻断门禁项）」；
+    `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`（缓解 ≠ 关闭）。
+  actor: "governance-agent"
