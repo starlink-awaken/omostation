@@ -9,6 +9,7 @@ weight: 0.3
 entropy_class: "high"
 lifecycle_state: "identified"
 owner: "governance-team"
+bet_ref: "BET-Y2Q4-T10-350"
 affected_roots: []
 evidence_refs:
 - .omo/debt/dashboard/current.yaml
@@ -18,7 +19,7 @@ evidence_refs:
 mitigation_refs:
 - 本条 history 第一条（双向对照读数与根因）
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
+last_reviewed_at: "2026-11-23"
 next_review_at: "2026-12-10"
 gate_level: watchlist
 x1_policy_ref: ""
@@ -103,4 +104,23 @@ history:
     本轮以「加双引号、正文 219 字逐字不变」修复（1 行 diff）；修复后 refresh/dispatch/campaign/report 四步 rc 全 0，
     真实读数 `debt_health 0.0 / backlog_pressure 7.45 / watchlist 6`，与冻结的 `100.0 / 0 / []` 方向相反。
     检出落后依然存在，但已不是当前这次假绿的直接成因。
+  actor: "governance-agent"
+- at: "2026-11-23T19:17:00+00:00"
+  action: mitigate
+  note: >-
+    **结构护栏落地（治「单条目畸形 ⇒ 整个投影平面停摆」这一类，而不只是治这一次的脏数据）**：
+    `projects/omo/src/omo/omo_debt_metrics.py::_resolve_ref_path()` 先做 `isinstance(ref, str)`
+    类型闸门，非 str 的 refs 元素不再进 `Path()`；`collect_stale_evidence_item_ids()` 遇畸形 ref
+    把该条目标记为 stale 并 `continue`（**可见降级**，不是静默丢弃，也不让整平面崩）。
+    新用例 `projects/omo/tests/unit/test_omo_debt_malformed_refs.py` 走真实入口
+    `omo.omo_debt.refresh_outputs()` 验证 5 份投影全部产出。4 passed；在未修树（pin `d87a680`）
+    上跑同一用例复现生产签名 `TypeError: argument should be a str or an os.PathLike object
+    where __fspath__ returns a str, not ''dict''` ⇒ 判据能红。
+    交付：omo 主分支 squash `08ce92a`（omo PR #258）→ 主仓 gitlink `8ed1d34a4` → origin/main
+    squash `2e26f8441`（PR #5488）；台账 `BET-Y2Q4-T10-350` 以 `delivery_accepted`
+    （engineering VERIFIED / operational PROVEN / value **NOT_PROVEN**）关闭。
+    **未闭**：本条 `decision_needed` 的 (A)/(B)/(C) 与「复核追加待裁（门禁严格度）」仍待 principal
+    裁定；且 `com.omostation.omo-debt-refresh` 跑的是 canonical 检出，护栏虽已在 origin/main，
+    canonical 未同步前冻结读数不会自行恢复 —— 故 value 轴不主张已达成。`lifecycle_state`
+    与 `gate_level` 保持 `identified` / `watchlist` 不变（缓解≠关闭），本条仍在复审队列里。
   actor: "governance-agent"
