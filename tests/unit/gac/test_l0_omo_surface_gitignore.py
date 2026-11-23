@@ -118,3 +118,24 @@ def test_real_registry_covers_every_non_ignored_top_level_asset(module) -> None:
     assert actual - ignored, "非忽略资产集为空 ⇒ 判据会被整体架空"
     missing = sorted((actual - ignored) - registered)
     assert missing == [], f"未登记且未被 gitignore 的顶层资产: {missing}"
+
+
+def test_omo_state_runtime_dir_is_gitignored(module) -> None:
+    """`.omo/_state/` 是 resident 运行时状态, 必须被 gitignore 覆盖。
+
+    它 2026-11-13 从 `bin/.omo/_state/` 迁来 (STATE-SHADOW-BIN-OMO-ORPHANED-DATA) 时
+    丢了忽略 —— 原处那条 `bin/.omo/` 是刻意保留的防御性规则, 新落点却没有同等对待。
+    上面那条通用判据**只在目录已存在于盘中时才看得见它**, 干净克隆里规则被删也不会红;
+    本条把「规则在不在」变成无条件判据。
+    """
+    omo = ROOT / ".omo"
+    probe = omo / "_state"
+    probe.mkdir(exist_ok=True)
+    try:
+        assert probe.name in module._git_ignored(omo, {probe.name}), (
+            "`.omo/_state/` 未被 gitignore —— 跑过 bin/gac/weekly-review.py 后,"
+            "test_real_registry_covers_every_non_ignored_top_level_asset 会恒红"
+        )
+    finally:
+        if not any(probe.iterdir()):
+            probe.rmdir()
