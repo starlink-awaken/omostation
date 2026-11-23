@@ -45,6 +45,14 @@ def parse_date(value: object) -> datetime | None:
     return None
 
 
+def _path_exists(path: Path) -> bool:
+    # Path.exists() 只吞 ENOENT/ENOTDIR/EBADF/ELOOP；超长 ref 在 py<3.14 抛 ENAMETOOLONG(errno 63)
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
 def load_items(root: Path) -> list[dict]:
     registry = root / ".omo" / "_truth" / "registry" / "debt.yaml"
     paths: list[Path] = []
@@ -56,7 +64,7 @@ def load_items(root: Path) -> list[dict]:
         paths = sorted(items_dir.glob("*.yaml")) if items_dir.is_dir() else []
     items = []
     for p in paths:
-        if not p.exists():
+        if not _path_exists(p):
             continue
         data = yaml.safe_load(p.read_text())
         if isinstance(data, dict):
@@ -72,7 +80,7 @@ def has_verifiable_evidence(item: dict, root: Path) -> bool:
         p = Path(ref)
         if not p.is_absolute():
             p = root / ref
-        if p.exists():
+        if _path_exists(p):
             return True
     for field in ("resolution_evidence", "closed_evidence", "close_reason"):
         value = item.get(field)

@@ -151,3 +151,59 @@ def test_terminal_items_still_check_evidence(tmp_path: Path) -> None:
     result = module.assess(items, root, _now())
     assert [x["id"] for x in result["needs_reassessment"]] == ["X-6"]
     assert result["overdue"] == []
+
+
+def _overlong_ref() -> str:
+    """构造一个 >1024 字节的 ref —— macOS PATH_MAX，实测 main 上有 1155 / 1661 字节两条。"""
+    prose = "去重: GAP-SEED-DISPATCH 处理的是反方向 —— gap_seed_items 声明但物理不存在; " * 20
+    assert len(prose.encode("utf-8")) > 1024, len(prose.encode("utf-8"))
+    return prose
+
+
+def test_overlong_evidence_ref_is_not_verifiable_but_not_fatal(tmp_path: Path) -> None:
+    """超长 evidence ref 必须判为「不可核」并继续出报告，而不是打断整轮。
+
+    py<3.14 的 Path.exists() 只吞 ENOENT/ENOTDIR/EBADF/ELOOP，遇到 ENAMETOOLONG
+    (errno 63) 直接抛 OSError —— 2026-11-23 在 origin/main 内容上用 3.13.18/3.9.6
+    实跑本脚本即 rc=1 崩溃，3.14.8/3.15.2 则隐式返回 False，同一份案面两种结局。
+    """
+    module = _load()
+    root = _tmp_root(tmp_path)
+    items = [
+        {
+            "id": "X-7",
+            "lifecycle_state": "resolved",
+            "severity": "low",
+            "evidence_refs": [_overlong_ref()],
+            "_file": ".omo/debt/items/X-7.yaml",
+        },
+        {
+            "id": "X-8",
+            "lifecycle_state": "resolved",
+            "severity": "low",
+            "evidence_refs": [_overlong_ref()],
+            "resolution_evidence": "PR #5465 订正扫描总体口径",
+            "_file": ".omo/debt/items/X-8.yaml",
+        },
+    ]
+    result = module.assess(items, root, _now())
+    assert [x["id"] for x in result["needs_reassessment"]] == ["X-7"]
+    assert result["overdue"] == []
+
+
+def test_load_items_skips_overlong_seed_entry(tmp_path: Path) -> None:
+    """registry 里的超长 seed_items 条目同样不得把 load_items 打断。"""
+    module = _load()
+    root = _tmp_root(tmp_path)
+    items_dir = root / ".omo" / "debt" / "items"
+    items_dir.mkdir(parents=True)
+    (items_dir / "OK-1.yaml").write_text("id: OK-1\nlifecycle_state: identified\n", encoding="utf-8")
+    (root / ".omo" / "_truth" / "registry" / "debt.yaml").write_text(
+        "seed_items:\n"
+        f"  - '.omo/debt/items/{_overlong_ref()}.yaml'\n"
+        "  - .omo/debt/items/OK-1.yaml\n"
+        "  - .omo/debt/items/GONE.yaml\n",
+        encoding="utf-8",
+    )
+    loaded = module.load_items(root)
+    assert [i["id"] for i in loaded] == ["OK-1"]
