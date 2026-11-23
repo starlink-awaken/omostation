@@ -48186,7 +48186,8 @@ bets:
     malformed 回退剥注释文本对比); 生成器补 working_directory 渲染与 calendar
     list[dict] 多时刻支持 (单 dict 声明保持单 dict 渲染, 不破坏存量形态);
     services.yaml 回填三字段使 SSOT 与 11-10 手工修复对齐。
-  status: pending
+  status: done
+  done_at: 2026-11-23
   corrected_at: 2026-11-23
   correction_note: >-
     2026-11-23 收口腿（owner 当日授权「充分授权，全面推进」）。生产代码（`_plist_equivalent` 语义等价、
