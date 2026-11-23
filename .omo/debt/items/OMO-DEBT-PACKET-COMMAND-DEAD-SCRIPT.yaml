@@ -52,6 +52,59 @@ history:
 
 
     影响: packet 的 command 字段是 agent 直接照抄执行的入口（见 .omo/debt/dispatch 面），指向不存在的路径等于派发即失败；测试逐字断言这些字符串把「文本字面量」当执行平面钉住，反而阻止修复。本次立案时顺带量到: 同族缺陷此前已在本会话的 OMO-DEBT-HISTORY-EMPTY-TIMESTAMP 结案说明里作为附带发现登记。''.'
+- at: '2026-11-23T14:18:47.742317+00:00'
+  action: update_description
+  note: 'Updated description from ''判据缝隙: omo-debt dispatch packet 交给 agent 的命令是不可执行的死路径，且测试面把它逐字钉住，任何路径下都不会被发现。
+
+
+    位置: projects/omo/src/omo/omo_debt_action_packet.py:10/14/18/23/29 生成 python3 scripts/omo_debt.py {schedule,revalidate,escalate} ... 。
+
+
+    死路径证据 (子模块 pin d87a680df, 2026-11-23 实测):
+
+    - git -C projects/omo ls-tree -r --name-only HEAD | grep -c ''^scripts/omo_debt.py'' = 0 —— 该脚本在 omo 仓 tree 里不存在。
+
+    - git -C projects/omo log --oneline --all -- scripts/omo_debt.py 末条 = e41a1d7 「refactor(omo): Batch 1 模块清理 — 删除 28 死模块」—— 脚本被当死模块删除，packet 生成器与测试仍引用它。
+
+    - 引用面共 9 个文件 99 处: test_omo_debt_cli.py 60, test_omo_debt_docs.py 10, test_omo_debt_dispatch.py 9, omo_debt_action_packet.py 5(src), test_omo_debt_action_packet.py 6, test_omo_debt_outputs.py 4, test_omo_debt_reporting.py 3, test_omo_debt_campaign.py 2, test_omo_debt_owner_routing.py 2。
+
+
+    空转证据 (同一 pin 上实跑):
+
+    - 默认口径: 上述 8 个测试文件 58 collected / 12 passed / 46 skipped。
+
+    - 给 tests/test_omo_debt_cli.py 加 --run-real-omo: 43 failed / 0 passed（子进程找不到脚本，且 cwd=parents[2] 解析到 <root>/projects，与 scripts/ 不在同一层）。
+
+    - rg --run-real-omo 在 Makefile、.github/workflows/、projects/omo/Makefile、projects/omo/pyproject.toml 全无启用面 ⇒ 这批用例在任何路径下都不执行，只在真机上手动加旗标时必红。
+
+
+    影响: packet 的 command 字段是 agent 直接照抄执行的入口（见 .omo/debt/dispatch 面），指向不存在的路径等于派发即失败；测试逐字断言这些字符串把「文本字面量」当执行平面钉住，反而阻止修复。本次立案时顺带量到: 同族缺陷此前已在本会话的 OMO-DEBT-HISTORY-EMPTY-TIMESTAMP 结案说明里作为附带发现登记。'' to ''判据缝隙: omo-debt dispatch packet 交给 agent 的命令是不可执行的死路径，且测试面把它逐字钉住，任何路径下都不会被发现。
+
+
+    位置: projects/omo/src/omo/omo_debt_action_packet.py:10/14/18/23/29 生成 python3 scripts/omo_debt.py {schedule,revalidate,escalate} ... 。
+
+
+    死路径证据 (子模块 pin d87a680df, 2026-11-23 实测):
+
+    - git -C projects/omo ls-tree -r --name-only HEAD 内 scripts/omo_debt.py 命中 = 0 —— 该脚本在 omo 仓 tree 里不存在。
+
+    - git -C projects/omo log --oneline --all -- scripts/omo_debt.py 末条 = e41a1d7 「refactor(omo): Batch 1 模块清理 — 删除 28 死模块」—— 脚本被当死模块删除，packet 生成器与测试仍引用它。
+
+    - 代码/测试两个平面 (src/omo + tests) 命中 103 处 / 11 个文件: 生成器 5, test_omo_debt_cli.py 60, test_omo_debt_docs.py 10, test_omo_debt_dispatch.py 9, test_omo_debt_action_packet.py 6, test_omo_debt_outputs.py 4, test_omo_debt_reporting.py 3, test_omo_debt_campaign.py 2, test_omo_debt_owner_routing.py 2 (以上 8 个受害者测试文件合计 96), tests/README.md 1, test_omo_debt_history_timestamp.py 1 (本次立案新写, 仅文档字符串说明为何不能用 subprocess)。
+
+    - 根仓 .omo 平面另有 311 处, 全在 2026-06-02 的 plan 文档与 omo 仓自带 .omo/debt/{dispatch,action-packet,campaign,owner-routing} 生成物里; 根仓排除 .omo 后零命中。
+
+
+    空转证据 (同一 pin 上实跑, 8 个受害者测试文件字面传参):
+
+    - 默认口径: 58 collected / 12 passed / 46 skipped。
+
+    - 加 --run-real-omo: 46 failed / 12 passed —— 子进程找不到脚本, 且 cwd=parents[2] 解析到 <root>/projects, 与 scripts/ 不在同一层。
+
+    - --run-real-omo 在 Makefile、.github/workflows/、projects/omo/Makefile、projects/omo/pyproject.toml 全无启用面 ⇒ 这批用例在任何 CI/本地路径下都不真跑, 只在手动加旗标时必红。
+
+
+    影响 (订正后收窄): 根仓 canonical 当前不存在 .omo/debt/dispatch/current.md, 死命令眼下未在根仓派发面生效。真实风险面是三条: ① packet 生成器一旦被调用即产出不可执行命令 —— omo 仓自带 .omo/debt/dispatch/current.md 里 2026-06-05 的旧产物就是实例; ② 8 个测试文件逐字断言这些字符串, 把「文本字面量」当执行平面钉住, 任何修复先撞红测; ③ 判据面默认全绿使 ①② 无法被发现。同族缺陷此前作为附带发现登记在 OMO-DEBT-HISTORY-EMPTY-TIMESTAMP。''.'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Principle
@@ -63,21 +116,23 @@ description: '判据缝隙: omo-debt dispatch packet 交给 agent 的命令是�
 
   死路径证据 (子模块 pin d87a680df, 2026-11-23 实测):
 
-  - git -C projects/omo ls-tree -r --name-only HEAD | grep -c ''^scripts/omo_debt.py'' = 0 —— 该脚本在 omo 仓 tree 里不存在。
+  - git -C projects/omo ls-tree -r --name-only HEAD 内 scripts/omo_debt.py 命中 = 0 —— 该脚本在 omo 仓 tree 里不存在。
 
   - git -C projects/omo log --oneline --all -- scripts/omo_debt.py 末条 = e41a1d7 「refactor(omo): Batch 1 模块清理 — 删除 28 死模块」—— 脚本被当死模块删除，packet 生成器与测试仍引用它。
 
-  - 引用面共 9 个文件 99 处: test_omo_debt_cli.py 60, test_omo_debt_docs.py 10, test_omo_debt_dispatch.py 9, omo_debt_action_packet.py 5(src), test_omo_debt_action_packet.py 6, test_omo_debt_outputs.py 4, test_omo_debt_reporting.py 3, test_omo_debt_campaign.py 2, test_omo_debt_owner_routing.py 2。
+  - 代码/测试两个平面 (src/omo + tests) 命中 103 处 / 11 个文件: 生成器 5, test_omo_debt_cli.py 60, test_omo_debt_docs.py 10, test_omo_debt_dispatch.py 9, test_omo_debt_action_packet.py 6, test_omo_debt_outputs.py 4, test_omo_debt_reporting.py 3, test_omo_debt_campaign.py 2, test_omo_debt_owner_routing.py 2 (以上 8 个受害者测试文件合计 96), tests/README.md 1, test_omo_debt_history_timestamp.py 1 (本次立案新写, 仅文档字符串说明为何不能用 subprocess)。
+
+  - 根仓 .omo 平面另有 311 处, 全在 2026-06-02 的 plan 文档与 omo 仓自带 .omo/debt/{dispatch,action-packet,campaign,owner-routing} 生成物里; 根仓排除 .omo 后零命中。
 
 
-  空转证据 (同一 pin 上实跑):
+  空转证据 (同一 pin 上实跑, 8 个受害者测试文件字面传参):
 
-  - 默认口径: 上述 8 个测试文件 58 collected / 12 passed / 46 skipped。
+  - 默认口径: 58 collected / 12 passed / 46 skipped。
 
-  - 给 tests/test_omo_debt_cli.py 加 --run-real-omo: 43 failed / 0 passed（子进程找不到脚本，且 cwd=parents[2] 解析到 <root>/projects，与 scripts/ 不在同一层）。
+  - 加 --run-real-omo: 46 failed / 12 passed —— 子进程找不到脚本, 且 cwd=parents[2] 解析到 <root>/projects, 与 scripts/ 不在同一层。
 
-  - rg --run-real-omo 在 Makefile、.github/workflows/、projects/omo/Makefile、projects/omo/pyproject.toml 全无启用面 ⇒ 这批用例在任何路径下都不执行，只在真机上手动加旗标时必红。
+  - --run-real-omo 在 Makefile、.github/workflows/、projects/omo/Makefile、projects/omo/pyproject.toml 全无启用面 ⇒ 这批用例在任何 CI/本地路径下都不真跑, 只在手动加旗标时必红。
 
 
-  影响: packet 的 command 字段是 agent 直接照抄执行的入口（见 .omo/debt/dispatch 面），指向不存在的路径等于派发即失败；测试逐字断言这些字符串把「文本字面量」当执行平面钉住，反而阻止修复。本次立案时顺带量到: 同族缺陷此前已在本会话的 OMO-DEBT-HISTORY-EMPTY-TIMESTAMP 结案说明里作为附带发现登记。'
-decision_needed: '待裁（三选一，裁决前不动 packet 文案、不改 8 个测试文件的逐字断言、不建 shim）：① 把 packet 命令改指向真实入口（本机实测可用的是 python3 -m omo.omo_debt_cli，另有 cockpit/ecos wrapper 可选）—— 代价: 要同步改 99 处引用，并先定「在哪个 cwd、用哪个解释器」的跨机口径（mini 与本机 PATH/venv 不同，参见「cron 的最小 PATH 不含 /opt/homebrew/bin」与「canonical venv 的 path hook 把 worktree 里的 import omo 静默指向主检出」）；② 恢复 scripts/omo_debt.py 作 shim 指向 CLI —— 代价: 与 e41a1d7「删除 28 死模块」的方向相反，等于把死模块请回来；③ 只修测试面（断言改为断言真实入口 + 给这批用例接上某个 CI 路径）—— 前置是先定 ① 的口径，否则测试会钉住另一个未验证的字符串。'
+  影响 (订正后收窄): 根仓 canonical 当前不存在 .omo/debt/dispatch/current.md, 死命令眼下未在根仓派发面生效。真实风险面是三条: ① packet 生成器一旦被调用即产出不可执行命令 —— omo 仓自带 .omo/debt/dispatch/current.md 里 2026-06-05 的旧产物就是实例; ② 8 个测试文件逐字断言这些字符串, 把「文本字面量」当执行平面钉住, 任何修复先撞红测; ③ 判据面默认全绿使 ①② 无法被发现。同族缺陷此前作为附带发现登记在 OMO-DEBT-HISTORY-EMPTY-TIMESTAMP。'
+decision_needed: '待裁（三选一，裁决前不动 packet 文案、不改 8 个测试文件的逐字断言、不建 shim）：① 把 packet 命令改指向真实入口（本机实测可用的是 python3 -m omo.omo_debt_cli，另有 cockpit/ecos wrapper 可选）—— 代价: 要同步改 96 处测试断言与生成器 5 处，并先定「在哪个 cwd、用哪个解释器」的跨机口径（mini 与本机 PATH/venv 不同，参见「cron 的最小 PATH 不含 /opt/homebrew/bin」与「canonical venv 的 path hook 把 worktree 里的 import omo 静默指向主检出」）；② 恢复 scripts/omo_debt.py 作 shim 指向 CLI —— 代价: 与 e41a1d7「删除 28 死模块」的方向相反，等于把死模块请回来；③ 只修测试面（断言改为断言真实入口 + 给这批用例接上某个 CI 路径）—— 前置是先定 ① 的口径，否则测试会钉住另一个未验证的字符串。'
