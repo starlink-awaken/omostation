@@ -857,6 +857,27 @@ GATE_TITLES = {
     "A5": "引用与 launchd 完整性",
 }
 
+# 准入类门禁的判定源不在 gate-health-check.py: 它只产 A1..A5 (见 collect_gates 里
+# `str(g.get("gate")).split()[0]` 的解析与上面的 GATE_TITLES)。Brief 若只点名它,
+# 复检既不能证真也不能证伪 —— 2026-11-23 实测 A7/RF0 的 verifier 均 ok:true,
+# 却因采集整轮抛 projection_code_root_not_current_main 而回落成 NOT_ADMITTED 发布为红。
+GATE_REVERIFY_SCRIPTS = {
+    "A6": "bin/gac/orca-r0-verify.py",
+    "A7": "bin/gac/multica-as0-verify.py",
+    "RF0": "bin/gac/ruflo-rf0-verify.py",
+}
+
+
+def gate_reverify_hint(gate_ids: "list[str]") -> str:
+    named = [(gid, GATE_REVERIFY_SCRIPTS[gid]) for gid in gate_ids if gid in GATE_REVERIFY_SCRIPTS]
+    if not named:
+        return ""
+    return (
+        " 判定源不同的门禁: "
+        + " / ".join(f"{gid} → {script} --json" for gid, script in named)
+        + "（不在 gate-health-check.py 名单内）。"
+    )
+
 
 def collect_gates(payload: dict | None = None) -> list[dict]:
     # Under sustained overload the wrapper budget cannot be met, so every gate
@@ -5204,6 +5225,7 @@ def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | Non
                      "point-in-time snapshot; re-run bin/gac/gate-health-check.py --json "
                      "before claiming, since a lagging managed clone or an already-healed "
                      "gitlink can make a listed gate green by now."
+                     + gate_reverify_hint([g["id"] for g in failing])
                  ),
                  "source": "panorama.gates"}
             ] if failing else []),
