@@ -96,6 +96,33 @@ def _sgf_policy_present() -> bool:
             / "m1" / "governance" / "sgf-policy.yaml").is_file()
 
 
+def _cron_registered_tools() -> set[str]:
+    """cron 登记面里出现过的工具路径 (按 basename 与 command 文本匹配)。
+
+    为什么需要: `_discover_wiring` 只扫 workflows + sgf-policy + ci-check-runner,
+    **不含 cron**; 于是 cron 在跑的作业会被列进 `unwired_tools`, 读起来像
+    「从不运行」。这里只报「cron 里出现过」这个事实, 不主张它是门禁 ——
+    cron 面本身没有生产者 (债务 CRON-REGISTRY-REALITY-NO-PRODUCER), 所以
+    「登记了」不等于「真在跑」, 但至少不等于「没人调用」。
+    """
+    registry = WORKSPACE / ".omo" / "cron" / "registry.yaml"
+    if not registry.is_file():
+        return set()
+    try:
+        data = _load_yaml(registry) or {}
+    except Exception:  # noqa: BLE001 — 解析失败按缺席处理, 不假装有 cron 面
+        return set()
+    names: set[str] = set()
+    for job in data.get("jobs") or []:
+        if not isinstance(job, dict):
+            continue
+        cmd = str(job.get("command") or "")
+        for path in re.findall(r"[\w./$-]+\.(?:py|sh)\b", cmd):
+            names.add(path)
+            names.add(Path(path).name)
+    return names
+
+
 def _local_gate_tools() -> set[str]:
     """gac-local-gate.py 实际会执行的检查工具。
 
@@ -271,6 +298,7 @@ def check_ci_surfaces() -> dict:
     # 这一形状在旧实现里**完全不体现** —— 实测 perception-coverage 声明
     # workflow: gac-gate.yml 却从未被执行（CI-SURFACE-FALSE-WIRING-PERCEPTION-COVERAGE）。
     local_gate_tools = _local_gate_tools()
+    cron_tools = _cron_registered_tools()
     for tool, entry in sorted(registered_tools.items()):
         declared = str(entry.get("workflow") or "")
         if not declared or declared == "(none)":
@@ -396,6 +424,10 @@ def check_ci_surfaces() -> dict:
                 {
                     "tool": tool,
                     "declared_workflow": str((registered_tools[tool] or {}).get("workflow") or ""),
+                    # 本判据只扫 workflows + sgf-policy + gac-local-gate, **不扫 cron 面**;
+                    # 不标注的话, cron 在跑的作业会被读成「从不运行」(2026-11-23 实测:
+                    # log-rotate 由 cron `log-rotate-daily` 每天跑, 却出现在未接线名单里)。
+                    "cron_registered": tool in cron_tools,
                 }
                 for tool in registered_tools
                 if tool not in (set(wiring) | local_gate_tools)
@@ -528,7 +560,10 @@ def main() -> int:
         f"unwired={report['unwired_count']} orphan_registered={report['orphan_registered']}"
     )
     for row in report["unwired_tools"]:
-        print(f"  UNWIRED  {row['tool']}  (声明 workflow: {row['declared_workflow'] or '—'})")
+        cron = "  [cron 登记在跑]" if row["cron_registered"] else ""
+        print(
+            f"  UNWIRED  {row['tool']}  (声明 workflow: {row['declared_workflow'] or '—'}){cron}"
+        )
     if not _sgf_policy_present():
         # 缺生可见: wired_tools 来自 workflow 文本 + sgf-policy; 后者在子模块未
         # init 的检出里缺席 ⇒ 计数静默偏低 (实测 154 面里 wired 146 => 95)。

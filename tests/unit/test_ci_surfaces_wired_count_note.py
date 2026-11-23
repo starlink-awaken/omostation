@@ -88,3 +88,21 @@ def _summary_line() -> str:
         if line.startswith("SSOT:"):
             return line
     return ""
+
+
+def test_unwired_cron_entries_are_annotated() -> None:
+    """cron 在跑的作业若落进未接线名单, 必须带 `[cron 登记在跑]` 标注。
+
+    判据只扫 workflows + sgf-policy + gac-local-gate, **不扫 cron**; 不标注的话
+    `log-rotate` 这类每天在跑的作业会被读成「从不运行」(2026-11-23 实测)。
+    标注只陈述「cron 里出现过」, 不主张它是门禁。
+    """
+    report = MODULE.check_ci_surfaces()
+    by_tool = {row["tool"]: row for row in report["unwired_tools"]}
+    cron_names = MODULE._cron_registered_tools()
+    assert "bin/ssot/log-rotate.py" in cron_names or any(
+        "log-rotate" in name for name in cron_names
+    ), "前提不成立: cron 登记面里找不到 log-rotate"
+    for tool, row in by_tool.items():
+        expect = tool in cron_names or Path(tool).name in cron_names
+        assert row["cron_registered"] == expect, (tool, row)
