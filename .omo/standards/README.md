@@ -32,6 +32,7 @@ type: ssot
 | `doc-presentation-pattern.md` | 文档呈现模式 (digest + pointer + lint) |
 | `doc-ssot-contract.md` | 文档 SSOT 正交契约 |
 | `health-metrics-semantics.md` | 健康指标语义 |
+| `reading-honesty-checklist.md` | 检查器读数诚实性判据 (分母可见 / 点名 / 声明扫描面与来源) |
 | `interface_contract.md` | L0/L3 接口契约 (TaskObject, AgentMessage) |
 | `kos-baseline-drift-monitor.md` | KOS baseline 监控 |
 | `mcp-tool-and-transport-standard.md` | MCP 工具返回契约 + 传输约束 |
