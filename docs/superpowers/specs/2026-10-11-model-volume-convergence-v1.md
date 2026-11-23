@@ -7,10 +7,19 @@ spec_version: 1.0.0
 bet_id: BET-Y2Q4-T10-242
 owner: governance-team
 last_updated: '2026-10-11'
-last-reviewed: '2026-10-11'
+last-reviewed: '2026-11-22'
 ---
 
 # BET-Y2Q4-T10-242 — P1 存储收敛 spec
+
+> ⚠️ **前提已变, 执行前必读 (2026-11-23 复核)**：本文 §2 基线表、§3.1 迁移步骤与
+> `decision_needed` 全部以 **`/Volumes/SHAREDMODEL` 挂在本机** 为前提。实测该卷
+> **已归家里 Mac Studio**（`studio-home`, ts 100.74.244.58；该机 `/Volumes/SHAREDMODEL`
+> 挂载正常, 1.9Ti, 849Gi 用），而 mbp 的 `/Volumes` 下**没有它**（`Model` 仍在 mbp,
+> `Model/omlx` 19G 仍在, `~/omlx` 仍是 0B 空壳）。
+> ⇒ **照本文执行会扑空**。迁移要么在 studio-home 上执行（mbp 侧源经 tailscale 可达），
+> 要么改指向 mbp 本地卷 —— **在 owner 选定前不要动 `Model/omlx`**（见债务
+> `OMLX-COPIES-CONVERGENCE` 的 `blockers`）。本横幅只做时效提示, 不替 owner 裁断目标机。
 
 > 上位 BET: BET-Y2Q4-T10-242（台账行 ~41638）。本文是其实施规格与验证契约。
 > P0 已完成（2026-10-10/11）：冷备工具链修复+首档验证、231G 清理、keepalive UUID 化、
