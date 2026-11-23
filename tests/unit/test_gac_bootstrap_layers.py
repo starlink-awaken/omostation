@@ -16,6 +16,7 @@ import importlib.util
 import json
 import pathlib
 import re
+from pathlib import Path
 
 import pytest
 import yaml
@@ -23,12 +24,11 @@ import yaml
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 BOOT_PATH = ROOT / "bin" / "gac" / "gac-bootstrap.py"
 
-# 本 BET 立案的两个人证: 登记面写 workflow=gac-gate.yml + triggers=[gac_local_gate, per_pr],
-# 但 runtime GATES_LIST / CI run: / hooks / sgf-policy 四处都没有它们.
-UNREACHED = {
-    "bin/gac/check-gate-detail-contract.py",
-    "bin/gac/check-cron-interpreter-executability.py",
-}
+# 人证**每次运行现取**, 不硬编: 不同的检出/基线下「谁未接线」会变, 钉死两个字面量
+# 会在接线进度变化后把前提变成假 (2026-11-23 实测: 原先的两条被 #5443 接进运行时面后,
+# 本用例的前提当场不成立)。取法 = 结构口径点名的工具里, 同时**在 gac-local-gate.py 文本里
+# 出现过**的那些 —— 只有这种才构成「正则口径会把它当成已接线」的对照.
+UNREACHED = set()  # 由 test_l6_text_regex_mutation_would_go_green 现取
 
 
 def _boot():
@@ -237,14 +237,19 @@ def test_l6_text_regex_mutation_would_go_green() -> None:
     b = _boot()
     src = (BOOT_PATH.parent / "gac-local-gate.py").read_text(encoding="utf-8")
     regex_tokens = set(re.findall(r"[\w./$-]+\.py", src))
-    assert UNREACHED <= regex_tokens, "前提不成立: 两个字面量已不在 gac-local-gate.py 里"
 
     named = {v["tool"] for v in b.check_plane_coverage()["violations"]}
-    assert UNREACHED <= named, "结构口径必须点名这两个执行平面缺席者"
+    # 按**文件名**取对照: gac-local-gate.py 里引用工具用的是分立字面量
+    # (`WORKSPACE / "bin" / "ssot" / "x.py"`), 整路径不会作为单个 token 出现。
+    witnesses = sorted(tool for tool in named if Path(tool).name in regex_tokens)
+    assert len(witnesses) >= 2, (
+        "结构口径点名的工具里, 至少要有 2 个同时出现在 gac-local-gate.py 文本中 —— "
+        f"否则本用例的对照不成立。named={sorted(named)}"
+    )
 
     b._runtime_plane = lambda: (regex_tokens, 90, "sgf", {})
     mutated = {v["tool"] for v in b.check_plane_coverage()["violations"]}
-    assert not (UNREACHED <= mutated), "文本正则口径把它们当成已接线 —— 正是本层要防的假绿"
+    assert not (set(witnesses) <= mutated), "文本正则口径把它们当成已接线 —— 正是本层要防的假绿"
 
 
 @pytest.mark.skipif(
