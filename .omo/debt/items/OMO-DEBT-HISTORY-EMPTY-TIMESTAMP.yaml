@@ -1,0 +1,41 @@
+id: OMO-DEBT-HISTORY-EMPTY-TIMESTAMP
+title: 'omo-debt reclassify/escalate/revalidate 三处 append_history 未传 timestamp/actor 写出 at: 空时间戳'
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/omo_debt_cli.py
+- projects/omo/src/omo/omo_debt_lifecycle.py
+evidence_refs:
+- projects/omo/src/omo/omo_debt_cli.py
+mitigation_refs: []
+opened_at: '2026-11-23T08:56:41.771829+00:00'
+last_reviewed_at: '2026-11-23'
+next_review_at: null
+gate_level: watchlist
+history:
+- at: '2026-11-23T08:56:41.771829+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-HISTORY-EMPTY-TIMESTAMP.
+  actor: governance-agent
+- at: '2026-11-23T08:58:31+00:00'
+  action: identify
+  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python
+    read-check-write 补齐。'
+  actor: governance-agent
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '子模块 pin `47d9f2b51`：`src/omo/omo_debt_cli.py` 的 reclassify(`:351`)/escalate(`:363`)/revalidate(`:373`)
+  三处调用 `append_history(payload, <action>, <note>)` **未传** `timestamp=` / `actor=`；而 `omo_debt_lifecycle.py:9-17`
+  的签名默认 `timestamp=""` 且 `actor` 仅在有值时才写入条目 ⇒ 这三条状态流转落盘为 `at: ''''` 的历史，审计时间线断裂。同文件 close(`:80`)/desc(`:119`)/reopen(`:410`)
+  是正确写法（传 `_now_iso()` + actor），可直接照抄。实测：2026-11-23 对 BET-LEDGER-STATUS-LAGS-DELIVERY 跑一次 `debt revalidate`
+  即产出 `at: ''''` 并把整份 YAML 重排；已 `git checkout --` 回退，未进 main。'
+decision_needed: 三处补 `timestamp=_now_iso()`；actor 需要 reclassify/escalate 两个子命令先加 `--actor` （revalidate
+  也没有）。改动全在子模块 `projects/omo`，要走子模块 commit 三步走。是否顺带给 `_write_yaml` 加键序保持（避免整份重排）另议。

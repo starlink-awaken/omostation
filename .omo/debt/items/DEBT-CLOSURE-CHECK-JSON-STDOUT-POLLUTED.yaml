@@ -1,0 +1,39 @@
+id: DEBT-CLOSURE-CHECK-JSON-STDOUT-POLLUTED
+title: check-debt-closure-discipline.py:132 往 stdout 打印 gate_level 分布导致 --json 不可解析
+dimension: governance
+subdimension: ssot
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/gac/check-debt-closure-discipline.py
+evidence_refs:
+- bin/gac/check-debt-closure-discipline.py
+mitigation_refs: []
+opened_at: '2026-11-23T08:56:16.504157+00:00'
+last_reviewed_at: '2026-11-23'
+next_review_at: null
+gate_level: watchlist
+history:
+- at: '2026-11-23T08:56:16.504157+00:00'
+  action: register
+  note: Registered debt item DEBT-CLOSURE-CHECK-JSON-STDOUT-POLLUTED.
+  actor: governance-agent
+- at: '2026-11-23T08:58:31+00:00'
+  action: identify
+  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python
+    read-check-write 补齐。'
+  actor: governance-agent
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '2026-11-23 在 origin/main(802b6eb87) 快照上实测：`bin/gac/check-debt-closure-discipline.py:132`
+  在 `scan_gate_level_enum()` 里无条件 `print(f"  gate_level 分布: {dict(counts)}")` 写 stdout，而 `--json` 分支只在最后打印
+  JSON。于是 `--json` 的输出首行是中文分布行，`json.loads` 在 line 1 column 3 抛 JSONDecodeError（本窗口实际踩到）。任何按 `--json`
+  消费的自动化都会拿到不可解析文本；若调用方 try/except 吞异常，就退成本仓已登记的「解析失败退回空」形状 —— 读数变 0 而不是报错。'
+decision_needed: 一行修复：该行改 `file=sys.stderr`，或用 `if not args.json` 收口。附带问题是该脚本目前是否进 gac-local-gate（它只在部分巡查里手跑）——
+  属门禁策略，本条不代决。

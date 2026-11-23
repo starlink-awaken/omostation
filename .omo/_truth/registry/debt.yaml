@@ -43,8 +43,6 @@ seed_items:
 - .omo/debt/items/INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED.yaml
 - .omo/debt/items/LAUNCHD-PLIST-INSTALLED-DIVERGED.yaml
 - .omo/debt/items/CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN.yaml
-# 2026-11-09 再对齐: 补登 21 个存在但未登记的条目 (ledger 此前对它们不可见)。
-# 其中 7 identified + 1 in_progress 是活条目 —— 逾期未复审/未推进却零可见。
 - .omo/debt/items/AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER.yaml
 - .omo/debt/items/BET-LEDGER-CLI-AUTHORITY-SPLIT.yaml
 - .omo/debt/items/CRON-INSTALLERS-OUTSIDE-SSOT.yaml
@@ -102,3 +100,7 @@ seed_items:
 - .omo/debt/items/TESTS-UNIT-CLEAN-CHECKOUT-RED.yaml
 - .omo/debt/items/CR-X1-AGENT-AUDIT-STUB-CLAIMED-AS-IMPL.yaml
 - .omo/debt/items/TESTCOLLECTION-ENV-MISCLASSIFIED.yaml
+- .omo/debt/items/DEBT-CLOSURE-CHECK-JSON-STDOUT-POLLUTED.yaml
+- .omo/debt/items/OMO-DEBT-HISTORY-EMPTY-TIMESTAMP.yaml
+- .omo/debt/items/OMO-DEBT-NO-CONFIRM-FLAG-INVERTED.yaml
+- .omo/debt/items/VERIFY-MODE-TASK-JUDGE-UNWIRED.yaml
