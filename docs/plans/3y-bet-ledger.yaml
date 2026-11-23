@@ -48186,7 +48186,20 @@ bets:
     malformed 回退剥注释文本对比); 生成器补 working_directory 渲染与 calendar
     list[dict] 多时刻支持 (单 dict 声明保持单 dict 渲染, 不破坏存量形态);
     services.yaml 回填三字段使 SSOT 与 11-10 手工修复对齐。
-  status: pending
+  status: done
+  done_at: 2026-11-23
+  corrected_at: 2026-11-23
+  correction_note: >-
+    2026-11-23 收口腿（owner 当日授权「充分授权，全面推进」）。生产代码（`_plist_equivalent` 语义等价、
+    `working_directory` 渲染、`calendar` list[dict] 多时刻）、`services.yaml` 三字段回填、spec 与本 retro
+    均在 PR #5425（squash `93b54639c`）合入 main，本条目此前仍记 `pending` —— 属台账落后于 main
+    （PITFALL-GAT-006 反向形态）。`write_surfaces` 原只列 3 处代码面，不含台账与收据 ⇒
+    `claim` 报 `WORK_PACKET_SCOPE_MISMATCH`，BET 无法自收口，按同构补入两条收口面。
+    verify 两条命令口径均无需订正，收口当天复测同读数（`20 passed` / `0 drift (78 services)` rc=0），
+    且本机 `make gac-local-gate` 里 `service-config-drift` 首次转 [PASS] —— 这是 11-10 起阻塞
+    T10-348 closeout 链的那条假红的解除点。收据另记一条装置口径：`--check` 经
+    `repo_root.canonical_root()` 只读规范检出，故在 worktree 内改 `services.yaml` 的变异无效，
+    判据由生成侧变异替代。
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48202,6 +48215,8 @@ bets:
   - bin/mof/gen-service-configs.py
   - tests/test_gen_service_configs.py
   - .omo/_truth/registry/services.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-11-23-service-config-check-drift-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-22-service-config-check-comment-false-positive-bet-t10-349.md
     spec_version: 1.0.0
@@ -48222,9 +48237,54 @@ bets:
     expect: 新增用例通过且既有用例无回归。
   - cmd: uv run --with pyyaml python bin/mof/gen-service-configs.py --check
     expect: 本机现状（仅注释漂移）exit 0。
+    note: >-
+      2026-11-23 收口复测 `✅ 0 drift (78 launchd services)` rc=0，且同机 `make gac-local-gate` 的
+      `service-config-drift` 项转 [PASS]（11-10 起恒 FAIL，曾阻塞 T10-348 closeout 链）。
+      装置口径：`--check` 读 `repo_root.canonical_root()` 的注册表，不读当前 worktree —— 在 worktree 内
+      撤回填的变异无效，承重判据改由生成侧变异承担（见收据「前置条件」）。
   circuit_breaker: >-
     若剔除注释逻辑影响 --write 生成或其它消费对比结果的调用方，停止并交
     owner 裁决。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@93b54639c6e55d2841de3dac9258278bd8b62aa2
+          tests:
+            ref: receipt://docs/reports/2026-11-23-service-config-check-drift-closeout.md#受控测试
+            sha256: sha256:2eb2b3289cb04e87647e269ed2eb4c1b179b4a2769a70a2c6754ca03a843eecd
+          diff:
+            ref: receipt://docs/reports/2026-11-23-service-config-check-drift-closeout.md
+            sha256: sha256:2eb2b3289cb04e87647e269ed2eb4c1b179b4a2769a70a2c6754ca03a843eecd
+          rollback:
+            ref: receipt://docs/reports/2026-11-23-service-config-check-drift-closeout.md#rollback
+            sha256: sha256:2eb2b3289cb04e87647e269ed2eb4c1b179b4a2769a70a2c6754ca03a843eecd
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-23-service-config-check-drift-closeout.md#判读要点
+            sha256: sha256:2eb2b3289cb04e87647e269ed2eb4c1b179b4a2769a70a2c6754ca03a843eecd
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-23-service-config-check-drift-closeout.md
+            sha256: sha256:2eb2b3289cb04e87647e269ed2eb4c1b179b4a2769a70a2c6754ca03a843eecd
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-349.md
+            sha256: sha256:634944840235724718b0feedb643ef50142c86f5c990af1b5a67a1121f422523
+          cleanup:
+            ref: receipt://docs/reports/2026-11-23-service-config-check-drift-closeout.md#operational-轴
+            sha256: sha256:2eb2b3289cb04e87647e269ed2eb4c1b179b4a2769a70a2c6754ca03a843eecd
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            已证本机 `service-config-drift` 假红解除（standalone rc=0 且 `gac-local-gate` 该项 [PASS]）、
+            对比层与渲染层判据由三处变异自证。未做机器级 plist 重装与 `--write` 安装路径收敛（spec 非目标
+            第 3 条），部署侧仍另案；`bin/ops/launchd/*.plist` 模板注释保留（非目标第 2 条）。
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
