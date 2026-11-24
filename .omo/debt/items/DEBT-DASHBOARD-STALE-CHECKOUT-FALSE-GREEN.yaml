@@ -7,7 +7,11 @@ scope: "workspace"
 severity: "high"
 weight: 0.3
 entropy_class: "high"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
+closed_at: "2026-11-24"
+closed_by: "governance-team"
+close_reason: "Resolved via BET-Y2Q4-T10-363: anchor-install-root.sh upgraded with dirty working copy pre-check (fail-closed exit 6) and deterministic release-manifest.json generation. All multi-root topologies (~/.local/opt/omostation and code-main) are aligned with origin/main tip with behind=0 and 0 dirty items, restoring honest gate and debt readings."
+resolution_evidence: "bin/ssot/anchor-install-root.sh:49-65,153-210; tests/test_anchor_install_root_ref.py:157-195"
 owner: "governance-team"
 bet_ref: "BET-Y2Q4-T10-350"
 affected_roots: []
@@ -301,4 +305,10 @@ history:
     ② 托管克隆 code-main (~/.local/share/zhixing-dashboard/code-main) 清理 0 字节陈旧 index.lock，检出推进至 e41d012b8，并拉取对齐 omo/ecos/aetherforge 子模块对象，工作树 0 脏项；
     ③ .gitignore 补齐 .omo/_delivery/scene-outcomes/**/*.json 规则，消除了 journey-engine.py 产出的 33 个运行时 exec-*.json 污染；
     ④ 运行 panorama-collect.py 验证，生成的 data.json 中 code_root_health 由 STALE 转为 PASS (behind_origin_main: 0, ahead_origin_main: 0, dirty_count: 0)，门禁 A3 与 RF0 随之翻转为 PASS。
+  actor: "governance-agent"
+- at: "2026-11-24T07:15:00Z"
+  action: close
+  note: >-
+    BET-Y2Q4-T10-363 闭环关闭：在 anchor-install-root.sh 中固化安装位脏状态安全前检（防止盲目覆盖脏工作树），
+    并落地 release-manifest.json 生成与自查通路；多根同步与健康度判定全面恢复为真实的 PASS。
   actor: "governance-agent"
