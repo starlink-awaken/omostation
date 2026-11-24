@@ -1,0 +1,227 @@
+id: OMO-DEBT-ADR-NUMBER-REGEX-MISSES-PREFIX-FORM
+title: ADR 编号提取 5 处同形正则只认 NNNN- 文件名形态，ADR-NNNN- 形态对撞号检查/drift 检查/原子防撞号分配器全部不可见 ——
+  现网 0456 与 0460 已各铸出同号双文件
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/ssot/adr-number-check.py
+- bin/adr/_lib.py
+- bin/adr/adr-drift-check.py
+- bin/gac/swarm_discipline.py
+- docs/governance/AGENT-PROFILE.md
+- .omo/_knowledge/decisions/
+evidence_refs:
+- bin/ssot/adr-number-check.py
+- bin/adr/_lib.py
+- bin/adr/adr-drift-check.py
+- bin/gac/swarm_discipline.py
+- bin/adr/next-adr-id.py
+- docs/governance/AGENT-PROFILE.md
+- AGENTS.md
+- .omo/_knowledge/decisions/ADR-0456-governance-downshift-closeout-grading.md
+mitigation_refs: []
+opened_at: '2026-11-24T10:17:57.811168+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T10:17:57.811168+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-ADR-NUMBER-REGEX-MISSES-PREFIX-FORM.
+- at: '2026-11-24T10:18:07.768790+00:00'
+  action: update_description
+  note: "Updated description from '' to 'ADR 编号空间的形态盲区：5 处同形正则只认 `NNNN-` 文件名，`ADR-NNNN-`\
+    \ 形态对撞号检查、\ndrift 检查与原子防撞号分配器全部不可见 —— 现网 0456 / 0460 已各铸出同号双文件（4 份均 ACCEPTED），\n\
+    本仓只能用「按文件名引用」的散文绕行。\n\n## 1. 五个读取点，同一条正则\n\n`.omo/_knowledge/decisions/` 里的 ADR\
+    \ 有两种文件命名形态，而所有编号读取点都只匹配前一种：\n\n| 位置 | 代码 | 承担的职责 |\n|---|---|---|\n| `bin/ssot/adr-number-check.py:18`\
+    \ | `ADR_PATTERN = re.compile(r\"^(\\d{4})-\")` | ADR-0443 「撞号 + 分级双查」的校验载体（`0443-production-convergence-balance-framework.md:62`\
+    \ 指名） |\n| `bin/adr/_lib.py:14` | `ADR_NUMBER_RE = re.compile(r\"^(\\d{4})-\"\
+    )` | `list_adrs` / `duplicate_adr_numbers` 的单一真相源，被 `adr-coverage.py:141` 与 `compass_radar._count_adr_renumber_signals`\
+    \ 共用 |\n| `bin/adr/adr-drift-check.py:45` | `re.match(r\"^(\\d{4})-\", f.name)`（自带一份，未走\
+    \ `_lib`） | P89 ADR drift 检查的 ADR 全集 |\n| `bin/gac/swarm_discipline.py:93` | `re.match(r\"\
+    ^(\\d{4})-\", path.name)` | `list_existing_adr_numbers` 读本机目录 |\n| `bin/gac/swarm_discipline.py:105`\
+    \ | 同上（`git ls-tree origin/main` 一侧） | 同一函数的远端分支，防并发 main 已合并的编号 |\n\n第 4/5 点经\
+    \ `bin/adr/next-adr-id.py:57` 喂给 ADR-0220 D1 / G-CONV.7 的 **原子防撞号分配器**（`--claim`\
+    \ 用\nexclusive flock），所以盲区不止影响读数，还影响分配决策本身。\n\n实测读数（本 worktree，真实目录）：\n\n```\n\
+    $ python3 bin/ssot/adr-number-check.py\nadr-number-check: OK (419 ADRs, latest=0467,\
+    \ next available=0468)     rc=0\n\n$ python3 bin/adr/adr-drift-check.py | head\
+    \ -4\n\U0001F50D P89 ADR drift check\n\U0001F4CB ADRs: 419\n⚠️  Issues: 361  \
+    \ 按类型: {'archived_missing': 47, 'missing_path': 314}\n```\n\n目录实况：`*.md` 共 429\
+    \ 个 = 数字形态 419 + `ADR-` 前缀形态 2 + 非 ADR 8（`INDEX.md`、`README.md`、\n`STRAT-P76/77/79/80/81-strategic-roadmap.md`、`age-v2-dynamic-agent-cell.md`）。两个前缀文件是\n\
+    `ADR-0456-governance-downshift-closeout-grading.md` 与 `ADR-0460-decision-throughput-mechanism.md`；\n\
+    `adr-drift-check.py` 全文输出里这两个文件名 **0 次命中**（149 个被扫条目只含数字形态）。\n\n## 2. 撞号已发生，不是假想\n\
+    \n`419 ADRs` 这个读数把双文件情况整体抹平了。真实在册：\n\n| 编号 | 数字形态文件 | `ADR-` 前缀形态文件 | frontmatter\
+    \ |\n|---|---|---|---|\n| 0456 | `0456-dev-runtime-profile-root.md`（11-06 `e2357d7e7`）\
+    \ | `ADR-0456-governance-downshift-closeout-grading.md`（09-27 `72c93f896`） | 两份都\
+    \ `id: ADR-0456` / `status: ACCEPTED` |\n| 0460 | `0460-provenance-own-commits-only.md`（11-07\
+    \ `267c4959f`） | `ADR-0460-decision-throughput-mechanism.md`（09-28 `0ea0d63ba`）\
+    \ | 两份都 `id: ADR-0460` / `status: ACCEPTED` |\n\n时间序是 09 月的前缀形态在先、11 月的同号数字形态在后\
+    \ —— 即**后铸的编号与既有编号相同，而检查报 OK、\n分配器不拦**。AGENTS.md §1 第 8 条因此被写成「按**文件名**引用：`id`\
+    \ 字段为 ADR-0456 的文件有两份，\n另一份……是别的决定，两份均为 ACCEPTED，但属于不同决定」。那段绕行文字是本条的第一手后果证据：\n\
+    编号空间已不可用作唯一标识，引用纪律被迫降级到文件名字符串。\n\n边界（不夸大）：这两例是否经 `next-adr-id.py --claim` 铸出，未取证\
+    \ —— 本条只证明该分配器在两种形态\n并存时无法拦下，不声称它拦过或没拦过。\n\n## 3. 沙盒构造实测（分配器侧）\n\n`/tmp/b16root`：逐字复制真实\
+    \ `bin/adr/next-adr-id.py` 与 `bin/gac/swarm_discipline.py`（脚本用\n`ROOT = Path(__file__).resolve().parents[2]`\
+    \ 定根，故沙盒目录布局即真实执行面），在沙盒\n`.omo/_knowledge/decisions/` 放 3 个文件：`0467-numeric.md`、`ADR-0468-prefixed.md`、`ADR-0469-prefixed.md`。\n\
+    \n```\n$ cd /tmp/b16root && python3 bin/adr/next-adr-id.py --json        # 不加\
+    \ --claim，零写入\n{ \"next\": 468, \"next_id\": \"0468\", \"existing_max\": 467,\
+    \ \"claimed_count\": 0, ... }\n```\n\n0468 已被 `ADR-0468-prefixed.md` 占用，分配器仍把它当空闲号发出。真实台账目录里今天没有触发这一条\n\
+    （前缀形态最大是 0460 < 0467），所以现网无正在发生的错分配；这条是**可达路径已被实测打通**，\n不是当前故障。\n\n## 4. drift\
+    \ 覆盖的实际损失：今日为 0（自证不夸大）\n\n把那两个前缀文件按真实函数喂给 drift 检查（`check_drift([(456, …), (460,\
+    \ …)], root, known)`）：\n`total_adrs=2, total_issues=0`，`path_refs` 为空 —— 两份文件当前没有反引号路径引用，`adr_refs`\n\
+    （0249 / 0419 / 0453 / 0456）也全部命中已知编号。所以形态盲区今天**没有**漏掉任何 drift finding；\n漏掉的是一整条治理可见性：这两个\
+    \ ACCEPTED 决定不在 419 的计数、覆盖率、迭代速率与 renumber 信号里，\n一旦它们开始引用路径或引用不存在的编号，finding 会静默消失。\n\
+    \n## 5. `make adr-number-check`：一个已删目标留在文档里（本批订正的部分）\n\n| commit | 日期 | 效应 |\n\
+    |---|---|---|\n| `69129f2d8` | 2026-08-07 | `+adr-number-check:  ## 检查 ADR 编号冲突`\
+    \ + `+\t@python3 bin/ssot/adr-number-check.py` |\n| `40be82662` | 2026-08-16 |\
+    \ 同一对行被删（`-adr-number-check:` / `-\t@python3 …`），属「round11 bin/scripts convergence\
+    \ loop」 |\n\n档案基线 `w0-fact-baseline-2026-08-10.md:53` 落在窗口内，记录 `adr-number-check\
+    \ | make adr-number-check |\n✅ OK | 0 | 358 ADRs`。目标删除后，`docs/governance/AGENT-PROFILE.md:58`（该文件\
+    \ `last-reviewed: 2026-09-25`，\n晚于删除）仍以表格「工具/规则」列的形式把 `make adr-number-check`\
+    \ 当作 ADR 编号体系的验证入口 —— 实测\n`make adr-number-check` → `make: *** No rule to make\
+    \ target 'adr-number-check'. Stop.` rc=2。\n同仓 `CLAUDE.md:247` 早就是正确形态（`python3\
+    \ bin/ssot/adr-number-check.py    # ADR 变更时`），\n所以本批把 AGENT-PROFILE.md:58 改指真实执行体并同步\
+    \ `last-reviewed`，不动任何判据代码。\n\nCI 面一并核实：`adr-number-check` 在 `.github/workflows/*`\
+    \ 与 `.omo/_truth/registry/ci-surfaces.yaml`\n全量 grep **零命中**；registry 条目 `bin/_registry/scripts/knowledge/adr-number-check.yaml`\
+    \ 是\n`triggers: []`、`maturity: draft`。台账 `docs/plans/3y-bet-ledger.yaml:38056`/`:38156`\
+    \ 把\n`cmd: python3 bin/ssot/adr-number-check.py` 写进两个 BET 的 verify —— 属 BET 级一次性证据，不是常驻门禁。\n\
+    「双查」因此只在有人主动跑时发生；把形态补齐后检查会当场报 2 条 DUPLICATE，这是判据面变化，不由 agent 选定。\n\n## 6. 扫描口径与仪器自纠\n\
+    \n- 本批对 202 个在册 md（`AGENTS.md`/`CLAUDE.md`/`README.md`/`docs/governance|architecture|SOPs|operations`/\n\
+    \  `.omo/standards`/`.agents/skills`）静态扫 `make <target>` 引用，对照根 `Makefile` 的 283\
+    \ 个目标，命中 6 个\n  「缺失」候选，其中 5 个经复核不是缺陷：`make changes` / `make edits` / `make targets`\
+    \ 是英文散文\n  （\"make edits\"、\"make targets + project-registry.yaml\"）；`make multica-status`\
+    \ 所在文档自己写明\n  「这层封装暂未落地」（`docs/architecture/multica-squad-system-v1.md:236`）；`make\
+    \ test-diff` 5 处是\n  **kairon 子模块**的目标，在 pin `3a1963c07` 的子仓 `Makefile:40` 确实存在，不在主仓\
+    \ Makefile。\n  只有 `make adr-number-check` 是真缺陷。登记此口径，避免把扫描命中数当缺陷数。\n- 首轮把 `docs/SOPs`\
+    \ 等目录一起扫时，还查出 `python3 bin/gac/meta-doctor.py --json` 与\n  `zhixing-host-sync.py\
+    \ capture` 两个可疑命中，两者均**非缺陷**：前者的 `--json` 是行尾注释里的字\n  （注释本身写明「脚本恒定输出 JSON, 无 --json\
+    \ 参数」），后者 `capture` 是被 `BLOCKED_COMMANDS`\n  （`zhixing-host-sync.py:117`）在 `main()`\
+    \ 解析参数之前短路返回 BLOCKED 的刻意设计（`:1219-1222`，rc=2）。\n- broker 调用装置：`/opt/homebrew/bin/python3\
+    \ -m omo.omo_debt` 直接报 `No module named 'omo'`；\n  `PYTHONPATH=projects/omo` 仍不对（包在\
+    \ `src/` 下）。最终用 `PYTHONPATH=projects/omo/src`，\n  `import omo` 解析到本 worktree 的\
+    \ `projects/omo/src/omo/__init__.py`。此前批次走的是主检出\n  `.venv`（其 path hook 指向 `/Users/xiamingxing/Workspace/projects/omo/src`），本批改用\
+    \ worktree 本地包并在此留痕。\n- 「文档引用的可执行名（make 目标 / script 路径 / 旗标）是否仍存在」目前没有任何判据：\n\
+    \  gac 检查里与 make-target 校验相关的 grep 零命中。这与\n  `OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS`（管\
+    \ BET 载荷枚举与 lint 必填字段）是同一族的两个不同面，\n  是否合并立案由 principal 权衡，本条不重复开设。\n\n## 7. 待裁（principal，四选一）\n\
+    \n① 把 5 处正则统一到单一真相源（`bin/adr/_lib.py`）并纳入 `ADR-(\\d{4})-` 形态 —— 后果：\n`adr-number-check`\
+    \ 当场从 `OK` 变为 2 条 DUPLICATE、drift/coverage 计数从 419 变 421，属判据面变化；\n② 只补分配器侧（`swarm_discipline.py:93`\
+    \ 与 `:105`），保持 checker/drift 现状 —— 只防未来撞号，不追认历史；\n③ 治理命名规范：规定 `decisions/` 只允许\
+    \ `NNNN-` 形态，把 2 个 `ADR-` 前缀文件改名 —— 波及既有引用\n（含 AGENTS.md §1 的绕行措辞可同步撤掉、`ADR-0460-decision-throughput-mechanism.md`\
+    \ 的引用点）；\n④ 保持现状，把「两种形态分属不同编号空间」明文写成规范 —— 即把 AGENTS.md 现有散文绕行的语义正式化，\n同时要求 checker\
+    \ 读数声明其形态范围（`419 ADRs` 须写明「不含 ADR- 前缀形态」）。\n\n四条都改变既有交付口径，agent 不代为选定。本批落盘面只有\
+    \ `docs/governance/AGENT-PROFILE.md` 的两处\n（:58 命令形态、:6 `last-reviewed`）与本债务条目\
+    \ + `.omo/_truth/registry/debt.yaml` 索引；未改任何正则、\n未改名任何 ADR、未新增门禁、未动 CI/台账/指标面。\n\
+    '."
+- at: '2026-11-24T10:18:53.624207+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T10:19:08.127427+00:00'
+  action: update_field
+  note: 登记 4 个 broker 不拥有的字段：evidence_refs 8 项（逐条 Path.exists 实测全部在位）、affected_roots 6 项、last_reviewed_at '2026-11-24'、decision_needed 四选一。改法为 read→check→modify→write 定点替换，未整文件 safe_dump（避免重排 broker 写的 description 块）；改后断言 description 与 /tmp/b16desc.txt 逐字节相等（10264B），24 键结构与 OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS 同形。
+- at: '2026-11-24T10:19:08.127427+00:00'
+  action: restore_lifecycle_state
+  note: broker `schedule --next-review-at 2026-12-08` 除排期字段外把 lifecycle_state 从 identified 改成 scheduled（`projects/omo/src/omo/omo_debt_lifecycle.py:74` 直改状态字段，即 OMO-DEBT-REGISTER-NO-REVIEW-DATES 决策项 (3) 的机制）。本条是「已登记待裁」不是「已排期处置」，故手工把状态字段改回 identified，排期字段 2026-12-08 保留 —— 改动在此留痕，不静默覆盖。
+- at: '2026-11-24T10:19:08.127427+00:00'
+  action: measurement_provenance
+  note: 取数装置：`PYTHONPATH=projects/omo/src` + `/opt/homebrew/bin/python3 -m omo.omo_debt`，`import omo` 解析到本 worktree projects/omo/src/omo/__init__.py（此前批次用主检出 .venv 的 path hook，指向 /Users/xiamingxing/Workspace/projects/omo/src）；所有多词命令均按 argv 列表传入 subprocess，不用 shell 变量循环（批次 15 曾因 zsh 不做 word-splitting 拿到假 rc=2）。沙盒 /tmp/b16root 只放 3 个 .md 探针文件，真实 decisions/ 目录与真实台账零写入。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: "ADR 编号空间的形态盲区：5 处同形正则只认 `NNNN-` 文件名，`ADR-NNNN-` 形态对撞号检查、\ndrift 检查与原子防撞号分配器全部不可见\
+  \ —— 现网 0456 / 0460 已各铸出同号双文件（4 份均 ACCEPTED），\n本仓只能用「按文件名引用」的散文绕行。\n\n## 1. 五个读取点，同一条正则\n\
+  \n`.omo/_knowledge/decisions/` 里的 ADR 有两种文件命名形态，而所有编号读取点都只匹配前一种：\n\n| 位置 | 代码 |\
+  \ 承担的职责 |\n|---|---|---|\n| `bin/ssot/adr-number-check.py:18` | `ADR_PATTERN = re.compile(r\"\
+  ^(\\d{4})-\")` | ADR-0443 「撞号 + 分级双查」的校验载体（`0443-production-convergence-balance-framework.md:62`\
+  \ 指名） |\n| `bin/adr/_lib.py:14` | `ADR_NUMBER_RE = re.compile(r\"^(\\d{4})-\")`\
+  \ | `list_adrs` / `duplicate_adr_numbers` 的单一真相源，被 `adr-coverage.py:141` 与 `compass_radar._count_adr_renumber_signals`\
+  \ 共用 |\n| `bin/adr/adr-drift-check.py:45` | `re.match(r\"^(\\d{4})-\", f.name)`（自带一份，未走\
+  \ `_lib`） | P89 ADR drift 检查的 ADR 全集 |\n| `bin/gac/swarm_discipline.py:93` | `re.match(r\"\
+  ^(\\d{4})-\", path.name)` | `list_existing_adr_numbers` 读本机目录 |\n| `bin/gac/swarm_discipline.py:105`\
+  \ | 同上（`git ls-tree origin/main` 一侧） | 同一函数的远端分支，防并发 main 已合并的编号 |\n\n第 4/5 点经 `bin/adr/next-adr-id.py:57`\
+  \ 喂给 ADR-0220 D1 / G-CONV.7 的 **原子防撞号分配器**（`--claim` 用\nexclusive flock），所以盲区不止影响读数，还影响分配决策本身。\n\
+  \n实测读数（本 worktree，真实目录）：\n\n```\n$ python3 bin/ssot/adr-number-check.py\nadr-number-check:\
+  \ OK (419 ADRs, latest=0467, next available=0468)     rc=0\n\n$ python3 bin/adr/adr-drift-check.py\
+  \ | head -4\n\U0001F50D P89 ADR drift check\n\U0001F4CB ADRs: 419\n⚠️  Issues: 361\
+  \   按类型: {'archived_missing': 47, 'missing_path': 314}\n```\n\n目录实况：`*.md` 共 429\
+  \ 个 = 数字形态 419 + `ADR-` 前缀形态 2 + 非 ADR 8（`INDEX.md`、`README.md`、\n`STRAT-P76/77/79/80/81-strategic-roadmap.md`、`age-v2-dynamic-agent-cell.md`）。两个前缀文件是\n\
+  `ADR-0456-governance-downshift-closeout-grading.md` 与 `ADR-0460-decision-throughput-mechanism.md`；\n\
+  `adr-drift-check.py` 全文输出里这两个文件名 **0 次命中**（149 个被扫条目只含数字形态）。\n\n## 2. 撞号已发生，不是假想\n\
+  \n`419 ADRs` 这个读数把双文件情况整体抹平了。真实在册：\n\n| 编号 | 数字形态文件 | `ADR-` 前缀形态文件 | frontmatter\
+  \ |\n|---|---|---|---|\n| 0456 | `0456-dev-runtime-profile-root.md`（11-06 `e2357d7e7`）\
+  \ | `ADR-0456-governance-downshift-closeout-grading.md`（09-27 `72c93f896`） | 两份都\
+  \ `id: ADR-0456` / `status: ACCEPTED` |\n| 0460 | `0460-provenance-own-commits-only.md`（11-07\
+  \ `267c4959f`） | `ADR-0460-decision-throughput-mechanism.md`（09-28 `0ea0d63ba`）\
+  \ | 两份都 `id: ADR-0460` / `status: ACCEPTED` |\n\n时间序是 09 月的前缀形态在先、11 月的同号数字形态在后\
+  \ —— 即**后铸的编号与既有编号相同，而检查报 OK、\n分配器不拦**。AGENTS.md §1 第 8 条因此被写成「按**文件名**引用：`id` 字段为\
+  \ ADR-0456 的文件有两份，\n另一份……是别的决定，两份均为 ACCEPTED，但属于不同决定」。那段绕行文字是本条的第一手后果证据：\n编号空间已不可用作唯一标识，引用纪律被迫降级到文件名字符串。\n\
+  \n边界（不夸大）：这两例是否经 `next-adr-id.py --claim` 铸出，未取证 —— 本条只证明该分配器在两种形态\n并存时无法拦下，不声称它拦过或没拦过。\n\
+  \n## 3. 沙盒构造实测（分配器侧）\n\n`/tmp/b16root`：逐字复制真实 `bin/adr/next-adr-id.py` 与 `bin/gac/swarm_discipline.py`（脚本用\n\
+  `ROOT = Path(__file__).resolve().parents[2]` 定根，故沙盒目录布局即真实执行面），在沙盒\n`.omo/_knowledge/decisions/`\
+  \ 放 3 个文件：`0467-numeric.md`、`ADR-0468-prefixed.md`、`ADR-0469-prefixed.md`。\n\n```\n\
+  $ cd /tmp/b16root && python3 bin/adr/next-adr-id.py --json        # 不加 --claim，零写入\n\
+  { \"next\": 468, \"next_id\": \"0468\", \"existing_max\": 467, \"claimed_count\"\
+  : 0, ... }\n```\n\n0468 已被 `ADR-0468-prefixed.md` 占用，分配器仍把它当空闲号发出。真实台账目录里今天没有触发这一条\n\
+  （前缀形态最大是 0460 < 0467），所以现网无正在发生的错分配；这条是**可达路径已被实测打通**，\n不是当前故障。\n\n## 4. drift 覆盖的实际损失：今日为\
+  \ 0（自证不夸大）\n\n把那两个前缀文件按真实函数喂给 drift 检查（`check_drift([(456, …), (460, …)], root,\
+  \ known)`）：\n`total_adrs=2, total_issues=0`，`path_refs` 为空 —— 两份文件当前没有反引号路径引用，`adr_refs`\n\
+  （0249 / 0419 / 0453 / 0456）也全部命中已知编号。所以形态盲区今天**没有**漏掉任何 drift finding；\n漏掉的是一整条治理可见性：这两个\
+  \ ACCEPTED 决定不在 419 的计数、覆盖率、迭代速率与 renumber 信号里，\n一旦它们开始引用路径或引用不存在的编号，finding 会静默消失。\n\
+  \n## 5. `make adr-number-check`：一个已删目标留在文档里（本批订正的部分）\n\n| commit | 日期 | 效应 |\n|---|---|---|\n\
+  | `69129f2d8` | 2026-08-07 | `+adr-number-check:  ## 检查 ADR 编号冲突` + `+\t@python3\
+  \ bin/ssot/adr-number-check.py` |\n| `40be82662` | 2026-08-16 | 同一对行被删（`-adr-number-check:`\
+  \ / `-\t@python3 …`），属「round11 bin/scripts convergence loop」 |\n\n档案基线 `w0-fact-baseline-2026-08-10.md:53`\
+  \ 落在窗口内，记录 `adr-number-check | make adr-number-check |\n✅ OK | 0 | 358 ADRs`。目标删除后，`docs/governance/AGENT-PROFILE.md:58`（该文件\
+  \ `last-reviewed: 2026-09-25`，\n晚于删除）仍以表格「工具/规则」列的形式把 `make adr-number-check` 当作\
+  \ ADR 编号体系的验证入口 —— 实测\n`make adr-number-check` → `make: *** No rule to make target\
+  \ 'adr-number-check'. Stop.` rc=2。\n同仓 `CLAUDE.md:247` 早就是正确形态（`python3 bin/ssot/adr-number-check.py\
+  \    # ADR 变更时`），\n所以本批把 AGENT-PROFILE.md:58 改指真实执行体并同步 `last-reviewed`，不动任何判据代码。\n\
+  \nCI 面一并核实：`adr-number-check` 在 `.github/workflows/*` 与 `.omo/_truth/registry/ci-surfaces.yaml`\n\
+  全量 grep **零命中**；registry 条目 `bin/_registry/scripts/knowledge/adr-number-check.yaml`\
+  \ 是\n`triggers: []`、`maturity: draft`。台账 `docs/plans/3y-bet-ledger.yaml:38056`/`:38156`\
+  \ 把\n`cmd: python3 bin/ssot/adr-number-check.py` 写进两个 BET 的 verify —— 属 BET 级一次性证据，不是常驻门禁。\n\
+  「双查」因此只在有人主动跑时发生；把形态补齐后检查会当场报 2 条 DUPLICATE，这是判据面变化，不由 agent 选定。\n\n## 6. 扫描口径与仪器自纠\n\
+  \n- 本批对 202 个在册 md（`AGENTS.md`/`CLAUDE.md`/`README.md`/`docs/governance|architecture|SOPs|operations`/\n\
+  \  `.omo/standards`/`.agents/skills`）静态扫 `make <target>` 引用，对照根 `Makefile` 的 283\
+  \ 个目标，命中 6 个\n  「缺失」候选，其中 5 个经复核不是缺陷：`make changes` / `make edits` / `make targets`\
+  \ 是英文散文\n  （\"make edits\"、\"make targets + project-registry.yaml\"）；`make multica-status`\
+  \ 所在文档自己写明\n  「这层封装暂未落地」（`docs/architecture/multica-squad-system-v1.md:236`）；`make\
+  \ test-diff` 5 处是\n  **kairon 子模块**的目标，在 pin `3a1963c07` 的子仓 `Makefile:40` 确实存在，不在主仓\
+  \ Makefile。\n  只有 `make adr-number-check` 是真缺陷。登记此口径，避免把扫描命中数当缺陷数。\n- 首轮把 `docs/SOPs`\
+  \ 等目录一起扫时，还查出 `python3 bin/gac/meta-doctor.py --json` 与\n  `zhixing-host-sync.py\
+  \ capture` 两个可疑命中，两者均**非缺陷**：前者的 `--json` 是行尾注释里的字\n  （注释本身写明「脚本恒定输出 JSON, 无 --json\
+  \ 参数」），后者 `capture` 是被 `BLOCKED_COMMANDS`\n  （`zhixing-host-sync.py:117`）在 `main()`\
+  \ 解析参数之前短路返回 BLOCKED 的刻意设计（`:1219-1222`，rc=2）。\n- broker 调用装置：`/opt/homebrew/bin/python3\
+  \ -m omo.omo_debt` 直接报 `No module named 'omo'`；\n  `PYTHONPATH=projects/omo` 仍不对（包在\
+  \ `src/` 下）。最终用 `PYTHONPATH=projects/omo/src`，\n  `import omo` 解析到本 worktree 的 `projects/omo/src/omo/__init__.py`。此前批次走的是主检出\n\
+  \  `.venv`（其 path hook 指向 `/Users/xiamingxing/Workspace/projects/omo/src`），本批改用\
+  \ worktree 本地包并在此留痕。\n- 「文档引用的可执行名（make 目标 / script 路径 / 旗标）是否仍存在」目前没有任何判据：\n  gac\
+  \ 检查里与 make-target 校验相关的 grep 零命中。这与\n  `OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS`（管\
+  \ BET 载荷枚举与 lint 必填字段）是同一族的两个不同面，\n  是否合并立案由 principal 权衡，本条不重复开设。\n\n## 7. 待裁（principal，四选一）\n\
+  \n① 把 5 处正则统一到单一真相源（`bin/adr/_lib.py`）并纳入 `ADR-(\\d{4})-` 形态 —— 后果：\n`adr-number-check`\
+  \ 当场从 `OK` 变为 2 条 DUPLICATE、drift/coverage 计数从 419 变 421，属判据面变化；\n② 只补分配器侧（`swarm_discipline.py:93`\
+  \ 与 `:105`），保持 checker/drift 现状 —— 只防未来撞号，不追认历史；\n③ 治理命名规范：规定 `decisions/` 只允许 `NNNN-`\
+  \ 形态，把 2 个 `ADR-` 前缀文件改名 —— 波及既有引用\n（含 AGENTS.md §1 的绕行措辞可同步撤掉、`ADR-0460-decision-throughput-mechanism.md`\
+  \ 的引用点）；\n④ 保持现状，把「两种形态分属不同编号空间」明文写成规范 —— 即把 AGENTS.md 现有散文绕行的语义正式化，\n同时要求 checker\
+  \ 读数声明其形态范围（`419 ADRs` 须写明「不含 ADR- 前缀形态」）。\n\n四条都改变既有交付口径，agent 不代为选定。本批落盘面只有 `docs/governance/AGENT-PROFILE.md`\
+  \ 的两处\n（:58 命令形态、:6 `last-reviewed`）与本债务条目 + `.omo/_truth/registry/debt.yaml` 索引；未改任何正则、\n\
+  未改名任何 ADR、未新增门禁、未动 CI/台账/指标面。\n"
+decision_needed: '待裁（四选一，属判据面变化、既有 ADR 文件改名与引用纪律口径变更，留 principal）：
+
+  ① 把 5 处编号正则统一到单一真相源 `bin/adr/_lib.py:14` 并纳入 `^ADR-(\d{4})-` 形态（后果实测： `adr-number-check`
+  从 `OK (419 ADRs)` 变为报 2 条 DUPLICATE，drift/coverage 计数 419 → 421）；
+
+  ② 只补分配器侧 `bin/gac/swarm_discipline.py:93` 与 `:105`，checker/drift 保持现状 —— 只防未来撞号，
+  不追认 0456/0460 两例历史，读数含义不变；
+
+  ③ 立命名规范：规定 `.omo/_knowledge/decisions/` 只允许 `NNNN-` 形态，把 `ADR-0456-governance-downshift-closeout-grading.md`
+  / `ADR-0460-decision-throughput-mechanism.md` 改名（波及既有引用；AGENTS.md §1 的「按文件名引用」绕行措辞可同步撤掉）；
+
+  ④ 保持现状并把「两种形态分属不同编号空间」明文写成规范 —— 同时要求 checker 读数声明形态范围 （`419 ADRs` 须写明不含 `ADR-` 前缀形态），使现有散文绕行成为可引用的规则而非口头约定。
+
+  四条都不由 agent 代为选定；本批仅落盘 AGENT-PROFILE.md 的命令形态订正与本条目登记。'
