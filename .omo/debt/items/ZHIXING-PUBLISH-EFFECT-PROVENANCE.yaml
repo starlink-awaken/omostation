@@ -19,8 +19,8 @@ mitigation_refs:
 - ~/Library/LaunchAgents/com.omostation.zhixing-dashboard-refresh.plist
 - ~/Library/LaunchAgents/com.omostation.zhixing-dashboard.plist
 opened_at: '2026-11-10'
-last_reviewed_at: '2026-11-10'
-next_review_at: '2026-11-13'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: watchlist
 x1_policy_ref: ''
 x3_tier: Operational
@@ -140,6 +140,27 @@ history:
 
     **仍未做的** (本条主要问题, 未动): 「判断 host 发布到底改变了哪一字节」在**发布前**没有可靠通路 —— 要决定的是给 publish 加「发布后自证」步骤
     (读运行时产物与发布前后指纹做定向 diff), 替掉手写 `--json` 计数的土办法。**本次只记实测, 不代做该设计。**''.'
+- at: '2026-11-24T01:47:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 01:24Z)：障碍 ② 已被代码面回答，且答案早于本条立案 —— 缺的是「有人去读它」。**
+    ① `bin/panorama/panorama-collect.py:515-526`：执行前把 `Path(__file__).resolve()` 的字节与
+    `git show HEAD:bin/panorama/panorama-collect.py` 比对，不等即 `RuntimeError: projection_collector_not_at_bound_commit`；
+    value meter 同构（`projection_value_meter_not_at_bound_commit`，`:520-526`）；子模块脏即
+    `projection_{name}_checkout_dirty`（`:512`）。⇒ 「线上跑的是不是绑定提交的那份代码」在采集侧是 **fail-closed 断言**，
+    不是要靠 `zhixing-host-sync.py` 的读数猜。
+    ② `git log -S"projection_collector_not_at_bound_commit"` 显示这套绑定是 **2026-09-24** 落的
+    （`e3e140773` feat(panorama): publish revision-bound dashboard projections、`9b4fd6c06` test(panorama): bind projection
+    producer identity），**早于本条 2026-11-10 立案** ⇒ 立案时写的「缺一条可直接判定的通路」措辞不准：通路在，
+    只是当时没用；本条真正该跟的是「把这三条断言写成复核必答项」。
+    ③ 最新两帧 `revisions/*/manifest.json` 的 `producer`：`root_oid` = `e41d012b8`（= 今日 origin/main tip，不是陈旧目标值），
+    `collector_sha256`/`value_meter_sha256`/两个 gitlink 恒定，而 `process_identity`（`:527`，
+    pid + process_started_ns + root_oid 的 canonical-JSON sha256）**逐帧不同**（`587e9cc5…` / `84e62108…`）
+    ⇒ `root_oid` 回答「绑定哪棵树」，`process_identity` 区分「哪个进程实例」，两问可分开答。
+    ④ `live_server.py` pid 由立案时的 50155 变为 **2779**（进程已换代；其 cwd 半边本轮未复测，不下结论）。
+    ⑤ 障碍 ①（`zhixing-host-sync.py` 拿运行树当源真值而报 `in_sync`）本轮未复跑 —— 它需要一次真实 publish 才有意义，
+    不在只读复测范围内，保持未复测声明。
 description: '**实测 (2026-11-23, 基线 origin/main): `status` 已逐文件点名漂移, 该子项看起来已满足。**
 
 

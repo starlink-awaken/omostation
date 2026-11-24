@@ -19,8 +19,8 @@ mitigation_refs:
 - bin/panorama/assets/host/panorama-collect-main.py.asset —— 发布链冻结副本的版本化恢复件（恢复到 ~/.local/share/zhixing-dashboard/ 属部署面写操作，待 principal 授权）
 - bin/gac/check-gate-detail-contract.py —— ③ 交付的 A 系门禁 detail 一致性门禁（两平面 shape/coherence/reason_missing/order 四类阻断 + 跨平面 skew 只 advisory）
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
-next_review_at: "2026-11-17"
+last_reviewed_at: "2026-11-24"
+next_review_at: "2026-12-08"
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
@@ -245,3 +245,27 @@ history:
     **另需说明**: 本次为修 ② 改了 `com.omostation.zhixing-dashboard-refresh.plist`
     (去掉 `OMOSTATION_ROOT`) —— 这与本条修法第 (3) 步 (追加 `PANORAMA_OUTPUT_ROOT`) 是
     **两件事**; 本条第 (3) 步仍待 principal 授权, 未执行。
+- at: '2026-11-24T01:47:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 01:46Z)：裁定已发生但线上跑的仍是旧那份 —— 差异是 6 行，恰好就是 OUTPUT_ROOT。**
+    ① 代码半边**已在仓内落地**：#5466（`fix(panorama): 输出根与代码支持根分离 (PANORAMA_OUTPUT_ROOT)`）
+    state=**MERGED**，mergedAt `2026-11-23T10:10:04Z`；`bin/panorama/assets/host/orchestrator.py.asset`
+    现于 `:118` 与 `:539-541` 写 `os.environ.get("PANORAMA_OUTPUT_ROOT") or os.environ.get("PANORAMA_ROOT")`，
+    注释 `:106`/`:539` 直指「本机两者不同根 ⇒ 读侧错位」。
+    ② **但线上运行副本没有它**：`~/.local/share/zhixing-dashboard/current/orchestrator.py`（843 行，mtime **11-23 00:05**，
+    即 #5466 之前）内 `PANORAMA_OUTPUT_ROOT` 命中 **0**；与仓内 asset 对拍只差 **6 行**，内容正是
+    `:118 producer_root` 与 `:539 configured_state` 两处的 OUTPUT_ROOT fallback（部署映射见
+    `bin/gac/zhixing-host-sync.py:87` `("orchestrator.py", "orchestrator.py.asset")`、`:1155 stable_entry=CURRENT_LINK/"orchestrator.py"`）。
+    ③ 冻结读数因此**没理由解冻**（01:23:51Z 帧）：`panorama_base` = `STALE_UNAVAILABLE`、last_success 仍
+    `2026-10-28T07:27:34`（640 h+）；`personal_value_truth` last_success 仍 `2026-10-28T08:18:27`、status 本轮为 `DEFERRED`。
+    对照同帧 `gantt` `OK`（01:20:34）/`ruflo` `DEFERRED`（01:19:52）新鲜 ⇒ 管线活着，冻的是这两条 base/价值腿。
+    ④ **订正引用形状**：本条正文引的 `orchestrator.py:509-516` 在仓内**不存在该路径**
+    （`git ls-files "*orchestrator.py"` 只有 `bin/gac/` 下三个无关 orchestrator；`~/.local/opt/omostation/bin/panorama/orchestrator.py`
+    也不存在）。实现体在 `bin/panorama/assets/host/orchestrator.py.asset`（def `merge_panorama_base` 在 `:169`），
+    断言行现已移到 `:539-541`；**当前 live 副本的 `:505-520` 是进程 kill 逻辑，与断言无关**。⇒ 复核要按 asset 读，
+    不要按 live 副本的行号读；这也解释了为什么此前「机制在 `:509-516`」的表述与今天的读数对不上。
+    ⑤ `tests/unit/test_panorama_output_root.py` 存在 —— OUTPUT_ROOT 有测试面，缺的是部署。
+    ⇒ 裁决项仍是「谁来把这两行落到 current 帧 + plist 是否注入 `PANORAMA_OUTPUT_ROOT`（部署面写，需 principal 授权）」，
+    本轮零改动。
