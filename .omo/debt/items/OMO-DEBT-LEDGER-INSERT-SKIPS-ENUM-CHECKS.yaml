@@ -1,0 +1,996 @@
+id: OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS
+title: ledger-safe-insert 前置校验不查 meta 枚举与 lint 必填字段 —— 5 类非法 BET 载荷 rc=0 落盘，而 lint
+  判据在 CI 只是信息性
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- .omo
+evidence_refs:
+- bin/gac/ledger-safe-insert.py
+- bin/plan/bet-ledger.py
+- .github/workflows/bet-done-gate.yml
+- AGENTS.md
+- docs/plans/3y-bet-ledger.yaml
+- docs/SOPs/ledger-closeout-sop.md
+mitigation_refs: []
+opened_at: '2026-11-24T09:20:53.027536+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T09:20:53.027536+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS.
+  actor: agent:governance-agent
+- at: '2026-11-24T09:21:23.711452+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md
+    §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照 `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与
+    `.github/workflows/bet-done-gate.yml` 的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69
+    的隔离 worktree 内实测。
+
+
+    ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+    只检查 6 项：
+
+    - id 以 `BET-` 开头（`:75`）
+
+    - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+    - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+    - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+    - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+    外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+    绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层
+    `tracks` 或 `cmd_lint` 的 required 字段列表。
+
+
+    ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+    | 载荷 | 插入器 rc | 是否落盘 |
+
+    |---|---|---|
+
+    | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+    | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+    | C `window: Y9Q9` | 0 | 是 |
+
+    | D `priority: P9` | 0 | 是 |
+
+    | E `track: no-such-track` | 0 | 是 |
+
+    | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+    | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+    |
+
+
+    每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+    同步为 600（绝对派生，无漂移）。
+
+
+    ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+    `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+    track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+    status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+    把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+    window Y9Q9`、`未知 track no-such-track`。
+
+
+    priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+    / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority
+    取值清单。
+
+
+    ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+    `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+    对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败
+    grep 模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+    window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+    ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+    - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+    - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+    `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+    的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+    - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真
+    CLI，20.7s）。所以「把枚举类 finding 升级为阻断」当前没有历史回填成本。
+
+
+    ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+    1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+    git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+    行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+    2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+    BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+    ## 7. 待裁（principal，三选一；本轮零代码改动）
+
+
+    1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+    2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+    CI（§5 实测 rc=0，无回填成本）；
+
+    3. 或维持现状，另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+    本条只登记判据缺口与实测，不改 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml`
+    任何一行，不移动 `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。''.'
+- at: '2026-11-24T09:21:23.751331+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T09:23:42.980901+00:00'
+  action: review
+  note: broker 副作用复核：`schedule --next-review-at 2026-12-08` 除写 `next_review_at` 外还把
+    `lifecycle_state` 从 `identified` 改成 `scheduled`（`omo_debt_lifecycle.py:74` 直改状态字段，见
+    OMO-DEBT-REGISTER-NO-REVIEW-DATES 决策项 (3)）。本条为「已登记待裁」而非「已排期处置」，故手工把状态字段改回 `identified`，排期字段保留，改动在此留痕。
+  actor: agent:governance-agent
+- at: '2026-11-24T09:23:42.980901+00:00'
+  action: review
+  note: 覆盖面补测：`rg -l "ledger-safe-insert|ledger_safe_insert" tests/` 零命中 —— 插入器无任何测试用例，§2
+    的七类载荷是本次首次实测。命中清单集中在 docs/SOPs/ledger-closeout-sop.md、docs/operations/workflow-waiver-*.md
+    与 3y-bet-ledger.yaml，均为文字引用而非执行面。
+  actor: agent:governance-agent
+- at: '2026-11-24T09:30:06.359643+00:00'
+  action: review
+  note: 口径补正（对决策项 ② 的前提）：`bet-done-gate.yml:7-10` 无 paths 过滤、每个 PR 必跑，所以 lint 确实在每条
+    PR 上执行；`:31-32` 把「lint 自身 exit 1」注释为「历史非 transition 台账债务, 保持 informational」——即信息性是带着「有历史债务所以不能阻断」这一前提写下的。本条
+    §5 的实测读数 `OK -- 599 bets, 17 tracks, no errors`(rc=0) 说明该前提当前不成立，故选项 ② 的「无回填成本」是按今日读数测的，不是按注释里的假设立论。若日后台账重新积累错误，硬失败模式扩到枚举类会立刻把这些历史条目一并拦下
+    —— 这是选 ① 还是 ② 的实质差别，留 principal 权衡。
+  actor: agent:governance-agent
+- at: '2026-11-24T09:40:18.004259+00:00'
+  action: update_description
+  note: 'Updated description from ''实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md
+    §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照 `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与
+    `.github/workflows/bet-done-gate.yml` 的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69
+    的隔离 worktree 内实测。
+
+
+    ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+    只检查 6 项：
+
+    - id 以 `BET-` 开头（`:75`）
+
+    - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+    - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+    - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+    - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+    外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+    绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层
+    `tracks` 或 `cmd_lint` 的 required 字段列表。
+
+
+    ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+    | 载荷 | 插入器 rc | 是否落盘 |
+
+    |---|---|---|
+
+    | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+    | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+    | C `window: Y9Q9` | 0 | 是 |
+
+    | D `priority: P9` | 0 | 是 |
+
+    | E `track: no-such-track` | 0 | 是 |
+
+    | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+    | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+    |
+
+
+    每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+    同步为 600（绝对派生，无漂移）。
+
+
+    ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+    `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+    track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+    status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+    把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+    window Y9Q9`、`未知 track no-such-track`。
+
+
+    priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+    / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority
+    取值清单。
+
+
+    ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+    `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+    对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败
+    grep 模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+    window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+    ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+    - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+    - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+    `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+    的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+    - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真
+    CLI，20.7s）。所以「把枚举类 finding 升级为阻断」当前没有历史回填成本。
+
+
+    ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+    1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+    git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+    行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+    2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+    BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+    ## 7. 待裁（principal，三选一；本轮零代码改动）
+
+
+    1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+    2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+    CI（§5 实测 rc=0，无回填成本）；
+
+    3. 或维持现状，另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+    本条只登记判据缺口与实测，不改 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml`
+    任何一行，不移动 `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。'' to
+    ''实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照
+    `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与 `.github/workflows/bet-done-gate.yml`
+    的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69 的隔离 worktree 内实测。
+
+
+    ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+    只检查 6 项：
+
+    - id 以 `BET-` 开头（`:75`）
+
+    - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+    - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+    - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+    - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+    外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+    绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层
+    `tracks` 或 `cmd_lint` 的 required 字段列表。
+
+
+    ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+    | 载荷 | 插入器 rc | 是否落盘 |
+
+    |---|---|---|
+
+    | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+    | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+    | C `window: Y9Q9` | 0 | 是 |
+
+    | D `priority: P9` | 0 | 是 |
+
+    | E `track: no-such-track` | 0 | 是 |
+
+    | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+    | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+    |
+
+
+    每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+    同步为 600（绝对派生，无漂移）。
+
+
+    ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+    `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+    track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+    status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+    把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+    window Y9Q9`、`未知 track no-such-track`。
+
+
+    priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+    / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority
+    取值清单。
+
+
+    ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+    `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+    对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败
+    grep 模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+    window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+    ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+    - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+    - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+    `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+    的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+    - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真
+    CLI，20.7s）。所以「把枚举类 finding 升级为阻断」当前没有历史回填成本。
+
+
+    ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+    1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+    git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+    行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+    2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+    BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+    ## 7. 补测：现存唯一「执行性约定」文本自身写成不可调用形态
+
+
+    排除「其实已有约定、只是没人跑」这一可能时发现的：`docs/SOPs/ledger-closeout-sop.md` 是台账类交付的 SOP，
+
+    `:232` 的收尾 checklist 确实要求 `python3 bin/plan/bet-ledger.py lint` PASS，`:79` 也给了正确形态；
+
+    但 `:57`（Step 2.2 Verify 代码块）写的是 `python3 bin/plan/bet-ledger.py lint  docs/plans/3y-bet-ledger.yaml`。
+
+    实测该形态 rc=2：`bet-ledger.py:3461 sub.add_parser("lint")` 不接任何位置参数或旗标，
+
+    报错原文 `bet-ledger.py: error: unrecognized arguments: docs/plans/3y-bet-ledger.yaml`。
+
+    即照 SOP 该步执行的人会先拿到一个失败命令，而不是拿到 lint 读数。
+
+    全仓扫描该形态（`rg -n "bet-ledger\.py +lint +[^ ]" docs/ .agents/skills/ AGENTS.md CLAUDE.md`）
+
+    命中 9 行，其中 8 行是散文/done_when 文本（如「bet-ledger.py lint 增强」「lint 零 error」），
+
+    只有 `ledger-closeout-sop.md:57` 一处是命令形态。
+
+
+    本条已顺手把 `:57` 改回可调用形态（同一 PR，纯文本订正，不动判据、不动 checklist 语义），
+
+    并把该文件 `last-reviewed` 推到 2026-11-24（UTC 当天）。
+
+
+    ## 8. 待裁（principal，四选一；本轮除 §7 的 SOP 命令形态订正外零代码改动）
+
+
+    1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+    2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+    CI（§5 实测 rc=0，无回填成本）；
+
+    3. 「规定插入后必须跑 lint 并人读结果」并不是新约定——§7 实测 SOP `:232` 已经这么要求，缺的是执行点（没有任何自动化跑它），所以该选项的实质是「给既有文本补一个强制点」还是「仍不补」；
+
+    4. 或另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+    本条不改动 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml` 任何一行；§7
+    记录的 `docs/SOPs/ledger-closeout-sop.md:57` 命令形态订正是本条唯一落盘改动（纯文本，不动判据与 checklist
+    语义），不移动 `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。''.'
+- at: '2026-11-24T09:41:30.115445+00:00'
+  action: review
+  note: '覆盖面补测与一处纯文本订正：排除「其实已有执行约定、只是没人跑」时读到 `docs/SOPs/ledger-closeout-sop.md` ——
+    `:232` 收尾 checklist 已要求 `bet-ledger.py lint` PASS、`:79` 形态正确， 但 `:57`（Step 2.2
+    Verify 代码块）写成 `bet-ledger.py lint  docs/plans/3y-bet-ledger.yaml`；实测 rc=2（`bet-ledger.py:3461
+    sub.add_parser("lint")` 不接位置参数），报错原文 `unrecognized arguments: docs/plans/3y-bet-ledger.yaml`。全仓扫该形态
+    9 处命中，8 处是散文/done_when 文本，只有这一处是命令形态。已在本批同一 PR 内把 `:57` 改回可调用形态并把该文件 `last-reviewed`
+    推到 2026-11-24（UTC 当天），并在 description §7/§8 记录：决策项从三选一变为四选一，「规定插入后必须跑 lint」不再是新立条文而是缺执行点的既有文本。判据、CI
+    面、台账零改动。'
+  actor: agent:governance-agent
+- at: '2026-11-24T09:52:27.147948+00:00'
+  action: update_description
+  note: 'Updated description from ''实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md
+    §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照 `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与
+    `.github/workflows/bet-done-gate.yml` 的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69
+    的隔离 worktree 内实测。
+
+
+    ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+    只检查 6 项：
+
+    - id 以 `BET-` 开头（`:75`）
+
+    - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+    - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+    - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+    - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+    外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+    绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层
+    `tracks` 或 `cmd_lint` 的 required 字段列表。
+
+
+    ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+    | 载荷 | 插入器 rc | 是否落盘 |
+
+    |---|---|---|
+
+    | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+    | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+    | C `window: Y9Q9` | 0 | 是 |
+
+    | D `priority: P9` | 0 | 是 |
+
+    | E `track: no-such-track` | 0 | 是 |
+
+    | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+    | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+    |
+
+
+    每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+    同步为 600（绝对派生，无漂移）。
+
+
+    ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+    `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+    track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+    status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+    把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+    window Y9Q9`、`未知 track no-such-track`。
+
+
+    priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+    / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority
+    取值清单。
+
+
+    ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+    `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+    对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败
+    grep 模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+    window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+    ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+    - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+    - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+    `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+    的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+    - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真
+    CLI，20.7s）。所以「把枚举类 finding 升级为阻断」当前没有历史回填成本。
+
+
+    ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+    1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+    git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+    行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+    2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+    BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+    ## 7. 补测：现存唯一「执行性约定」文本自身写成不可调用形态
+
+
+    排除「其实已有约定、只是没人跑」这一可能时发现的：`docs/SOPs/ledger-closeout-sop.md` 是台账类交付的 SOP，
+
+    `:232` 的收尾 checklist 确实要求 `python3 bin/plan/bet-ledger.py lint` PASS，`:79` 也给了正确形态；
+
+    但 `:57`（Step 2.2 Verify 代码块）写的是 `python3 bin/plan/bet-ledger.py lint  docs/plans/3y-bet-ledger.yaml`。
+
+    实测该形态 rc=2：`bet-ledger.py:3461 sub.add_parser("lint")` 不接任何位置参数或旗标，
+
+    报错原文 `bet-ledger.py: error: unrecognized arguments: docs/plans/3y-bet-ledger.yaml`。
+
+    即照 SOP 该步执行的人会先拿到一个失败命令，而不是拿到 lint 读数。
+
+    全仓扫描该形态（`rg -n "bet-ledger\.py +lint +[^ ]" docs/ .agents/skills/ AGENTS.md CLAUDE.md`）
+
+    命中 9 行，其中 8 行是散文/done_when 文本（如「bet-ledger.py lint 增强」「lint 零 error」），
+
+    只有 `ledger-closeout-sop.md:57` 一处是命令形态。
+
+
+    本条已顺手把 `:57` 改回可调用形态（同一 PR，纯文本订正，不动判据、不动 checklist 语义），
+
+    并把该文件 `last-reviewed` 推到 2026-11-24（UTC 当天）。
+
+
+    ## 8. 待裁（principal，四选一；本轮除 §7 的 SOP 命令形态订正外零代码改动）
+
+
+    1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+    2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+    CI（§5 实测 rc=0，无回填成本）；
+
+    3. 「规定插入后必须跑 lint 并人读结果」并不是新约定——§7 实测 SOP `:232` 已经这么要求，缺的是执行点（没有任何自动化跑它），所以该选项的实质是「给既有文本补一个强制点」还是「仍不补」；
+
+    4. 或另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+    本条不改动 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml` 任何一行；§7
+    记录的 `docs/SOPs/ledger-closeout-sop.md:57` 命令形态订正是本条唯一落盘改动（纯文本，不动判据与 checklist
+    语义），不移动 `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。'' to ''实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md
+    §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照 `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与
+    `.github/workflows/bet-done-gate.yml` 的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69
+    的隔离 worktree 内实测。
+
+
+    ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+    只检查 6 项：
+
+    - id 以 `BET-` 开头（`:75`）
+
+    - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+    - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+    - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+    - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+    外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+    绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层
+    `tracks` 或 `cmd_lint` 的 required 字段列表。
+
+
+    ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+    | 载荷 | 插入器 rc | 是否落盘 |
+
+    |---|---|---|
+
+    | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+    | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+    | C `window: Y9Q9` | 0 | 是 |
+
+    | D `priority: P9` | 0 | 是 |
+
+    | E `track: no-such-track` | 0 | 是 |
+
+    | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+    | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+    |
+
+
+    每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+    同步为 600（绝对派生，无漂移）。
+
+
+    ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+    `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+    track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+    status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+    把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+    window Y9Q9`、`未知 track no-such-track`。
+
+
+    priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+    / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority
+    取值清单。
+
+
+    ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+    `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+    对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败
+    grep 模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+    window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+    ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+    - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+    - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+    `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+    的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+    - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真
+    CLI，20.7s）。所以「把枚举类 finding 升级为阻断」当前没有历史回填成本。
+
+
+    ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+    1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+    git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+    行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+    2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+    BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+    ## 7. 补测：现存唯一「执行性约定」文本自身写成不可调用形态
+
+
+    排除「其实已有约定、只是没人跑」这一可能时发现的：`docs/SOPs/ledger-closeout-sop.md` 是台账类交付的 SOP，
+
+    `:232` 的收尾 checklist 确实要求 `python3 bin/plan/bet-ledger.py lint` PASS，`:79` 也给了正确形态；
+
+    但 `:57`（Step 2.2 Verify 代码块）写的是 `python3 bin/plan/bet-ledger.py lint  docs/plans/3y-bet-ledger.yaml`。
+
+    实测该形态 rc=2：`bet-ledger.py:3461 sub.add_parser("lint")` 不接任何位置参数或旗标，
+
+    报错原文 `bet-ledger.py: error: unrecognized arguments: docs/plans/3y-bet-ledger.yaml`。
+
+    即照 SOP 该步执行的人会先拿到一个失败命令，而不是拿到 lint 读数。
+
+    全仓扫描该形态（`rg -n "bet-ledger\.py +lint +[^ ]" docs/ .agents/skills/ AGENTS.md CLAUDE.md`）
+
+    命中 9 行，其中 8 行是散文/done_when 文本（如「bet-ledger.py lint 增强」「lint 零 error」），
+
+    只有 `ledger-closeout-sop.md:57` 一处是命令形态。
+
+
+    本条已顺手把 `:57` 改回可调用形态（同一 PR，纯文本订正，不动判据、不动 checklist 语义），
+
+    并把该文件 `last-reviewed` 推到 2026-11-24（UTC 当天）。
+
+
+    ### 7.1 同批第二处（订正 `:57` 后复测同一代码块）
+
+
+    `:72` 写的是 `python3 bin/plan/bet-ledger.py status <bet-id> --done`。实测 rc=2，报错原文
+
+    `unrecognized arguments: BET-Y2Q4-T10-999 --done` —— `sub.add_parser("status")`（`bet-ledger.py:3456`）不接任何参数；
+
+    `bet-ledger.py status` 单独跑是台账总览打印（rc=0，输出「总 bet … done 597」）。真正执行 done-transition
+    的动词是
+
+    `complete <bet_id> [--force]`（`:3488-3490`，`complete --help` rc=0 可读出 usage），而订正前的
+    SOP 全文 239 行里
+
+    一次都没出现过 `complete`（订正前 `"complete" in open(...).read()` 实测 False）。
+
+    于是照 SOP Step 3.1 执行的 agent 必然先拿到一个失败命令，再落到紧邻的「或手工编辑 … status: done」分支 ——
+
+    而 `bet-ledger.py:3074-3075` 的注释写明 done 证据守卫的存在理由正是「防止直接 YAML/API 提交绕过 cmd_complete
+    的状态闸」。
+
+    SOP 教的道路与该守卫的意图相反。
+
+
+    在册足迹（真实台账直接读，非推断）：`status: done` 597 条，其中 151 条无 `completion_evidence`、26 条无 `done_at`。
+
+    按 lint 自己的判据再分层：151 条里 `_is_completion_evidence_grandfathered` 命中 115 条、非 grandfathered
+    36 条
+
+    （样例 BET-Y3H1-T7-01、BET-Y3H2-T7-01、BET-Y1Q3-T6-16、BET-Y2Q1-T6-01）；这 36 条不报 ERROR
+    是因为守卫只看
+
+    「base 非 done → 当前 done」的 transition（`:3079-3084`）。`COMPLETION_MATRIX_REQUIRED_STATUSES
+    = {in_progress, review}`。
+
+    该足迹不能读成「36 次绕闸」，它只说明现行文本没把执行动词交给读者。
+
+
+    订正（同一 PR）：`:72` 改为 `python3 bin/plan/bet-ledger.py complete <bet-id>`，并补两行说明 `status`
+    与 `complete` 的分工；
+
+    保留原「或手工编辑」分支与 `:232` checklist 语义不动 —— 纯命令形态订正，不动判据、不动门禁、不动台账。
+
+
+
+    ## 8. 待裁（principal，四选一；本轮除 §7 的 SOP 命令形态订正外零代码改动）
+
+
+    1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+    2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+    CI（§5 实测 rc=0，无回填成本）；
+
+    3. 「规定插入后必须跑 lint 并人读结果」并不是新约定——§7 实测 SOP `:232` 已经这么要求，缺的是执行点（没有任何自动化跑它），所以该选项的实质是「给既有文本补一个强制点」还是「仍不补」；
+
+    4. 或另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+    本条不改动 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml` 任何一行；§7
+    记录的 `docs/SOPs/ledger-closeout-sop.md:57` 命令形态订正是本条唯一落盘改动（纯文本，不动判据与 checklist
+    语义），不移动 `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。''.'
+- at: '2026-11-24T09:54:11.933117+00:00'
+  action: review
+  note: '§7.1 登记说明与仪器自纠：订正 `:57` 后用同一手段复测 `:72`，发现第二个不可调用形态 (`bet-ledger.py status <bet-id> --done` rc=2 `unrecognized arguments: BET-Y2Q4-T10-999 --done`)，已随本批把 `:72` 改回 `complete <bet-id>` 并补 `status`/`complete` 分工两行。自纠：第一次测这组命令用的是 `for c in "status BET… --done"; do python3 … $c; done` 形态，本机 Bash 工具跑的是 zsh、无引号变量不做 word-splitting，整串被当成一个 argv 传给 `cmd` 位置参数，于是一条 rc=2 的 `invalid choice: ''complete --help''` 是我的调用装置错误、不是 SOP 缺陷；改用显式 argv 列表重跑后才拿到真实读数（`status <id> --done` rc=2 / `status` rc=0 总览 / `complete --help` rc=0 usage）。另外「SOP 全文不提 complete」是订正前的实测（订正后出现 2 次，即我新增的两行）。'
+  actor: agent:governance-agent
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照
+  `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与 `.github/workflows/bet-done-gate.yml`
+  的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69 的隔离 worktree 内实测。
+
+
+  ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+  只检查 6 项：
+
+  - id 以 `BET-` 开头（`:75`）
+
+  - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+  - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+  - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+  - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+  外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+  绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层 `tracks`
+  或 `cmd_lint` 的 required 字段列表。
+
+
+  ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+  | 载荷 | 插入器 rc | 是否落盘 |
+
+  |---|---|---|
+
+  | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+  | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+  | C `window: Y9Q9` | 0 | 是 |
+
+  | D `priority: P9` | 0 | 是 |
+
+  | E `track: no-such-track` | 0 | 是 |
+
+  | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+  | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+  |
+
+
+  每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+  同步为 600（绝对派生，无漂移）。
+
+
+  ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+  `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+  track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+  status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+  把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+  window Y9Q9`、`未知 track no-such-track`。
+
+
+  priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+  / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority 取值清单。
+
+
+  ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+  `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+  对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败 grep
+  模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+  window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+  ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+  - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+  - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+  `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+  的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+  - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真 CLI，20.7s）。所以「把枚举类
+  finding 升级为阻断」当前没有历史回填成本。
+
+
+  ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+  1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+  git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+  行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+  2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+  BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+  ## 7. 补测：现存唯一「执行性约定」文本自身写成不可调用形态
+
+
+  排除「其实已有约定、只是没人跑」这一可能时发现的：`docs/SOPs/ledger-closeout-sop.md` 是台账类交付的 SOP，
+
+  `:232` 的收尾 checklist 确实要求 `python3 bin/plan/bet-ledger.py lint` PASS，`:79` 也给了正确形态；
+
+  但 `:57`（Step 2.2 Verify 代码块）写的是 `python3 bin/plan/bet-ledger.py lint  docs/plans/3y-bet-ledger.yaml`。
+
+  实测该形态 rc=2：`bet-ledger.py:3461 sub.add_parser("lint")` 不接任何位置参数或旗标，
+
+  报错原文 `bet-ledger.py: error: unrecognized arguments: docs/plans/3y-bet-ledger.yaml`。
+
+  即照 SOP 该步执行的人会先拿到一个失败命令，而不是拿到 lint 读数。
+
+  全仓扫描该形态（`rg -n "bet-ledger\.py +lint +[^ ]" docs/ .agents/skills/ AGENTS.md CLAUDE.md`）
+
+  命中 9 行，其中 8 行是散文/done_when 文本（如「bet-ledger.py lint 增强」「lint 零 error」），
+
+  只有 `ledger-closeout-sop.md:57` 一处是命令形态。
+
+
+  本条已顺手把 `:57` 改回可调用形态（同一 PR，纯文本订正，不动判据、不动 checklist 语义），
+
+  并把该文件 `last-reviewed` 推到 2026-11-24（UTC 当天）。
+
+
+  ### 7.1 同批第二处（订正 `:57` 后复测同一代码块）
+
+
+  `:72` 写的是 `python3 bin/plan/bet-ledger.py status <bet-id> --done`。实测 rc=2，报错原文
+
+  `unrecognized arguments: BET-Y2Q4-T10-999 --done` —— `sub.add_parser("status")`（`bet-ledger.py:3456`）不接任何参数；
+
+  `bet-ledger.py status` 单独跑是台账总览打印（rc=0，输出「总 bet … done 597」）。真正执行 done-transition
+  的动词是
+
+  `complete <bet_id> [--force]`（`:3488-3490`，`complete --help` rc=0 可读出 usage），而订正前的
+  SOP 全文 239 行里
+
+  一次都没出现过 `complete`（订正前 `"complete" in open(...).read()` 实测 False）。
+
+  于是照 SOP Step 3.1 执行的 agent 必然先拿到一个失败命令，再落到紧邻的「或手工编辑 … status: done」分支 ——
+
+  而 `bet-ledger.py:3074-3075` 的注释写明 done 证据守卫的存在理由正是「防止直接 YAML/API 提交绕过 cmd_complete
+  的状态闸」。
+
+  SOP 教的道路与该守卫的意图相反。
+
+
+  在册足迹（真实台账直接读，非推断）：`status: done` 597 条，其中 151 条无 `completion_evidence`、26 条无 `done_at`。
+
+  按 lint 自己的判据再分层：151 条里 `_is_completion_evidence_grandfathered` 命中 115 条、非 grandfathered
+  36 条
+
+  （样例 BET-Y3H1-T7-01、BET-Y3H2-T7-01、BET-Y1Q3-T6-16、BET-Y2Q1-T6-01）；这 36 条不报 ERROR
+  是因为守卫只看
+
+  「base 非 done → 当前 done」的 transition（`:3079-3084`）。`COMPLETION_MATRIX_REQUIRED_STATUSES
+  = {in_progress, review}`。
+
+  该足迹不能读成「36 次绕闸」，它只说明现行文本没把执行动词交给读者。
+
+
+  订正（同一 PR）：`:72` 改为 `python3 bin/plan/bet-ledger.py complete <bet-id>`，并补两行说明 `status`
+  与 `complete` 的分工；
+
+  保留原「或手工编辑」分支与 `:232` checklist 语义不动 —— 纯命令形态订正，不动判据、不动门禁、不动台账。
+
+
+
+  ## 8. 待裁（principal，四选一；本轮除 §7 的 SOP 命令形态订正外零代码改动）
+
+
+  1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+  2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+  CI（§5 实测 rc=0，无回填成本）；
+
+  3. 「规定插入后必须跑 lint 并人读结果」并不是新约定——§7 实测 SOP `:232` 已经这么要求，缺的是执行点（没有任何自动化跑它），所以该选项的实质是「给既有文本补一个强制点」还是「仍不补」；
+
+  4. 或另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+  本条不改动 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml` 任何一行；§7 记录的
+  `docs/SOPs/ledger-closeout-sop.md:57` 命令形态订正是本条唯一落盘改动（纯文本，不动判据与 checklist 语义），不移动
+  `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。'
+decision_needed: '待裁（四选一，属判据接线、CI 硬失败口径与既有 SOP 约定强制点变更，留 principal）：
+
+  ① 把 `bet-ledger.py:3046-3056` 的四类判据（status_enum / windows / tracks / required 字段）前置进
+  `ledger-safe-insert.py:validate_entry`，取值仍读同一份 `meta`/`tracks`（不建第二权威面），插入即拒；
+
+  ② 或插入器保持薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`（实测
+  main 现状 `OK -- 599 bets, 17 tracks, no errors`、rc=0，无历史回填成本），把拦截点后移到 CI；
+
+  ③ 「规定插入后必须跑 lint 并人读结果」并非新约定（描述 §7 实测 SOP `:232` 已如此要求），缺的是执行点，所以该选项实质是给既有文本补一个强制点还是仍不补；
+
+  ④ 或另立 priority 取值口径（`meta.priority_enum` 或引用既有标准）并处置已漂移的 3 条 `high`（BET-Y1Q4-T6-17/18/19）。
+
+  四条都改变既有交付口径，agent 不代为选定；本轮除 `docs/SOPs/ledger-closeout-sop.md:57` 命令形态订正（纯文本，不动判据）外零代码、零判据、零
+  CI 面改动。'
