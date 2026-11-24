@@ -48353,6 +48353,7 @@ bets:
   circuit_breaker: >-
     若 .omo/_truth/{scenarios,journeys}/v3 存在活跃消费方 (导致 autogen 切换
     数据源破坏其读数), 停止并交 owner 裁决。
+- id: BET-Y2Q4-T10-350
   title: BET-Y2Q4-T10-350 omo-debt 单个畸形 ref 冻结投影平面 29.8h —— 非 str 条目 ref 判 stale 而非崩平面（代码腿）
   goal: '`.omo/debt/items/*` 的 refs 写散文注解是既有用法（全库 352 个 ref 元素中 142 个带注解），散文里出现 ASCII
     `: ` 时 YAML 把整个列表项解析成 mapping；装载器 `_as_tuple`（`omo_debt_registry.py:105-115`） 只归一顶层
