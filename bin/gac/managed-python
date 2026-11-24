@@ -59,6 +59,9 @@ case "$ACTION" in
   probe|run) ;;
   *) fail "unknown action: $ACTION" ;;
 esac
+if [ -z "$PROFILE" ]; then
+  PROFILE="stdlib"
+fi
 case "$PROFILE" in
   stdlib|pyyaml) ;;
   *) fail "--profile must be stdlib or pyyaml" ;;
@@ -155,5 +158,8 @@ print(json.dumps({
 PY
   exit 0
 fi
+
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONUNBUFFERED=1
 
 exec "${SELECTED_CMD[@]}" "$@"
