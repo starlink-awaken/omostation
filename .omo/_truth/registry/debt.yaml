@@ -115,3 +115,4 @@ seed_items:
 - .omo/debt/items/OMO-DEBT-REGISTER-NO-REVIEW-DATES.yaml
 - .omo/debt/items/HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT.yaml
 - .omo/debt/items/META-DOCTOR-RITUAL-PROPOSALS-NO-CONSUMER.yaml
+- .omo/debt/items/DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT.yaml

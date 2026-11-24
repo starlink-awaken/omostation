@@ -1,0 +1,141 @@
+id: DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT
+title: check-debt-staleness 在 git 不可读时输出「疑似陈旧=0 + ✅ 无」—— _commits_since 不看退出码且异常返回 0, 默认路径又不跑 self_test
+  ⇒ 仪器没跑与真无改动同形
+dimension: governance
+subdimension: measurement
+domain: governance
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/gac/check-debt-staleness.py
+- bin/gac/gac-local-gate.py
+evidence_refs:
+- 'bin/gac/check-debt-staleness.py:55-71 (_commits_since: git log 取提交数; :69-70 异常 return 0; :71 return
+  len(out.stdout.split()) 且 out.returncode 全程未被读)'
+- 'bin/gac/check-debt-staleness.py:58-59 (docstring 说明为何用计数: 二元命中活跃期 21/21 全中无区分度)'
+- bin/gac/check-debt-staleness.py:115-119 (_render 输出 identified/候选/疑似陈旧 三个数, 不含 git 可用性)
+- bin/gac/check-debt-staleness.py:132-205 (self_test 定义于 :132, main 于 :206; 临时目录 git init + base/touch
+  两次提交, 证明检测器可分辨 —— 但默认路径不调用它)
+- 'bin/gac/check-debt-staleness.py:206-221 (main: --self-test 为独立旗标; 默认 collect() 后 return 0, advisory
+  永不失败)'
+- bin/gac/gac-local-gate.py:421 (接线命令 ["bin/gac/check-debt-staleness.py"] 无参数 ⇒ 走不自证路径)
+- .omo/_truth/registry/governance-checks.yaml:182 (script_baseline 743→744 登记该脚本, 描述自陈『advisory 恒 exit
+  0』)
+- '复现 2026-11-24 05:50Z: git archive origin/main .omo bin 解到 /tmp/driftchk (无 .git) 跑该脚本 → identified=42
+  候选=26 疑似陈旧=0 且打印『✅ 无: 所有候选条目的 affected_roots 自复审以来未被改动』'
+- '同代码对照组: claim worktree (main tip 真实仓) identified=42 候选=26 疑似陈旧=21; canonical (101 份旧检出真实仓) identified=38
+  候选=18 疑似陈旧=16 ⇒ 分母相同而结论翻转, 差异只在 git 是否可读'
+- '同族既有记录: 『仪器阴性先证其能跑』与『2>/dev/null 把仪器根本没跑洗成零命中』(docs/pitfalls.md), 本条的掩盖方式是不读 returncode'
+mitigation_refs: []
+opened_at: '2026-11-24'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: watchlist
+history:
+- at: '2026-11-24T05:54:54.271277+00:00'
+  action: register
+  note: Registered debt item DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT.
+  actor: governance-agent
+- at: '2026-11-24T05:54:54.319556+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '一条 advisory 信号在证据源缺席时谎报全清。三段都在同一个脚本里，可复算。
+
+    判据怎么算「陈旧」：`bin/gac/check-debt-staleness.py:55 _commits_since(root, path, ts)` 用
+    `git log --since=@<ts> --format=%h -- <path>` 取**提交数**（`:58-59` 的 docstring 解释了为什么用计数而不是布尔：
+    二元命中在活跃期 21/21 全中，没有区分度），`:60-68` 起 `subprocess.run(..., cwd=root, timeout=30)`。
+
+    断点一（本条核心）：**退出码从未被检查**。
+    - `:69-70` `except (OSError, subprocess.SubprocessError): return 0`；
+    - `:71` `return len(out.stdout.split())`。
+    非 git 目录里 `git log` 返回 rc=128 且 stdout 为空，**不触发异常**，于是直接走到 `:71` ⇒ 计数 **0**；
+    即使真抛异常也是 `return 0`。两条路径都把「无法取证」折叠成「自复审以来零改动」，
+    与真实的 `0 commits since` 在输出上完全同形，且 `rc` 不进 report、不进渲染行。
+
+    断点二：默认调用路径不带自证。`:206-212` 的 `main()` 里 `--self-test` 是独立开关（`:213-214`），
+    只有显式传旗标才跑 `self_test()`（`:132`，它会在临时目录 `git init` + 两次 commit 证明检测器真能分辨改动）。
+    而实际接线 `bin/gac/gac-local-gate.py:421` 的命令是
+    `{"command": ["bin/gac/check-debt-staleness.py"]}` —— 无参数，走的就是不静默自证的那条路。
+
+    断点三：退出码恒 0。`:221 return 0`（advisory 设计如此），所以「疑似陈旧 N 条」再多也不会拦任何东西；
+    这与断点一叠加后的净效果是：**这条信号既不能失败，也能在没跑的时候说「✅ 无」**。
+
+    复现（本会话 05:50Z，三种环境同一份代码）：
+    | 环境 | identified | 候选(有 roots+复审日) | 疑似陈旧 |
+    |------|-----------|---------------------|---------|
+    | main tip 的 **git-less** 抽取（`git archive origin/main .omo bin` 解到 /tmp/driftchk，无 `.git`） | 42 | **26** | **0** + `✅ 无: 所有候选条目的 affected_roots 自复审以来未被改动` |
+    | claim 出的 worktree（main tip，真实仓） | 42 | 26 | 21 |
+    | canonical（101 份旧检出，真实仓） | 38 | 18 | 16 |
+    候选分母在 git-less 那份与真实 worktree **完全相同**（42/26），只有「疑似陈旧」从 21 变成 0 并附带绿色结论行
+    ⇒ 差异不是数据、不是口径，而是 git 是否可读。这正是本仓避坑条目「仪器阴性先证其能跑」
+    与「`2>/dev/null` 把『仪器根本没跑』洗成『零命中』」的同族，只是这里的掩盖方式是不看 rc。
+
+    与既立案的边界（避免读成重复）：本条**不是** `DEBT-YAML-BYPASS-TEST-VENV-FALLBACK-FALSE-RED`
+    （那份讲测试因 venv 回退而假红），也不是 `check-debt-staleness` 今天在我复核批次里出现的 `rc=0` 读数本身
+    —— 那些读数都来自真实仓，成立。本条只针对「git 不可读 ⇒ 假绿」这一条形状。
+    `ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP` 讲的是「基线改了没人 bump」，方向相反（那个是恒红，这个是恒绿）。
+    '.
+- at: '2026-11-24T05:54:00Z'
+  action: review
+  actor: governance-agent
+  note: 立案即复核：三段断点全部按行号取到 (:69-70 异常 return 0 / :71 不读 returncode / :206-214 self-test 只在旗标下跑 / :221 恒
+    exit 0)，复现用三种环境对照而非单一读数 —— git-less 抽取与真实 worktree 的候选分母完全相同 (42/26) 而结论从 21 翻到 0，这才把『数据不同』与『仪器没跑』区分开。反向前提也查过：self_test
+    不是不存在，而是存在但没被默认路径调用 (:132-205 完整可用)，所以本条的措辞是『不自证』而不是『无自证能力』。不代改判据面 (见 decision_needed 三选一)。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: |
+  一条 advisory 信号在证据源缺席时谎报全清。三段都在同一个脚本里，可复算。
+
+  判据怎么算「陈旧」：`bin/gac/check-debt-staleness.py:55 _commits_since(root, path, ts)` 用
+  `git log --since=@<ts> --format=%h -- <path>` 取**提交数**（`:58-59` 的 docstring 解释了为什么用计数而不是布尔：
+  二元命中在活跃期 21/21 全中，没有区分度），`:60-68` 起 `subprocess.run(..., cwd=root, timeout=30)`。
+
+  断点一（本条核心）：**退出码从未被检查**。
+  - `:69-70` `except (OSError, subprocess.SubprocessError): return 0`；
+  - `:71` `return len(out.stdout.split())`。
+  非 git 目录里 `git log` 返回 rc=128 且 stdout 为空，**不触发异常**，于是直接走到 `:71` ⇒ 计数 **0**；
+  即使真抛异常也是 `return 0`。两条路径都把「无法取证」折叠成「自复审以来零改动」，
+  与真实的 `0 commits since` 在输出上完全同形，且 `rc` 不进 report、不进渲染行。
+
+  断点二：默认调用路径不带自证。`:206-212` 的 `main()` 里 `--self-test` 是独立开关（`:213-214`），
+  只有显式传旗标才跑 `self_test()`（`:132`，它会在临时目录 `git init` + 两次 commit 证明检测器真能分辨改动）。
+  而实际接线 `bin/gac/gac-local-gate.py:421` 的命令是
+  `{"command": ["bin/gac/check-debt-staleness.py"]}` —— 无参数，走的就是不静默自证的那条路。
+
+  断点三：退出码恒 0。`:221 return 0`（advisory 设计如此），所以「疑似陈旧 N 条」再多也不会拦任何东西；
+  这与断点一叠加后的净效果是：**这条信号既不能失败，也能在没跑的时候说「✅ 无」**。
+
+  复现（本会话 05:50Z，三种环境同一份代码）：
+  | 环境 | identified | 候选(有 roots+复审日) | 疑似陈旧 |
+  |------|-----------|---------------------|---------|
+  | main tip 的 **git-less** 抽取（`git archive origin/main .omo bin` 解到 /tmp/driftchk，无 `.git`） | 42 | **26** | **0** + `✅ 无: 所有候选条目的 affected_roots 自复审以来未被改动` |
+  | claim 出的 worktree（main tip，真实仓） | 42 | 26 | 21 |
+  | canonical（101 份旧检出，真实仓） | 38 | 18 | 16 |
+  候选分母在 git-less 那份与真实 worktree **完全相同**（42/26），只有「疑似陈旧」从 21 变成 0 并附带绿色结论行
+  ⇒ 差异不是数据、不是口径，而是 git 是否可读。这正是本仓避坑条目「仪器阴性先证其能跑」
+  与「`2>/dev/null` 把『仪器根本没跑』洗成『零命中』」的同族，只是这里的掩盖方式是不看 rc。
+
+  与既立案的边界（避免读成重复）：本条**不是** `DEBT-YAML-BYPASS-TEST-VENV-FALLBACK-FALSE-RED`
+  （那份讲测试因 venv 回退而假红），也不是 `check-debt-staleness` 今天在我复核批次里出现的 `rc=0` 读数本身
+  —— 那些读数都来自真实仓，成立。本条只针对「git 不可读 ⇒ 假绿」这一条形状。
+  `ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP` 讲的是「基线改了没人 bump」，方向相反（那个是恒红，这个是恒绿）。
+decision_needed: |
+  三选一，裁决前不改 check-debt-staleness.py 的判据与输出契约，也不动 gac-local-gate 接线：
+  (a) 让 `_commits_since` 检查 `out.returncode`：非 0 时返回哨兵（如 -1）并在 report 里加
+      `git_ok: false`，`_render`（`:115-119`）把「疑似陈旧=0」改写成「无法取证（git 不可读）」；
+      同时在 `main()` 默认路径前置跑一次 `self_test()`（:132 已实现，今天只是没被调用）。
+      代价：这条 advisory 的输出行数与措辞会变，任何按现文案 grep 的人/脚本会失配。
+      本会话已全仓检索 `疑似陈旧|check-debt-staleness`，命中仅 3 个文件 —— 脚本自身、
+      `bin/gac/gac-local-gate.py`（按子进程调用不解析文案）、`bin/_registry/scripts/governance/check-debt-staleness.yaml`
+      （登记描述），**无文案消费者** ⇒ (a) 的失配风险实测为零。
+  (b) 保持脚本不变，改接线：`gac-local-gate.py:421` 换成带 `--self-test` 前置的双步，
+      使「仪器能跑」成为读数的前提。代价：门禁多一步 git 操作（self_test 建临时仓，实测耗时约 1-2 s）。
+  (c) 接受现状，把「这条读数只在真实仓里可信」写进使用侧约定（不进代码）。
+  另附一条独立问题：`:221` 恒 exit 0 使该信号永不失败，而 `governance-checks.yaml:182` 已把它登记进
+  `script_baseline`（743→744）。若将来要让它参与阻断，需要先决定「git 不可读」算不算失败——
+  那属判据面变更，本条不代裁，也不代为接线。
