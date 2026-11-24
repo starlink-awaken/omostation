@@ -312,3 +312,47 @@ history:
     BET-Y2Q4-T10-363 闭环关闭：在 anchor-install-root.sh 中固化安装位脏状态安全前检（防止盲目覆盖脏工作树），
     并落地 release-manifest.json 生成与自查通路；多根同步与健康度判定全面恢复为真实的 PASS。
   actor: "governance-agent"
+- at: '2026-11-24T08:24:01Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **闭案次日实测：本条 `decision_needed` 第二次复核那句「再混进一条真坏 ref，群体计数不会变」，今日被我用自己的手注入验证了一遍 —— 读数比原文还要强。全部 kernel 直调，零落盘、零改动。**
+
+    ① 权威 queue 今日读数：`build_review_queue(items, now=UTC, repo_root)`（`projects/omo/src/omo/omo_debt_review_queue.py:69`）
+       对 106 条给 `due_now 0 / upcoming 0 / escalation_candidates 0 / unscheduled 0`，而同一返回值 `summary.by_severity`
+       = high 7 + medium 30 + low 2 = **39**，与内核 `TERMINAL_STATES = {closed, resolved}` 下数出的非终态 39 条相等
+       ⇒ 四桶全空不是「无债可核」，而是 **39/39 全体出窗**：`min(next_review_at) = 2026-12-06`（12 天后），
+       而 `REVIEW_WINDOW_DAYS = 7`，`:89-92` 只有 `due_at <= current` 与 `due_at <= current + 7d` 两个入桶分支，
+       出窗条目不进任何列表。投影面同读数且作业是活的：`.omo/debt/review-queue/current.yaml`
+       `generated_at 2026-11-24T08:05:05Z`（我 08:05:2xZ 读到 mtime 17 秒前）四桶亦全 0。
+       消费面确有契约，不是我自己挑的口径：`.omo/_knowledge/usage/AGENT.md:268` 写明该文件是
+       "the operator-facing queue surface for due-now work, escalation candidates, upcoming work, and unscheduled debts"
+       —— 今日它对 operator 的表述是「四个列表全空」。
+
+    ② stale 集合今日 **37/39**，按 `omo_debt_metrics.py:80` 起的分支逐条归因（同函数口径复算，非推断）：
+       **26 条只因 `mitigation_refs` 为空** —— `:80` 是 `if not item.evidence_refs or not item.mitigation_refs:`，
+       这个 `or` 使「可选字段没填」直接判 stale，而 `mitigation_refs` 按 broker 默认就是空（见 OMO-DEBT-REGISTER-NO-REVIEW-DATES）；
+       2 条两个 ref 都空；8 条有 ref 路径不存在；**真因只有 1 条**（ref mtime 晚于 `last_reviewed_at`，
+       即 AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER —— 我 07:45Z 复核它之后 `docs/pitfalls.md`
+       与 `bin/scheduler-compile.py` 被别的 PR 改过）。⇒ 「证据已失效」与「登记时没填可选字段」
+       在同一个 flag 里不可分，今日比例 **1 : 36**。
+
+    ③ 反事实注入（对 ② 与待裁段的直接检验）：实测找到一类**真坏 ref 形状** —— `evidence_refs`/`mitigation_refs`
+       里共 **11 处 `~/` 写法**，涉及 4 个开放条目（DASHBOARD-TEMPLATE-CONTRACT-GAP 2、HW-DISK8-4TB-FLAKY 4、
+       RESIDENT-PLANE-SPLIT-LAUNCHD-INERT 3、PANORAMA-GATE-DETAIL-UNRELIABLE 2），而 `_resolve_ref_path`（`:26`，
+       判定体 `:39`）只有 `if ref_path.is_absolute(): return ref_path` / `return repo_root / ref_path`，
+       **不调 `expanduser()`** ⇒ `~/Library/Logs/x` 折成 `<repo_root>/~/Library/Logs/x`，永远不存在。
+       在我自己进程里把它换成 expanduser 版重算：stale 集合 **37 → 37（双向零差集）**，
+       九项指标逐项同值（`debt_health 0.0 / classification_entropy 0.0 / state_entropy 0.1 / pointer_entropy 1.0 /
+       time_entropy 0.0 / backlog_pressure 5.75 / coupling_load 1.36 / watchlist 5 / gate 0`）。
+       原因正是 ②：这 4 条本来就因散文 ref / 缺路径落进同一分支，展开与否不改变归属。
+       ⇒ 据此**不另立条目**：该 latent 缺陷今日无任何可观测后果，再立一条只是给已饱和的信号添一条噪声实例；
+       同时它把本条待裁段的「护栏只买到『不崩』，没买到『能看见』」数值化了 —— 往饱和信号里注入一类真缺陷，
+       群体读数一动不动。
+
+    ④ cron 道同刻读数（只读 `python3 bin/gac/debt-review-scheduler.py --json`，rc=0）：
+       `total_items 106 / needs_reassessment 0 / overdue 0`。两道的「零」含义不同，且都不表达「39 条开放」：
+       kernel 道零 = 全体出窗，cron 道零 = 按 `INTERVAL_DAYS[severity]` 回推未到期。
+       要让 operator 侧真看得见，需要的是待裁段 A/B/C 之外的第三个动作 —— 给 kernel 加一个
+       「已排期但未进窗口」桶，或把 `REVIEW_WINDOW_DAYS` 与本轮补日惯例（+14d）对齐 ——
+       属判据与数据契约变更，仍留 principal 裁决，本轮零改动、不改任何指标/门禁读数面。
