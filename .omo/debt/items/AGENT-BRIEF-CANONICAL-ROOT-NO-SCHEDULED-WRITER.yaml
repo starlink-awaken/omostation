@@ -152,6 +152,14 @@ history:
     或让 `state_root()` 在 declared=false 时对"读运行态投影"这类调用显式报警/拒绝（属 ADR-0456 契约变更，
     会把当前刻意保留的向后兼容语义改掉），
     或把 §1.8 的指针从"函数解析"改为"字面 XDG 路径 + 说明与 profile 的对应关系"。
+    ⇒ 第三方向本来最干净（内容寻址、天然带时效），但实测**它现在不可直接解析**（07:50Z 直测）：
+    `~/.local/share/zhixing-dashboard/revisions/` 存在、有 **48** 个 revision 目录，
+    每个里面是 `agent-brief.json`，而 store 下**没有 `latest`、没有 `CURRENT`、没有 `manifest.json`** 任一指针
+    （目录名是 revision hash，不是时间序 ⇒ 按名排序不等于按新旧排序）。
+    两份根副本的 `provenance.source_path` 恰好指向这里（状态根 `revision_id=d85a4810d2ce…`、
+    仓根 `9738a18d3507…`，两个不同 revision），说明真正的产出面是 store，**两个根都只是它的复制落点**。
+    ⇒ 所以若 owner 想让读契约直接指向 store，得先有"当前 revision"的解析器或 `latest` 指针；
+    否则读侧仍只能依赖复制落点，而复制落点之一无人写 —— 这正是本条的命题。
 
     ③ 同一回落的**写侧**暴露面顺手量化（AST 级数 `state_root()` 调用点，范围 `bin` + `projects/omo/omo` + `.githooks` + `tests`，1429 个 py 文件）：
     **27 个调用点、15 个文件**，其中两处值得单列：
