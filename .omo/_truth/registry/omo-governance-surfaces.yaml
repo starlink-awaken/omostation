@@ -2,8 +2,13 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-09
+last-reviewed: 2026-11-24
 ---
+
+# 2026-11-24 复审 (governance-team):
+#   `check-l0-constraints.py` 实测: X4-C01 (44 assets), CR-OMO-SURFACE-01 (36 顶层资产全部登记),
+#   CR-OMO-SURFACE-02 (state_plane + governance_kernel), X3-C03 (3 layers) 全部通过;
+#   无新增未登记顶层资产, 既有 runtime/遗留声明与 2026-11-09 审计一致。
 
 # 2026-11-09 复审 + X2-C05 拆墙决策 (governance-team)。
 #   前四次到期 (2026-09-21 / 10-06 / 10-21 / 11-05) 都只靠再提交一次戳记续命, 每轮都写下
