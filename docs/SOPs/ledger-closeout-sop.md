@@ -69,7 +69,9 @@ make gac-local-gate
 
 ```bash
 # 3.1 改台账条目: status → done, done_at, completion_evidence
-python3 bin/plan/bet-ledger.py status <bet-id> --done
+python3 bin/plan/bet-ledger.py complete <bet-id>
+# done-transition 的执行动词是 complete（:3488 接 bet_id 与 --force）；
+# `bet-ledger.py status` 只是台账总览打印，不接任何参数。
 # 或手工编辑 docs/plans/3y-bet-ledger.yaml 的对应 bet 段:
 #   status: done
 #   done_at: "<UTC datetime>"
