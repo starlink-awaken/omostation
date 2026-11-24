@@ -125,7 +125,7 @@ fi
 
 # 降级防护: 目标比当前锚点更旧 ⇒ 照做会把常驻族**往回**切。
 # 默认参考既是 origin/main, 这条正常情况下不会触发; 触发即说明有人显式传了旧 SHA。
-if [[ "${ANCHOR_ALLOW_DOWNGRADE:-0}" != "1" ]] && git -C "$INSTALL_ROOT" merge-base --is-ancestor "$target" "$cur" 2>/dev/null; then
+if [[ "${ANCHOR_ALLOW_DOWNGRADE:-0}" != "1" && "$target" != "$cur" ]] && git -C "$INSTALL_ROOT" merge-base --is-ancestor "$target" "$cur" 2>/dev/null; then
   echo "拒绝: 目标 $target 是当前锚点 $cur 的祖先 —— 重锚会**降级**安装位." >&2
   echo "  若确实要回退, 用 ANCHOR_ALLOW_DOWNGRADE=1 显式放行." >&2
   exit 5
@@ -150,8 +150,8 @@ if ! git -C "$INSTALL_ROOT" cat-file -e "${target}^{commit}" 2>/dev/null; then
   exit 3
 fi
 
-# 工作区脏状态预检: 严禁盲目覆盖或破坏已修改的安装位状态
-dirty_status="$(git -C "$INSTALL_ROOT" status --porcelain 2>/dev/null || true)"
+# 工作区脏状态预检: 严禁盲目覆盖或破坏已修改的安装位状态 (-uall 确保仅含 release-manifest.json 的新 runtime/ 不折叠误判)
+dirty_status="$(git -C "$INSTALL_ROOT" status --porcelain -uall 2>/dev/null | grep -vE '^\?\? runtime/release-manifest\.json$' || true)"
 if [[ -n "$dirty_status" && "${ANCHOR_ALLOW_DIRTY:-0}" != "1" ]]; then
   echo "拒绝: 安装位工作区存在未提交的修改 (dirty):" >&2
   echo "$dirty_status" | head -20 >&2

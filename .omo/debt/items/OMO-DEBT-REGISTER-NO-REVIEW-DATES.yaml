@@ -8,7 +8,7 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - projects/omo/src/omo/omo_debt_lifecycle.py
@@ -31,6 +31,8 @@ evidence_refs:
 mitigation_refs: []
 opened_at: '2026-11-24'
 last_reviewed_at: '2026-11-24'
+closed_at: '2026-11-24'
+resolution_evidence: 'Wave 3 starlink-awaken/omostation-omo#259 (16f68b1b8101): projects/omo/src/omo/omo_debt_lifecycle.py, projects/omo/src/omo/omo_debt_cli.py (--last-reviewed-at/--next-review-at + UTC today/+14d defaults), and projects/omo/tests/unit/test_omo_debt_broker_hardening.py.'
 next_review_at: '2026-12-08'
 gate_level: watchlist
 history:
@@ -123,6 +125,10 @@ history:
   action: review
   actor: governance-agent
   note: 决策项 (3)「立案后必须调 schedule」的代价，2026-11-24 当日拿到自证复现：本轮为 OMO-DEBT-PACKET-ALL-NONE-WHILE-39-OPEN 与 OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID 两条新案按该规避路径调 `python3 -m omo.omo_debt_cli schedule --next-review-at 2026-12-08`，`omo_debt_lifecycle.py:76` 把两条的 `lifecycle_state` 一并写成 `scheduled`，需手工复位为 `identified`（已在各自 history 留痕）。措辞「等于用状态字段换排期字段」由此从推断升为实测。顺带在同一函数上发现更硬的一面并另立一案：`schedule_item` 无存在性闸（对照 `omo_debt_cli.py:71-74 close` 有闸），对不存在的 id 沙箱实测 rc=0 + 打印成功 + 落无 `id` 孤儿文件，kernel 再按 `id=UNKNOWN`/`severity=P3` 默认值（`omo_debt_registry.py:146`/`:143`）把它读进指标面，A/B 单条即 `debt_health 87.5→75.0`、`state_entropy 0.0→0.5` —— 见 OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID。本案三项待裁口径不变，本轮零代码、零判据改动。
+- at: '2026-11-24T12:03:00Z'
+  action: resolve
+  actor: governance-agent
+  note: 'Wave 3 闭环 (starlink-awaken/omostation-omo#259, 16f68b1b8101bc66eb31f1e996ab710a7c147bc5): register 子命令新增可选 --last-reviewed-at / --next-review-at 参数，register_item() 默认将 last_reviewed_at 设为当日 UTC 日期、next_review_at 设为 +14d，新条目不再一落地即落 unscheduled；补单测 tests/unit/test_omo_debt_broker_hardening.py。'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

@@ -479,6 +479,21 @@ def run_ancestry_gate(base: str, head: str, root: Path, *, write_debt: bool, jso
                 continue
             if _run_in(subdir, "merge-base", "--is-ancestor", old, new).returncode == 0:
                 continue
+            # Freshness alignment (mirrors submodule-guard.py): if `new` equals the
+            # submodule's `origin/main` tip and is NOT an ancestor of `old` (i.e. `old`
+            # was a diverged/unmerged side-branch pin later squash-merged into main),
+            # realigning the root gitlink onto `origin/main` is not a rewind.
+            remote_main = _run_in(subdir, "rev-parse", "-q", "--verify", "origin/main")
+            if (
+                remote_main.returncode == 0
+                and remote_main.stdout.strip() == new
+                and _run_in(subdir, "merge-base", "--is-ancestor", new, old).returncode != 0
+            ):
+                warnings.append(
+                    f"[INFO] {path}: 指针 {new[:12]} 对齐子模块 origin/main "
+                    f"(旧指针 {old[:12]} 非其祖先且非后代，属侧支/squash 合入对齐，放行)"
+                )
+                continue
             violations.append({"path": path, "old_sha": old, "new_sha": new})
 
     tags = scan_exemption_tags(base, head, root) if not unresolvable else []

@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
 affected_roots:
 - .omo/_truth/registry/governance-checks.yaml
@@ -19,7 +19,8 @@ evidence_refs:
 - .omo/_truth/registry/governance-checks.yaml
 mitigation_refs: []
 opened_at: "2026-11-12"
-last_reviewed_at: "2026-11-12"
+last_reviewed_at: "2026-11-24"
+closed_at: "2026-11-24"
 next_review_at: "2026-12-12"
 gate_level: none
 x1_policy_ref: ""
@@ -69,3 +70,10 @@ history:
     那批（本次实测 247 个根文件 + `tests/bin/**`）要当「本地跑得到、CI 看不见」的
     平面对待，别把本地绿当证据。
   actor: "governance-agent"
+- at: "2026-11-24T12:08:30Z"
+  action: resolve
+  actor: "governance-agent"
+  note: >-
+    Wave 3 闭环 (starlink-awaken/omostation-ecos#98, 2518e4b4154a78bf21fc68159863401cb2f34995):
+    将 declared 生命周期演进合并入 ecos main，并以 GAC_M1_SYNC_WRITE=1 gac-m1-sync.py --sync
+    完成创建 22 / 更新 13 / 删除 68 项，使 gac-m1-sync --tracked 恢复 90/90 零漂移。

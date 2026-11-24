@@ -320,3 +320,82 @@ class TestDebtEntryReDerivable:
         for key in ("base_sha", "head_sha", "merge_base"):
             assert _git(m, "cat-file", "-e", f"{entry[key]}^{{commit}}").returncode == 0, f"{key} unresolvable"
         assert _git_ok(m, "merge-base", entry["base_sha"], entry["head_sha"]) == entry["merge_base"]
+
+
+class TestOriginMainFreshnessAlignment:
+    """Range gate mirrors submodule-guard.py for diverged side-branch -> origin/main realignments."""
+
+    @staticmethod
+    def _init_sub(path: Path) -> str:
+        path.mkdir()
+        _git_ok(path, "init", "-b", "main")
+        _git_ok(path, "config", "user.email", "test@example.com")
+        _git_ok(path, "config", "user.name", "fixture")
+        (path / "base.txt").write_text("base\n", encoding="utf-8")
+        return _commit(path, "sub base c1")
+
+    @staticmethod
+    def _init_main_with_sub(tmp_path: Path, sub_repo: Path) -> Path:
+        m = tmp_path / "main-repo"
+        m.mkdir()
+        _git_ok(m, "init", "-b", "main")
+        _git_ok(m, "config", "user.email", "test@example.com")
+        _git_ok(m, "config", "user.name", "fixture")
+        _git_ok(m, "-c", "protocol.file.allow=always", "submodule", "add", str(sub_repo), "sub")
+        return m
+
+    def test_diverged_side_branch_aligned_to_origin_main_passes(self, tmp_path):
+        import json
+
+        s = tmp_path / "sub-repo"
+        c1 = self._init_sub(s)
+        _git_ok(s, "checkout", "-b", "side-branch", c1)
+        (s / "side.txt").write_text("side\n", encoding="utf-8")
+        side_sha = _commit(s, "side branch commit")
+
+        _git_ok(s, "checkout", "main")
+        (s / "squash.txt").write_text("squash\n", encoding="utf-8")
+        squash_sha = _commit(s, "squash merged onto main")
+
+        m = self._init_main_with_sub(tmp_path, s)
+        _git_ok(m / "sub", "checkout", side_sha)
+        commit_old = _commit(m, "pin side branch commit")
+
+        _git_ok(m / "sub", "checkout", squash_sha)
+        commit_new = _commit(m, "align sub pointer to origin/main")
+
+        result = run_gate(m, "--range", commit_old, commit_new, "--cwd", str(m), "--json")
+        assert result.returncode == 0, result.stdout + result.stderr
+        data = json.loads(result.stdout)
+        assert data["ok"] is True
+        assert data["violations"] == []
+        assert data["exempted"] is False
+        assert any("origin/main" in w for w in data["warns"])
+
+    def test_strict_rewind_to_origin_main_still_blocks(self, tmp_path):
+        import json
+
+        s = tmp_path / "sub-repo"
+        self._init_sub(s)
+        (s / "c2.txt").write_text("c2\n", encoding="utf-8")
+        c2 = _commit(s, "main c2")
+
+        _git_ok(s, "checkout", "-b", "ahead-branch", c2)
+        (s / "c3.txt").write_text("c3\n", encoding="utf-8")
+        c3 = _commit(s, "ahead c3")
+
+        _git_ok(s, "checkout", "main")
+
+        m = self._init_main_with_sub(tmp_path, s)
+        _git_ok(m / "sub", "checkout", c3)
+        commit_ahead = _commit(m, "pin c3 ahead of origin/main")
+
+        _git_ok(m / "sub", "checkout", c2)
+        commit_back = _commit(m, "rewind back to c2 origin/main")
+
+        result = run_gate(m, "--range", commit_ahead, commit_back, "--cwd", str(m), "--json")
+        assert result.returncode == 1, result.stdout + result.stderr
+        data = json.loads(result.stdout)
+        assert data["ok"] is False
+        assert len(data["violations"]) == 1
+        assert data["violations"][0]["path"] == "sub"
