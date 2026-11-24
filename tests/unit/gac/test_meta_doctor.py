@@ -355,3 +355,74 @@ def test_submodule_ff_check_detects_regression(tmp_path, monkeypatch):
     assert subs[0]["head"] == "aaa"
     # ecos 两指针相同 (ccc), 不报
     assert not any(r["submodule"] == "projects/ecos" for r in regressions)
+
+
+def test_heartbeat_install_root_resolves_from_canonical_root_instead_of_frozen_copy(
+    tmp_path, monkeypatch
+):
+    mod = _load()
+    now = datetime.now(timezone.utc)  # noqa: UP017 - match macOS Python 3.9 runtime
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
+
+    install_dir = tmp_path / "install"
+    canonical_dir = tmp_path / "canonical"
+    stale_file = install_dir / ".omo/state/runtime/system_health.yaml"
+    fresh_file = canonical_dir / ".omo/state/runtime/system_health.yaml"
+    stale_file.parent.mkdir(parents=True)
+    fresh_file.parent.mkdir(parents=True)
+    stale_file.write_text(f"last_scan: {(now - timedelta(hours=500)).timestamp()}\n")
+    fresh_file.write_text(f"last_scan: {(now - timedelta(hours=1)).timestamp()}\n")
+
+    monkeypatch.setattr(mod, "runtime_install_root", lambda: install_dir)
+    monkeypatch.setattr(mod, "runtime_canonical_root", lambda: canonical_dir)
+
+    rows = mod.check_heartbeats(install_dir, now=now)
+    sys_row = next(r for r in rows if r["file"] == ".omo/state/system_health.yaml")
+    assert sys_row["ok"] is True
+    assert sys_row["source"] == "canonical"
+    assert sys_row["checked_file"] == str(fresh_file)
+
+
+def test_heartbeat_install_root_prefers_declared_state_root_over_canonical(
+    tmp_path, monkeypatch
+):
+    mod = _load()
+    now = datetime.now(timezone.utc)  # noqa: UP017 - match macOS Python 3.9 runtime
+
+    install_dir = tmp_path / "install"
+    canonical_dir = tmp_path / "canonical"
+    state_dir = tmp_path / "state"
+    for d, age_h in ((install_dir, 500), (canonical_dir, 300), (state_dir, 1)):
+        f = d / ".omo/state/runtime/system_health.yaml"
+        f.parent.mkdir(parents=True)
+        f.write_text(f"last_scan: {(now - timedelta(hours=age_h)).timestamp()}\n")
+
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_dir))
+    monkeypatch.setattr(mod, "runtime_install_root", lambda: install_dir)
+    monkeypatch.setattr(mod, "runtime_canonical_root", lambda: canonical_dir)
+
+    rows = mod.check_heartbeats(install_dir, now=now)
+    sys_row = next(r for r in rows if r["file"] == ".omo/state/system_health.yaml")
+    assert sys_row["ok"] is True
+    assert sys_row["source"] == "canonical"
+    assert sys_row["checked_file"] == str(state_dir / ".omo/state/runtime/system_health.yaml")
+
+
+def test_heartbeat_arbitrary_tmp_workspace_remains_hermetic(tmp_path, monkeypatch):
+    mod = _load()
+    now = datetime.now(timezone.utc)  # noqa: UP017 - match macOS Python 3.9 runtime
+    state_dir = tmp_path / "host_state"
+    host_file = state_dir / ".omo/state/runtime/system_health.yaml"
+    host_file.parent.mkdir(parents=True)
+    host_file.write_text(f"last_scan: {(now - timedelta(hours=1)).timestamp()}\n")
+
+    isolated_ws = tmp_path / "isolated_ws"
+    isolated_ws.mkdir()
+
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_dir))
+
+    rows = mod.check_heartbeats(isolated_ws, now=now)
+    sys_row = next(r for r in rows if r["file"] == ".omo/state/system_health.yaml")
+    assert sys_row["absent"] is True
+    assert sys_row["exists"] is False
+    assert sys_row["checked_file"] == ".omo/state/system_health.yaml"

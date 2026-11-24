@@ -29,7 +29,14 @@ from typing import TypedDict
 WORKSPACE = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 # cron 与 CI 用裸 python3 跑这里，解析器必须仍是标准库（无 pyyaml）。
-from repo_root import projection_read, projection_rels, state_root as runtime_state_root
+from repo_root import (
+    STATE_ROOT_ENV,
+    canonical_root as runtime_canonical_root,
+    install_root as runtime_install_root,
+    projection_read,
+    projection_rels,
+    state_root as runtime_state_root,
+)
 
 # M1 心跳登记: 投影名 (或未登记投影的相对路径) → (时间戳字段, SLA 小时)
 # 登记为投影的那两行, 报告键与读取路径一律由 runtime-projections.yaml 解析:
@@ -130,28 +137,79 @@ def _stamp_field(path: Path, field: str) -> datetime | None:
     return None
 
 
-def check_heartbeats(
+def _resolve_heartbeat_file(
     ws_root: Path,
-    now: datetime | None = None,
+    hb_key: str,
     state_root: Path | None = None,
-) -> list[dict]:
-    now = now or _now()
-    if state_root is None:
-        # 默认根就是本仓 —— 写根按 profile 解析；显式 --workspace 覆盖时调用者
-        # 指哪读哪，不再叠加 profile。
-        state_root = runtime_state_root() if ws_root == WORKSPACE else ws_root
-    out = []
-    for hb_key, (field, sla_h) in HEARTBEATS.items():
-        try:
-            entry_rel = projection_rels(hb_key, registry_root=ws_root)[1]
+) -> tuple[str, Path, str]:
+    """Resolve authoritative heartbeat path across state_root, canonical_root, and ws_root."""
+    try:
+        canonical_rel, entry_rel = projection_rels(hb_key, registry_root=ws_root)
+    except KeyError:
+        canonical_rel, entry_rel = None, hb_key
+
+    if state_root is not None:
+        if canonical_rel is not None:
             f, source = projection_read(
                 ws_root,
                 hb_key,
                 registry_root=ws_root,
                 state_root=state_root,
             )
-        except KeyError:
-            entry_rel, f, source = hb_key, ws_root / hb_key, "legacy"
+            return entry_rel, f, source
+        return hb_key, ws_root / hb_key, "legacy"
+
+    ws_resolved = ws_root.resolve()
+    inst = runtime_install_root()
+    is_install = inst is not None and ws_resolved == inst.resolve()
+    is_authority_target = ws_resolved == WORKSPACE.resolve() or is_install
+
+    if os.environ.get(STATE_ROOT_ENV) and is_authority_target:
+        sr = runtime_state_root()
+        target_rel = canonical_rel or hb_key
+        candidate = sr / target_rel
+        if candidate.is_file():
+            return entry_rel, candidate, ("canonical" if canonical_rel is not None else "state_root")
+        if canonical_rel is not None and (sr / entry_rel).is_file():
+            return entry_rel, sr / entry_rel, "state_root"
+
+    if is_install:
+        try:
+            canon = runtime_canonical_root()
+        except RuntimeError:
+            canon = None
+        if canon is None or canon.resolve() == ws_resolved:
+            home_ws = Path.home() / "Workspace"
+            canon = home_ws if (home_ws / "AGENTS.md").is_file() else None
+        if canon is not None and canon.resolve() != ws_resolved:
+            target_rel = canonical_rel or hb_key
+            candidate = canon / target_rel
+            if candidate.is_file():
+                return entry_rel, candidate, "canonical"
+            if canonical_rel is not None and (canon / entry_rel).is_file():
+                return entry_rel, canon / entry_rel, "legacy"
+
+    if canonical_rel is not None:
+        eff_sr = runtime_state_root() if ws_resolved == WORKSPACE.resolve() else ws_root
+        f, source = projection_read(
+            ws_root,
+            hb_key,
+            registry_root=ws_root,
+            state_root=eff_sr,
+        )
+        return entry_rel, f, source
+    return hb_key, ws_root / hb_key, "legacy"
+
+
+def check_heartbeats(
+    ws_root: Path,
+    now: datetime | None = None,
+    state_root: Path | None = None,
+) -> list[dict]:
+    now = now or _now()
+    out = []
+    for hb_key, (field, sla_h) in HEARTBEATS.items():
+        entry_rel, f, source = _resolve_heartbeat_file(ws_root, hb_key, state_root=state_root)
         checked_rel = str(f.relative_to(ws_root)) if f.is_relative_to(ws_root) else str(f)
         entry = {
             "file": entry_rel, "field": field, "sla_hours": sla_h,

@@ -109,10 +109,14 @@ SPEC_MARKER_READINGS = {
     # 是新的一处钉检出根站点 => `.omo/_truth` 163 -> 164。
     # 2026-11-24 BET-Y2Q4-T10-351 (#5498): scene-journey-autogen 数据源对齐 docs/
     # (SCENES_DIR / JOURNEYS_DIR 迁往 docs/)，移除 2 处 .omo/_truth 站点 => 164 -> 162。
+    # 2026-11-24 Wave 1 运行态读侧收敛 (state_file_read): 还掉 3 处债:
+    #   panorama-collect.py (.omo/state/agent-cell/semantic/roles.jsonl) ⇒ .omo/state 103→102
+    #   auto-pruner.py + drift-face-detector.py (runtime/dashboard/agent-brief.json) ⇒ runtime 47→45
+    # 门禁三读数 170/161/107 → 167/158/107。
     ".omo/_truth": 162,
-    ".omo/state": 103,
+    ".omo/state": 102,
     ".omo/_delivery": 78,
-    "runtime": 47,
+    "runtime": 45,
     ".omo/_knowledge": 62,
 }
 # 2026-11-06 BET-Y2Q4-T10-289 AC-02（准入谓词改按族，**分桶读数一条未动**）：门禁三读数
@@ -123,8 +127,8 @@ SPEC_MARKER_READINGS = {
 # 差额 3 站点 / 2 对全在 `bin/panorama/panorama-collect.py`，即 OUT_DIR 与 collect_alerts
 # 第二读点（`ROOT / "runtime/dashboard/data.json"` 两处）—— 它们此前钉检出根，现在跟随
 # OUTPUT_ROOT/DATA_JSON。文件数不变（该文件另有 3 处仍钉检出根）。
-SPEC_GATED_SITES = 170
-SPEC_GATED_PAIRS = 161
+SPEC_GATED_SITES = 167
+SPEC_GATED_PAIRS = 158
 SPEC_GATED_FILES = 107
 
 # 2026-10-13 由 BET-Y2Q4-T10-250 的扫描生成的登记面（(文件, 拼出的相对路径) 去重）。
@@ -234,7 +238,6 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/ops/unified_metrics.py', 'runtime/pids/<fstr>'),
         ('bin/panorama/panorama-collect.py', '.omo/state/a2a-messages.jsonl'),
         ('bin/panorama/panorama-collect.py', '.omo/state/agent-cell/cell_states.json'),
-        ('bin/panorama/panorama-collect.py', '.omo/state/agent-cell/semantic/roles.jsonl'),
         ('bin/panorama/panorama-collect.py', '.omo/state/agent-tick-daemon.jsonl'),
         ('bin/panorama/panorama-collect.py', '.omo/state/evolution-proposals/*'),
         ('bin/panorama/panorama-collect.py', '.omo/state/handoffs/*'),
@@ -251,9 +254,7 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/ssot/agent-cell-pool-live-smoke.py', '.omo/state/agent-cell/cell_states.json'),
         ('bin/ssot/agent-cell-semantic-smoke.py', '.omo/state/agent-cell/semantic'),
         ('bin/ssot/auto-pruner.py', '.omo/state/heartbeats'),
-        ('bin/ssot/auto-pruner.py', 'runtime/dashboard/agent-brief.json'),
         ('bin/ssot/drift-face-detector.py', '.omo/state/heartbeats'),
-        ('bin/ssot/drift-face-detector.py', 'runtime/dashboard/agent-brief.json'),
         ('bin/ssot/episode-source-aggregator.py', '.omo/state'),
         ('bin/ssot/episode-source-aggregator.py', '.omo/state/heartbeats'),
         ('bin/ssot/knowledge-shadow-runner.py', '.omo/state/knowledge-shadow.json'),
@@ -970,7 +971,7 @@ def test_family_table_is_load_bearing_and_single_sourced(monkeypatch):
     )
     after = gated_pairs(sites)
     assert after < before, "族表清空后门禁集合没变 —— 说明那 20 处不是族表带来的"
-    assert (len(after), len(before)) == (141, 161), (len(after), len(before))
+    assert (len(after), len(before)) == (138, 158), (len(after), len(before))
 
 
 

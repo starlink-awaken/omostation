@@ -854,15 +854,24 @@ jobs:
     sfop_slot: S
 
   - name: debt-refresh-weekly
-    schedule: "30 10 * * 1"
+    label: com.omostation.omo-debt-refresh
+    schedule: "5,35 * * * *"
     command: >-
       cd "$HOME/Workspace" && uv run --project projects/omo omo debt refresh
       --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> runtime/cron/operating-rhythm-weekly.log 2>&1
-    planes: [crontab]
-    reality: declared_only
-    status: proposed
+    planes: [launchd]
+    reality: installed
+    status: active
     owner: governance-team
     sfop_slot: S
+    env:
+      PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+      no_proxy: "github.com,api.github.com,localhost,127.0.0.1"
+    reconciliation_note: >-
+      2026-11-24 收敛 (CRON-REGISTRY-REALITY-NO-PRODUCER): 本机 launchd
+      com.omostation.omo-debt-refresh 每小时 :05/:35 运行 python -m omo.omo_debt_cli refresh
+      (与 omo debt refresh 为同一 CLI, 见 projects/omo/src/omo/cli.py:113), 已由
+      scheduler-compile.py --probe-reality 实证在跑, 从 declared_only/proposed 收敛为 active/installed。
 
   - name: weekly-review-post-inbox
     schedule: "35 10 * * 1"
@@ -1096,13 +1105,13 @@ jobs:
   - name: local-ops-test-all
     schedule: "23 7 * * *"
     command: >-
-      /Users/xiamingxing/.local/share/local-ops/dev-venv/bin/python /Users/xiamingxing/local-ops/bin/test-all >> /Users/xiamingxing/.local/log/test-all.log 2>&1
+      /Users/xiamingxing/.local/share/local-ops/dev-venv/bin/python3 /Users/xiamingxing/local-ops/bin/test-all >> /Users/xiamingxing/.local/log/test-all.log 2>&1
     planes: [crontab]
     reality: installed
     status: active
     owner: local-ops
     sfop_slot: S
-    reconciliation_note: 2026-11-01 补登记 (10-24 crontab 重写事故恢复时核实); 命令抄自实际 crontab 行。
+    reconciliation_note: "2026-11-24 收敛 (CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN): dev-venv/bin/python 改用同 venv 下 dev-venv/bin/python3 软链, normalize_interpreter 可折回比较键。"
 
   - name: work-agent-sched-health-check
     schedule: "0 9 * * *"

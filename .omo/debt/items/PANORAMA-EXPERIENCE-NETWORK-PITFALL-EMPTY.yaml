@@ -7,7 +7,11 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Updated collect_experience_network() to glob both flat and categorized */PITFALL-*.yaml files, parse plain YAML and frontmatter documents, surface parse_errors explicitly, align PITFALL-{CAT}-{NNN} decision edge matching, and expose pitfall_count without type starvation.'
+resolution_evidence: 'bin/panorama/panorama-collect.py collect_experience_network; bin/panorama/assets/host/panorama-collect-main.py.asset; tests/unit/test_panorama_experience_network.py (2 passed)'
 owner: governance-team
 affected_roots:
 - .omo
@@ -67,6 +71,14 @@ history:
        ⇒ 裁决项 (a) 的代价被立案低估：**只修 glob 会得到 58 个同 id 空节点**，glob 与解析两处必须同修。
     ④ 本条此前同为 `unscheduled`（`next_review_at` 空，成因见 OMO-DEBT-REGISTER-NO-REVIEW-DATES），本轮补 `next_review_at=2026-12-08` 后退出 `unscheduled` 桶（4 → 0），但**不等于进面板** —— 内核 `REVIEW_WINDOW_DAYS = 7`，12-08 是 14 天后，既不进 `due_now` 也不进 `upcoming`，四条在 queue 的任何列表里都不出现（`build_review_queue` 实测 11-24 04:10Z：修复前 due_now 1 / upcoming 2 / unscheduled 4，修复后 unscheduled 0 而另两桶不变）。准确状态是「已排期、未进 7 天窗口」。
     ⑤ 修法 (a)/(b)/(c) 的取舍仍是「承认哪个平面是权威」，未动采集代码与判据面。
+- at: '2026-11-24T08:35:00Z'
+  action: close
+  actor: governance-agent
+  note: >-
+    Resolved by implementing option (a) in `collect_experience_network()`: recursive category glob
+    `*/PITFALL-*.yaml` + plain YAML / frontmatter parsing + three-part `PITFALL-{CAT}-{NNN}` edge
+    matching + explicit `parse_errors` & `pitfall_count`. Synced host mirror and verified with
+    `tests/unit/test_panorama_experience_network.py`.
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

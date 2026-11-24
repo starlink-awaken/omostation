@@ -40,7 +40,23 @@ def _render(tmp_path: Path) -> list[str]:
         encoding="utf-8",
     )
     fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
-    env = {**os.environ, "PATH": f"{fake_bin}:{os.environ.get('PATH', '')}", "SPOOL": str(spool)}
+    registry = tmp_path / "registry.yaml"
+    registry.write_text(
+        "version: 2\n"
+        "jobs:\n"
+        "  - name: resident-test\n"
+        "    schedule: '*/5 * * * *'\n"
+        "    command: 'python3 -m omo.cli resident ingest'\n"
+        "    planes: [crontab]\n"
+        "    status: active\n",
+        encoding="utf-8",
+    )
+    env = {
+        **os.environ,
+        "PATH": f"{fake_bin}:{os.environ.get('PATH', '')}",
+        "SPOOL": str(spool),
+        "CRON_REGISTRY_OVERRIDE": str(registry),
+    }
     subprocess.run(["bash", str(INSTALLER)], env=env, check=True, capture_output=True, text=True)
     return spool.read_text(encoding="utf-8").splitlines()
 
@@ -90,3 +106,44 @@ def test_event_ledger_path_equals_the_old_pin_without_profile_env() -> None:
         check=True,
     )
     assert out.stdout.strip() == "True", f"不等价 ⇒ 本改动会改变今天的 cron 行为: {out.stdout} {out.stderr}"
+
+
+def test_registry_coverage_guard_rejects_comments_and_proposed_entries(tmp_path: Path) -> None:
+    """YAML 结构检查必须忽略注释和 proposed 条目，不重复旧 grep 假放行。"""
+    fake_reg = tmp_path / "registry-comment-and-proposed.yaml"
+    fake_reg.write_text(
+        "# omo.cli resident 只出现在注释与未激活条目里\n"
+        "version: 2\n"
+        "jobs:\n"
+        "  - name: resident-proposed\n"
+        "    schedule: '*/5 * * * *'\n"
+        "    command: 'python3 -m omo.cli resident ingest'\n"
+        "    planes: [crontab]\n"
+        "    status: proposed\n"
+        "  - name: resident-launchd-only\n"
+        "    schedule: 'always'\n"
+        "    command: 'python3 -m omo.cli resident ingest'\n"
+        "    planes: [launchd]\n"
+        "    status: active\n",
+        encoding="utf-8",
+    )
+    env = {**os.environ, "CRON_REGISTRY_OVERRIDE": str(fake_reg)}
+    res = subprocess.run(
+        ["bash", str(INSTALLER), "--dry-run"],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 1, f"不应放行注释/proposed/launchd 条目: {res.stdout} {res.stderr}"
+
+
+def test_registry_coverage_guard_rejects_real_registry_without_active_crontab_resident() -> None:
+    """真实登记面已全部将 resident 迁移到 launchd，install-resident-cron 不应静默放行。"""
+    env = {k: v for k, v in os.environ.items() if k != "CRON_REGISTRY_OVERRIDE"}
+    res = subprocess.run(
+        ["bash", str(INSTALLER), "--dry-run"],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 1, f"真实登记面无 active crontab omo.cli resident 时应阻断: {res.stdout} {res.stderr}"

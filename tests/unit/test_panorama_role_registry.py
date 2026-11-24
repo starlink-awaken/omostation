@@ -32,6 +32,7 @@ def _record(role_id: str, state: str = "admitted", *, digest: str | None = None)
 
 
 def test_collect_role_registry_projects_valid_runtime_state(tmp_path, monkeypatch) -> None:
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
     module = _module()
     monkeypatch.setattr(module, "ROOT", tmp_path)
     store = tmp_path / ".omo/state/agent-cell/semantic/roles.jsonl"
@@ -51,6 +52,7 @@ def test_collect_role_registry_projects_valid_runtime_state(tmp_path, monkeypatc
 
 
 def test_collect_role_registry_fail_closed_on_tampered_record(tmp_path, monkeypatch) -> None:
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
     module = _module()
     monkeypatch.setattr(module, "ROOT", tmp_path)
     store = tmp_path / ".omo/state/agent-cell/semantic/roles.jsonl"
@@ -67,6 +69,7 @@ def test_collect_role_registry_fail_closed_on_tampered_record(tmp_path, monkeypa
 
 
 def test_collect_role_registry_reports_missing_store(tmp_path, monkeypatch) -> None:
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
     module = _module()
     monkeypatch.setattr(module, "ROOT", tmp_path)
 
@@ -75,3 +78,23 @@ def test_collect_role_registry_reports_missing_store(tmp_path, monkeypatch) -> N
     assert report["available"] is False
     assert report["verdict"] == "UNAVAILABLE"
     assert report["errors"] == ["registry_file_missing"]
+
+
+def test_collect_role_registry_prefers_state_root_when_declared(tmp_path, monkeypatch) -> None:
+    module = _module()
+    code_dir = tmp_path / "code"
+    state_dir = tmp_path / "state"
+    code_dir.mkdir()
+    monkeypatch.setattr(module, "ROOT", code_dir)
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_dir))
+
+    store = state_dir / ".omo/state/agent-cell/semantic/roles.jsonl"
+    store.parent.mkdir(parents=True)
+    store.write_text(json.dumps(_record("role:state-root"), ensure_ascii=False) + "\n", encoding="utf-8")
+
+    report = module.collect_role_registry()
+
+    assert report["available"] is True
+    assert report["verdict"] == "PASS"
+    assert report["total"] == 1
+    assert [item["role_id"] for item in report["records"]] == ["role:state-root"]

@@ -7,7 +7,11 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Aligned live_server.py.asset MAX_PROJECTION_ARTIFACT_BYTES with runtime_paths.py.asset _MAX_ARTIFACT_BYTES at 64 MiB and tightened projection size contract test.'
+resolution_evidence: 'bin/panorama/assets/host/live_server.py.asset MAX_PROJECTION_ARTIFACT_BYTES=64MiB; tests/test_zhixing_projection_size_contract.py (3 passed)'
 owner: "governance-team"
 affected_roots:
 - bin/panorama/assets/host/runtime_paths.py.asset
@@ -19,7 +23,7 @@ evidence_refs:
 - tests/test_zhixing_projection_size_contract.py
 mitigation_refs: []
 opened_at: "2026-11-12"
-last_reviewed_at: "2026-11-12"
+last_reviewed_at: "2026-11-24"
 next_review_at: "2026-12-12"
 gate_level: none
 x1_policy_ref: ""
@@ -97,3 +101,10 @@ history:
     若将来把 serve cap 也抬到 64 MiB，测试的下限断言（32 MiB）不会拦 —— 那是
     有意的（下限只保证裕量，不限制上调）。
   actor: "governance-agent"
+- at: "2026-11-24T08:35:00Z"
+  action: close
+  actor: "governance-agent"
+  note: >-
+    Resolved: bumped `bin/panorama/assets/host/live_server.py.asset` `MAX_PROJECTION_ARTIFACT_BYTES`
+    from 32 MiB to 64 MiB to match `runtime_paths.py.asset`, and updated
+    `tests/test_zhixing_projection_size_contract.py` to enforce equality at 64 MiB.

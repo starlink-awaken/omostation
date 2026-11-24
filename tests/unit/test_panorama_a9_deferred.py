@@ -47,11 +47,16 @@ def _stamp(age_seconds: float) -> str:
     return (datetime.now(timezone.utc) - timedelta(seconds=age_seconds)).isoformat()
 
 
-def _cockpit(statuses: dict[str, str]) -> dict:
+def _cockpit(statuses: dict[str, str], *, ages_seconds: dict[str, float | None] | None = None) -> dict:
     states = {}
+    ages = ages_seconds or {}
     for name in REQUIRED_SOURCES:
         status = statuses.get(name, "OK")
-        states[name] = {"status": status, "last_success_at": _stamp(60)}
+        age = ages.get(name, 60)
+        states[name] = {
+            "status": status,
+            "last_success_at": None if age is None else _stamp(age),
+        }
     return {"generated_at": _stamp(60), "source_states": states}
 
 
@@ -74,3 +79,46 @@ def test_failed_source_still_fails_the_gate(monkeypatch, tmp_path):
     report = module.collect_a9_gate(payload={}, dashboard_live=True)
     assert report["verdict"] == "PARTIAL"
     assert "cockpit_sources" in report["detail"]
+
+
+def test_stale_deferred_source_fails_the_gate(monkeypatch, tmp_path):
+    module = _load(monkeypatch, tmp_path)
+    _write_cockpit(
+        {"home": tmp_path / "home"},
+        _cockpit({"orca": "DEFERRED"}, ages_seconds={"orca": 48 * 3600}),
+    )
+    report = module.collect_a9_gate(payload={}, dashboard_live=True)
+    assert report["verdict"] == "PARTIAL"
+    assert "orca=DEFERRED" in report["detail"]
+
+
+def test_never_succeeded_deferred_source_fails_the_gate(monkeypatch, tmp_path):
+    module = _load(monkeypatch, tmp_path)
+    _write_cockpit(
+        {"home": tmp_path / "home"},
+        _cockpit({"workflow": "DEFERRED"}, ages_seconds={"workflow": None}),
+    )
+    report = module.collect_a9_gate(payload={}, dashboard_live=True)
+    assert report["verdict"] == "PARTIAL"
+    assert "workflow=DEFERRED" in report["detail"]
+
+
+def test_bounded_partial_source_is_accepted(monkeypatch, tmp_path):
+    module = _load(monkeypatch, tmp_path)
+    _write_cockpit(
+        {"home": tmp_path / "home"},
+        _cockpit({"strategy": "PARTIAL"}, ages_seconds={"strategy": 3600}),
+    )
+    report = module.collect_a9_gate(payload={}, dashboard_live=True)
+    assert report["verdict"] == "PASS", report
+
+
+def test_stale_partial_source_fails_the_gate(monkeypatch, tmp_path):
+    module = _load(monkeypatch, tmp_path)
+    _write_cockpit(
+        {"home": tmp_path / "home"},
+        _cockpit({"strategy": "PARTIAL"}, ages_seconds={"strategy": 48 * 3600}),
+    )
+    report = module.collect_a9_gate(payload={}, dashboard_live=True)
+    assert report["verdict"] == "PARTIAL"
+    assert "strategy=PARTIAL" in report["detail"]
