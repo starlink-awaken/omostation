@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: scheduled
+lifecycle_state: identified
 owner: governance-team
 affected_roots:
 - .omo
@@ -104,6 +104,10 @@ history:
     ④ 逐日静默期：纯函数把 now 从 2026-11-22 推到 2026-11-30，packet 五车道在 11-22…11-28 连续 7 天全 0，11-29 起 watch_only=1、11-30=4。
     ⑤ 一次扫描脚本因写了非法日期 2026-11-31 抛 ValueError（11 月只有 30 天），是本会话仪器之错，已重跑并剔除该次读数，不作证据。
     ⑥ 排期与可选字段按 OMO-DEBT-REGISTER-NO-REVIEW-DATES 记的隐性义务手工补齐（broker 默认把 next_review_at / last_reviewed_at / description / decision_needed / evidence_refs / mitigation_refs 六项留空），本条不改 broker、不改 kernel、不改任何既有条目。
+- at: '2026-11-24T08:33:00Z'
+  action: review
+  actor: governance-agent
+  note: 立案后复核：本条 `lifecycle_state` 被 broker 自己改成了 `scheduled` —— `omo_debt_lifecycle.py:66-84 schedule_item` 在写 `next_review_at`（`:77`）的同一段里无条件写 `payload["lifecycle_state"] = "scheduled"`（`:76`），而我本轮为补 `OMO-DEBT-REGISTER-NO-REVIEW-DATES` 决策项 (3) 所述的「立案后必须调 schedule」而调了 `schedule`，于是该键被连带改写。实测它是当时全库 107 条里唯一取 `scheduled` 的条目（closed 35 / resolved 32 / identified 35 / in_progress 4），即该词汇在现网无第二使用者，属 OMO-WRITEOWNER ⑥ 记的「词汇不在取值集内」形状；同文件 `reopen` 分支（`omo_debt_cli.py:456`）复位写的却是 `identified`，可见 broker 内部两套词汇。本轮把该键手工复位为 `identified`（不改任何判据、不改指标面），并在此留痕而非静默覆盖，理由：状态字段是治理面，排期字段才是我要写的，二者被一次 `schedule` 调用捆在一起正是待裁项。该副作用已作为复现证据登记进新案 OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID（同一函数还有更硬的一面：对不存在的 id 返回 rc=0 并铸孤儿文件）。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Tool

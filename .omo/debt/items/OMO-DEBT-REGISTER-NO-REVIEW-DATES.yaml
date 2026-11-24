@@ -119,6 +119,10 @@ history:
     同批要决定是否也让它落 `evidence_refs`/`decision_needed` 的**占位结构**（例如空列表 + 一条
     「待补判据」提示），否则「六个字段里补了两个」只是把缺口从六缩到四。
     本轮零改动：不改 broker、不改 review_queue、不改 scheduler、不替任何既有条目代补三个内容字段。
+- at: '2026-11-24T08:33:00Z'
+  action: review
+  actor: governance-agent
+  note: 决策项 (3)「立案后必须调 schedule」的代价，2026-11-24 当日拿到自证复现：本轮为 OMO-DEBT-PACKET-ALL-NONE-WHILE-39-OPEN 与 OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID 两条新案按该规避路径调 `python3 -m omo.omo_debt_cli schedule --next-review-at 2026-12-08`，`omo_debt_lifecycle.py:76` 把两条的 `lifecycle_state` 一并写成 `scheduled`，需手工复位为 `identified`（已在各自 history 留痕）。措辞「等于用状态字段换排期字段」由此从推断升为实测。顺带在同一函数上发现更硬的一面并另立一案：`schedule_item` 无存在性闸（对照 `omo_debt_cli.py:71-74 close` 有闸），对不存在的 id 沙箱实测 rc=0 + 打印成功 + 落无 `id` 孤儿文件，kernel 再按 `id=UNKNOWN`/`severity=P3` 默认值（`omo_debt_registry.py:146`/`:143`）把它读进指标面，A/B 单条即 `debt_health 87.5→75.0`、`state_entropy 0.0→0.5` —— 见 OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID。本案三项待裁口径不变，本轮零代码、零判据改动。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
