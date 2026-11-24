@@ -861,6 +861,8 @@ GATE_TITLES = {
 # `str(g.get("gate")).split()[0]` 的解析与上面的 GATE_TITLES)。Brief 若只点名它,
 # 复检既不能证真也不能证伪 —— 2026-11-23 实测 A7/RF0 的 verifier 均 ok:true,
 # 却因采集整轮抛 projection_code_root_not_current_main 而回落成 NOT_ADMITTED 发布为红。
+# 失败集含 A1..A5 时，行动项仍写 re-run gate-health-check.py，并附上名单外门禁的 hint。
+# 失败集全部落在 GATE_REVERIFY_SCRIPTS 时，行动项直接点名对应 verifier。
 GATE_REVERIFY_SCRIPTS = {
     "A6": "bin/gac/orca-r0-verify.py",
     "A7": "bin/gac/multica-as0-verify.py",
@@ -877,6 +879,30 @@ def gate_reverify_hint(gate_ids: "list[str]") -> str:
         + " / ".join(f"{gid} → {script} --json" for gid, script in named)
         + "（不在 gate-health-check.py 名单内）。"
     )
+
+
+def failing_gates_recheck_detail(failing: list[dict]) -> str:
+    """Name the script that can actually re-check this failing set."""
+    ids = [str(g["id"]) for g in failing]
+    outside = [gid for gid in ids if gid in GATE_REVERIFY_SCRIPTS]
+    inside = [gid for gid in ids if gid not in GATE_REVERIFY_SCRIPTS]
+    lead = (
+        f"Resolve failing gates: {', '.join(ids)} — "
+        "point-in-time snapshot; "
+    )
+    tail = (
+        "before claiming, since a lagging managed clone or an already-healed "
+        "gitlink can make a listed gate green by now."
+    )
+    if inside:
+        return (
+            lead
+            + "re-run bin/gac/gate-health-check.py --json "
+            + tail
+            + gate_reverify_hint(outside)
+        )
+    scripts = " / ".join(f"{GATE_REVERIFY_SCRIPTS[gid]} --json" for gid in outside)
+    return lead + f"re-run {scripts} " + tail
 
 
 def collect_gates(payload: dict | None = None) -> list[dict]:
@@ -5220,13 +5246,7 @@ def collect_agent_visibility(payload: dict, *, bound_value_readiness: dict | Non
         "next_actions": [
             *([
                 {"id": "resolve-failing-gates", "state": "required",
-                 "detail": (
-                     f"Resolve failing gates: {', '.join(g['id'] for g in failing)} — "
-                     "point-in-time snapshot; re-run bin/gac/gate-health-check.py --json "
-                     "before claiming, since a lagging managed clone or an already-healed "
-                     "gitlink can make a listed gate green by now."
-                     + gate_reverify_hint([g["id"] for g in failing])
-                 ),
+                 "detail": failing_gates_recheck_detail(failing),
                  "source": "panorama.gates"}
             ] if failing else []),
             {
