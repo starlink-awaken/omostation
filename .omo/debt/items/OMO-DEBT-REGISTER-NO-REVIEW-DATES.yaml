@@ -82,6 +82,43 @@ history:
   note: 立案即复核：broker 默认值在隔离目录复现（rc=0, 三字段 None/None/带微秒 datetime），权威 lane 的 unscheduled 分支与 cron lane
     的回退口径都按源码行号取到；现网 4 个实例逐名点名。反向前提已先否证再立案 —— scheduler 并非看不见这些条目，故措辞是「权威 lane 不排期」而非「永久失踪」。与 OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY（close/reopen
     腿）和 OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS（执行接线腿）分案，动作与失效面均不同。
+- at: '2026-11-24T05:35:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日再复测 (11-24 05:32Z)：本条前提比立案时更宽 —— 空的不止排期两字段，是六个。订正记在此条，不改正文与标题。**
+
+    ① 同一隔离手法重跑一次（`register --omo-dir /tmp/bt2/.omo --id ZZ-TEST-2 …` ⇒ rc=0），逐字段读回：
+    `next_review_at = None`、`last_reviewed_at = None`、**`description = None`**、**`decision_needed = None`**、
+    **`evidence_refs = []`**、**`mitigation_refs = []`**；而非空的默认值是
+    `affected_roots = ['.omo']`、`gate_level = 'none'`、`opened_at` 带微秒 ISO datetime。
+    ⇒ 本会话 04:02Z 首测只记录了排期两字段（当时未逐一读回其余字段），真实缺口是 **6 个字段留空**：
+    两个排期字段 + 三个内容字段（description / decision_needed / evidence_refs）+ mitigation_refs。
+    后果因此比原判更重：新条目不仅落 `unscheduled`，还会**没有判据出处、没有待裁清单**——
+    即一条刚立案的债务在被第一次复核之前，既不可核（无 evidence_refs）也不可知该谁决定什么（无 decision_needed）。
+
+    ② 现网活体实例（今天已点名的那个）：`CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN`
+    同时 `evidence_refs = []` 与 `decision_needed = None`（`description` 里反而写全了三选一）——
+    即「内容写在了正文里，结构化字段全空」的形状，正是 ① 的默认值 + 立案者手工只补 description 的结果。
+    本会话今晚复核该条时已按边界**只补排期、不代补 evidence_refs/decision_needed**（结构性变更），
+    所以这里把它作为 ① 的活体实例登记，而不是代做。
+
+    ③ 覆盖率侧的连带读数（不是本条的新缺陷，是给裁决项 (1) 的分母）：
+    `bin/gac/check-debt-staleness.py` 自陈「只统计**同时有** `affected_roots` 与 `last_reviewed_at` 的条目；
+    没有 `affected_roots` 的条目不进判定也不假装被跳过」（该文件 `:18-19`），实跑两份读数——
+    main tip 那轮（105 份，05:10Z）：`identified=42 候选(有 roots+复审日)=26 疑似陈旧=21`；
+    canonical 那轮（101 份**旧检出**，05:32Z）：`identified=38 候选=18 疑似陈旧=16`
+    ⇒ 两份读数差 4 条 identified / 8 条候选，本身就是「扫哪棵树」的函数（见今晚 DOCLINK ④ 与
+    HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT 的同类教训），引用时必须带上是哪份检出。
+    ⇒ main tip 口径的漂移信号覆盖率上限是 26/42 identified（非终态 47 条里 **18** 条 `affected_roots` 为空），
+    且该检查恒 exit 0（advisory，接线在 `bin/gac/gac-local-gate.py:421`，不进 ci-surfaces 的阻断位）。
+    其中硬件/存储类条目 `affected_roots` 为空是合理建模（它们不由代码根漂移触发），
+    所以这里只登记分母，**不**把 18 条当成缺陷计数；要裁的是「16 条疑似陈旧」在无人复核时的去处。
+
+    ④ 因此本条的裁决范围随之变大（原 (1)/(2)/(3) 文字不动）：若采 (1) 让 register 落默认排期，
+    同批要决定是否也让它落 `evidence_refs`/`decision_needed` 的**占位结构**（例如空列表 + 一条
+    「待补判据」提示），否则「六个字段里补了两个」只是把缺口从六缩到四。
+    本轮零改动：不改 broker、不改 review_queue、不改 scheduler、不替任何既有条目代补三个内容字段。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
