@@ -23,8 +23,8 @@ mitigation_refs:
 - bin/ops/hot-tier-resilience.sh
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-11-09'
-next_review_at: '2026-10-18'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
@@ -104,3 +104,25 @@ history:
 
     (6) 复用读数（只测不改正文）：mini `diskutil info disk8` = `Could not find disk: disk8`（第二次确认 mini 无 disk8）；studio disk4 仍 `Protocol: USB` / `SMART Status: Not Supported`；mini `~/bin/disk-keepalive.sh` 与 studio `~/.local/bin/disk-keepalive.sh` 的 sha256 前缀同为 `520cd524e7ab8f2f`、各 229 行 ⇒ 两份内容一致，:135 的坏 predicate 在两台机上形状相同。`df -k` SHAREDMODEL Used=**889,756,920 KB**（11-07 为 889,756,916，两天 +4 KB）⇒ 848.5 GiB 敞口不变，与 STORAGE-SHAREDMODEL-NO-BACKUP 本轮读数一致；SHAREDWORK Used=80 KB 块。
   actor: "governance-agent"
+- at: '2026-11-24T02:39:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日跨机实测 (11-24 02:31Z)：这块盘当前既不在 mini 也不在本机 —— 「掉线频次」在现有通道上测不出来，且 0 不等于没掉。**
+    ① 挂载普查：本机 `/Volumes` = FLEET-SETUP / Model / PVE / PVE 1（`diskutil list external` 只有 disk4=FLEET-SETUP 30.8G 与 disk6/7=2.0TB APFS），
+    mini `/Volumes` = Macintosh HD / Model / Recovery。**两台都没有 MOVESPEED / SHAREDWORK / SHAREDMODEL** ⇒ 4.1T 扩展坞目前物理缺席。
+    ② 先证仪器能跑再下结论：mini 上按脚本原谓词 `/usr/bin/log show --last 7d --predicate process=="icdd"` 得 **35** 行，
+    加 `CONTAINS "Removed"` 得 **2** 行（`2026-11-23 11:48:09 [Removed] | [USB][ My Passport 264F ]`），
+    而 `CONTAINS "DK5A1"`（`bin/ops/disk-keepalive.sh:40` 写死的 4T 坞名称片段）= **0** 行。
+    ⇒ `disk-keepalive.drops` 文件在两台都**不存在**，日志里 `REAL_DROP` 计数 **0**（本机 2314 行 / mini 3845 行）。
+    这些读数的含义是「7 天窗口里坞根本没出现过」，**不是**「出现过但没掉」；按避坑条目「记录恒缺 ≠ 事件为零」处理。
+    ③ keepalive 现在守护的是 **Lex**（脚本头注 `:48`：mini → Lex=69B4517B-C234-404A-B774-2D693E87EB33，Respire 记忆空间所在卷）：
+    mini `.state` = 连续 **5285** 次未挂载 ≈ 15855 分钟 ≈ **11.0 天**，`NEEDS_ATTENTION` 自 2026-11-24 10:29:55 起，
+    每轮都是 `REMOUNT SKIP: 查不到 UUID … 的设备(物理层不可见), 不动手`；本机同族 `NEEDS_ATTENTION` = 连续 **771** 次。
+    ⇒ 整个外接存储面（坞 + Lex 冷备卷）已离线约 11 天，这比立案时的「间歇性掉线」更严重，且**不是间歇**。
+    ④ 本条裁决项（把坞直插 mini 后置雷电口观察 3~7 天看 `ss_removed`）的**前置条件今天才成立**：先把坞接回去。
+    观察窗尚未开始，`ss_removed` 无数据可判；接回后 mini 跑一次 `bin/ops/disk-keepalive.sh` 即会生成
+    `$HOME/Library/Logs/disk-keepalive.drops`（按秒去重，附同刻消失的 SS 设备数）。
+    ⑤ 方法学留档：本机日志首行 `[2026-11-22 19:57:18] NOTE: v3 起改用 diskutil 判定挂载状态; 此前日志里的 未挂载/REMOUNT/NEEDS_ATTENTION 大量是误报`
+    ⇒ 11-22 之前的 NEEDS_ATTENTION 计数不可当掉线证据；mini 日志起点 11-21 09:32:55（滚动窗口），
+    故 5285 这个连续计数跨过了日志可见范围，只能证明「v3 判定下持续未挂载」，不能证明掉线时刻。

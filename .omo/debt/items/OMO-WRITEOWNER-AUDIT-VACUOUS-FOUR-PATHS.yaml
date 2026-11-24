@@ -14,8 +14,8 @@ affected_roots:
 evidence_refs: []
 mitigation_refs: []
 opened_at: '2026-11-09T06:01:57.243743+00:00'
-last_reviewed_at: '2026-11-09T09:14:16+00:00'
-next_review_at: '2026-11-16'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 history:
 - at: '2026-11-09T06:01:57.243743+00:00'
@@ -297,6 +297,40 @@ history:
     **残余 (未修)**: `omo_debt_cli` 的子命令 (register/close/desc/schedule/revalidate…) 都不能写
     `evidence_refs` / `mitigation_refs`; `omo_ingress_debt.py:78-79` 只 `setdefault`
     这两个键, 没有对外写入路径 ⇒ items 长期停在 `identified`、闭环证据靠手写。这是**功能请求**, 不是「规则空转」。''.'
+- at: '2026-11-24T02:39:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 02:35Z)：四条路径里 ②④ 已自愈，①③ 原样成立；本会话自己成了这条缺陷的活体实例。**
+    ① 已变的两条：`bin/ssot/write-owner-audit.py` 现有 4 个旗标 —— `--staged`(:180)、
+    **`--range <base>..head | auto`**(:181-189，auto = 先 PUSH_RANGE 再退 origin/main...HEAD)、`--advisory`(:191)、`--json`(:192)；
+    `bin/gac/gac-local-gate.py:59-67` 的调用形式也从「只有 `--staged`」换成 `["--range","auto","--advisory"]`
+    ⇒ 原 ②（post-commit 时暂存区恒空）与原 ④（没有 range/rev 模式）这两条**前提今天不成立**，
+    修法方向里「给脚本加 range 模式」这半已在仓内。
+    ② 仍成立的两条：`.githooks/` 引用 write-owner-audit 的计数仍是 **0**（本条 ①）；身份豁免仍按提交者而非目录 ——
+    `:119 AGENT_IDENTITIES`、`:137 is_ci`、`:143 is_system_committer = is_agent_run or is_ci or user_lc in AGENT_IDENTITIES`、
+    `:162 if not is_system_committer`（script:/daemon: 拥有面对系统提交者整批放行）。
+    接线面 `ci-surfaces.yaml:897-902` 仍是 `gate: true` + `workflow: (none)` + `triggers: []` ⇒ 没有任何 CI workflow 执行它。
+    ③ **活体实例（本会话自身，可复算）**：对本批 merge range 跑
+    `python3 bin/ssot/write-owner-audit.py --range 8c2472a38..5572f92a6 --json` ⇒ **rc=1**，
+    `files_audited=11 / rules_loaded=6`，violations 共 **8** 条，其中 **7** 条逐名点名本会话与前批手写的 items 文件
+    (BOS-KEMS-STATUS-DIVERGENT / CRON-INSTALLERS-OUTSIDE-SSOT / DIRECT-IO-GATE-TWO-TREES-TWO-COPIES /
+    INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED / OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT / PANORAMA-GATE-DETAIL-UNRELIABLE /
+    ZHIXING-PUBLISH-EFFECT-PROVENANCE)，第 8 条 TEST-AUTO-FIX-LOOP-REPO-STATE-DEPENDENT 属同一 range 内的他人交付
+    (range 覆盖 11 个文件 > 本批 9 个路径，故判定范围不等于交付范围，按「--from-diff 在共享主工作区算进他人改动」同族处理)。
+    点名文本均为
+    「owned by system 'script:omo-debt', manual modifications are forbidden outside agent workflows」。
+    而同一份改动作为 PR #5505 交付时 **12 项 CI 全绿、pre-commit 零拦截**（governance-verify 评的是 head sha）
+    ⇒ 违规可判、判据可用，缺的只是「谁在什么身份下被要求执行它」——正是本条剩下的那一问。
+    关键区分：本地以 human 身份跑才出 violations，CI 里 `is_ci=true` 整批豁免；两种场合的结论差来自**身份门**，不来自代码。
+    ④ 本条 ⑤（register 重写 registry 删注释）拿到了删除现场：`.omo/_truth/registry/debt.yaml` 今日 **0 行注释**
+    （`rg -c '^ *#'`），近 6 个修订（含 dd428c956 / #5500）全为 0；最新**有**注释的修订是 72b57f336（2 行），
+    紧接其后登记 4 项缺陷的那次 register（`0d376ddd2` = #5467，该文件 diff 为 `6 ++++--`）即把
+    `-# 2026-11-09 再对齐: 补登 21 个存在但未登记的条目…` / `-# 其中 7 identified + 1 in_progress 是活条目…`
+    换成 4 行 `- .omo/debt/items/…yaml` ⇒ ⑤ 的机制被历史记录直接证实，且正文当时写的「本次已手工恢复」
+    在 main 上**没有留下**（注释今日仍为 0）。
+    ⑤ 剩余待裁仍是「范围面何时从 advisory 升为阻断、升在哪一层」；选项 ②③ 的前置（追链问题、claim 数据出
+    `.gitignore:12`）本轮**未复核**，不据此下结论。裁决前不改 hook、不动 projects/ecos 的 sgf-policy.yaml、不把 `--advisory` 摘掉。
 decision_needed: '只剩一问 (2026-11-09 复算后, 原三问的 (1)(2) 已被实测否证为不可执行/非本因):
 
   **范围面何时从 advisory 升为阻断, 升在哪一层** —— ① 维持现状只报数 (CI 与本地都跑,
