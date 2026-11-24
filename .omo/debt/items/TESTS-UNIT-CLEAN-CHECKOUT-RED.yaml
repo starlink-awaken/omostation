@@ -112,3 +112,25 @@ history:
     **判据**: 这类「修完一类」的工作, 收工前要把**同一个量的另外几个面**都量一遍,
     否则会留下「单元面绿了、顶层 244 条红」的盲区 —— 而顶层才是最多人跑的那个。
   actor: "governance-agent"
+- at: "2026-11-24T12:50:00+00:00"
+  action: evaluate
+  note: >-
+    **同族新形态: 「部分 init」的 worktree —— 守卫放行但真实前提仍不满足。**
+    `test_codex_worker_adapter.py` 的两条集成用例守卫只探三个文件存在
+    (ecos / omo / bus-foundation); `gac-worktree.sh claim` 默认**全量浅 init**, 三者俱在,
+    而 omo 的依赖链仍缺 —— 实测 `uv run --project projects/omo` 报
+    `Failed to build agora @ file:///…/projects/agora … neither pyproject.toml nor setup.py`,
+    测试以 `WORKER_ACK_REJECTED` 红, 与文件头「缺项优雅跳过」的声明不符 (ws-hc2 / ws-cx1 复现)。
+    **修法**: 守卫改成探真实前提 —— 真跑一次 `uv run --project projects/omo python -c "import omo.cli"`,
+    失败即跳过 (判据去问被检对象本身, 不再枚举文件)。
+    **同批发现第二种面值: 判据自否证。** codex / pi / omp 三个 adapter 的 receipt 用例拿
+    `Path.cwd()` 当「非临时目录」且不清理 —— 在 `/tmp/<worktree>` 里跑时该路径被判成临时、
+    校验放行、适配器真的把 receipt 写进 `/tmp`, 于是**首跑红、再跑绿**(上一条留下的文件让
+    exists 检查命中)。清掉 `/tmp/unsafe-*-receipt-*.json` 后复现: run1 failed / run2 passed。
+    改用检出根(结构上不在任何系统临时根之下)并加 `finally` 清理。omp 那条本机被
+    pinned-bun 探针跳过, 属未爆的潜在项。
+    **两态实证**: 部分 init ⇒ 三条集成用例全 skip (原先 1 failed); 从 `/tmp` 跑三文件
+    ⇒ 97 passed / 65 skipped, 与在 worktree 里跑逐条一致 (原先 pi 红)。
+    **边界**: 本条 `decision_needed` 的 (a)/(b)/(c) 仍未裁; 本次只补足**单元面里这三个文件的
+    守卫精度与自清理**, 顶层 `tests/test_*.py` 的 223 failed + 21 errors 未动。
+  actor: "governance-agent"
