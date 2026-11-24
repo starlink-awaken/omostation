@@ -19,8 +19,8 @@ evidence_refs:
 - docs/pitfalls.md
 mitigation_refs: []
 opened_at: '2026-11-23T16:25:35.938626+00:00'
-last_reviewed_at:
-next_review_at:
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 history:
 - at: '2026-11-23T16:25:35.938626+00:00'
@@ -42,6 +42,30 @@ history:
 
 
     **与既有债的关系（不同面，不合并）** —— `DOCLINK-GITIGNORED-PERMA-RED`（`lifecycle_state: resolved`，2026-11-15 裁决「不改判据」）管的是「不完整检出上 `.omo/state/system.yaml` 链接报 14 条」，物化输入即清零；该条末尾自陈的第三个残留缺口是「本地 `make gac-local-gate-strict` 的 docstring 声称与 CI 的 gac-gate 对等，但没有 CI 那道物化前置」，属**strict 入口的前置缺失**，也与本条的「非 strict 分支的 `--files` 面大于声明面」不是同一件事。三条各自独立，本条不代裁前两条。''.'
+- at: '2026-11-24T04:05:30Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 03:59Z)：假阳性原样复现，两侧口径都拿到新读数；并纠正一次「worktree 缺运行态工件」造成的假面。**
+    ① 尺子自陈面：`bin/ssot/doc-link-check.py:20-28` 的 `LOCAL_DOC_GLOBS` = **9 条模式**
+       （AGENTS.md / CLAUDE.md / README.md / ARCHITECTURE.md / LAYER-INDEX.md / projects/AGENTS.md /
+       projects/*/AGENTS.md / projects/*/CLAUDE.md / projects/*/README.md），默认面实测扫 **36** 个文件，
+       canonical 上 `python3 bin/ssot/doc-link-check.py` ⇒ **rc=0 PASS (36 files)**。
+    ② 非 strict 侧仍是「全部 staged .md」：`bin/gac/gac-local-gate.py:993-1001` 的 `scoped_doc_link_command`
+       在 `strict` 为假时取 `staged_files_git()` 里所有 `.md` 直接接 `--files`，与 ① 的 9 模式面**无交集约束**
+       ⇒ 任何不在这 36 个文件内的 .md 一旦被 stage 就进入该尺。前提未变。
+    ③ 2 条假阳性原样复现（canonical 与 worktree 同读数）：`docs/pitfalls.md:367` 的
+       ``bin/[A-Za-z0-9_./-]+\.py`` 与 `:370` 的 ``bin/...\.py`` 被当链接解析，报
+       `broken link … -> docs/bin/…`；`--files docs/pitfalls.md` ⇒ **rc=1 FAIL (2 broken links)**。
+       对照组 `--files AGENTS.md` ⇒ **rc=0 PASS (1 files)**。⇒ 仍是「扫描面大于自陈范围」。
+    ④ 仪器条件单独记一条，防下一个复核者误报：同一条命令在 claim 出的新 worktree 里跑**默认面**得
+       **rc=1 / 15 broken links**，全部指向 `../../.omo/state/system.yaml`
+       （`projects/omo/AGENTS.md:62`、`projects/runtime/AGENTS.md:62` 等）—— 该文件是运行态工件、不在 git，
+       只在 canonical 存在（实测 1.9k、mtime 11-24 11:50），在 canonical 复跑即 rc=0。
+       ⇒ 报「默认面 N 条坏链」之前必须声明扫的是哪棵树（同「陈旧检出会伪造结论」「快速 claim 的运行态工件缺失」）。
+    ⑤ 排期补记：本条此前同为 `unscheduled`（`next_review_at` 空，成因见 OMO-DEBT-REGISTER-NO-REVIEW-DATES），本轮补 `next_review_at=2026-12-08` 后退出 `unscheduled` 桶（4 → 0），但**不等于进面板** —— 内核 `REVIEW_WINDOW_DAYS = 7`，12-08 是 14 天后，既不进 `due_now` 也不进 `upcoming`，四条在 queue 的任何列表里都不出现（`build_review_queue` 实测 11-24 04:10Z：修复前 due_now 1 / upcoming 2 / unscheduled 4，修复后 unscheduled 0 而另两桶不变）。准确状态是「已排期、未进 7 天窗口」。
+    ⑥ 修法 (a) 过滤 `--files` / (b) `LINK_RE` 跳过 code span / (c) 维持现状，本轮零改动；
+       取 (b) 需先补的「默认面 5 个根文件里反引号路径计数」读数本轮**未做**，不代为判定。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

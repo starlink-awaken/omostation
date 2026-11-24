@@ -1,0 +1,148 @@
+id: OMO-DEBT-REGISTER-NO-REVIEW-DATES
+title: broker register 默认留下空排期字段 —— next_review_at/last_reviewed_at 为 None, 新条目一落地就在权威 review queue 里落
+  unscheduled
+dimension: governance
+subdimension: tooling
+domain: governance
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/omo_debt_lifecycle.py
+- projects/omo/src/omo/omo_debt_review_queue.py
+- bin/gac/debt-review-scheduler.py
+evidence_refs:
+- projects/omo/src/omo/omo_debt_lifecycle.py:36-38 (register 产物 opened_at=timestamp / last_reviewed_at=None
+  / next_review_at=None)
+- projects/omo/src/omo/omo_debt_review_queue.py:81-83 (not item.next_review_at ⇒ unscheduled.append 后
+  continue)
+- bin/gac/debt-review-scheduler.py:117-138 (缺失时回退 last_reviewed_at/opened_at + 间隔) 与 :29 (INTERVAL_DAYS
+  medium=60)
+- projects/omo/src/omo/omo_debt_lifecycle.py:69-81 (schedule_item 顺带把 lifecycle_state 写成 scheduled)
+- '隔离复现 2026-11-24 04:02Z: register --omo-dir /tmp/brokertest/.omo --id ZZ-TEST-1 ⇒ rc=0, 产出三字段 None/None/带微秒
+  ISO datetime'
+- '现网实例 4 条 (origin/main 实测): OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT / PANORAMA-EXPERIENCE-NETWORK-PITFALL-EMPTY
+  / DOCLINK-SCOPED-FILES-SURFACE-MISMATCH / CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN'
+- 本会话同日 3 次新立条目均需在 broker 之后手工补 next_review_at, 否则新条目一落地即落 unscheduled (OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY
+  / OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT / ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP)
+mitigation_refs: []
+opened_at: '2026-11-24'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: watchlist
+history:
+- at: '2026-11-24T04:07:58.630013+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-REGISTER-NO-REVIEW-DATES.
+  actor: governance-agent
+- at: '2026-11-24T04:07:58.671115+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '现象：broker 立案出来的债务条目天生没有到期日，于是在权威排程序列里永远排在「未排期」桶。
+
+    隔离复现（不碰仓内状态）：在空目录跑一次真实 broker 入口 ——
+    `register --omo-dir /tmp/brokertest/.omo --id ZZ-TEST-1 --dimension governance --subdimension ci
+    --severity medium --owner governance-team --actor probe` ⇒ rc=0，产出的 `ZZ-TEST-1.yaml` 三字段是
+    `next_review_at = None`、`last_reviewed_at = None`、`opened_at = '2026-11-24T04:02:29.810000+00:00'`。
+    ⇒ 不是某个 agent 手写漏了字段，而是 `omo_debt_cli register` 的**默认产物**就这样：
+    `projects/omo/src/omo/omo_debt_lifecycle.py:36-38` 明确写 `"opened_at": timestamp` /
+    `"last_reviewed_at": None` / `"next_review_at": None`。
+
+    后果落在权威那条道：`projects/omo/src/omo/omo_debt_review_queue.py:81-83` 对
+    `not item.next_review_at` 的条目走 `unscheduled.append(...)` 后 `continue`，不进
+    `due_now` / `upcoming` / `escalation_candidates` ⇒ 面板与 review queue 永不提示该条目到期。
+    另一条道不同口径：`bin/gac/debt-review-scheduler.py:117-138` 在 `next_review_at` 缺失时回退
+    `last_reviewed_at` 或 `opened_at`，再加 `INTERVAL_DAYS[severity]`（`:29` = critical 14 / high 30 /
+    **medium 60** / low 90），于是这 4 条 medium 在 cron 道里的到期日是「开单 +60 天」，
+    在权威道里则是「无到期日」。同一份案面两条道给两个结论（与「同一文件两套权威面要声明读数来源」同族）。
+
+    现网规模（11-24 04:03Z，按 origin/main 检出实测）：非终态 44 条中 **4** 条 `next_review_at` 为空 ——
+    OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT / PANORAMA-EXPERIENCE-NETWORK-PITFALL-EMPTY /
+    DOCLINK-SCOPED-FILES-SURFACE-MISMATCH（三条 opened 11-23）与 CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN
+    （opened 11-09）；其中 3 条 `history[0].action == register`、1 条 register 的 actor 为 null，
+    四条的 `opened_at` 一律是带微秒的 ISO datetime ⇒ 与本条 ① 的 broker 产物同形状，实例全部由该默认值造成。
+    本会话当晚新立 3 条时同样遇到：broker 产出后必须手工补 `next_review_at`，否则新条目一落地就 unscheduled
+    —— 也就是说「补日期」这个动作现在是每个立案者的隐性义务，而不是工具行为。
+
+    与既有条目的关系（避免读成重复立案）：
+    `OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY` 讲 **close/reopen** 腿（覆写 gate_level、不写 close_reason）；
+    本条讲 **register** 腿留下空排期字段 —— 动作不同、失效面不同（闸级 vs 排期可见性）。
+    `OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS` 讲执行接线；本条即使接线全绿也照样产出 unscheduled 条目。
+    本条立案前先复核过反向前提：scheduler **并非看不见**这些条目（它按 `opened_at + 间隔` 回退，
+    当晚「逾期未复审 0」的读数里这 4 条也确实未被点名），所以准确表述不是「永久失踪」，而是
+    「权威 lane 不排期，cron lane 用另一套口径把它推到 60 天后」。
+
+    '.
+- at: '2026-11-24T04:05:30Z'
+  action: review
+  actor: governance-agent
+  note: 立案即复核：broker 默认值在隔离目录复现（rc=0, 三字段 None/None/带微秒 datetime），权威 lane 的 unscheduled 分支与 cron lane
+    的回退口径都按源码行号取到；现网 4 个实例逐名点名。反向前提已先否证再立案 —— scheduler 并非看不见这些条目，故措辞是「权威 lane 不排期」而非「永久失踪」。与 OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY（close/reopen
+    腿）和 OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS（执行接线腿）分案，动作与失效面均不同。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: |
+  现象：broker 立案出来的债务条目天生没有到期日，于是在权威排程序列里永远排在「未排期」桶。
+
+  隔离复现（不碰仓内状态）：在空目录跑一次真实 broker 入口 ——
+  `register --omo-dir /tmp/brokertest/.omo --id ZZ-TEST-1 --dimension governance --subdimension ci
+  --severity medium --owner governance-team --actor probe` ⇒ rc=0，产出的 `ZZ-TEST-1.yaml` 三字段是
+  `next_review_at = None`、`last_reviewed_at = None`、`opened_at = '2026-11-24T04:02:29.810000+00:00'`。
+  ⇒ 不是某个 agent 手写漏了字段，而是 `omo_debt_cli register` 的**默认产物**就这样：
+  `projects/omo/src/omo/omo_debt_lifecycle.py:36-38` 明确写 `"opened_at": timestamp` /
+  `"last_reviewed_at": None` / `"next_review_at": None`。
+
+  后果落在权威那条道：`projects/omo/src/omo/omo_debt_review_queue.py:81-83` 对
+  `not item.next_review_at` 的条目走 `unscheduled.append(...)` 后 `continue`，不进
+  `due_now` / `upcoming` / `escalation_candidates` ⇒ 面板与 review queue 永不提示该条目到期。
+  另一条道不同口径：`bin/gac/debt-review-scheduler.py:117-138` 在 `next_review_at` 缺失时回退
+  `last_reviewed_at` 或 `opened_at`，再加 `INTERVAL_DAYS[severity]`（`:29` = critical 14 / high 30 /
+  **medium 60** / low 90），于是这 4 条 medium 在 cron 道里的到期日是「开单 +60 天」，
+  在权威道里则是「无到期日」。同一份案面两条道给两个结论（与「同一文件两套权威面要声明读数来源」同族）。
+
+  现网规模（11-24 04:03Z，按 origin/main 检出实测）：非终态 44 条中 **4** 条 `next_review_at` 为空 ——
+  OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT / PANORAMA-EXPERIENCE-NETWORK-PITFALL-EMPTY /
+  DOCLINK-SCOPED-FILES-SURFACE-MISMATCH（三条 opened 11-23）与 CRON-INTERPRETER-LITERAL-UNFOLDABLE-DOUBLE-RUN
+  （opened 11-09）；其中 3 条 `history[0].action == register`、1 条 register 的 actor 为 null，
+  四条的 `opened_at` 一律是带微秒的 ISO datetime ⇒ 与本条 ① 的 broker 产物同形状，实例全部由该默认值造成。
+  本会话当晚新立 3 条时同样遇到：broker 产出后必须手工补 `next_review_at`，否则新条目一落地就 unscheduled
+  —— 也就是说「补日期」这个动作现在是每个立案者的隐性义务，而不是工具行为。
+
+  与既有条目的关系（避免读成重复立案）：
+  `OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY` 讲 **close/reopen** 腿（覆写 gate_level、不写 close_reason）；
+  本条讲 **register** 腿留下空排期字段 —— 动作不同、失效面不同（闸级 vs 排期可见性）。
+  `OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS` 讲执行接线；本条即使接线全绿也照样产出 unscheduled 条目。
+  本条立案前先复核过反向前提：scheduler **并非看不见**这些条目（它按 `opened_at + 间隔` 回退，
+  当晚「逾期未复审 0」的读数里这 4 条也确实未被点名），所以准确表述不是「永久失踪」，而是
+  「权威 lane 不排期，cron lane 用另一套口径把它推到 60 天后」。
+
+  补一条今晚实测的口径细节（本会话先把自己 (1) 的修法假设证伪了一次）：
+  给条目补上 `next_review_at` **不等于**让它进面板。内核 `omo_debt_review_queue.py` 的
+  `REVIEW_WINDOW_DAYS = 7` / `ESCALATION_THRESHOLD_DAYS = 3`，`build_review_queue` 只输出
+  `due_now`（已到期）/ `upcoming`（7 天内到期）/ `escalation_candidates` / `unscheduled` 四个列表。
+  今晚在同一份检出上做前后对照（`now = 2026-11-24T04:08:00+00:00`，其余字段不动，只 dataclasses.replace 这四条的
+  `next_review_at`/`last_reviewed_at`）：
+  补 `2026-12-08`（14 天后）**之前** due_now 1 / upcoming 2 / escalation 0 / unscheduled **4**；
+  **之后** unscheduled **0**，而 due_now 与 upcoming **不变** ⇒ 这四条既不在到期列也不在窗口列，
+  在 queue 的任何列表里都不出现。也就是说：`null` 让它们以「未排期」这个**显式警示**面出现，
+  而一个超出窗口的日期把它们变成**完全静默** —— 面板可见性取决于日期与 7 天窗口的相对位置，
+  不取决于有没有日期。据此 (1)/(2) 都不足以单独解决可见性，还要决定窗口宽度，或
+  「已排期未进窗口」是否也该在 summary 里出现（本轮未加，属判据面，不代做）。
+decision_needed: |
+  三项待裁，本轮只登记 + 给既有 4 条补到期日（到期日属复核产物的排期字段，状态字段一律未动）：
+  (1) 让 `register` 直接落 `next_review_at`，取值与 `bin/gac/debt-review-scheduler.py:29 INTERVAL_DAYS[severity]`
+      同源（medium=60）⇒ 两条道自动同口径。代价：改 broker 写面，影响此后所有新条目的默认值；且 60 天本身落在 7 天窗口之外（见 description 末段实测），同口径 ≠ 同可见；
+      且 60 天这个宽度本身是 cron 道自定的，采它等于把 cron 口径升为权威 —— 需要 principal 认这一步。
+  (2) 或让 `omo_debt_review_queue` 对空 `next_review_at` 走与 scheduler 相同的回退（`:81-83` 不再 continue）。
+      这是**改判定口径**（两 lane 合一），同样需 principal 明确哪套是权威；agent 不代为统一。合一后面板上会从「unscheduled 显式」变成「窗口外静默」，可见性未必变好。
+  (3) 或维持现状，规定立案后必须调 `schedule`。但 `omo_debt_lifecycle.py:69-81 schedule_item` 会把
+      `lifecycle_state` 一并写成 `scheduled`（该词汇不在现网取值集内，正是 OMO-WRITEOWNER ⑥ 记的形状），
+      等于「用状态字段换排期字段」，在当前状态下不可接受，除非与 (1) 或修 schedule 同批做。
+  另附一条口径说明：本轮为那 4 条补的是 `2026-12-08`（复核后 14 天，与本会话其他批次一致），
+  **比** cron 道回退的 `opened_at + 60d` 更紧。若采 (1)，这 4 条会被重算成 60 天口径，届时以裁决为准，
+  本轮读数不作为基线锁死。
+  本轮不动 broker、不动 review_queue、不动 scheduler、不改任何条目的 lifecycle_state/gate_level/severity/weight。

@@ -21,8 +21,8 @@ evidence_refs:
 - .omo/_knowledge/pitfalls/INDEX.md
 mitigation_refs: []
 opened_at: '2026-11-23T16:57:12.060350+00:00'
-last_reviewed_at:
-next_review_at:
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 history:
 - at: '2026-11-23T16:57:12.060350+00:00'
@@ -47,6 +47,26 @@ history:
 
 
     **影响** —— ① 面板类读者（Panorama 经验网络）在**有 58 条知识**的平面上永远显示空子图，且函数体整段包在 `try/except Exception: pass` 里，异常也不会暴露 —— 属本仓已登记的「接线 ≠ 非空转」与「假成功空转扫描法」两族的又一实例；② 判「坑有没有被固化」时，任何引用 `ecos-constraint pitfall list` 读数（3）或 `error-knowledge.py stats` 读数（58）的论证都不能代表 `docs/pitfalls.md`（162）的真实写入面，反之亦然；③ 双写会漂移：`origin/main` 的 ① 里带 2026-11-22/23 日期的条目有 **23** 条，而 ② 同窗口只有 **5** 条（`discovered_at` ≥ 2026-10-14：`PITFALL-ENV-009` 10-22、`PITFALL-COO-008` 11-06、`PITFALL-ENV-010`/`PITFALL-MEA-009`/`PITFALL-SUB-007` 11-09），两侧写入速率不成比例，且没有任何机制把 ① 的新坑搬进 ②。''.'
+- at: '2026-11-24T04:05:30Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 04:01Z)：0 命中根因原样成立，但「三面不同源」今晚换了形状 —— 两个权威面其实一致。**
+    ① 采集器仍打扁平路径：`bin/panorama/panorama-collect.py:4464` 是
+       `glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml"))`，实测命中 **0** 个文件；
+       实际布局 **7 子目录 / 58** 个 `PITFALL-*.yaml`（coordination 9、cron 5、environment 10、gate 17、
+       measurement 9、scoring 1、submodule 7，合计 58）⇒ pitfall 子图恒空前提未变。
+    ② 三面读数刷新：文件系统 **58** ＝ `bin/gac/error-knowledge.py stats` **58 total**（逐类计数与文件系统完全一致）；
+       `.omo/_knowledge/pitfalls/INDEX.md` 仅 **13** 行 `PITFALL-` 表项（全文 45 行）；panorama 图贡献 **0**。
+       ⇒ 立案所写「3 / 58 / 162」今晚不成立为三值分裂，真实形状是「两个权威面已对齐 58，INDEX.md 落后 13，图面 0」。
+       顺带一句防误引：162 恰是当晚 ISC-1 `.omo/_truth` 桶的另一条读数（见 ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP），
+       两面数字撞车，引用前须回到本文 ② 的实测口径。
+    ③ 解析半边同样原样：`:4466-4467` 用 `raw.split("---")[1] if raw.startswith("---") else ""`，
+       无 frontmatter 分隔线的 agent-error/v1 YAML ⇒ `fm=""`、`d={}`、节点 id 变成 **`PIT-`（空串）**；
+       `:4477-4478` 的 `except Exception: pass` 继续吞异常。
+       ⇒ 裁决项 (a) 的代价被立案低估：**只修 glob 会得到 58 个同 id 空节点**，glob 与解析两处必须同修。
+    ④ 本条此前同为 `unscheduled`（`next_review_at` 空，成因见 OMO-DEBT-REGISTER-NO-REVIEW-DATES），本轮补 `next_review_at=2026-12-08` 后退出 `unscheduled` 桶（4 → 0），但**不等于进面板** —— 内核 `REVIEW_WINDOW_DAYS = 7`，12-08 是 14 天后，既不进 `due_now` 也不进 `upcoming`，四条在 queue 的任何列表里都不出现（`build_review_queue` 实测 11-24 04:10Z：修复前 due_now 1 / upcoming 2 / unscheduled 4，修复后 unscheduled 0 而另两桶不变）。准确状态是「已排期、未进 7 天窗口」。
+    ⑤ 修法 (a)/(b)/(c) 的取舍仍是「承认哪个平面是权威」，未动采集代码与判据面。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
