@@ -7,15 +7,21 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Unified A9 admission bounds so DEFERRED, PARTIAL, STALE_UNAVAILABLE, and FAIL all require bounded last_success_at <= 21600s (6h), while OK remains accepted and UNAVAILABLE hard-blocks.'
+resolution_evidence: 'bin/panorama/panorama-collect.py collect_a9_gate; bin/panorama/assets/host/panorama-collect-main.py.asset; tests/unit/test_panorama_a9_deferred.py (8 passed); tests/unit/test_panorama_a9_bounded_fail.py (4 passed)'
 owner: governance-team
 affected_roots: []
 evidence_refs:
 - bin/panorama/panorama-collect.py
+- bin/panorama/assets/host/panorama-collect-main.py.asset
+- tests/unit/test_panorama_a9_deferred.py
 - docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
 mitigation_refs: []
 opened_at: '2026-11-10'
-last_reviewed_at: '2026-11-23'
+last_reviewed_at: '2026-11-24'
 next_review_at: '2026-12-07'
 gate_level: none
 x1_policy_ref: ''
@@ -119,6 +125,14 @@ history:
     **不代做**——这是判准变更。字段一致性推进：`last_reviewed_at` `2026-11-10`→`2026-11-23`、
     已过期 `next_review_at` `2026-11-17`→`2026-12-07`；`lifecycle_state`/`gate_level` 保持
     `identified`/`none`。
+- at: '2026-11-24T08:35:00Z'
+  action: close
+  actor: governance-agent
+  note: >-
+    Resolved in Wave 1: unified `collect_a9_gate()` so `DEFERRED`, `PARTIAL`, `STALE_UNAVAILABLE`,
+    and `FAIL` all share the `bounded` (`age <= 21600`) requirement while `UNAVAILABLE` still hard-blocks.
+    Synced `panorama-collect-main.py.asset` mirror and added bounded/stale/null regression tests in
+    `tests/unit/test_panorama_a9_deferred.py`.
 description: '**复测 (2026-11-23, 投影在 `~/.local/share/zhixing-dashboard/revisions/7026733c…/data.json`,
   mtime 11-23 13:58): A9 已 PASS。**
 

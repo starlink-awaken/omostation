@@ -7,7 +7,11 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Added dual-plane crontab + launchd reality producer (--probe-reality and atomic --sync-reality) in bin/scheduler-compile.py and converged debt-refresh-weekly to active/installed launchd entry com.omostation.omo-debt-refresh.'
+resolution_evidence: 'bin/scheduler-compile.py probe_reality/sync_reality; .omo/cron/registry.yaml debt-refresh-weekly; tests/unit/test_scheduler_compile_reality_probe.py (3 passed); tests/unit/test_cron_registry_reality_invariants.py (9 passed)'
 owner: "governance-team"
 affected_roots:
 - .omo/cron/registry.yaml
@@ -17,7 +21,7 @@ evidence_refs:
 - bin/mof/gen-service-configs.py
 mitigation_refs: []
 opened_at: "2026-11-14"
-last_reviewed_at: "2026-11-14"
+last_reviewed_at: "2026-11-24"
 next_review_at: "2026-12-14"
 gate_level: none
 x1_policy_ref: ""
@@ -74,3 +78,12 @@ history:
     两个安装面（crontab / launchd）时尤其如此；按「声明 a vs 已装 b」做集合差
     之前，先确认 a 与 b 是同一个平面。
   actor: "governance-agent"
+- at: "2026-11-24T08:35:00Z"
+  action: close
+  actor: "governance-agent"
+  note: >-
+    Resolved: implemented dual-plane `probe_reality()` and atomic `sync_reality()` in
+    `bin/scheduler-compile.py` (with CLI alias matching across `crontab -l` and LaunchAgents
+    plists), converged `debt-refresh-weekly` in `.omo/cron/registry.yaml` to active launchd
+    `com.omostation.omo-debt-refresh`, and added hermetic tests in
+    `tests/unit/test_scheduler_compile_reality_probe.py`.

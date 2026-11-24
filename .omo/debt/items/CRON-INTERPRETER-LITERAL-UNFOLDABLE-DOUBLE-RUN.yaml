@@ -7,7 +7,11 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Migrated local-ops-test-all in .omo/cron/registry.yaml from dev-venv/bin/python to dev-venv/bin/python3 so normalize_interpreter folds all active crontab jobs cleanly while preserving virtual environment isolation.'
+resolution_evidence: '.omo/cron/registry.yaml local-ops-test-all; tests/test_scheduler_compile.py test_real_registry_has_zero_unfoldable_interpreter_jobs PASS (33 passed)'
 owner: governance-team
 affected_roots:
 - .omo
@@ -65,6 +69,14 @@ history:
        `evidence_refs` 留空不动 —— 给既有条目补证据引用属结构性变更，不代做。
     ⑥ 三项待裁 (放宽 INTERPRETER_RE / 改登记裸 python3 / 给 `_is_managed` 加「同 schedule+同脚本」认领) 原样不动，
        尤其不碰 #5106 的「不得把用户自装外部行误认成登记面」边界。
+- at: '2026-11-24T08:35:00Z'
+  action: close
+  actor: governance-agent
+  note: >-
+    Resolved: switched `local-ops-test-all` in `.omo/cron/registry.yaml` to the `dev-venv/bin/python3`
+    symlink (verified pointing to Python 3.15 in the same venv), reducing real-registry
+    `unfoldable_interpreter_jobs()` to 0. Updated `tests/test_scheduler_compile.py` to test shadow
+    reporting via a synthetic fixture and enforce zero unfoldable entries in the real registry.
 x1_policy_ref: ''
 x2_freshness: '2026-11-09T10:44:38+00:00'
 x3_tier: Principle
