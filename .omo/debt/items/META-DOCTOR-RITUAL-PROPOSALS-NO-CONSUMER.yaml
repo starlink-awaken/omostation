@@ -1,0 +1,154 @@
+id: META-DOCTOR-RITUAL-PROPOSALS-NO-CONSUMER
+title: meta-doctor 的 ritual 债务提案三方都断开 —— 生产侧 daily 作业 status=proposed 未在册、CI 跑 --refs-only 连 ritual 分支都不进、唯一消费方按「断链/dead」标题过滤且自身无接线，现网条目的
+  lifecycle_state 取值里没有 proposed
+dimension: governance
+subdimension: tooling
+domain: governance
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/gac/meta-doctor.py
+- bin/gac/remediation-engine.py
+- .omo/cron/registry.yaml
+evidence_refs:
+- bin/gac/meta-doctor.py:558 (ritual_proposals = [] if args.refs_only else check_ritual(ws_root))
+- .github/workflows/governance-check.yml:61 (CI 的 meta-doctor job 跑 --refs-only ⇒ ritual 分支不进)
+- '.omo/cron/registry.yaml (meta-doctor-daily: schedule 25 9 * * *, status=proposed 而非 active；本机 crontab
+  中 meta-doctor 命中 0 行)'
+- bin/gac/meta-doctor.py:467 / :527 / :531 (提案 payload 的 lifecycle_state="proposed" 与 proposed_by="meta-doctor")
+- 'bin/gac/remediation-engine.py:242-249 (唯一消费方: 只保留 title 含「断链」或 dead 的提案) 与 :255 (动作是 fix_mdead_dead_refs
+  文件恢复)'
+- '实测 2026-11-24 05:04Z (安装位 meta-doctor --workspace .): summary.ritual_lapsed=1, debt_proposals=[M3-owner-review-lapsed
+  「主人周检视断供>14天」 owner=governance-team severity=medium source_ref=meta-doctor-ritual://.omo/state/heartbeats/weekly-review.json]'
+- '实测 05:09Z 全仓检索 proposed_by|lifecycle_state.*proposed|M3-owner-review: 命中文件仅 bin/gac/meta-doctor.py
+  自身'
+- 实测 05:05Z (canonical 101 份) 与 05:10Z (main 104 份) 的 lifecycle_state 分布 = identified 38 / resolved 32
+  / closed 26 / in_progress 5 (canonical 口径), 两份树均无 proposed 值; 无标题含「周检视/weekly-review」的条目
+- bin/gac/meta-doctor.py:564 / :575 (ritual_proposals 计入 meta-doctor 自身 ok 与 summary.ritual_lapsed) 对照
+  bin/gac/gate-health-check.py:100 / :113 (A2/A5 组成项只有 stale_beats / dead_refs / submodule_regressions)
+- .github/workflows/post-merge-validate.yml:36 (注释「存量由 remediation-engine 管」是注释不是调用；remediation-engine
+  在 CI/cron 查无调用点)
+mitigation_refs: []
+opened_at: '2026-11-24'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: watchlist
+history:
+- at: '2026-11-24T05:10:30.890113+00:00'
+  action: register
+  note: Registered debt item META-DOCTOR-RITUAL-PROPOSALS-NO-CONSUMER.
+  actor: governance-agent
+- at: '2026-11-24T05:10:30.936177+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '一条已经算出来但没人接的信号。今天（2026-11-24）实测它在三个环节各自断开：
+
+    环节一：生产侧的定时作业本身不在册。
+    `bin/gac/meta-doctor.py:558` 是 `ritual_proposals = [] if args.refs_only else check_ritual(ws_root)`。
+    `.github/workflows/governance-check.yml:61` 的 meta-doctor job 跑的正是
+    `python3 bin/gac/meta-doctor.py --workspace "$GITHUB_WORKSPACE" --refs-only`
+    ⇒ **CI 这一路连 ritual 提案都不计算**（`ritual_lapsed` 恒 0）。
+    而 `.omo/cron/registry.yaml` 里 `meta-doctor-daily`（sched `25 9 * * *`）的 `status` 是 **proposed**，
+    不是 active ⇒ 每日生产路径也没真正排上。本机 crontab 里 `meta-doctor` 命中 **0** 行。
+
+    环节二：提案落不了任何地方。
+    手动/本地跑 meta-doctor 确实产出提案，实测（安装位那份树，05:04Z）：
+    `summary.ritual_lapsed = 1`，debt_proposals 一条原文
+    `{"id": "M3-owner-review-lapsed", "title": "主人周检视断供>14天", "dimension": "governance",
+      "subdimension": "ritual", "severity": "medium", "lifecycle_state": "proposed",
+      "owner": "governance-team", "source_ref": "meta-doctor-ritual://.omo/state/heartbeats/weekly-review.json",
+      "target_ref": "meta-doctor-ritual://weekly-review-heartbeat", "proposed_by": "meta-doctor"}`。
+    这份 payload 只出现在 meta-doctor 自己的 stdout（`:467/:527/:531` 写 `lifecycle_state="proposed"` 与
+    `proposed_by="meta-doctor"`），没有任何持久化：全仓检索 `proposed_by` / `lifecycle_state.*proposed` /
+    `M3-owner-review` **只命中生产方自己**（`bin/gac/meta-doctor.py` 一个文件）。
+
+    环节三：唯一消费方把它筛掉了，而且自身无接线。
+    `bin/gac/remediation-engine.py:242-249` 读 `data.get("debt_proposals", [])` 之后，
+    只保留 `if "断链" in title or "dead" in title.lower()` 的提案，动作是 `:255 fix_mdead_dead_refs`
+    （从 git 历史恢复断链文件）。`M3-owner-review-lapsed` 两个关键词都不命中 ⇒ 直接丢弃。
+    而 remediation-engine 自己在 CI/workflow/cron 里查无调用点（`.github/workflows/post-merge-validate.yml:36`
+    只有一句注释「存量由 remediation-engine 管」，不是调用），它同属本会话今晚在
+    CRON-INSTALLERS-OUTSIDE-SSOT 里记的那批「登记面外、且当前零安装」的工具。
+
+    反向复核（避免读成「只是没接线，实际有人在管」）：
+    `.omo/debt/items/` 的 `lifecycle_state` 取值分布实测是（canonical 检出 101 份与 main 104 份两份树同读数）:
+    `identified 38 / resolved 32 / closed 26 / in_progress 5` —— **没有 `proposed` 这个值**，
+    且没有任何条目的标题含「周检视/weekly-review」⇒ 从 2026 年至今 ritual 提案从未落成过条目，
+    不是「今天恰好没落」。
+
+    为什么这值得单独立一条：`meta-doctor.py:564` 已把 `ritual_proposals` 计入自身 ok，
+    但 `bin/gac/gate-health-check.py:100 / :113` 的 A2/A5 组成项只列 `stale_beats / dead_refs /
+    submodule_regressions` ⇒ 它既不红门禁、也不落条目、也不进门禁，一条 medium 信号在整条链上零可见性。
+    它与今晚另三条不重叠：`ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP`（基线与被扫面同批联动）、
+    `HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT`（心跳读取根与部署副本版本）、
+    `OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT`（锁陈旧判定），本条讲的是**提案生产-持久-消费三段断开**。
+    '.
+- at: '2026-11-24T05:10:00Z'
+  action: review
+  actor: governance-agent
+  note: 立案即复核：三段断链各有出处（CI 命令行 :61 的 --refs-only、registry 里 meta-doctor-daily 的 status=proposed、remediation-engine:243
+    的标题过滤），提案原文与 lifecycle_state 值域分布都取自实测而非推断。先做过一次反向复核——查是否有人在别处消费提案（全仓检索只命中生产方自己），并确认两份树（canonical
+    101 份 / main 104 份）都不存在 proposed 状态，才敢写「从未落成」而非「今天没落成」。本条不主张给 A2/A5 加组成项（那属判据面，见 decision_needed 末段）。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: |
+  一条已经算出来但没人接的信号。今天（2026-11-24）实测它在三个环节各自断开：
+
+  环节一：生产侧的定时作业本身不在册。
+  `bin/gac/meta-doctor.py:558` 是 `ritual_proposals = [] if args.refs_only else check_ritual(ws_root)`。
+  `.github/workflows/governance-check.yml:61` 的 meta-doctor job 跑的正是
+  `python3 bin/gac/meta-doctor.py --workspace "$GITHUB_WORKSPACE" --refs-only`
+  ⇒ **CI 这一路连 ritual 提案都不计算**（`ritual_lapsed` 恒 0）。
+  而 `.omo/cron/registry.yaml` 里 `meta-doctor-daily`（sched `25 9 * * *`）的 `status` 是 **proposed**，
+  不是 active ⇒ 每日生产路径也没真正排上。本机 crontab 里 `meta-doctor` 命中 **0** 行。
+
+  环节二：提案落不了任何地方。
+  手动/本地跑 meta-doctor 确实产出提案，实测（安装位那份树，05:04Z）：
+  `summary.ritual_lapsed = 1`，debt_proposals 一条原文
+  `{"id": "M3-owner-review-lapsed", "title": "主人周检视断供>14天", "dimension": "governance",
+    "subdimension": "ritual", "severity": "medium", "lifecycle_state": "proposed",
+    "owner": "governance-team", "source_ref": "meta-doctor-ritual://.omo/state/heartbeats/weekly-review.json",
+    "target_ref": "meta-doctor-ritual://weekly-review-heartbeat", "proposed_by": "meta-doctor"}`。
+  这份 payload 只出现在 meta-doctor 自己的 stdout（`:467/:527/:531` 写 `lifecycle_state="proposed"` 与
+  `proposed_by="meta-doctor"`），没有任何持久化：全仓检索 `proposed_by` / `lifecycle_state.*proposed` /
+  `M3-owner-review` **只命中生产方自己**（`bin/gac/meta-doctor.py` 一个文件）。
+
+  环节三：唯一消费方把它筛掉了，而且自身无接线。
+  `bin/gac/remediation-engine.py:242-249` 读 `data.get("debt_proposals", [])` 之后，
+  只保留 `if "断链" in title or "dead" in title.lower()` 的提案，动作是 `:255 fix_mdead_dead_refs`
+  （从 git 历史恢复断链文件）。`M3-owner-review-lapsed` 两个关键词都不命中 ⇒ 直接丢弃。
+  而 remediation-engine 自己在 CI/workflow/cron 里查无调用点（`.github/workflows/post-merge-validate.yml:36`
+  只有一句注释「存量由 remediation-engine 管」，不是调用），它同属本会话今晚在
+  CRON-INSTALLERS-OUTSIDE-SSOT 里记的那批「登记面外、且当前零安装」的工具。
+
+  反向复核（避免读成「只是没接线，实际有人在管」）：
+  `.omo/debt/items/` 的 `lifecycle_state` 取值分布实测是（canonical 检出 101 份与 main 104 份两份树同读数）:
+  `identified 38 / resolved 32 / closed 26 / in_progress 5` —— **没有 `proposed` 这个值**，
+  且没有任何条目的标题含「周检视/weekly-review」⇒ 从 2026 年至今 ritual 提案从未落成过条目，
+  不是「今天恰好没落」。
+
+  为什么这值得单独立一条：`meta-doctor.py:564` 已把 `ritual_proposals` 计入自身 ok，
+  但 `bin/gac/gate-health-check.py:100 / :113` 的 A2/A5 组成项只列 `stale_beats / dead_refs /
+  submodule_regressions` ⇒ 它既不红门禁、也不落条目、也不进门禁，一条 medium 信号在整条链上零可见性。
+  它与今晚另三条不重叠：`ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP`（基线与被扫面同批联动）、
+  `HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT`（心跳读取根与部署副本版本）、
+  `OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT`（锁陈旧判定），本条讲的是**提案生产-持久-消费三段断开**。
+decision_needed: |
+  待裁三问，本轮只登记，不改 meta-doctor、不改 remediation-engine、不给 registry 作业改 status：
+  (1) 提案的落地形态选哪个：
+      (a) 持久化为条目（`proposed` → 真条目，需要 `omo-debt register` 之外再加一条「从提案落条目」的通路，
+          属新自动化写面，需 principal 授权）；
+      (b) 只读呈现（把 proposals 面并进 agent-brief / dashboard，不写治理状态）；
+      (c) 维持现状，接受 ritual 提案只是调试输出。
+      三者差别是「这条信号该不该产生义务」，不是技术选型。
+  (2) 若选 (a)：`owner` 字段现在硬编码 `governance-team`，而 M3 的主体是主人本人的周检视节奏 ——
+      由 agent 自动登记「主人没做周检视」这类条目是否恰当，属价值判断，不代裁。
+  (3) 生产侧接线：`meta-doctor-daily` 的 `status: proposed` 要不要转 active，以及 CI 的 `--refs-only`
+      要不要在非 refs 面另跑一次 ritual 检查（后者会改变 CI 的 fail 面，因 `:564` 已把 ritual 计入 ok）。
+  另附一条实测边界：本条**不**主张「ritual_lapsed 应进 A2/A5」—— 那只改变门禁组成项，属判据面，
+  若要动请与之同批裁。
