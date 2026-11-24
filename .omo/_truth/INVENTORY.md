@@ -2,12 +2,13 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-09
+last-reviewed: 2026-11-24
 type: ssot
 ---
 
 # Workspace 项目资产索引
 
+> 更新: 2026-11-24 (到期真复核: 与 `docs/project-registry.yaml` 逐项核对, §1.1 17 项 active 项目与 §1.2 paused/archived 归口完全对齐, 无漏列或状态漂移)
 > 更新: 2026-11-09 (truth-docs 到期复核: §1.1 补齐 registry 里漏列的 5 个 active 项目; family-hub 实为 paused; hermes-console 归位 §1.2; knowledge 按 registry 的复合体口径合并)
 > 更新: 2026-09-25 (truth-docs 到期复核: c2g/omo-debt 内包、_archived 引用移除、hermes/agora-dashboard 收敛口径对齐 registry)
 > 性质: 项目资产导航，不是 live runtime snapshot。

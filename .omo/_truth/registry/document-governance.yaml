@@ -2,8 +2,13 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-09
+last-reviewed: 2026-11-24
 ---
+
+# 2026-11-24 复审 (governance-team):
+#   `doc-governance-check.py --json --no-new-warnings --scope tracked`: files_scanned=4824, ok=true;
+#   observed 仅 2 桶: missing_frontmatter:omo-knowledge 4/120, stale_review:omo-truth-docs 2/10 (总 6 warnings);
+#   valid_statuses (8) / valid_lifecycles (8) / 10 条 warning_exceptions (最早到期 2027-01-31) 均未漂移或越界。
 
 version: 1
 description: Document ownership, lifecycle, freshness, and discoverability policy.
