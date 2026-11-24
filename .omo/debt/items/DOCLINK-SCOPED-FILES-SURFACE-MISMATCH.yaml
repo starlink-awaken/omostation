@@ -66,6 +66,34 @@ history:
     ⑤ 排期补记：本条此前同为 `unscheduled`（`next_review_at` 空，成因见 OMO-DEBT-REGISTER-NO-REVIEW-DATES），本轮补 `next_review_at=2026-12-08` 后退出 `unscheduled` 桶（4 → 0），但**不等于进面板** —— 内核 `REVIEW_WINDOW_DAYS = 7`，12-08 是 14 天后，既不进 `due_now` 也不进 `upcoming`，四条在 queue 的任何列表里都不出现（`build_review_queue` 实测 11-24 04:10Z：修复前 due_now 1 / upcoming 2 / unscheduled 4，修复后 unscheduled 0 而另两桶不变）。准确状态是「已排期、未进 7 天窗口」。
     ⑥ 修法 (a) 过滤 `--files` / (b) `LINK_RE` 跳过 code span / (c) 维持现状，本轮零改动；
        取 (b) 需先补的「默认面 5 个根文件里反引号路径计数」读数本轮**未做**，不代为判定。
+- at: '2026-11-24T07:17:30Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **补上 ⑤ 留的那笔读数（11-24 06:39Z）：修法 (b) 的代价比立案估计的大一个量级。**
+
+    立案原文说「若取 (b)（`LINK_RE` 跳过反引号 code span）须先补一个读数：默认面 5 个根文件里以反引号书写的面有多大」。实测
+    （`bin/gac/../bin/ssot/doc-link-check.py:20-28` 的 `LOCAL_DOC_GLOBS` 默认面前 5 个根文件，
+    按 `` `...` `` span 计数，粗口径、含非路径 span）：
+
+    | 文件 | 反引号 span | 其中含 `/` |
+    |------|-----------|-----------|
+    | `AGENTS.md` | 370 | 118 |
+    | `CLAUDE.md` | 183 | 72 |
+    | `README.md` | 107 | 50 |
+    | `ARCHITECTURE.md` | 127 | 78 |
+    | `LAYER-INDEX.md` | 20 | 17 |
+    | 合计 | **807** | **335** |
+
+    ⇒ 若采 (b)，被排除的是这 335 个含斜杠的反引号 span（上界，非精确链接数：其中一部分不是可解析路径）。
+    本仓大量路径正是以反引号书写（今晚我自己写的 review 条目也一样），所以 (b) 不是「只排语法性假阳性」的小改，
+    而是把默认面的相当一部分检查面关掉 —— 这个代价此前没有被写进裁决材料。
+    ⇒ 相对地，(a)（让 `--files` 按 `LOCAL_DOC_GLOBS` 过滤，`gac-local-gate.py:993-1001`）只收窄**非 strict 侧**的越界面，
+    不影响默认面那 36 个文件。今晚 03:59Z 已实测 2 条假阳性来自 `docs/pitfalls.md`（不在 36 内），
+    所以 (a) 恰好命中本案的真实痛点，而 (b) 会连带砍掉默认面的反引号路径。
+    方法学与边界：这是 grep 级粗读数，不是 `LINK_RE` 精确命中数；采 (b) 之前应由 owner 用真 `LINK_RE` 复算一次。
+    本轮零改动，`lifecycle_state`/`gate_level`/`severity`/`weight`/`evidence_refs`/`description`/`decision_needed` 均未动，
+    `next_review_at` 保持 2026-12-08。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

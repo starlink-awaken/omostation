@@ -331,6 +331,27 @@ history:
     在 main 上**没有留下**（注释今日仍为 0）。
     ⑤ 剩余待裁仍是「范围面何时从 advisory 升为阻断、升在哪一层」；选项 ②③ 的前置（追链问题、claim 数据出
     `.gitignore:12`）本轮**未复核**，不据此下结论。裁决前不改 hook、不动 projects/ecos 的 sgf-policy.yaml、不把 `--advisory` 摘掉。
+- at: '2026-11-24T07:17:30Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **把裁决项 ③ 的前置测出来了（11-24 06:39Z）：「claim 数据出 `.gitignore`」这一半是真的，但要看清是哪一半。**
+
+    ① `.gitignore:12` = `.omo/_delivery/*`；`git check-ignore --no-index -v .omo/_delivery/agent-workflows/runs`
+    ⇒ 命中 `.gitignore:12` ⇒ **run 记录目录确实被忽略**，CI 默认 checkout 读不到，本条 ⑦ 段（无数据可判）成立。
+    ② 但「请出 `.gitignore`」不是全有或全无：`git ls-files .omo/_delivery` 现有 **22** 个被跟踪文件，
+    逐名列出后确认它们属于 `calibration/`、`collab-scenarios/`(6)、`evalsets/`、`events/.gitkeep`、
+    `rule-drafts/`(3)、`scene-outcomes/.gitkeep`、`schedule-harness/`(2)、`x3-batch2/`(8) ——
+    **`runs/` 与 `locks/` 一个都不在其中**（即 22 个是历史显式 add 进来的旁支，不是 run 记录）。
+    ⇒ 选项 ③ 的前置工作量的准确说法是：只需把 `.omo/_delivery/agent-workflows/runs/**`（或一份 run 摘要投影）纳入跟踪，
+    而不是把整个 `.omo/_delivery` 从忽略里搬出来；今天那 22 个文件也顺手说明「已被跟踪的文件不受 ignore 影响」
+    （与今晚登记的 `git check-ignore 对已跟踪文件返回 rc=1` 同一条判据）。
+    ③ 本条剩下的那一问（范围面何时从 `--advisory` 升为阻断、升在哪一层）与 ⑥ 追链问题**未因此改变**，
+    仍然待裁；本轮零改动：不改 hook、不动 `projects/ecos` 的 `sgf-policy.yaml`、不把 `gac-local-gate.py:59-67`
+    的 `--advisory` 摘掉、不动任何 `.gitignore` 行。
+    ④ 另留一条今天新证的相关事实（不改判据，仅登记）：本会话批次 2/3 共 7 个手写 `.omo/debt/items/*.yaml` 的交付，
+    以 `--range 8c2472a38..5572f92a6` 复算 `write-owner-audit` 得 **8 条 violations**（7 条点名本会话文件、
+    1 条同 range 他人交付），而同一改动作为 PR #5505 交付时 12 项 CI 全绿 ⇒ 判据可用、场合差别来自身份门 + `--advisory`。
 decision_needed: '只剩一问 (2026-11-09 复算后, 原三问的 (1)(2) 已被实测否证为不可执行/非本因):
 
   **范围面何时从 advisory 升为阻断, 升在哪一层** —— ① 维持现状只报数 (CI 与本地都跑,
