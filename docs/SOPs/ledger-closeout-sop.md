@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-24
 type: doc
 review-state: metadata-fresh
 title: BET Ledger Closeout SOP — 5 步标准流程 (A2)
@@ -54,7 +54,7 @@ git submodule update --init       # 防指针回退 (PITFALL-SW-002)
 ```bash
 python3 bin/ssot/doc-governance-check.py --no-new-warnings
 python3 bin/ssot/script-registry.py validate
-python3 bin/plan/bet-ledger.py lint  docs/plans/3y-bet-ledger.yaml
+python3 bin/plan/bet-ledger.py lint
 make gac-local-gate
 ```
 
