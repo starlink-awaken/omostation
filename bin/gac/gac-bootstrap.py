@@ -145,6 +145,8 @@ def check_indexed_integrity() -> dict:
     device_unavailable: list[dict] = []
     checked = 0
     for r in rules:
+        if str(r.get("lifecycle", "")).lower() in {"declared", "removed", "superseded"}:
+            continue
         base = _source_ref_base(r.get("source_ref"))
         if not PATH_REF_RE.match(base):
             continue

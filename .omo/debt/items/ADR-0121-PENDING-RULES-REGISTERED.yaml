@@ -7,7 +7,11 @@ scope: "workspace"
 severity: "low"
 weight: 0.1
 entropy_class: "low"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
+closed_at: "2026-11-24"
+closed_by: "governance-team"
+close_reason: "Resolved via BET-Y2Q4-T10-362 option (a): formally introduced the 'declared' lifecycle state to GacRule schema, gac-validate, and check-governance-trend (exempt from 90d draft hard-fail). Reclassified CR-L0-SSOT-PATH-NORM to lifecycle: declared, aligning registry with ADR-0121 §1.2 without triggering gate failures."
+resolution_evidence: "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml:48; bin/gac/gac-validate.py:46; bin/gac/check-governance-trend.py:102; .omo/_truth/registry/governance-checks.yaml:654; tests/unit/gac/test_gac_declared_lifecycle.py"
 owner: "governance-team"
 affected_roots:
 - .omo/_knowledge/decisions/0121-governance-convergence-initiative.md
@@ -101,4 +105,11 @@ history:
     **纪律**：`gac-validate --gate` 的退出码**不能经过管道读** ——
     本轮第一次跑用 `| tail` 取 `$?`, 读到 0, 与 CI 的 1 相反,
     正是本仓 §7「取退出码不要经过管道」那条的同一个坑。
+  actor: "governance-agent"
+- at: "2026-11-24T06:38:00+00:00"
+  action: close
+  note: >-
+    BET-Y2Q4-T10-362 落地闭环：走方案 (a) 正式给 GacRule 生命周期引入 `declared` 状态，
+    不受 90 天 draft 硬门限制且不触发待激活警告。将 CR-L0-SSOT-PATH-NORM 成功正名为
+    `lifecycle: declared`，与 ADR-0121 §1.2「待加」意图完全自洽。实测 trend/validate/gate 全绿。
   actor: "governance-agent"
