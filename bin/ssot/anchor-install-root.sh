@@ -44,7 +44,25 @@ case "${1:-}" in
     echo "anchor_date:   $(git -C "$INSTALL_ROOT" log -1 --format=%ci 2>/dev/null || echo '-')"
     echo "origin_main:   $(git -C "$INSTALL_ROOT" rev-parse "$DEFAULT_REF" 2>/dev/null || echo '-')"
     echo "checkout_sha:  $(git -C "$CHECKOUT" rev-parse HEAD 2>/dev/null || echo '-') (读平面, 仅参考)"
+    if [[ -f "$INSTALL_ROOT/runtime/release-manifest.json" ]]; then
+      echo "manifest:      $INSTALL_ROOT/runtime/release-manifest.json"
+    fi
     exit 0
+    ;;
+  --manifest)
+    manifest_file=""
+    if [[ -f "$INSTALL_ROOT/runtime/release-manifest.json" ]]; then
+      manifest_file="$INSTALL_ROOT/runtime/release-manifest.json"
+    elif [[ -f "$CHECKOUT/runtime/release-manifest.json" ]]; then
+      manifest_file="$CHECKOUT/runtime/release-manifest.json"
+    fi
+    if [[ -n "$manifest_file" && -f "$manifest_file" ]]; then
+      cat "$manifest_file"
+      exit 0
+    else
+      echo "❌ 尚未生成 release-manifest.json (请先运行 anchor-install-root.sh 发布)" >&2
+      exit 1
+    fi
     ;;
   --check)
     CHECK_ONLY=1
@@ -132,11 +150,73 @@ if ! git -C "$INSTALL_ROOT" cat-file -e "${target}^{commit}" 2>/dev/null; then
   exit 3
 fi
 
+# 工作区脏状态预检: 严禁盲目覆盖或破坏已修改的安装位状态
+dirty_status="$(git -C "$INSTALL_ROOT" status --porcelain 2>/dev/null || true)"
+if [[ -n "$dirty_status" && "${ANCHOR_ALLOW_DIRTY:-0}" != "1" ]]; then
+  echo "拒绝: 安装位工作区存在未提交的修改 (dirty):" >&2
+  echo "$dirty_status" | head -20 >&2
+  echo "  请先在 $INSTALL_ROOT 提交或丢弃改动，或使用 ANCHOR_ALLOW_DIRTY=1 显式放行。" >&2
+  exit 6
+fi
+
 git -C "$INSTALL_ROOT" checkout --detach "$target" >/dev/null
 echo "-- 同步子模块"
-git -C "$INSTALL_ROOT" submodule update --init --recursive >/dev/null 2>&1 || true
+git -C "$INSTALL_ROOT" submodule update --init --recursive --no-fetch >/dev/null 2>&1 || git -C "$INSTALL_ROOT" submodule update --init --recursive >/dev/null 2>&1 || true
 echo "-- 同步 omo venv (常驻族运行依赖)"
 (cd "$INSTALL_ROOT/projects/omo" && uv sync --frozen >/dev/null 2>&1) || echo "   ⚠️ omo venv 同步失败 (需人工检查)"
+
+echo "-- 生成发布溯源清单 (release-manifest.json)"
+cur_anchor_sha="$(current_anchor)"
+manifest_json="$(python3 -c "
+import json, subprocess, sys
+from datetime import datetime, timezone
+
+install_root = sys.argv[1]
+target = sys.argv[2]
+cur_head = sys.argv[3]
+checkout_sha = sys.argv[4]
+
+submodules = {}
+try:
+    p = subprocess.run(['git', '-C', install_root, 'submodule', 'status', '--recursive'],
+                       capture_output=True, text=True, check=False)
+    for line in p.stdout.splitlines():
+        parts = line.strip().split()
+        if len(parts) >= 2:
+            sha = parts[0].lstrip('+-U')
+            name = parts[1]
+            submodules[name] = sha
+except Exception:
+    pass
+
+manifest = {
+    'released_at': datetime.now(timezone.utc).isoformat(),
+    'source_commit': target,
+    'install_root': install_root,
+    'install_root_sha': cur_head,
+    'checkout_sha': checkout_sha,
+    'producer': 'bin/ssot/anchor-install-root.sh',
+    'submodule_shas': submodules,
+}
+print(json.dumps(manifest, indent=2))
+" "$INSTALL_ROOT" "$target" "$cur_anchor_sha" "$checkout_sha")"
+
+mkdir -p "$INSTALL_ROOT/runtime" 2>/dev/null || true
+if [[ -d "$INSTALL_ROOT/runtime" ]]; then
+  echo "$manifest_json" > "$INSTALL_ROOT/runtime/release-manifest.json" 2>/dev/null || true
+fi
+
+state_root="$CHECKOUT"
+if [[ -f "$CHECKOUT/bin/lib/repo_root.py" ]]; then
+  detected_state_root="$(python3 "$CHECKOUT/bin/lib/repo_root.py" --json 2>/dev/null | grep -o '"state_root": "[^"]*"' | cut -d'"' -f4 || true)"
+  if [[ -n "$detected_state_root" && -d "$detected_state_root" ]]; then
+    state_root="$detected_state_root"
+  fi
+fi
+mkdir -p "$state_root/runtime" 2>/dev/null || true
+if [[ -d "$state_root/runtime" ]]; then
+  echo "$manifest_json" > "$state_root/runtime/release-manifest.json" 2>/dev/null || true
+fi
 
 echo "-- 自报校验"
 (cd "$INSTALL_ROOT" && /opt/homebrew/bin/python3 bin/lib/repo_root.py --json 2>/dev/null | head -6) || true

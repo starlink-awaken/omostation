@@ -154,5 +154,44 @@ def test_default_target_is_origin_main(planes, tmp_path):
     assert head == want, f"默认目标应是 origin/main: head={head} origin/main={want}"
 
 
+def test_dirty_install_root_is_rejected_without_opt_in(planes, tmp_path):
+    """安装位工作树有未提交修改时拒绝重锚 (exit 6)，ANCHOR_ALLOW_DIRTY=1 方可放行。"""
+    sha = _advance_origin_main(planes, tmp_path, 2)
+    install = Path(planes["install"])
+    (install / "dirty_file.txt").write_text("uncommitted", encoding="utf-8")
+
+    # 1. 默认应拒绝
+    r = _run(planes)
+    assert r.returncode == 6, f"dirty install_root 必须 exit 6: {r.stdout} {r.stderr}"
+    assert "未提交的修改" in r.stderr or "dirty" in r.stderr
+
+    # 2. ANCHOR_ALLOW_DIRTY=1 放行
+    r_allowed = _run(planes, env_extra={"ANCHOR_ALLOW_DIRTY": "1"})
+    assert r_allowed.returncode == 0, f"ANCHOR_ALLOW_DIRTY=1 必须放行: {r_allowed.stdout} {r_allowed.stderr}"
+
+
+def test_reanchor_generates_and_inspects_release_manifest(planes, tmp_path):
+    """重锚成功后在 runtime/ 下产生结构化 release-manifest.json，并支持 --manifest 读取。"""
+    sha = _advance_origin_main(planes, tmp_path, 1)
+    r = _run(planes)
+    assert r.returncode == 0, f"{r.stdout} {r.stderr}"
+
+    manifest_file = Path(planes["install"]) / "runtime" / "release-manifest.json"
+    assert manifest_file.is_file(), "必须生成 release-manifest.json"
+
+    import json
+    data = json.loads(manifest_file.read_text(encoding="utf-8"))
+    assert data["source_commit"] == sha
+    assert data["install_root"] == planes["install"]
+    assert "released_at" in data
+    assert data["producer"] == "bin/ssot/anchor-install-root.sh"
+
+    # 测试 --manifest 子命令
+    r_man = _run(planes, "--manifest")
+    assert r_man.returncode == 0, f"{r_man.stdout} {r_man.stderr}"
+    data_out = json.loads(r_man.stdout)
+    assert data_out["source_commit"] == sha
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
