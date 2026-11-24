@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.1
 entropy_class: "low"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
 affected_roots:
 - projects/agora/etc/bos-services.yaml
@@ -18,6 +18,7 @@ evidence_refs:
 mitigation_refs: []
 opened_at: "2026-11-10"
 last_reviewed_at: "2026-11-24"
+closed_at: "2026-11-24"
 next_review_at: "2026-12-08"
 gate_level: none
 x1_policy_ref: ""
@@ -82,3 +83,7 @@ history:
     ⇒ 裁决问题本身不变（哪个登记面是权威、`manual` 是否该进跳过集合）。本轮只复测读数，未改任何一侧的登记值，
     也未改 `bos-uri-verify.py`。附带一个复算陷阱：`.omo/_truth/registry/services.yaml` 是**多文档 YAML**
     （`safe_load` 直接抛 ComposerError），复算必须用 `yaml.safe_load_all`。
+- at: '2026-11-24T09:15:00Z'
+  action: resolve
+  actor: governance-agent
+  note: 'Wave 2 闭环: bin/ssot/bos-uri-verify.py 新增 load_manual_disabled_uris()（经 code_root() 与 yaml.safe_load_all 解析 services.yaml 中 enabled=false 且 scheduler=manual 的能力），仅对 transport=http 跳过监听探活并记为 skipped，保留非 HTTP 能力与真实守护进程的探活检查；补单测 tests/unit/test_bos_uri_verify_manual_skip.py 并实测 Unreachable=0。'

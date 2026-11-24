@@ -955,24 +955,6 @@ jobs:
     sfop_slot: S
     reconciliation_note: ADR-0431 D2 要求的规则生命周期扫描, 目前完全没有在跑。
 
-  - name: scene-calibration-weekly
-    schedule: "0 6 * * 1"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/calibration-engine.py daily >> runtime/cron/scene-calibration.log 2>&1'
-    planes: [crontab]
-    reality: declared_only
-    status: proposed
-    owner: governance-team
-    sfop_slot: S
-
-  - name: scene-registry-sync-daily
-    schedule: "15 6 * * *"
-    command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-registry.py generate >> runtime/cron/scene-registry.log 2>&1'
-    planes: [crontab]
-    reality: declared_only
-    status: proposed
-    owner: governance-team
-    sfop_slot: S
-
   - name: scene-guardrail-daily
     schedule: "30 6 * * *"
     command: 'cd "$HOME/Workspace" && python3 bin/ssot/scene-v3-guardrail.py validate-all --allow-forward-refs >> runtime/cron/scene-guardrail.log 2>&1'

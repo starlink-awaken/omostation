@@ -8,7 +8,7 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - bin/gac/check-debt-staleness.py
@@ -33,6 +33,7 @@ evidence_refs:
 mitigation_refs: []
 opened_at: '2026-11-24'
 last_reviewed_at: '2026-11-24'
+closed_at: '2026-11-24'
 next_review_at: '2026-12-08'
 gate_level: watchlist
 history:
@@ -85,6 +86,10 @@ history:
   note: 立案即复核：三段断点全部按行号取到 (:69-70 异常 return 0 / :71 不读 returncode / :206-214 self-test 只在旗标下跑 / :221 恒
     exit 0)，复现用三种环境对照而非单一读数 —— git-less 抽取与真实 worktree 的候选分母完全相同 (42/26) 而结论从 21 翻到 0，这才把『数据不同』与『仪器没跑』区分开。反向前提也查过：self_test
     不是不存在，而是存在但没被默认路径调用 (:132-205 完整可用)，所以本条的措辞是『不自证』而不是『无自证能力』。不代改判据面 (见 decision_needed 三选一)。
+- at: '2026-11-24T09:15:00Z'
+  action: resolve
+  actor: governance-agent
+  note: 'Wave 2 闭环 (方案 a): bin/gac/check-debt-staleness.py 的 _commits_since() 检查 git 退出码与可读性（异常或非 0 退出返回 -1 哨兵），collect() 输出 git_ok: false 与 stale_count: null，_render() 输出「无法取证 (git 不可读)」而不再输出「✅ 无」假绿；main() 默认路径静默运行 self_test(quiet=True) 且 self_test 同时校验无 .git 目录 fail-honesty，补单测 tests/unit/gac/test_check_debt_staleness.py。'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
