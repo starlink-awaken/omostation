@@ -134,3 +134,20 @@ history:
     3. 运行 bin/ssot/anchor-install-root.sh --check，输出「锚点一致 origin/main: e41d012b8」，退出码 0；
     4. 联动更新托管克隆 code-main 并触发全景驾驶舱采集，data.json 中 code_root_health.verdict 确认翻转为 PASS。
   actor: "governance-agent"
+- at: '2026-11-24T02:14:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **并发披露 (11-24 02:13Z)：本条在 #5503 跑 CI 期间被 PR #5502 结案；结案实证与本条 01:19Z 读数一致，两点补充。**
+    ① 本条只追加这条 review，main 的 close 五项 (lifecycle_state=closed / gate_level=none / closed_at /
+    close_reason / resolution_evidence) 与全部 4 条 history 原样保留，`next_review_at` 也不动 (仍是 2026-11-16)。
+    ② 他们处置的正是本条 ③ 段观测到的阻塞对象：`resolution_evidence` 写「清理 projects/agora 与 projects/omo 内本地
+    uv.lock 后安装位工作树 0 脏项」⇒ 我 01:19Z 记的「唯一脏面 = 安装位子模块 `M uv.lock`」已被清掉并重锚
+    (5cec6612a → e41d012b8，落后 297 提交 / 14 天)，与本条 ① 段 `--check` rc=0、落后 0 同读数 ⇒ 「被挡住」这一实例闭环。
+    ③ 未随结案消失的是**能力形状**：`.omo/cron/registry.yaml:1237-1240` 的排班仍只跑 `anchor-install-root.sh --check`，
+    没有自愈分支 ⇒ 下次漂移仍需人工重锚。本条 ② 段刚记录判据修复生效 (11-24 起正确报「锚点落后 origin/main 241 个提交」)，
+    判据修好了但通道仍是只读 ⇒ 原裁决项 (2) 仍开放，且对象比结案前更清楚：给排班加自愈腿 (部署面写，需 principal 授权)
+    还是维持人工重锚 + 只告警。
+    ④ 旁证一条：main 上的 `close_reason` 与 `resolution_evidence` 是**手写**进去的 —— broker `close` 不能写这两个字段
+    (见 OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY，`omo_debt_cli.py:80-86`)，本次结案是该缺陷「只能 broker 外手写」这条腿的
+    第 2 个活体实例。`gate_level` 被覆写那条腿本次**未触发**：base 已是 `none` (按 merge-base 逐字段核实)，不是 close 覆写的结果。

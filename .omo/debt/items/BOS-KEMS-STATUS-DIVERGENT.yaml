@@ -17,8 +17,8 @@ evidence_refs:
 - .omo/_truth/registry/services.yaml
 mitigation_refs: []
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
-next_review_at: "2026-11-17"
+last_reviewed_at: "2026-11-24"
+next_review_at: "2026-12-08"
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
@@ -68,3 +68,17 @@ history:
     最明显的一例)。裁决项因此收窄为一个: 探针该不该跳过手动能力, 以及这种
     「URI 有效但无守护进程」的条目在 BOS 面该用什么状态表达。
   actor: "governance-agent"
+- at: '2026-11-24T01:47:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 01:24Z)：三个事实全部原样成立，未自愈。**
+    ① `.omo/_truth/registry/services.yaml:4759-4784` 四条 kems（status/graph/ocr_queue/forecast 同族）仍是
+    `enabled: false` + `scheduler: manual` + `trigger: on_demand` + `disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"`。
+    ② `projects/agora/etc/bos-services.yaml:3028-3048` 同一批 URI 仍写 `status: active` + `http_url: http://localhost:8090/api/kems/*`。
+    ③ `bin/ssot/bos-uri-verify.py:173` 的跳过集合仍是 `("deprecated", "unimplemented", "planned")` —— **没有** `manual`
+    或 `enabled:false` 的概念，因此它按 agora 面把这 4 条当活跃 HTTP 服务探。
+    ④ 端口实况：`lsof -nP -iTCP:8090 -sTCP:LISTEN` **rc=1、0 行**（无监听）⇒ 4 条恒 unreachable，与本条描述一致。
+    ⇒ 裁决问题本身不变（哪个登记面是权威、`manual` 是否该进跳过集合）。本轮只复测读数，未改任何一侧的登记值，
+    也未改 `bos-uri-verify.py`。附带一个复算陷阱：`.omo/_truth/registry/services.yaml` 是**多文档 YAML**
+    （`safe_load` 直接抛 ComposerError），复算必须用 `yaml.safe_load_all`。
