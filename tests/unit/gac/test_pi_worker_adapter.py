@@ -764,17 +764,29 @@ def test_failed_trial_directory_removal_is_cleanup_unconfirmed(tmp_path: Path, m
 
 @pytest.mark.parametrize("existing", [False, True])
 def test_unsafe_or_overwrite_receipt_path_is_rejected(tmp_path: Path, existing: bool):
-    receipt = (Path.cwd() / f"unsafe-pi-receipt-{tmp_path.name}.json") if not existing else safe_receipt(tmp_path)
-    if existing:
-        receipt.write_text("existing", encoding="utf-8")
+    # 「非临时」目录用检出根: 结构上不在任何系统临时根之下 (worktree 约定落在 ~/ws-*)。
+    # 原来用 `Path.cwd()` 且**无清理** —— 在 /tmp/<worktree> 里跑时该路径被判成临时、
+    # 校验放行、适配器真的把 receipt 写进 /tmp, 于是首跑红而**再跑绿** (上一条留下的
+    # 文件让 exists 检查命中) —— 判据自否证 (2026-11-24 清掉残留后复现: run1 failed,
+    # run2 passed, 残留文件 1 个)。同源用例见 codex / omp 两个 adapter 测试。
+    receipt = (
+        (SCRIPT.parents[2] / f"unsafe-pi-receipt-{tmp_path.name}.json")
+        if not existing
+        else safe_receipt(tmp_path)
+    )
+    try:
+        if existing:
+            receipt.write_text("existing", encoding="utf-8")
 
-    with pytest.raises(adapter.AdapterError, match="unsafe_receipt"):
-        adapter.run_worker(
-            prompt="x",
-            execute=True,
-            receipt_path=receipt,
-            user_home=user_pi_home(tmp_path),
-        )
+        with pytest.raises(adapter.AdapterError, match="unsafe_receipt"):
+            adapter.run_worker(
+                prompt="x",
+                execute=True,
+                receipt_path=receipt,
+                user_home=user_pi_home(tmp_path),
+            )
+    finally:
+        receipt.unlink(missing_ok=True)
 
 
 def test_exact_marker_mismatch_fails_closed_and_never_persists_stderr_secret(
