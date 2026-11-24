@@ -442,7 +442,8 @@ def _is_red(report: dict, name: str) -> bool:
     \`core_files\` 的 \`ok\` 是**数量**（存在的文件数）而不是布尔 —— 用 \`is False\`
     永远不成立；它的「坏」定义是 missing 非空。
     """
-    item = report.get(name) or {}
+    # core_files 的读数挂在 report["files"]（历史键名），别按名字直接取。
+    item = report.get("files" if name == "core_files" else name) or {}
     if name == "core_files":
         return bool(item.get("missing"))
     return item.get("ok") is False
