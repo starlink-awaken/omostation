@@ -20,11 +20,34 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _find_omo_python() -> str:
+    """按优先级寻找可用的 omo python 解释器 (ADR-0456 E2)."""
+    candidates = [
+        ROOT / "projects" / "omo" / ".venv" / "bin" / "python",
+    ]
+    try:
+        sys.path.insert(0, str(ROOT / "bin" / "lib"))
+        import repo_root
+        c_root = repo_root.canonical_root()
+        if c_root and c_root != ROOT:
+            candidates.append(c_root / "projects" / "omo" / ".venv" / "bin" / "python")
+        i_root = repo_root.install_root()
+        if i_root:
+            candidates.append(i_root / "projects" / "omo" / ".venv" / "bin" / "python")
+    except Exception:
+        pass
+    candidates.append(Path.home() / ".local/opt/omostation/projects/omo/.venv/bin/python")
+
+    for cand in candidates:
+        if cand.exists():
+            return str(cand)
+    return sys.executable
+
+
 def _run_lint() -> tuple[int, str]:
     """跑 yaml-bypass lint, 返回 (rc, stdout)."""
-    # 走 omo venv 的真实 lint (不用 PATH shim)
-    venv_py = ROOT / "projects" / "omo" / ".venv" / "bin" / "python"
-    py = str(venv_py) if venv_py.exists() else sys.executable
+    # 优先走 omo venv 的真实 lint (支持 worktree 跨根回退到 canonical / install_root)
+    py = _find_omo_python()
     result = subprocess.run(
         [py, "-m", "omo.omo_lint", "yaml-bypass"],
         cwd=ROOT,
@@ -33,7 +56,15 @@ def _run_lint() -> tuple[int, str]:
         timeout=60,
         check=False,
     )
-    return result.returncode, (result.stdout + result.stderr)
+    out = result.stdout + result.stderr
+    # 区分「跑不成（环境缺依赖）」与「跑出违规」（E1）
+    if result.returncode != 0 and (
+        "ModuleNotFoundError" in out
+        or "Error while finding module specification" in out
+        or "No module named" in out
+    ):
+        pytest.skip(f"yaml-bypass lint 装置不可用 (解释器无法导入 omo/yaml 依赖):\n{out}")
+    return result.returncode, out
 
 
 class TestYamlBypassInvariant:
