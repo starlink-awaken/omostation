@@ -8,7 +8,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - .omo
@@ -23,6 +23,7 @@ mitigation_refs:
 - projects/omo/tests/test_omo_debt_outputs.py
 opened_at: '2026-11-24T08:32:37.051144+00:00'
 last_reviewed_at: '2026-11-24'
+closed_at: '2026-11-24'
 next_review_at: '2026-12-08'
 gate_level: none
 history:
@@ -221,6 +222,10 @@ history:
     \ `title` 的文件出 typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155`\
     \ 的三个默认值，把 `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n\
     三条都会改变现网读数口径，agent 不代为选定；本轮零代码、零判据、零指标面改动。'."
+- at: '2026-11-24T12:03:00Z'
+  action: resolve
+  actor: governance-agent
+  note: 'Wave 3 闭环 (starlink-awaken/omostation-omo#259, 16f68b1b8101bc66eb31f1e996ab710a7c147bc5): schedule_item() 在条目不存在时抛出 FileNotFoundError，omo_debt_cli 的 schedule/reclassify/escalate/reopen 全部对齐 close/desc 存在性闸（输出未找到并返回 rc=1，不铸孤儿 YAML）；补单测 tests/unit/test_omo_debt_broker_hardening.py。'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Tool

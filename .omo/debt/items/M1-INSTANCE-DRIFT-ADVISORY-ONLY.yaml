@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
 affected_roots:
 - .omo/_truth/registry/governance-checks.yaml
@@ -19,7 +19,8 @@ evidence_refs:
 - bin/gac/gac-healthcheck.py
 mitigation_refs: []
 opened_at: "2026-11-14"
-last_reviewed_at: "2026-11-14"
+last_reviewed_at: "2026-11-24"
+closed_at: "2026-11-24"
 next_review_at: "2026-12-14"
 gate_level: none
 x1_policy_ref: ""
@@ -76,3 +77,11 @@ history:
     `需显式 env 才写` 的工具时, 要同时问「谁在什么频率上跑它」——
     「有开关」不等于「有人开」。
   actor: "governance-agent"
+- at: "2026-11-24T12:08:30Z"
+  action: resolve
+  actor: "governance-agent"
+  note: >-
+    Wave 3 闭环 (starlink-awaken/omostation-ecos#98, 2518e4b4154a78bf21fc68159863401cb2f34995):
+    M1 GAC-RULE-*.yaml 实例经 GAC_M1_SYNC_WRITE=1 gac-m1-sync.py --sync 完成全量对齐
+    （创建 22 / 更新 13 / 清理 68 历史孤儿），并合并进 ecos main 推进主仓指针，
+    gac-m1-sync.py --tracked 实测 registry_rules=90 / m1_instances=90 / 0 drift。

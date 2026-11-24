@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - .omo
@@ -22,6 +22,7 @@ mitigation_refs:
 - projects/omo/tests/test_omo_debt_outputs.py
 opened_at: '2026-11-24T08:19:28.264810+00:00'
 last_reviewed_at: '2026-11-24'
+closed_at: '2026-11-24'
 next_review_at: '2026-12-08'
 gate_level: none
 history:
@@ -112,6 +113,10 @@ history:
   action: review
   actor: governance-agent
   note: 把「今日四桶为 0」升级为「按当前排期约定结构上必为 0」：逐条量 41 条非终态条目的 `next_review_at` （本批立案后 = 原 39 + 本条 + OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID），落 `due_now`(`<=今日`) 0 条、落 `upcoming`(`<=今日+7d`，即 2026-12-01 前) **0 条**；最早一条是 2026-12-06（+12 天），最晚 2026-12-16（+22 天），8–14 天区间 23 条、>14 天 18 条。即四桶 0/0/0/0 不是「今天没到期」，而是**只要维持「复核后 +14 天」的排期约定，`REVIEW_WINDOW_DAYS=7` 就永远接不到任何条目**——本条描述的 all-none 是构造性的，不是时点性的。严重度分布 medium 32 / high 7 / low 2，41 条里 40 条挂着 `decision_needed`。该读数只加判据依据，不改任何窗口常量、排期约定与桶逻辑；三选一仍留 principal。
+- at: '2026-11-24T12:03:00Z'
+  action: resolve
+  actor: governance-agent
+  note: 'Wave 3 闭环 (starlink-awaken/omostation-omo#259, 16f68b1b8101bc66eb31f1e996ab710a7c147bc5): build_review_queue() 新增 scheduled_later 桶与 summary.scheduled_later_count / open_count；build_action_packet() 将 scheduled_later 中 gate_level 为 gate/watchlist 的条目呈递进 watch_only 车道（reason=watchlist_scheduled_later），不再与 dashboard 互为相反结论；补单测 tests/unit/test_omo_debt_broker_hardening.py。'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Tool
