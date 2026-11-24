@@ -14,8 +14,8 @@ affected_roots:
 evidence_refs: []
 mitigation_refs: []
 opened_at: '2026-11-09T10:44:38.402036+00:00'
-last_reviewed_at: null
-next_review_at: null
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 history:
 - at: '2026-11-09T10:44:38.402036+00:00'
@@ -40,6 +40,31 @@ history:
     /python —— 代价: /usr/bin/python 即 Xcode 3.9 这个真实死信号在比较键里消失; ② 把 local-ops-test-all
     改登记裸 python3 交给 resolve_python_command —— 代价: resolve 只允许可折回候选, dev-venv 的第三方依赖拿不到,
     脚本可能改换成另一种死法; ③ 给 _is_managed 加「同 schedule + 同脚本」认领 —— 代价: 触碰 #5106 立下的「不得把用户自装外部行误认成登记面」边界。''.'
+- at: '2026-11-24T04:05:30Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 04:01Z)：机制原样在，mini 上双跑当前不存在 —— 准确表述是「离双跑差一次装机」。**
+    ① 登记面原样钉不可折回写法：`.omo/cron/registry.yaml` 的 `local-ops-test-all` =
+       schedule `23 7 * * *` + command `/Users/xiamingxing/.local/share/local-ops/dev-venv/bin/python …/local-ops/bin/test-all …`。
+       `bin/lib/cron_normalize.py:539 unfoldable_interpreter_jobs()` 对全部 87 个 jobs 命中 **1** 条，
+       tokens 正是该 dev-venv 字面量，reason 原文「comparison_key 折不回裸 python3 ⇒ 登记面与安装态永远不可比」。
+       折回口径同函数实测：`normalize_interpreter("/opt/homebrew/bin/python3 x.py")` → `python3 x.py`，
+       而 `.../dev-venv/bin/python x.py` → **原样不折**（`:32 INTERPRETER_RE` 只认 python3/python3.x）。
+    ② 实装面读数变了：mini `crontab -l` 里 `23 7 * * *` 只有 **1** 行，且该行用的是
+       `/opt/homebrew/bin/python3 /Users/xiamingxing/local-ops/bin/test-all` ⇒ **当前不双跑**。
+    ③ 但那行是外部行：mini crontab 的 `omostation-ops` / `omostation-maturity` 标记各 **0** 条
+       （与 CRON-INSTALLERS-OUTSIDE-SSOT 今晚读数一致：两个登记面外安装器在本机与 mini 均零安装）。
+       按 `install-cron-plane` 的 `_is_managed` 语义，这条已装外部行会被判外部保留，再追加登记面那条
+       ⇒ **一次装机即触发双跑**。比立案更准确的表述：11-09 那次「候选里 test-all 有 2 条」今天只剩 1 条，
+       消失原因是 plane 未装机（外因），比较键本身没修（见 ①）。
+    ④ 登记面规模刷新：jobs **87** / active **59**（立案所写「43 条 active crontab 作业」已过时），命中数仍为 1。
+    ⑤ 字段形状订正（本条此前三个结构化字段全空）：`next_review_at` / `evidence_refs` / `decision_needed`
+       在 main 上均为 null ⇒ 权威排程序列里落 `unscheduled`（成因见 OMO-DEBT-REGISTER-NO-REVIEW-DATES）、
+       判据无处可查（该条目只有 description 正文可引）。本轮按边界只补到期日（补后退出 `unscheduled` 桶 4 → 0，但**不等于进面板** —— 内核 `REVIEW_WINDOW_DAYS = 7`，12-08 是 14 天后，既不进 `due_now` 也不进 `upcoming`，四条在 queue 的任何列表里都不出现（`build_review_queue` 实测 11-24 04:10Z：修复前 due_now 1 / upcoming 2 / unscheduled 4，修复后 unscheduled 0 而另两桶不变）。准确状态是「已排期、未进 7 天窗口」。）与实测读数，
+       `evidence_refs` 留空不动 —— 给既有条目补证据引用属结构性变更，不代做。
+    ⑥ 三项待裁 (放宽 INTERPRETER_RE / 改登记裸 python3 / 给 `_is_managed` 加「同 schedule+同脚本」认领) 原样不动，
+       尤其不碰 #5106 的「不得把用户自装外部行误认成登记面」边界。
 x1_policy_ref: ''
 x2_freshness: '2026-11-09T10:44:38+00:00'
 x3_tier: Principle

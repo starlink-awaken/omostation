@@ -112,3 +112,4 @@ seed_items:
 - .omo/debt/items/OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY.yaml
 - .omo/debt/items/OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT.yaml
 - .omo/debt/items/ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP.yaml
+- .omo/debt/items/OMO-DEBT-REGISTER-NO-REVIEW-DATES.yaml

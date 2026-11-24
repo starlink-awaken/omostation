@@ -17,8 +17,8 @@ evidence_refs:
 - projects/omo/tests/test_omo_debt_cli.py
 mitigation_refs: []
 opened_at: '2026-11-23T14:06:24.944634+00:00'
-last_reviewed_at:
-next_review_at:
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 history:
 - at: '2026-11-23T14:06:24.944634+00:00'
@@ -105,6 +105,25 @@ history:
 
 
     影响 (订正后收窄): 根仓 canonical 当前不存在 .omo/debt/dispatch/current.md, 死命令眼下未在根仓派发面生效。真实风险面是三条: ① packet 生成器一旦被调用即产出不可执行命令 —— omo 仓自带 .omo/debt/dispatch/current.md 里 2026-06-05 的旧产物就是实例; ② 8 个测试文件逐字断言这些字符串, 把「文本字面量」当执行平面钉住, 任何修复先撞红测; ③ 判据面默认全绿使 ①② 无法被发现。同族缺陷此前作为附带发现登记在 OMO-DEBT-HISTORY-EMPTY-TIMESTAMP。''.'
+- at: '2026-11-24T04:05:30Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 04:00Z)：前提原样成立，覆盖面读数刷新，并补一条「命令不可执行」的可复算证据。**
+    ① 死路径确认：worktree 与 canonical 两处 `find . -name omo_debt.py` 均 **0 命中**（全仓不存在）。
+    ② 执行 packet 原文命令 ⇒ 真 **rc=2**，stderr `can't open file '.../scripts/omo_debt.py': [Errno 2] No such file or directory`。
+       方法学留一条：首跑写成 `... 2>&1 | tail -2; echo $?`，读到的是 tail 的 rc=0；改重定向后才是真 rc（同族陷阱第三次咬人）。
+    ③ 覆盖面比立案大：全仓 `scripts/omo_debt.py` 命中 **13 文件 / 107 行** ——
+       `omo_debt_action_packet.py` **5** 处（:10/:14/:18/:23 等，即 packet 文案自身）；测试 9 文件 **99** 行
+       （test_omo_debt_cli 60、test_omo_debt_docs 10、test_omo_debt_dispatch 9、test_omo_debt_action_packet 6、
+       test_omo_debt_outputs 4、test_omo_debt_reporting 3、test_omo_debt_owner_routing 2、test_omo_debt_campaign 2、
+       test_omo_debt_history_timestamp 1）；`docs/pitfalls.md` 2；`projects/omo/tests/README.md` 1。
+       ⇒ 立案所写「96 处测试断言」现读 99（+3），裁决项 ① 的真实改动面是 13 个文件，不是「9 个测试文件」。
+    ④ 可用入口再确认：`PYTHONPATH=projects/omo/src python3 -m omo.omo_debt_cli --help` **rc=0**。
+    ⑤ 排期形状订正：本条此前 `next_review_at` 为空 ⇒ 在权威 review queue 里落 `unscheduled`
+       （`omo_debt_review_queue.py:81-83`），只有 cron 道按 `opened_at + INTERVAL_DAYS[medium]=60` 回退才看得见；
+       成因是新立条目 OMO-DEBT-REGISTER-NO-REVIEW-DATES 所记的 broker 默认值。本轮补 `next_review_at=2026-12-08` 后它退出 `unscheduled` 桶（`unscheduled_count` 4 → 0），但**不等于进面板** —— 内核 `REVIEW_WINDOW_DAYS = 7`，12-08 是 14 天后，既不进 `due_now` 也不进 `upcoming`，四条在 queue 的任何列表里都不出现（`build_review_queue` 实测 11-24 04:10Z：修复前 due_now 1 / upcoming 2 / unscheduled 4，修复后 unscheduled 0 而另两桶不变）。准确状态是「已排期、未进 7 天窗口」。
+    ⑥ 三项待裁 (①改指真实入口 / ②恢复 shim / ③只修测试面) 原样保留：未动 packet 文案、未动 99 处测试断言、未建 shim。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Principle
