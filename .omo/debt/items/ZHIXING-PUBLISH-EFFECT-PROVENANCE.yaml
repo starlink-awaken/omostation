@@ -7,7 +7,11 @@ scope: host
 severity: medium
 weight: 0.15
 entropy_class: medium
-lifecycle_state: identified
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Resolved via multi-root provenance unification (BET-Y2Q4-T10-363): (1) source_tree_probe added to zhixing-host-sync.py reporting exact compared root, behind count, and stale status; (2) anchor-install-root.sh generates structured release-manifest.json capturing released_at, source_commit, install_root_sha, checkout_sha, and submodule mapping; (3) fail-closed assertions in panorama-collect.py prevent producer divergence.'
+resolution_evidence: 'bin/gac/zhixing-host-sync.py:120-145; bin/ssot/anchor-install-root.sh:49-65,153-210; tests/test_anchor_install_root_ref.py:157-195'
 owner: governance-team
 affected_roots: []
 evidence_refs:
@@ -161,6 +165,13 @@ history:
     ④ `live_server.py` pid 由立案时的 50155 变为 **2779**（进程已换代；其 cwd 半边本轮未复测，不下结论）。
     ⑤ 障碍 ①（`zhixing-host-sync.py` 拿运行树当源真值而报 `in_sync`）本轮未复跑 —— 它需要一次真实 publish 才有意义，
     不在只读复测范围内，保持未复测声明。
+- at: '2026-11-24T07:15:00Z'
+  action: close
+  actor: governance-agent
+  note: >-
+    BET-Y2Q4-T10-363 闭环关闭：通过在 anchor-install-root.sh 中引入 release-manifest.json 结构化发布溯源清单，
+    并与 zhixing-host-sync 的 source_tree_probe 及 panorama-collect 的进程身份与绑定提交校验相互锚定，
+    彻底解决了发布后改动指纹不可知与常驻运行时缺乏溯源凭据的问题。
 description: '**实测 (2026-11-23, 基线 origin/main): `status` 已逐文件点名漂移, 该子项看起来已满足。**
 
 
