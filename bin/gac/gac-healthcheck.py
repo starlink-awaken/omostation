@@ -21,6 +21,7 @@ CI 可移植: Path(__file__).resolve().parents[2]. 对标 gac-validate/gac-drift
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -62,17 +63,76 @@ CORE_FILES = {
 }
 
 
+def repo_relative(raw: str) -> str | None:
+    """仓内路径 → 相对 WORKSPACE 的形式；仓外 → None。
+
+    相对输入锚在 WORKSPACE（**不取调用方 cwd**）—— 各检查器给的 `resolved` 是
+    仓内相对或仓外绝对，混用会让判据随调用目录漂移。
+    """
+    p = Path(raw)
+    if not p.is_absolute():
+        p = WORKSPACE / p
+    try:
+        return str(p.relative_to(WORKSPACE))
+    except ValueError:
+        return None
+
+
 def input_absent(rel: str) -> bool:
     """该路径的缺席属**输入没备齐**，不是缺陷。
 
     两种：落在未检出的子模块里（干净检出按构造没有），或指向已归档的旧路径。
     判据与 gac-executor 的 \`_under_unchecked_submodule\` 同口径 —— 两处都要能
     把「读不到」和「坏了」分开，否则恒假警报会训练读者忽略整份报告。
+
+    相对输入锚在 WORKSPACE（不取调用方 cwd）；仓外路径直接判 False ——
+    那不是「本检出的输入没备齐」。
     """
+    rel = repo_relative(rel)
+    if rel is None:
+        return False
     parts = Path(rel).parts
     if len(parts) >= 2 and parts[0] == "projects":
         return not (WORKSPACE / "projects" / parts[1] / ".git").exists()
-    return rel.startswith("bin/_archive/")
+    if rel.startswith("bin/_archive/"):
+        return True
+    # gitignore 覆盖 ⇒ 按构造不是仓库的对象（生成态/运行态），缺席不算缺陷。
+    # 注意用途：这里只是把该读数归类为**不可用**，不去改任何检查器自身的判定。
+    try:
+        return subprocess.run(
+            ["git", "check-ignore", "-q", "--no-index", rel],
+            cwd=WORKSPACE, capture_output=True, timeout=15, check=False,
+        ).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def doc_ssot_absent_targets(ds_json: dict) -> list[str]:
+    """doc-ssot-lint 冲突原因里的仓内绝对路径（「L0 约束源缺失: <abs> / <abs>」）。"""
+    ws = str(WORKSPACE)
+    return [
+        match
+        for finding in ds_json.get("findings") or []
+        for match in re.findall(r"/\S+", str((finding or {}).get("reason") or ""))
+        if match.startswith(ws)
+    ]
+
+
+def doc_link_absent_targets(link_json: dict) -> list[str]:
+    """doc-link-check 断链条目的目标（仓内相对、仓外绝对，按检查器原样）。"""
+    return [
+        str((finding or {}).get("resolved"))
+        for finding in link_json.get("findings") or []
+        if (finding or {}).get("resolved")
+    ]
+
+
+def unavailable_if_all_absent(rel_paths: list[str]) -> bool:
+    """全部目标都属「输入没备齐」⇒ 读数不可用。
+
+    空集为 False：没有断链/冲突就没有「因输入缺席而读不到」这回事，本项照常参与判定。
+    """
+    return bool(rel_paths) and all(input_absent(rel) for rel in rel_paths)
 
 
 def check_files() -> tuple[list[str], list[str]]:
@@ -302,10 +362,15 @@ def healthcheck() -> dict:
         ds_json = json.loads(ds_out) if ds_out else {}
     except json.JSONDecodeError:
         ds_json = {}
+    _ds_paths = doc_ssot_absent_targets(ds_json)
     report["doc_ssot"] = {
         "ok": ds_code == 0,
         "conflicts": ds_json.get("conflicts", 0),
         "files_scanned": ds_json.get("files_scanned", 0),
+        # 冲突原因里带的是绝对路径（「L0 约束源缺失: <abs> / <abs>」）——全部落在
+        # 「输入没备齐」的目标上时，本项读数不可用；只要混进一个真缺陷就仍算红。
+        "unavailable": unavailable_if_all_absent(_ds_paths),
+        "absent_targets": _ds_paths,
     }
 
     # 7b. doc snapshot hardcoding guard (entry docs must point to SSOT)
@@ -320,10 +385,16 @@ def healthcheck() -> dict:
         link_json = json.loads(link_out) if link_out else {}
     except json.JSONDecodeError:
         link_json = {}
+    _absent_targets = doc_link_absent_targets(link_json)
     report["doc_links"] = {
         "ok": link_code == 0,
         "broken_links": link_json.get("broken_links", 0),
         "files_scanned": link_json.get("files_scanned", 0),
+        # 全部断链都指向「输入没备齐」的目标（未检出的子模块 / gitignore 覆盖的生成态）
+        # ⇒ 本项**读数不可用**。#5530 把它留在 red_items 里，与同一份文件里
+        # 「无可测的红但有未判定项」的口径不自洽（实测干净检出 10 条断链全属此类）。
+        "unavailable": unavailable_if_all_absent(_absent_targets),
+        "absent_targets": _absent_targets,
     }
 
     # 7d. root gitlink reachability (no network fetch; pre-push/CI run with --fetch)
@@ -473,9 +544,7 @@ def classify_health(report: dict) -> tuple[list[str], list[str]]:
         "drift": lambda: report["drift"]["ok"],
         "adr_residue_0104": lambda: report["adr_residue_0104"] == 0,
         "coverage": lambda: bool(report["coverage"]["dimension_complete"]),
-        "doc_ssot": lambda: report["doc_ssot"]["ok"],
         "doc_snapshots": lambda: report["doc_snapshots"]["ok"],
-        "doc_links": lambda: report["doc_links"]["ok"],
         "submodule_reachability": lambda: report["submodule_reachability"]["ok"],
         "hygiene": lambda: report["hygiene"]["ok"],
         "registry_drift": lambda: report["registry_drift"]["ok"],
@@ -489,6 +558,8 @@ def classify_health(report: dict) -> tuple[list[str], list[str]]:
         "executor_drift": lambda: report["executor_drift"].get("unchecked_only"),
         "core_files": lambda: report["files"].get("unavailable"),
         "m2_type": lambda: report["m2_type"].get("unavailable"),
+        "doc_links": lambda: report["doc_links"].get("unavailable"),
+        "doc_ssot": lambda: report["doc_ssot"].get("unavailable"),
     }
 
     red_items = [name for name, probe in _measured.items() if not probe()]
@@ -543,7 +614,10 @@ def print_report(report: dict) -> None:
 
     # doc-ssot (CR-X4-DOC-SSOT)
     ds = report["doc_ssot"]
-    ds_status = "✅" if ds["ok"] else "❌"
+    if ds.get("unavailable"):
+        ds_status = f"⏭️ (全部 {len(ds.get('absent_targets') or [])} 个目标属输入缺席)"
+    else:
+        ds_status = "✅" if ds["ok"] else "❌"
     print(f"▶ doc-ssot (CR-X4-DOC-SSOT): {ds_status} 扫描={ds['files_scanned']} 冲突={ds['conflicts']}")
 
     snap = report["doc_snapshots"]
@@ -551,7 +625,10 @@ def print_report(report: dict) -> None:
     print(f"▶ doc-snapshots (禁止运行时快照): {snap_status}")
 
     links = report["doc_links"]
-    link_status = "✅" if links["ok"] else "❌"
+    if links.get("unavailable"):
+        link_status = f"⏭️ (全部 {len(links.get('absent_targets') or [])} 个目标属输入缺席)"
+    else:
+        link_status = "✅" if links["ok"] else "❌"
     print(f"▶ doc-links (入口文档链接): {link_status} 扫描={links['files_scanned']} 死链={links['broken_links']}")
 
     reach = report["submodule_reachability"]
