@@ -1,0 +1,180 @@
+id: OMO-DEBT-BROKER-WRITE-VERBS-ACCEPT-EMPTY-EVIDENCE-TEXT
+title: broker 写动词接受空/纯空白 --description/--title：rc=0 静默覆盖审计正文（含 6353→0 一手事故）
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/omo_debt_cli.py
+- projects/omo/src/omo/outcome_feedback.py
+- .omo/debt/items/
+evidence_refs:
+- projects/omo/src/omo/omo_debt_cli.py
+- projects/omo/src/omo/outcome_feedback.py
+- bin/ssot/_shared.py
+- .omo/debt/items/OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES.yaml
+mitigation_refs: []
+opened_at: '2026-11-24T11:22:12.677390+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T11:22:12.677390+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-BROKER-WRITE-VERBS-ACCEPT-EMPTY-EVIDENCE-TEXT.
+- at: '2026-11-24T11:22:20.686232+00:00'
+  action: update_description
+  note: "Updated description from '' to '【批次 18 · A/2】broker 写动词接受空/纯空白证据文本，rc=0 且无告警\n\
+    \n§1 缺陷事实（沙箱实测，取证方式见 §5）\n`omo-debt desc` 对 `--description` 的三种空值全部返回 rc=0 并落库：\n\
+    \  - `\"\"` → description 长度 0\n  - `\" \"`（单个空格）→ 长度 1\n  - `\"\\n\\n\"` → 长度\
+    \ 2\n每一次都是「覆盖」：写前该字段有 5,850 B 真实内容，写后变成 0/1/2 字符，而 CLI 只打印条目 id，不打印任何 WARN，不返回非零码。\n\
+    `register --title \"\"` 同样 rc=0 铸出条目文件：`title: ''`、22 键齐全、`lifecycle_state: identified`——空标题条目可以直接进台账与投影。\n\
+    \n§2 一手事故（非沙箱，真实台账）\n2026-11-24 本机会话登记批次 17 条目时用 `--description \"$(cat /tmp/b17desc.txt)\"\
+    ` 传正文。macOS 27 无 `/usr/bin/cat`，命令替换静默返回空串，broker 接受并把已写入的 6,353 字符 description\
+    \ 覆盖成 0 长度，rc=0。靠写后立即读回才发现，再用 argv 列表方式重写到 6,614 字符并逐字节校验。该事故已写进该条目 history（measurement_provenance\
+    \ 条目）。\n结论：这不是理论风险，是本批工具链真实踩到的载荷丢失路径；任何用 shell 命令替换传正文的 agent 编排都在同一条路径上。\n\n\
+    §3 代码位置（origin/main 305afff3e）\n- `projects/omo/src/omo/omo_debt_cli.py:115-142`（desc\
+    \ 写路径）：`payload[\"description\"] = description` 直接赋值，无 `strip()`、无非空判定、无长度下限。\n\
+    - `omo_debt_cli.py:291` 的 `--description required=True` 只保证「参数出现」，不保证「值非空」——这是\
+    \ argparse 语义，不是校验。\n- `omo_debt_cli.py:178-183` / `:449` register 的 `--title\
+    \ required=True` 同理，空标题条目可铸出。\n- 无截断/上限护栏：`rg 'MAX_|truncate' projects/omo/src/omo/omo_debt*.py`\
+    \ 零命中。\n- 无用例钉住非空：`projects/omo/tests` 下对 desc 空值行为的命中为零。\n\n§4 同包内已有正确先例（对照事实，不构成建议）\n\
+    `projects/omo/src/omo/outcome_feedback.py:115-150` 对同类字段用 `_required_text(...)`（空即抛\
+    \ `OutcomeFeedbackError`）与 `len(result_ref) > 500` 显式抛错，并对 note 只存 `note_digest`\
+    \ 而非全文。即「写前校验非空 + 有界」在本包内已是既有约定；broker 的 desc/register 是这条约定上的缺口，不是全仓统一风格。\n\n\
+    §5 取证方式与边界\n- 空值测试全部在临时沙箱（`/tmp/b18probe`，broker 指向 ledger 拷贝）执行，真实台账写前写后均 5,850\
+    \ B，未被触碰。\n- 只测了 `desc` 与 `register` 两个动词；`schedule`/`reclassify`/`escalate`/`close`/`reopen`\
+    \ 等其它写动词的空值行为未测，不做「全部写动词都接受空值」的全称声称。\n- 未测超长文本写入行为，只确证代码里没有长度上限。\n\n§6 后果链\ndescription\
+    \ 是债务条目里唯一承载判据原文的字段：复审判据、待裁选项、实测数字都在正文里。审计面（`bin/ssot/_shared.py:171-198 check_evidence`）只看路径与\
+    \ `resolution_evidence`，不读 description，所以空正文不会在任何门禁上发红——它只静默降低台账的可审性；rc=0 又让调用方不会重试或告警。\n\
+    \n§7 待裁（属 CLI 契约变更，对所有 agent 的既有编排可见，不由 agent 选定）\n1. 加非空守卫：desc/register 的值 `strip()`\
+    \ 后为空即 rc≠0 并说明被拒原因（与 `outcome_feedback._required_text` 同口径）。\n2. 默认拒绝 + 显式放开：清空需要\
+    \ `--allow-empty` / `--clear` 一类显式旗标，保留程序化清空能力。\n3. 不拦但留痕：允许写入，但 rc=0 时打 WARN，并把「旧长度→新长度」写进\
+    \ history，使下游可读、不破坏既有脚本行为。\n三条都改变当前 CLI 对空值的可见行为；选哪条（或都不选）由 principal 定。\n'."
+- at: '2026-11-24T11:22:55.024755+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T11:24:24+00:00'
+  action: measurement_provenance
+  note: 沙箱 /tmp/b18probe 实测 desc 空值三档（写后长度 0/1/2）与 register --title 空值铸条，均 rc=0 无
+    WARN；真实台账写前写后 5,850B 未变。一手事故 6353→0 记于批次 17 条目 history。取证工具故障 1 起：rg -r 把下一 token
+    当替换串，改用 rg -n 重测后才下结论。
+- at: '2026-11-24T11:24:24+00:00'
+  action: restore_lifecycle_state
+  note: broker schedule 依 omo_debt_lifecycle.py:74 把 lifecycle_state 从 identified
+    翻成 scheduled；本批以文本级替换还原 identified（还原前断言 scheduled 形态恰 1 次），next_review_at=2026-12-08
+    由 schedule 写入。
+- at: '2026-11-24T11:28:27.321200+00:00'
+  action: update_description
+  note: "Updated description from '【批次 18 · A/2】broker 写动词接受空/纯空白证据文本，rc=0 且无告警\n\n\
+    §1 缺陷事实（沙箱实测，取证方式见 §5）\n`omo-debt desc` 对 `--description` 的三种空值全部返回 rc=0 并落库：\n\
+    \  - `\"\"` → description 长度 0\n  - `\" \"`（单个空格）→ 长度 1\n  - `\"\\n\\n\"` → 长度\
+    \ 2\n每一次都是「覆盖」：写前该字段有 5,850 B 真实内容，写后变成 0/1/2 字符，而 CLI 只打印条目 id，不打印任何 WARN，不返回非零码。\n\
+    `register --title \"\"` 同样 rc=0 铸出条目文件：`title: ''`、22 键齐全、`lifecycle_state: identified`——空标题条目可以直接进台账与投影。\n\
+    \n§2 一手事故（非沙箱，真实台账）\n2026-11-24 本机会话登记批次 17 条目时用 `--description \"$(cat /tmp/b17desc.txt)\"\
+    ` 传正文。macOS 27 无 `/usr/bin/cat`，命令替换静默返回空串，broker 接受并把已写入的 6,353 字符 description\
+    \ 覆盖成 0 长度，rc=0。靠写后立即读回才发现，再用 argv 列表方式重写到 6,614 字符并逐字节校验。该事故已写进该条目 history（measurement_provenance\
+    \ 条目）。\n结论：这不是理论风险，是本批工具链真实踩到的载荷丢失路径；任何用 shell 命令替换传正文的 agent 编排都在同一条路径上。\n\n\
+    §3 代码位置（origin/main 305afff3e）\n- `projects/omo/src/omo/omo_debt_cli.py:115-142`（desc\
+    \ 写路径）：`payload[\"description\"] = description` 直接赋值，无 `strip()`、无非空判定、无长度下限。\n\
+    - `omo_debt_cli.py:291` 的 `--description required=True` 只保证「参数出现」，不保证「值非空」——这是\
+    \ argparse 语义，不是校验。\n- `omo_debt_cli.py:178-183` / `:449` register 的 `--title\
+    \ required=True` 同理，空标题条目可铸出。\n- 无截断/上限护栏：`rg 'MAX_|truncate' projects/omo/src/omo/omo_debt*.py`\
+    \ 零命中。\n- 无用例钉住非空：`projects/omo/tests` 下对 desc 空值行为的命中为零。\n\n§4 同包内已有正确先例（对照事实，不构成建议）\n\
+    `projects/omo/src/omo/outcome_feedback.py:115-150` 对同类字段用 `_required_text(...)`（空即抛\
+    \ `OutcomeFeedbackError`）与 `len(result_ref) > 500` 显式抛错，并对 note 只存 `note_digest`\
+    \ 而非全文。即「写前校验非空 + 有界」在本包内已是既有约定；broker 的 desc/register 是这条约定上的缺口，不是全仓统一风格。\n\n\
+    §5 取证方式与边界\n- 空值测试全部在临时沙箱（`/tmp/b18probe`，broker 指向 ledger 拷贝）执行，真实台账写前写后均 5,850\
+    \ B，未被触碰。\n- 只测了 `desc` 与 `register` 两个动词；`schedule`/`reclassify`/`escalate`/`close`/`reopen`\
+    \ 等其它写动词的空值行为未测，不做「全部写动词都接受空值」的全称声称。\n- 未测超长文本写入行为，只确证代码里没有长度上限。\n\n§6 后果链\ndescription\
+    \ 是债务条目里唯一承载判据原文的字段：复审判据、待裁选项、实测数字都在正文里。审计面（`bin/ssot/_shared.py:171-198 check_evidence`）只看路径与\
+    \ `resolution_evidence`，不读 description，所以空正文不会在任何门禁上发红——它只静默降低台账的可审性；rc=0 又让调用方不会重试或告警。\n\
+    \n§7 待裁（属 CLI 契约变更，对所有 agent 的既有编排可见，不由 agent 选定）\n1. 加非空守卫：desc/register 的值 `strip()`\
+    \ 后为空即 rc≠0 并说明被拒原因（与 `outcome_feedback._required_text` 同口径）。\n2. 默认拒绝 + 显式放开：清空需要\
+    \ `--allow-empty` / `--clear` 一类显式旗标，保留程序化清空能力。\n3. 不拦但留痕：允许写入，但 rc=0 时打 WARN，并把「旧长度→新长度」写进\
+    \ history，使下游可读、不破坏既有脚本行为。\n三条都改变当前 CLI 对空值的可见行为；选哪条（或都不选）由 principal 定。\n' to\
+    \ '【批次 18 · A/2】broker 写动词接受空/纯空白证据文本，rc=0 且无告警\n\n单位纪律：本条所有长度都显式标明「字符」或「UTF-8\
+    \ 字节」；不标单位的数字是字符数。（登记时第一稿把 `len()` 的字符数误标成「B」，已由本批 B 项的同一重写路径改正，见 B 项 §3。）\n\n\
+    §1 缺陷事实（沙箱实测，取证方式见 §5）\n`omo-debt desc` 对 `--description` 的三种空值全部返回 rc=0 并落库：\n\
+    \  - 空串 → 写后长度 0\n  - 单个空格 → 写后长度 1\n  - 两个换行 → 写后长度 2\n每一次都是「覆盖」：写前该字段有 5,850\
+    \ 字符（9,047 字节）真实内容，写后变成 0/1/2 字符，而 CLI 只打印条目 id，不打印任何 WARN，不返回非零码。\n`register\
+    \ --title \"\"` 同样 rc=0 铸出条目文件：`title: ''`、22 键齐全、`lifecycle_state: identified`——空标题条目可以直接进台账与投影。\n\
+    \n§2 一手事故（非沙箱，真实台账）\n2026-11-24 本机会话登记批次 17 条目时用 `--description \"$(cat /tmp/b17desc.txt)\"\
+    ` 传正文。macOS 27 无 `/usr/bin/cat`，命令替换静默返回空串，broker 接受并把已写入的 6,353 字符正文覆盖成 0 长度，rc=0。靠写后立即读回才发现，再用\
+    \ argv 列表方式重写到 6,614 字符（10,464 字节）并逐字节校验。该事故已写进该条目 history（measurement_provenance\
+    \ 条目）。\n结论：这不是理论风险，是本批工具链真实踩到的载荷丢失路径；任何用 shell 命令替换传正文的 agent 编排都在同一条路径上。\n\n\
+    §3 代码位置（origin/main 305afff3e）\n- `projects/omo/src/omo/omo_debt_cli.py:115-142`（desc\
+    \ 写路径）：`payload[\"description\"] = description` 直接赋值，无 `strip()`、无非空判定、无长度下限。\n\
+    - `omo_debt_cli.py:291` 的 `--description required=True` 只保证「参数出现」，不保证「值非空」——这是\
+    \ argparse 语义，不是校验。\n- `omo_debt_cli.py:178-183` / `:449` register 的 `--title\
+    \ required=True` 同理，空标题条目可铸出。\n- 无截断/上限护栏：`rg 'MAX_|truncate' projects/omo/src/omo/omo_debt*.py`\
+    \ 零命中。\n- 无用例钉住非空：`projects/omo/tests` 下对 desc 空值行为的命中为零。\n\n§4 同包内已有正确先例（对照事实，不构成建议）\n\
+    `projects/omo/src/omo/outcome_feedback.py:115-150` 对同类字段用 `_required_text(...)`（空即抛\
+    \ `OutcomeFeedbackError`）与 `len(result_ref) > 500` 显式抛错，并对 note 只存 `note_digest`\
+    \ 而非全文。即「写前校验非空 + 有界」在本包内已是既有约定；broker 的 desc/register 是这条约定上的缺口，不是全仓统一风格。\n\n\
+    §5 取证方式与边界\n- 空值测试全部在临时沙箱（`/tmp/b18probe`，broker 指向 ledger 拷贝）执行。真实台账未被触碰：探针前后，被拷贝的真实条目\
+    \ `OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS` 的 description 同为 5,850 字符 / 9,047\
+    \ 字节。\n- 只测了 `desc` 与 `register` 两个动词；`schedule`/`reclassify`/`escalate`/`close`/`reopen`\
+    \ 等其它写动词的空值行为未测，不做「全部写动词都接受空值」的全称声称。\n- 未测超长文本写入行为，只确证代码里没有长度上限。\n\n§6 后果链\ndescription\
+    \ 是债务条目里唯一承载判据原文的字段：复审判据、待裁选项、实测数字都在正文里。审计面（`bin/ssot/_shared.py:171-198 check_evidence`）只看路径与\
+    \ `resolution_evidence`，不读 description，所以空正文不会在任何门禁上发红——它只静默降低台账的可审性；rc=0 又让调用方不会重试或告警。\n\
+    \n§7 待裁（属 CLI 契约变更，对所有 agent 的既有编排可见，不由 agent 选定）\n1. 加非空守卫：desc/register 的值 `strip()`\
+    \ 后为空即 rc≠0 并说明被拒原因（与 `outcome_feedback._required_text` 同口径）。\n2. 默认拒绝 + 显式放开：清空需要\
+    \ `--allow-empty` / `--clear` 一类显式旗标，保留程序化清空能力。\n3. 不拦但留痕：允许写入，但 rc=0 时打 WARN，并把「旧长度→新长度」写进\
+    \ history，使下游可读、不破坏既有脚本行为。\n三条都改变当前 CLI 对空值的可见行为；选哪条（或都不选）由 principal 定。\n'."
+- at: '2026-11-24T11:28:27+00:00'
+  action: measurement_provenance
+  note: >-
+    单位口径校正：首稿把 len() 的字符数标成 B。本次仍走 broker desc（未用文本级替换），故按本条所登记的机制再复制一份全文进 history——实测文件 11,279→20,508 字节、note 4,621→12,896 字节，正文长度 2,366 字符 / 4,320 字节。校正后字符/字节两口径已同时给出。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: "【批次 18 · A/2】broker 写动词接受空/纯空白证据文本，rc=0 且无告警\n\n单位纪律：本条所有长度都显式标明「字符」或「UTF-8\
+  \ 字节」；不标单位的数字是字符数。（登记时第一稿把 `len()` 的字符数误标成「B」，已由本批 B 项的同一重写路径改正，见 B 项 §3。）\n\n§1\
+  \ 缺陷事实（沙箱实测，取证方式见 §5）\n`omo-debt desc` 对 `--description` 的三种空值全部返回 rc=0 并落库：\n \
+  \ - 空串 → 写后长度 0\n  - 单个空格 → 写后长度 1\n  - 两个换行 → 写后长度 2\n每一次都是「覆盖」：写前该字段有 5,850 字符（9,047\
+  \ 字节）真实内容，写后变成 0/1/2 字符，而 CLI 只打印条目 id，不打印任何 WARN，不返回非零码。\n`register --title \"\"\
+  ` 同样 rc=0 铸出条目文件：`title: ''`、22 键齐全、`lifecycle_state: identified`——空标题条目可以直接进台账与投影。\n\
+  \n§2 一手事故（非沙箱，真实台账）\n2026-11-24 本机会话登记批次 17 条目时用 `--description \"$(cat /tmp/b17desc.txt)\"\
+  ` 传正文。macOS 27 无 `/usr/bin/cat`，命令替换静默返回空串，broker 接受并把已写入的 6,353 字符正文覆盖成 0 长度，rc=0。靠写后立即读回才发现，再用\
+  \ argv 列表方式重写到 6,614 字符（10,464 字节）并逐字节校验。该事故已写进该条目 history（measurement_provenance\
+  \ 条目）。\n结论：这不是理论风险，是本批工具链真实踩到的载荷丢失路径；任何用 shell 命令替换传正文的 agent 编排都在同一条路径上。\n\n§3\
+  \ 代码位置（origin/main 305afff3e）\n- `projects/omo/src/omo/omo_debt_cli.py:115-142`（desc\
+  \ 写路径）：`payload[\"description\"] = description` 直接赋值，无 `strip()`、无非空判定、无长度下限。\n\
+  - `omo_debt_cli.py:291` 的 `--description required=True` 只保证「参数出现」，不保证「值非空」——这是 argparse\
+  \ 语义，不是校验。\n- `omo_debt_cli.py:178-183` / `:449` register 的 `--title required=True`\
+  \ 同理，空标题条目可铸出。\n- 无截断/上限护栏：`rg 'MAX_|truncate' projects/omo/src/omo/omo_debt*.py`\
+  \ 零命中。\n- 无用例钉住非空：`projects/omo/tests` 下对 desc 空值行为的命中为零。\n\n§4 同包内已有正确先例（对照事实，不构成建议）\n\
+  `projects/omo/src/omo/outcome_feedback.py:115-150` 对同类字段用 `_required_text(...)`（空即抛\
+  \ `OutcomeFeedbackError`）与 `len(result_ref) > 500` 显式抛错，并对 note 只存 `note_digest`\
+  \ 而非全文。即「写前校验非空 + 有界」在本包内已是既有约定；broker 的 desc/register 是这条约定上的缺口，不是全仓统一风格。\n\n§5\
+  \ 取证方式与边界\n- 空值测试全部在临时沙箱（`/tmp/b18probe`，broker 指向 ledger 拷贝）执行。真实台账未被触碰：探针前后，被拷贝的真实条目\
+  \ `OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS` 的 description 同为 5,850 字符 / 9,047 字节。\n\
+  - 只测了 `desc` 与 `register` 两个动词；`schedule`/`reclassify`/`escalate`/`close`/`reopen`\
+  \ 等其它写动词的空值行为未测，不做「全部写动词都接受空值」的全称声称。\n- 未测超长文本写入行为，只确证代码里没有长度上限。\n\n§6 后果链\ndescription\
+  \ 是债务条目里唯一承载判据原文的字段：复审判据、待裁选项、实测数字都在正文里。审计面（`bin/ssot/_shared.py:171-198 check_evidence`）只看路径与\
+  \ `resolution_evidence`，不读 description，所以空正文不会在任何门禁上发红——它只静默降低台账的可审性；rc=0 又让调用方不会重试或告警。\n\
+  \n§7 待裁（属 CLI 契约变更，对所有 agent 的既有编排可见，不由 agent 选定）\n1. 加非空守卫：desc/register 的值 `strip()`\
+  \ 后为空即 rc≠0 并说明被拒原因（与 `outcome_feedback._required_text` 同口径）。\n2. 默认拒绝 + 显式放开：清空需要\
+  \ `--allow-empty` / `--clear` 一类显式旗标，保留程序化清空能力。\n3. 不拦但留痕：允许写入，但 rc=0 时打 WARN，并把「旧长度→新长度」写进\
+  \ history，使下游可读、不破坏既有脚本行为。\n三条都改变当前 CLI 对空值的可见行为；选哪条（或都不选）由 principal 定。\n"
+decision_needed: '待裁（三选一，均属 broker 对外契约可见行为变更，不由 agent 选定）：
+
+
+  ① 加非空守卫 —— desc/register 的值 strip() 后为空即 rc≠0 并打印被拒原因，与同包 outcome_feedback._required_text
+  同口径。后果：现存以空串占位的调用编排会开始失败；我未取证是否存在这样的调用方，故不外推影响面。
+
+
+  ② 默认拒绝 + 显式放开 —— 新增 --allow-empty / --clear 一类旗标才允许写空值，保留程序化清空能力。后果：CLI 参数面变宽，help
+  与既有编排文档需同步。
+
+
+  ③ 不拦但留痕 —— 允许写入，rc=0 时打 WARN，并把「旧长度→新长度」写进 history，使静默丢失变可见。后果：不改变任何既有脚本行为，但丢失本身仍会发生。
+
+
+  另需一并裁定：是否给 desc/register 的入参加长度上限（当前全库无任何 MAX_/截断护栏；由此产生的历史体积代价见姊妹条目 OMO-DEBT-DESC-HISTORY-EMBEDS-FULL-EVIDENCE-TEXT）。'

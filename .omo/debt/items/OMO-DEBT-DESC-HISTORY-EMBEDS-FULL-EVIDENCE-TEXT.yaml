@@ -1,0 +1,227 @@
+id: OMO-DEBT-DESC-HISTORY-EMBEDS-FULL-EVIDENCE-TEXT
+title: omo-debt desc 把新旧全文写进每条 history note：全库历史体积 3.07× 正文，7 条贡献 31%
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: low
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/omo_debt_cli.py
+- projects/omo/src/omo/omo_audit_checks.py
+- .omo/debt/items/
+evidence_refs:
+- projects/omo/src/omo/omo_debt_cli.py
+- projects/omo/src/omo/omo_audit_checks.py
+- projects/omo/src/omo/outcome_feedback.py
+- .omo/debt/items/OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES.yaml
+mitigation_refs: []
+opened_at: '2026-11-24T11:22:12.719936+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T11:22:12.719936+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-DESC-HISTORY-EMBEDS-FULL-EVIDENCE-TEXT.
+- at: '2026-11-24T11:22:20.724363+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【批次 18 · B/2】omo-debt desc 把新旧全文写进每条 history
+    note：全库历史体积 3.07× 正文
+
+
+    §1 机制（origin/main 305afff3e）
+
+    `projects/omo/src/omo/omo_debt_cli.py:133-134`：desc 写完正文后追加 history，note 形如
+
+    `f"Updated description from ''{old_desc}'' to ''{description}''."`
+
+    即每次重写把「旧全文 + 新全文」各一份塞进同一条 note。多次重写 ⇒ 同一正文的多个历史版本全量留在文件里，且没有任何 `MAX_`/截断护栏（同批
+    A 项 §3 的 grep 零命中）。
+
+
+    §2 全库规模实测
+
+    `.omo/debt/items/` 共 111 条：description 字段合计 104,597 B，history note 合计 321,233
+    B，历史/正文比 = 3.07×。
+
+    重写 ≥2 次的 7 条贡献 101,831 B，占全库历史字节的 31%。头部（history B / description B）：
+
+    - OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS 24,439 / 5,850（3 次）
+
+    - OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES 20,735 / 6,614（3 次）
+
+    - OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS 19,787 / 3,584（4 次）
+
+    - OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID 14,904 / 3,215
+
+    - PANORAMA-A9-SOURCES-STALE-12D 10,612 / 1,483
+
+    - OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT 6,048 / 1,677
+
+
+    §3 本会话一手观察
+
+    批次 17 条目从 229 行涨到 396 行 / 32,402 B，而正文只有 6,614 B ⇒ 该文件 63% 是历史副本。行数膨胀直接放大 `git
+    diff` 审阅面与这条路径的 affected-hash 面。
+
+
+    §4 这份额外体积是否被依赖？（实测：代码上有，现实中没有）
+
+    `projects/omo/src/omo/omo_audit_checks.py:138-155`（debt integrity 检查）对 lifecycle
+    为 resolved/closed 且 `resolution_evidence`/`closed_evidence` 皆空的条目，回退读 `history[-1].note`（要求
+    `len ≥ 20`）当证据。实测：111 条里有 6 条走这条回退，它们的最后一条 note 的 action 全是 resolve 类（`resolve`
+    ×4、`resolve-default-a` ×1、`resolve-removal` ×1），note 长度 99–435 B；全库 `history[-1]`
+    是 `update_description` 的条目只有 1 条。
+
+    ⇒ desc 的全文嵌入目前不是这 6 条的证据来源；但任何以 desc 重写收尾的条目，其超长 note 会被该检查当证据读。改成 digest 的方案必须同时交代这条回退的口径。
+
+
+    §5 先例
+
+    同包 `projects/omo/src/omo/outcome_feedback.py:143` 对 note 只存 `note_digest`（`_digest(...)`），说明「digest
+    替代全文」在本仓已有实现形状。
+
+
+    §6 待裁
+
+    1. note 只记 digest 与长度差（形如 `sha256:<hex> 6353→6614 B`），全文不再进历史——与 §5 先例对齐；代价：历史不再能逐字回放旧正文。
+
+    2. 保留全文但截断到 N 字符：需先定 N 与截断标记口径，并同步复核 `omo_audit_checks` 的 `len≥20` 回退是否仍成立。
+
+    3. 维持现状：把「历史即全文快照」明文写成审计设计意图，同时在文档登记其体积代价。
+
+    另需一并裁定：是否对既有 111 条做一次历史瘦身。改动他人条目的正文/历史属在册的「不代为变更」范围，本批未动任何他人条目。
+
+    ''.'
+- at: '2026-11-24T11:22:55.066234+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T11:24:24+00:00'
+  action: measurement_provenance
+  note: 全库 111 条统计：description 合计 104,597B、history note 合计 321,233B，比值 3.07x；重写≥2
+    次的 7 条贡献 101,831B（全库历史 31%）。omo_audit_checks.py:138-155 回退实测 6 条命中且 action 全为
+    resolve 类。history[-1]=update_description 计数由 1 变 3 的登记时点校正写在正文末段。
+- at: '2026-11-24T11:24:24+00:00'
+  action: restore_lifecycle_state
+  note: broker schedule 依 omo_debt_lifecycle.py:74 把 lifecycle_state 从 identified
+    翻成 scheduled；本批以文本级替换还原 identified（还原前断言 scheduled 形态恰 1 次），next_review_at=2026-12-08
+    由 schedule 写入。
+- at: '2026-11-24T11:28:27.376567+00:00'
+  action: update_description
+  note: "Updated description from '【批次 18 · B/2】omo-debt desc 把新旧全文写进每条 history note：全库历史体积\
+    \ 3.07× 正文\n\n§1 机制（origin/main 305afff3e）\n`projects/omo/src/omo/omo_debt_cli.py:133-134`：desc\
+    \ 写完正文后追加 history，note 形如\n`f\"Updated description from '{old_desc}' to '{description}'.\"\
+    `\n即每次重写把「旧全文 + 新全文」各一份塞进同一条 note。多次重写 ⇒ 同一正文的多个历史版本全量留在文件里，且没有任何 `MAX_`/截断护栏（同批\
+    \ A 项 §3 的 grep 零命中）。\n\n§2 全库规模实测\n`.omo/debt/items/` 共 111 条：description 字段合计\
+    \ 104,597 B，history note 合计 321,233 B，历史/正文比 = 3.07×。\n重写 ≥2 次的 7 条贡献 101,831\
+    \ B，占全库历史字节的 31%。头部（history B / description B）：\n- OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS\
+    \ 24,439 / 5,850（3 次）\n- OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES 20,735 /\
+    \ 6,614（3 次）\n- OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS 19,787 / 3,584（4 次）\n\
+    - OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID 14,904 / 3,215\n- PANORAMA-A9-SOURCES-STALE-12D\
+    \ 10,612 / 1,483\n- OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT 6,048 / 1,677\n\n§3 本会话一手观察\n\
+    批次 17 条目从 229 行涨到 396 行 / 32,402 B，而正文只有 6,614 B ⇒ 该文件 63% 是历史副本。行数膨胀直接放大 `git\
+    \ diff` 审阅面与这条路径的 affected-hash 面。\n\n§4 这份额外体积是否被依赖？（实测：代码上有，现实中没有）\n`projects/omo/src/omo/omo_audit_checks.py:138-155`（debt\
+    \ integrity 检查）对 lifecycle 为 resolved/closed 且 `resolution_evidence`/`closed_evidence`\
+    \ 皆空的条目，回退读 `history[-1].note`（要求 `len ≥ 20`）当证据。实测：111 条里有 6 条走这条回退，它们的最后一条 note\
+    \ 的 action 全是 resolve 类（`resolve` ×4、`resolve-default-a` ×1、`resolve-removal`\
+    \ ×1），note 长度 99–435 B；全库 `history[-1]` 是 `update_description` 的条目只有 1 条。\n⇒ desc\
+    \ 的全文嵌入目前不是这 6 条的证据来源；但任何以 desc 重写收尾的条目，其超长 note 会被该检查当证据读。改成 digest 的方案必须同时交代这条回退的口径。\n\
+    \n§5 先例\n同包 `projects/omo/src/omo/outcome_feedback.py:143` 对 note 只存 `note_digest`（`_digest(...)`），说明「digest\
+    \ 替代全文」在本仓已有实现形状。\n\n§6 待裁\n1. note 只记 digest 与长度差（形如 `sha256:<hex> 6353→6614\
+    \ B`），全文不再进历史——与 §5 先例对齐；代价：历史不再能逐字回放旧正文。\n2. 保留全文但截断到 N 字符：需先定 N 与截断标记口径，并同步复核\
+    \ `omo_audit_checks` 的 `len≥20` 回退是否仍成立。\n3. 维持现状：把「历史即全文快照」明文写成审计设计意图，同时在文档登记其体积代价。\n\
+    另需一并裁定：是否对既有 111 条做一次历史瘦身。改动他人条目的正文/历史属在册的「不代为变更」范围，本批未动任何他人条目。\n§4 计数校正（登记时点）：上述『history[-1]\
+    \ 是 update_description 的条目只有 1 条』是登记前基线。本批两条新条目自身就是活样本——desc 写入后 history[-1] 即为\
+    \ update_description，其 note 内含正文全文（条目 B 文件 163 行里正文只占 1,886 B）。登记后该计数为 3。\n' to\
+    \ '【批次 18 · B/2】omo-debt desc 把新旧全文写进每条 history note：全库历史体积约为正文 3 倍\n\n单位纪律：下列每个数字都显式标明「字符」或「字节」（UTF-8）。登记时第一稿把\
+    \ `len()` 得到的字符数标成了「B」，属单位口径误标；本次校正文本身又走了一次 desc，于是这条 note 的全文在历史里再复制一份——这正是本条要登记的机制在自证。\n\
+    \n§1 机制（origin/main 305afff3e）\n`projects/omo/src/omo/omo_debt_cli.py:133-134`：desc\
+    \ 写完正文后追加 history，note 形如\n`f\"Updated description from '{old_desc}' to '{description}'.\"\
+    `\n即每次重写把「旧全文 + 新全文」各一份塞进同一条 note。多次重写 ⇒ 同一正文的多个历史版本全量留在文件里，且没有任何 `MAX_`/截断护栏（同批\
+    \ A 项 §3 的 grep 零命中）。\n\n§2 全库规模实测\n- 登记前基线（111 条）：description 合计 104,597 字符，history\
+    \ note 合计 321,233 字符 ⇒ 字符口径 3.07×。\n- 登记后（113 条，含本批两条）：description 108,854 字符\
+    \ / 162,879 字节，history note 326,327 字符 / 509,390 字节 ⇒ 3.00×（字符）/ 3.13×（字节）。两个口径同量级，比值不因编码选择而翻转。\n\
+    - 重写 ≥2 次的 7 条贡献 note 101,831 字符 / 155,401 字节 = 全库 note 字节的 31%。头部（次数；note 字符/字节；正文字符/字节）：\n\
+    \  - OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS：3；24,439 / 37,649；5,850 / 9,047\n\
+    \  - OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES：3；20,735 / 32,838；6,614 / 10,464\n\
+    \  - OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS：4；19,787 / 29,605；3,584 / 5,312\n\
+    \  - OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID：3；14,904 / 22,790；3,215\
+    \ / 4,959\n  - PANORAMA-A9-SOURCES-STALE-12D：2；10,612 / 15,389；1,483 / 2,143\n\
+    \  - OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT：2；6,048 / 8,856；1,677 / 2,501\n  - ZHIXING-PUBLISH-EFFECT-PROVENANCE：2；5,306\
+    \ / 8,274；963 / 1,507\n\n§3 一次重写即超正文（字节口径统一，本批自证）\n- 本条目 B 在第一次 desc 后：文件 9,639\
+    \ 字节，正文 3,382 字节，note 合计 3,752 字节 ⇒ 单次重写就让历史副本字节多于正文。\n- 姊妹条目 A 同批：文件 11,279 字节，正文\
+    \ 3,921 字节，note 4,621 字节 ⇒ 1.18×。\n- 批次 17 条目经 3 次重写：文件 49,077 字节，正文 10,464 字节（占\
+    \ 21%），note 32,838 字节（占 67%）。\n- 行数膨胀直接放大 `git diff` 审阅面与这条路径的 affected-hash 面（批次\
+    \ 17 条目从 229 行涨到 396 行）。\n\n§4 这份额外体积是否被依赖？（实测：代码上有，现实中没有）\n`projects/omo/src/omo/omo_audit_checks.py:138-155`（debt\
+    \ integrity 检查）对 lifecycle 为 resolved/closed 且 `resolution_evidence`/`closed_evidence`\
+    \ 皆空的条目，回退读 `history[-1].note`（要求长度 ≥20）当证据。实测：111 条基线里有 6 条走这条回退，它们的最后一条 note\
+    \ 的 action 全是 resolve 类（`resolve` ×4、`resolve-default-a` ×1、`resolve-removal`\
+    \ ×1），note 长度 99–435 字符；登记前基线中 `history[-1]` 是 `update_description` 的条目只有 1 条，本批两条入册后为\
+    \ 3 条（计数时点已按现状标注，不拿基线当现状）。\n⇒ desc 的全文嵌入目前不是那 6 条的证据来源；但任何以 desc 重写收尾的条目，其超长 note\
+    \ 会被该检查当证据读。所以「改成 digest」不是零代价动作，必须同时交代这条回退的口径。\n\n§5 先例\n同包 `projects/omo/src/omo/outcome_feedback.py:143`\
+    \ 对 note 只存 `note_digest`（`_digest(...)`），说明「digest 替代全文」在本仓已有实现形状。\n\n§6 待裁\n\
+    1. note 只记 digest 与长度差（形如 `sha256:<hex> 6353→6614 字符`），全文不再进历史——与 §5 先例对齐；代价：历史不再能逐字回放旧正文。\n\
+    2. 保留全文但截断到 N 字符：需先定 N 与截断标记口径，并同步复核 `omo_audit_checks` 那条「长度 ≥20」回退在截断后是否仍成立。\n\
+    3. 维持现状：把「历史即全文快照」明文写成审计设计意图，同时在文档登记其体积代价。\n另需一并裁定：是否对既有 113 条做一次历史瘦身。改动他人条目的正文/历史属在册的「不代为变更」范围，本批除自身两条外未动任何他人条目。\n\
+    '."
+- at: '2026-11-24T11:28:27+00:00'
+  action: measurement_provenance
+  note: >-
+    单位口径校正：首稿把 len() 的字符数标成 B。本次仍走 broker desc（未用文本级替换），故按本条所登记的机制再复制一份全文进 history——实测文件 9,639→19,124 字节、note 3,752→11,585 字节，正文长度 2,567 字符 / 4,417 字节。校正后字符/字节两口径已同时给出。
+- at: '2026-11-24T11:29:01+00:00'
+  action: measurement_provenance
+  note: >-
+    §2 读数时点披露：『登记后 113 条』那组数字测于 2026-11-24T11:26Z，即刻意单位校正的那次 desc 之前；校正本身又为两条目各追加一条含全文的 note，实测条目 A 文件 11,279→20,508 字节（正文仅 3,921→4,320 字节）、条目 B 9,639→19,124 字节（正文 3,382→4,417 字节），合计 +17,579 字节里正文只占 1,434 字节。故 §2 的两组『登记后』数是校正前快照而非文件现状；本条不为此再走一次 desc（那会按本条所登记的机制继续加副本）。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: "【批次 18 · B/2】omo-debt desc 把新旧全文写进每条 history note：全库历史体积约为正文 3 倍\n\n\
+  单位纪律：下列每个数字都显式标明「字符」或「字节」（UTF-8）。登记时第一稿把 `len()` 得到的字符数标成了「B」，属单位口径误标；本次校正文本身又走了一次\
+  \ desc，于是这条 note 的全文在历史里再复制一份——这正是本条要登记的机制在自证。\n\n§1 机制（origin/main 305afff3e）\n\
+  `projects/omo/src/omo/omo_debt_cli.py:133-134`：desc 写完正文后追加 history，note 形如\n`f\"\
+  Updated description from '{old_desc}' to '{description}'.\"`\n即每次重写把「旧全文 + 新全文」各一份塞进同一条\
+  \ note。多次重写 ⇒ 同一正文的多个历史版本全量留在文件里，且没有任何 `MAX_`/截断护栏（同批 A 项 §3 的 grep 零命中）。\n\n§2\
+  \ 全库规模实测\n- 登记前基线（111 条）：description 合计 104,597 字符，history note 合计 321,233 字符 ⇒\
+  \ 字符口径 3.07×。\n- 登记后（113 条，含本批两条）：description 108,854 字符 / 162,879 字节，history note\
+  \ 326,327 字符 / 509,390 字节 ⇒ 3.00×（字符）/ 3.13×（字节）。两个口径同量级，比值不因编码选择而翻转。\n- 重写 ≥2 次的\
+  \ 7 条贡献 note 101,831 字符 / 155,401 字节 = 全库 note 字节的 31%。头部（次数；note 字符/字节；正文字符/字节）：\n\
+  \  - OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS：3；24,439 / 37,649；5,850 / 9,047\n\
+  \  - OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES：3；20,735 / 32,838；6,614 / 10,464\n\
+  \  - OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS：4；19,787 / 29,605；3,584 / 5,312\n \
+  \ - OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID：3；14,904 / 22,790；3,215 /\
+  \ 4,959\n  - PANORAMA-A9-SOURCES-STALE-12D：2；10,612 / 15,389；1,483 / 2,143\n  -\
+  \ OMO-DEBT-PACKET-COMMAND-DEAD-SCRIPT：2；6,048 / 8,856；1,677 / 2,501\n  - ZHIXING-PUBLISH-EFFECT-PROVENANCE：2；5,306\
+  \ / 8,274；963 / 1,507\n\n§3 一次重写即超正文（字节口径统一，本批自证）\n- 本条目 B 在第一次 desc 后：文件 9,639\
+  \ 字节，正文 3,382 字节，note 合计 3,752 字节 ⇒ 单次重写就让历史副本字节多于正文。\n- 姊妹条目 A 同批：文件 11,279 字节，正文\
+  \ 3,921 字节，note 4,621 字节 ⇒ 1.18×。\n- 批次 17 条目经 3 次重写：文件 49,077 字节，正文 10,464 字节（占\
+  \ 21%），note 32,838 字节（占 67%）。\n- 行数膨胀直接放大 `git diff` 审阅面与这条路径的 affected-hash 面（批次\
+  \ 17 条目从 229 行涨到 396 行）。\n\n§4 这份额外体积是否被依赖？（实测：代码上有，现实中没有）\n`projects/omo/src/omo/omo_audit_checks.py:138-155`（debt\
+  \ integrity 检查）对 lifecycle 为 resolved/closed 且 `resolution_evidence`/`closed_evidence`\
+  \ 皆空的条目，回退读 `history[-1].note`（要求长度 ≥20）当证据。实测：111 条基线里有 6 条走这条回退，它们的最后一条 note 的\
+  \ action 全是 resolve 类（`resolve` ×4、`resolve-default-a` ×1、`resolve-removal` ×1），note\
+  \ 长度 99–435 字符；登记前基线中 `history[-1]` 是 `update_description` 的条目只有 1 条，本批两条入册后为 3\
+  \ 条（计数时点已按现状标注，不拿基线当现状）。\n⇒ desc 的全文嵌入目前不是那 6 条的证据来源；但任何以 desc 重写收尾的条目，其超长 note\
+  \ 会被该检查当证据读。所以「改成 digest」不是零代价动作，必须同时交代这条回退的口径。\n\n§5 先例\n同包 `projects/omo/src/omo/outcome_feedback.py:143`\
+  \ 对 note 只存 `note_digest`（`_digest(...)`），说明「digest 替代全文」在本仓已有实现形状。\n\n§6 待裁\n1.\
+  \ note 只记 digest 与长度差（形如 `sha256:<hex> 6353→6614 字符`），全文不再进历史——与 §5 先例对齐；代价：历史不再能逐字回放旧正文。\n\
+  2. 保留全文但截断到 N 字符：需先定 N 与截断标记口径，并同步复核 `omo_audit_checks` 那条「长度 ≥20」回退在截断后是否仍成立。\n\
+  3. 维持现状：把「历史即全文快照」明文写成审计设计意图，同时在文档登记其体积代价。\n另需一并裁定：是否对既有 113 条做一次历史瘦身。改动他人条目的正文/历史属在册的「不代为变更」范围，本批除自身两条外未动任何他人条目。\n"
+decision_needed: '待裁（三选一 + 一项范围裁定）：
+
+
+  ① note 只记 digest 与长度差（形如 sha256:<hex> 6353→6614 B），全文不再进历史 —— 与同包 outcome_feedback.py:143
+  的 note_digest 先例对齐。代价：历史不再能逐字回放旧正文，且 omo_audit_checks.py:138-155「以最后一条 note 当证据」的回退口径要同时定。
+
+
+  ② 保留全文但截断到 N 字符。前置：先定 N 与截断标记口径，并复核该回退的 len>=20 判据在截断后是否仍成立。
+
+
+  ③ 维持现状 —— 明文把「历史即全文快照」定为审计设计意图，并在文档登记其体积代价（当前实测 3.07x，7 条贡献 31%）。
+
+
+  范围裁定：是否对既有 111 条做历史瘦身。本批未动任何他人条目的正文与 history；瘦身等于改写他人条目历史，属在册的「不代为变更」面，需 principal
+  明确授权后再做。'
