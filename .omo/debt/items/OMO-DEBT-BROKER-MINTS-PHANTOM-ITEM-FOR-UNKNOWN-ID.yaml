@@ -1,5 +1,6 @@
 id: OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID
-title: omo-debt 四个写动词（schedule/reopen/escalate/reclassify）对不存在的 debt_id 返回 rc=0 并铸出无 id 孤儿条目 —— kernel 按 id=UNKNOWN / severity=P3 / lifecycle_state=active 默认值把它读进指标面
+title: omo-debt 四个写动词（schedule/reopen/escalate/reclassify）对不存在的 debt_id 返回 rc=0 并铸出无
+  id 孤儿条目 —— kernel 按 id=UNKNOWN / severity=P3 / lifecycle_state=active 默认值把它读进指标面
 dimension: governance
 subdimension: consistency
 domain: workspace
@@ -31,32 +32,237 @@ history:
   actor: governance-agent
 - at: '2026-11-24T08:32:37.095452+00:00'
   action: update_description
-  note: "Updated description from '' to '`omo.omo_debt_cli` 的 `schedule` / `desc` / `reopen` 三个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/` 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，`id` 取默认哨兵 `UNKNOWN`、`severity` 取默认 `P3`，直接进入指标面。\n\n复现（2026-11-24 08:30:31Z，沙箱根 `/tmp/sbxroot/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\n1. `python3 -m omo.omo_debt_cli schedule --omo-dir /tmp/sbx-omo --id BOGUS-ID-NOT-EXIST --next-review-at 2026-12-08`\n   ⇒ `rc=0`、stdout `scheduled BOGUS-ID-NOT-EXIST`、目录新增 `BOGUS-ID-NOT-EXIST.yaml`，内容仅三键：\n   `lifecycle_state: scheduled` / `next_review_at: '2026-12-08'` / `history[0].action=schedule`。\n2. `... desc --id BOGUS-ID-NOT-EXIST --description ...` ⇒ 同样 `rc=0`、`BOGUS-ID-NOT-EXIST description 已更新`。\n3. 把该文件登记进 `seed_items` 后 `load_debt_ledger` 读回 **2** 条，第二条是\n   `id='UNKNOWN' | title='' | lifecycle_state='scheduled' | severity='P3' | next_review_at='2026-12-08'`。\n4. A/B（同一沙箱，只删这一个文件）：`debt_health 87.5 →\
-    \ 75.0`（−12.5）、`state_entropy 0.0 → 0.5`。\n   即**一条拼错的 id 就能改动债务健康分读数**，且不改任何真实条目。\n\n默认值出处可直接读死：`omo_debt_registry.py:146 id=str(payload.get(\"id\", \"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"severity\") or payload.get(\"priority\") or \"P3\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84 schedule_item`（`:74` 直接拼 `items/{id}.yaml`，`:75` 读、`:76` 写 `lifecycle_state`，`:84` 落盘，全程无 `exists()` 判定）；\n`omo_debt_cli.py:455-456 reopen` 同形状。对照 `omo_debt_cli.py:71-74 close` 是有闸的\n（`if not item_path.exists(): print(\"❌ 未知 debt_id\"); return 1`）——同一 CLI 内两种口径并存，\n`update_item`（`omo_debt_lifecycle.py:87-104`）的 docstring 明写「若不存在则返回 canonical 路径，\n调用方会以明确的 not found 失败」，但 `schedule_item` 不走 `update_item`、`reopen`/`desc` 不检查返回值存在性，\n于是该承诺只对 `close` 成立。\n\n自身污染面实测为零：本仓现网 107 条在册条目**全部**带非空 `id`，`id=='UNKNOWN'` 计数 0，\n`.omo/debt/items/` 下无孤儿/无 `id` 文件（按「文件缺 `id` 键」与「`id` 值等于 UNKNOWN」两条判据分别扫，均为 0 命中），\n故本轮不主张现网已被污染，只登记该缺陷的形状与可达性。\n\n待裁（三选一，属 CLI rc 语义与写面契约变更，留 principal）：\n① 给 `schedule_item`/`reopen`/`desc`\
-    \ 补与 `close:72-74` 同款的 `exists()` 闸（改 rc 语义，最小面）；\n② 让 `load_debt_ledger` 对缺 `id` 的条目出 typed warning 或直接跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146` 的 `UNKNOWN` 默认（改数据模型：`DebtItem.id` 变成必填，历史无 `id` 文件会当场炸出）。\n三条都会改变现网读数口径，agent 不代为选定。'."
+  note: "Updated description from '' to '`omo.omo_debt_cli` 的 `schedule` / `desc`\
+    \ / `reopen` 三个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/` 落一个无 `id`、无\
+    \ `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，`id` 取默认哨兵 `UNKNOWN`、`severity`\
+    \ 取默认 `P3`，直接进入指标面。\n\n复现（2026-11-24 08:30:31Z，沙箱根 `/tmp/sbxroot/.omo`，只含 1 条真条目\
+    \ `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\n1. `python3 -m omo.omo_debt_cli\
+    \ schedule --omo-dir /tmp/sbx-omo --id BOGUS-ID-NOT-EXIST --next-review-at 2026-12-08`\n\
+    \   ⇒ `rc=0`、stdout `scheduled BOGUS-ID-NOT-EXIST`、目录新增 `BOGUS-ID-NOT-EXIST.yaml`，内容仅三键：\n\
+    \   `lifecycle_state: scheduled` / `next_review_at: '2026-12-08'` / `history[0].action=schedule`。\n\
+    2. `... desc --id BOGUS-ID-NOT-EXIST --description ...` ⇒ 同样 `rc=0`、`BOGUS-ID-NOT-EXIST\
+    \ description 已更新`。\n3. 把该文件登记进 `seed_items` 后 `load_debt_ledger` 读回 **2** 条，第二条是\n\
+    \   `id='UNKNOWN' | title='' | lifecycle_state='scheduled' | severity='P3' | next_review_at='2026-12-08'`。\n\
+    4. A/B（同一沙箱，只删这一个文件）：`debt_health 87.5 → 75.0`（−12.5）、`state_entropy 0.0 → 0.5`。\n\
+    \   即**一条拼错的 id 就能改动债务健康分读数**，且不改任何真实条目。\n\n默认值出处可直接读死：`omo_debt_registry.py:146\
+    \ id=str(payload.get(\"id\", \"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"\
+    severity\") or payload.get(\"priority\") or \"P3\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84\
+    \ schedule_item`（`:74` 直接拼 `items/{id}.yaml`，`:75` 读、`:76` 写 `lifecycle_state`，`:84`\
+    \ 落盘，全程无 `exists()` 判定）；\n`omo_debt_cli.py:455-456 reopen` 同形状。对照 `omo_debt_cli.py:71-74\
+    \ close` 是有闸的\n（`if not item_path.exists(): print(\"❌ 未知 debt_id\"); return 1`）——同一\
+    \ CLI 内两种口径并存，\n`update_item`（`omo_debt_lifecycle.py:87-104`）的 docstring 明写「若不存在则返回\
+    \ canonical 路径，\n调用方会以明确的 not found 失败」，但 `schedule_item` 不走 `update_item`、`reopen`/`desc`\
+    \ 不检查返回值存在性，\n于是该承诺只对 `close` 成立。\n\n自身污染面实测为零：本仓现网 107 条在册条目**全部**带非空 `id`，`id=='UNKNOWN'`\
+    \ 计数 0，\n`.omo/debt/items/` 下无孤儿/无 `id` 文件（按「文件缺 `id` 键」与「`id` 值等于 UNKNOWN」两条判据分别扫，均为\
+    \ 0 命中），\n故本轮不主张现网已被污染，只登记该缺陷的形状与可达性。\n\n待裁（三选一，属 CLI rc 语义与写面契约变更，留 principal）：\n\
+    ① 给 `schedule_item`/`reopen`/`desc` 补与 `close:72-74` 同款的 `exists()` 闸（改 rc 语义，最小面）；\n\
+    ② 让 `load_debt_ledger` 对缺 `id` 的条目出 typed warning 或直接跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n\
+    ③ 去掉 `:146` 的 `UNKNOWN` 默认（改数据模型：`DebtItem.id` 变成必填，历史无 `id` 文件会当场炸出）。\n三条都会改变现网读数口径，agent\
+    \ 不代为选定。'."
 - at: '2026-11-24T08:32:37.137445+00:00'
   action: schedule
   note: Next review set to 2026-12-08.
 - at: '2026-11-24T08:31:00Z'
   action: review
   actor: governance-agent
-  note: 立案同批自证的两处 broker 副作用与现网洁净度：① `omo_debt_lifecycle.py:76 schedule_item` 会把 `lifecycle_state` 一并写成 `scheduled`——本轮对本条调 `schedule` 后实测该键确为 `scheduled`，且它是全库 107 条里唯一取该值的条目（其余 closed 35 / resolved 32 / identified 35 / in_progress 4）；`scheduled` 不在既有用词汇内，正是 OMO-WRITEOWNER ⑥ 记的形状（同文件 `reopen` 分支 `omo_debt_cli.py:456` 复位写的是 `identified`），故本轮把该键手工复位为 `identified` 并在此留痕，不静默采纳 broker 的状态写入；② 现网未被本缺陷污染：按「文件缺 `id` 键」「`id` 为空」「`id == UNKNOWN`」「`title` 为空」「`severity == P3`」五条判据扫 107 个文件与 `load_debt_ledger` 读回的 107 条，命中全为 0，所以本条只登记形状与可达性，不主张已发生污染；③ 复现全程在 `/tmp/sbxroot` 沙箱内完成，工作区与现网条目零改动；A/B 读数（debt_health 87.5→75.0、state_entropy 0.0→0.5）由同一沙箱只删该一个文件得到，非推断。
+  note: 立案同批自证的两处 broker 副作用与现网洁净度：① `omo_debt_lifecycle.py:76 schedule_item` 会把 `lifecycle_state`
+    一并写成 `scheduled`——本轮对本条调 `schedule` 后实测该键确为 `scheduled`，且它是全库 107 条里唯一取该值的条目（其余
+    closed 35 / resolved 32 / identified 35 / in_progress 4）；`scheduled` 不在既有用词汇内，正是
+    OMO-WRITEOWNER ⑥ 记的形状（同文件 `reopen` 分支 `omo_debt_cli.py:456` 复位写的是 `identified`），故本轮把该键手工复位为
+    `identified` 并在此留痕，不静默采纳 broker 的状态写入；② 现网未被本缺陷污染：按「文件缺 `id` 键」「`id` 为空」「`id ==
+    UNKNOWN`」「`title` 为空」「`severity == P3`」五条判据扫 107 个文件与 `load_debt_ledger` 读回的 107
+    条，命中全为 0，所以本条只登记形状与可达性，不主张已发生污染；③ 复现全程在 `/tmp/sbxroot` 沙箱内完成，工作区与现网条目零改动；A/B 读数（debt_health
+    87.5→75.0、state_entropy 0.0→0.5）由同一沙箱只删该一个文件得到，非推断。
 - at: '2026-11-24T08:36:14.281120+00:00'
   action: update_description
-  note: "Updated description from '`omo.omo_debt_cli` 的 `schedule` / `desc` / `reopen` 三个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/` 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，`id` 取默认哨兵 `UNKNOWN`、`severity` 取默认 `P3`，直接进入指标面。\n\n复现（2026-11-24 08:30:31Z，沙箱根 `/tmp/sbxroot/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\n1. `python3 -m omo.omo_debt_cli schedule --omo-dir /tmp/sbx-omo --id BOGUS-ID-NOT-EXIST --next-review-at 2026-12-08`\n   ⇒ `rc=0`、stdout `scheduled BOGUS-ID-NOT-EXIST`、目录新增 `BOGUS-ID-NOT-EXIST.yaml`，内容仅三键：\n   `lifecycle_state: scheduled` / `next_review_at: '2026-12-08'` / `history[0].action=schedule`。\n2. `... desc --id BOGUS-ID-NOT-EXIST --description ...` ⇒ 同样 `rc=0`、`BOGUS-ID-NOT-EXIST description 已更新`。\n3. 把该文件登记进 `seed_items` 后 `load_debt_ledger` 读回 **2** 条，第二条是\n   `id='UNKNOWN' | title='' | lifecycle_state='scheduled' | severity='P3' | next_review_at='2026-12-08'`。\n4. A/B（同一沙箱，只删这一个文件）：`debt_health 87.5 → 75.0`（−12.5）、`state_entropy\
-    \ 0.0 → 0.5`。\n   即**一条拼错的 id 就能改动债务健康分读数**，且不改任何真实条目。\n\n默认值出处可直接读死：`omo_debt_registry.py:146 id=str(payload.get(\"id\", \"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"severity\") or payload.get(\"priority\") or \"P3\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84 schedule_item`（`:74` 直接拼 `items/{id}.yaml`，`:75` 读、`:76` 写 `lifecycle_state`，`:84` 落盘，全程无 `exists()` 判定）；\n`omo_debt_cli.py:455-456 reopen` 同形状。对照 `omo_debt_cli.py:71-74 close` 是有闸的\n（`if not item_path.exists(): print(\"❌ 未知 debt_id\"); return 1`）——同一 CLI 内两种口径并存，\n`update_item`（`omo_debt_lifecycle.py:87-104`）的 docstring 明写「若不存在则返回 canonical 路径，\n调用方会以明确的 not found 失败」，但 `schedule_item` 不走 `update_item`、`reopen`/`desc` 不检查返回值存在性，\n于是该承诺只对 `close` 成立。\n\n自身污染面实测为零：本仓现网 107 条在册条目**全部**带非空 `id`，`id=='UNKNOWN'` 计数 0，\n`.omo/debt/items/` 下无孤儿/无 `id` 文件（按「文件缺 `id` 键」与「`id` 值等于 UNKNOWN」两条判据分别扫，均为 0 命中），\n故本轮不主张现网已被污染，只登记该缺陷的形状与可达性。\n\n待裁（三选一，属 CLI rc 语义与写面契约变更，留 principal）：\n① 给 `schedule_item`/`reopen`/`desc` 补与 `close:72-74`\
-    \ 同款的 `exists()` 闸（改 rc 语义，最小面）；\n② 让 `load_debt_ledger` 对缺 `id` 的条目出 typed warning 或直接跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146` 的 `UNKNOWN` 默认（改数据模型：`DebtItem.id` 变成必填，历史无 `id` 文件会当场炸出）。\n三条都会改变现网读数口径，agent 不代为选定。' to '`omo.omo_debt_cli` 的四个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/` 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，缺省字段由解析层默认值补齐（`id='UNKNOWN'`、`severity='P3'`、`lifecycle_state='active'`），直接进入指标面。逐 verb 隔离实测（2026-11-24 08:35:35Z，每个 verb 一份全新沙箱根 `/tmp/sbx-v/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\n| verb | rc | 是否落孤儿 | 孤儿实际内容（除 history） |\n|---|---|---|---|\n| `schedule --next-review-at 2026-12-08` | **0** | 是 | `lifecycle_state: scheduled` + `next_review_at` |\n| `reopen` | **0** | 是 | `lifecycle_state: identified` |\n| `escalate --gate-level advisory` | **0** | 是 | `gate_level: advisory`（**无** `lifecycle_state` 键） |\n| `reclassify --dimension governance --subdimension consistency` | **0** | 是 | `dimension` + `subdimension`\
-    \ |\n| `desc --description …` | 1 | 否 | `❌ 未知 debt_id: GHOST-X (不在 .omo/debt/items)`（闸在 `omo_debt_cli.py:126`） |\n| `close --confirm` | 1 | 否 | 同上措辞（闸在 `omo_debt_cli.py:71-74`） |\n| `approve` / `revalidate` | 1 | 否 | 先炸于 `FileNotFoundError: missing dispatch packet …`，另一条路径 |\n\n默认值出处可直接读死：`omo_debt_registry.py:146 id=str(payload.get(\"id\",\"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"severity\") or payload.get(\"priority\") or \"P3\")`、\n`:155 lifecycle_state=str(payload.get(\"lifecycle_state\") or payload.get(\"status\") or \"active\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84 schedule_item`（`:74` 直接拼 `items/{id}.yaml`、`:75` 读、`:84` 落盘，全程无 `exists()` 判定）\n与 `omo_debt_cli.py:455-456 reopen` / `:393 escalate` / `:378 reclassify`（都走 `update_item`，\n而 `omo_debt_lifecycle.py:87-104` 在两个候选路径都不存在时**返回 canonical 路径而不报错**，其 docstring 明写「由调用方以明确的 not found 失败」——\n实测只有 `close`/`desc` 履行了这句，其余四个动词直接把返回值当已存在条目写下去）。\n\n指标面影响 A/B（同一沙箱，只删/留这 1 个孤儿文件，真条目不变）：\n`debt_health 87.5 → 75.0`（−12.5）。即**一个拼错的\
-    \ id 就能改动债务健康分读数**。\n不夸大另一面：孤儿带 `gate_level: advisory` 时 `debt_gate_count` 仍为 0（该车道另有前置条件），\n`state_entropy` 在 escalate 单条样本里未变，故本条只主张 `debt_health` 与在册条数被污染，不主张闸面被污染。\n另有碰撞面：两次不同拼写会落两个文件、`id` 同为哨兵 `UNKNOWN`，在 ledger/dashboard 里不可区分。\n\n现网洁净度实测为**未被污染**，故本条不主张已发生事故：按「文件缺 `id` 键」「`id` 为空」「`id == UNKNOWN`」\n「`title` 为空」「`severity == P3`」五条判据扫 `.omo/debt/items/` 107 个文件与 `load_debt_ledger` 读回的 107 条，\n命中全为 0；`lifecycle_state` 取值集为 closed 35 / resolved 32 / identified 35 / in_progress 4（本批立案后另见），\n`active`/`scheduled` 在真实条目里均无使用者——而上面四个动词恰好会往这三个词里塞。\n\n仪器自纠（同批留痕，避免读者复现到假读数）：首轮把 `schedule` 与 `desc` 连跑在**同一**沙箱，\n`desc` 报 rc=0 + 「已更新」，当时被我读成「`desc` 也铸孤儿」；逐 verb 全新沙箱重跑后证实该 rc=0 是\n前一步 `schedule` 已把文件建出来的**继承效应**，`desc` 自身有闸（`omo_debt_cli.py:126`）返回 rc=1。\n本条正文按隔离重测的读数写，不用连跑读数。\n\n待裁（三选一，属 CLI rc 语义与数据模型契约变更，留 principal）：\n① 把 `close:71-74` 的存在性闸同款补进 `schedule_item`/`reopen`/`escalate`/`reclassify`，或让 `update_item`\n   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n② 让 `load_debt_ledger` 对缺 `id`/缺 `title` 的文件出\
-    \ typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155` 的三个默认值，把 `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n三条都会改变现网读数口径，agent 不代为选定；本轮零代码、零判据、零指标面改动。'."
+  note: "Updated description from '`omo.omo_debt_cli` 的 `schedule` / `desc` / `reopen`\
+    \ 三个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/` 落一个无 `id`、无 `title`、无\
+    \ `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，`id` 取默认哨兵 `UNKNOWN`、`severity` 取默认\
+    \ `P3`，直接进入指标面。\n\n复现（2026-11-24 08:30:31Z，沙箱根 `/tmp/sbxroot/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\
+    \n1. `python3 -m omo.omo_debt_cli schedule --omo-dir /tmp/sbx-omo --id BOGUS-ID-NOT-EXIST\
+    \ --next-review-at 2026-12-08`\n   ⇒ `rc=0`、stdout `scheduled BOGUS-ID-NOT-EXIST`、目录新增\
+    \ `BOGUS-ID-NOT-EXIST.yaml`，内容仅三键：\n   `lifecycle_state: scheduled` / `next_review_at:\
+    \ '2026-12-08'` / `history[0].action=schedule`。\n2. `... desc --id BOGUS-ID-NOT-EXIST\
+    \ --description ...` ⇒ 同样 `rc=0`、`BOGUS-ID-NOT-EXIST description 已更新`。\n3. 把该文件登记进\
+    \ `seed_items` 后 `load_debt_ledger` 读回 **2** 条，第二条是\n   `id='UNKNOWN' | title=''\
+    \ | lifecycle_state='scheduled' | severity='P3' | next_review_at='2026-12-08'`。\n\
+    4. A/B（同一沙箱，只删这一个文件）：`debt_health 87.5 → 75.0`（−12.5）、`state_entropy 0.0 → 0.5`。\n\
+    \   即**一条拼错的 id 就能改动债务健康分读数**，且不改任何真实条目。\n\n默认值出处可直接读死：`omo_debt_registry.py:146\
+    \ id=str(payload.get(\"id\", \"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"\
+    severity\") or payload.get(\"priority\") or \"P3\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84\
+    \ schedule_item`（`:74` 直接拼 `items/{id}.yaml`，`:75` 读、`:76` 写 `lifecycle_state`，`:84`\
+    \ 落盘，全程无 `exists()` 判定）；\n`omo_debt_cli.py:455-456 reopen` 同形状。对照 `omo_debt_cli.py:71-74\
+    \ close` 是有闸的\n（`if not item_path.exists(): print(\"❌ 未知 debt_id\"); return 1`）——同一\
+    \ CLI 内两种口径并存，\n`update_item`（`omo_debt_lifecycle.py:87-104`）的 docstring 明写「若不存在则返回\
+    \ canonical 路径，\n调用方会以明确的 not found 失败」，但 `schedule_item` 不走 `update_item`、`reopen`/`desc`\
+    \ 不检查返回值存在性，\n于是该承诺只对 `close` 成立。\n\n自身污染面实测为零：本仓现网 107 条在册条目**全部**带非空 `id`，`id=='UNKNOWN'`\
+    \ 计数 0，\n`.omo/debt/items/` 下无孤儿/无 `id` 文件（按「文件缺 `id` 键」与「`id` 值等于 UNKNOWN」两条判据分别扫，均为\
+    \ 0 命中），\n故本轮不主张现网已被污染，只登记该缺陷的形状与可达性。\n\n待裁（三选一，属 CLI rc 语义与写面契约变更，留 principal）：\n\
+    ① 给 `schedule_item`/`reopen`/`desc` 补与 `close:72-74` 同款的 `exists()` 闸（改 rc 语义，最小面）；\n\
+    ② 让 `load_debt_ledger` 对缺 `id` 的条目出 typed warning 或直接跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n\
+    ③ 去掉 `:146` 的 `UNKNOWN` 默认（改数据模型：`DebtItem.id` 变成必填，历史无 `id` 文件会当场炸出）。\n三条都会改变现网读数口径，agent\
+    \ 不代为选定。' to '`omo.omo_debt_cli` 的四个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/`\
+    \ 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，缺省字段由解析层默认值补齐（`id='UNKNOWN'`、`severity='P3'`、`lifecycle_state='active'`），直接进入指标面。逐\
+    \ verb 隔离实测（2026-11-24 08:35:35Z，每个 verb 一份全新沙箱根 `/tmp/sbx-v/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\
+    \n| verb | rc | 是否落孤儿 | 孤儿实际内容（除 history） |\n|---|---|---|---|\n| `schedule --next-review-at\
+    \ 2026-12-08` | **0** | 是 | `lifecycle_state: scheduled` + `next_review_at` |\n\
+    | `reopen` | **0** | 是 | `lifecycle_state: identified` |\n| `escalate --gate-level\
+    \ advisory` | **0** | 是 | `gate_level: advisory`（**无** `lifecycle_state` 键） |\n\
+    | `reclassify --dimension governance --subdimension consistency` | **0** | 是 |\
+    \ `dimension` + `subdimension` |\n| `desc --description …` | 1 | 否 | `❌ 未知 debt_id:\
+    \ GHOST-X (不在 .omo/debt/items)`（闸在 `omo_debt_cli.py:126`） |\n| `close --confirm`\
+    \ | 1 | 否 | 同上措辞（闸在 `omo_debt_cli.py:71-74`） |\n| `approve` / `revalidate` | 1\
+    \ | 否 | 先炸于 `FileNotFoundError: missing dispatch packet …`，另一条路径 |\n\n默认值出处可直接读死：`omo_debt_registry.py:146\
+    \ id=str(payload.get(\"id\",\"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"\
+    severity\") or payload.get(\"priority\") or \"P3\")`、\n`:155 lifecycle_state=str(payload.get(\"\
+    lifecycle_state\") or payload.get(\"status\") or \"active\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84\
+    \ schedule_item`（`:74` 直接拼 `items/{id}.yaml`、`:75` 读、`:84` 落盘，全程无 `exists()` 判定）\n\
+    与 `omo_debt_cli.py:455-456 reopen` / `:393 escalate` / `:378 reclassify`（都走 `update_item`，\n\
+    而 `omo_debt_lifecycle.py:87-104` 在两个候选路径都不存在时**返回 canonical 路径而不报错**，其 docstring\
+    \ 明写「由调用方以明确的 not found 失败」——\n实测只有 `close`/`desc` 履行了这句，其余四个动词直接把返回值当已存在条目写下去）。\n\
+    \n指标面影响 A/B（同一沙箱，只删/留这 1 个孤儿文件，真条目不变）：\n`debt_health 87.5 → 75.0`（−12.5）。即**一个拼错的\
+    \ id 就能改动债务健康分读数**。\n不夸大另一面：孤儿带 `gate_level: advisory` 时 `debt_gate_count` 仍为\
+    \ 0（该车道另有前置条件），\n`state_entropy` 在 escalate 单条样本里未变，故本条只主张 `debt_health` 与在册条数被污染，不主张闸面被污染。\n\
+    另有碰撞面：两次不同拼写会落两个文件、`id` 同为哨兵 `UNKNOWN`，在 ledger/dashboard 里不可区分。\n\n现网洁净度实测为**未被污染**，故本条不主张已发生事故：按「文件缺\
+    \ `id` 键」「`id` 为空」「`id == UNKNOWN`」\n「`title` 为空」「`severity == P3`」五条判据扫 `.omo/debt/items/`\
+    \ 107 个文件与 `load_debt_ledger` 读回的 107 条，\n命中全为 0；`lifecycle_state` 取值集为 closed\
+    \ 35 / resolved 32 / identified 35 / in_progress 4（本批立案后另见），\n`active`/`scheduled`\
+    \ 在真实条目里均无使用者——而上面四个动词恰好会往这三个词里塞。\n\n仪器自纠（同批留痕，避免读者复现到假读数）：首轮把 `schedule` 与 `desc`\
+    \ 连跑在**同一**沙箱，\n`desc` 报 rc=0 + 「已更新」，当时被我读成「`desc` 也铸孤儿」；逐 verb 全新沙箱重跑后证实该 rc=0\
+    \ 是\n前一步 `schedule` 已把文件建出来的**继承效应**，`desc` 自身有闸（`omo_debt_cli.py:126`）返回 rc=1。\n\
+    本条正文按隔离重测的读数写，不用连跑读数。\n\n待裁（三选一，属 CLI rc 语义与数据模型契约变更，留 principal）：\n① 把 `close:71-74`\
+    \ 的存在性闸同款补进 `schedule_item`/`reopen`/`escalate`/`reclassify`，或让 `update_item`\n\
+    \   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n② 让 `load_debt_ledger` 对缺 `id`/缺 `title` 的文件出\
+    \ typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155` 的三个默认值，把\
+    \ `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n三条都会改变现网读数口径，agent\
+    \ 不代为选定；本轮零代码、零判据、零指标面改动。'."
 - at: '2026-11-24T08:36:00Z'
   action: review
   actor: governance-agent
-  note: '订正本条首轮读数：初稿把 `schedule` 与 `desc` 连跑在同一沙箱，`desc` 报 rc=0 + 「已更新」，被误读为「desc 同样铸孤儿」；实为前一步 `schedule` 已建出该文件的继承效应。改为逐 verb 全新沙箱重跑（2026-11-24 08:35:35Z）后的真实分布是：铸孤儿且 rc=0 的是 `schedule`(lifecycle_state=scheduled) / `reopen`(lifecycle_state=identified) / `escalate`(gate_level=advisory，且不写 lifecycle_state) / `reclassify`(dimension+subdimension) 四个；`desc`(cli:126) 与 `close`(cli:71-74) **有**存在性闸，rc=1 打印「❌ 未知 debt_id」不落文件；`approve`/`revalidate` 先炸于 missing dispatch packet。另补第三条默认值出处 `omo_debt_registry.py:155 lifecycle_state … or "active"`——escalate 型孤儿正是走这条拿到现网无人使用的 `active`。不夸大面：孤儿带 `gate_level: advisory` 时 `debt_gate_count` 仍为 0，故只主张 `debt_health`(87.5→75.0) 与在册条数被污染。本轮同样零代码、零判据、零指标面改动。'
+  note: '订正本条首轮读数：初稿把 `schedule` 与 `desc` 连跑在同一沙箱，`desc` 报 rc=0 + 「已更新」，被误读为「desc
+    同样铸孤儿」；实为前一步 `schedule` 已建出该文件的继承效应。改为逐 verb 全新沙箱重跑（2026-11-24 08:35:35Z）后的真实分布是：铸孤儿且
+    rc=0 的是 `schedule`(lifecycle_state=scheduled) / `reopen`(lifecycle_state=identified)
+    / `escalate`(gate_level=advisory，且不写 lifecycle_state) / `reclassify`(dimension+subdimension)
+    四个；`desc`(cli:126) 与 `close`(cli:71-74) **有**存在性闸，rc=1 打印「❌ 未知 debt_id」不落文件；`approve`/`revalidate`
+    先炸于 missing dispatch packet。另补第三条默认值出处 `omo_debt_registry.py:155 lifecycle_state
+    … or "active"`——escalate 型孤儿正是走这条拿到现网无人使用的 `active`。不夸大面：孤儿带 `gate_level: advisory`
+    时 `debt_gate_count` 仍为 0，故只主张 `debt_health`(87.5→75.0) 与在册条数被污染。本轮同样零代码、零判据、零指标面改动。'
+- at: '2026-11-24T08:43:42.230511+00:00'
+  action: update_description
+  note: "Updated description from '`omo.omo_debt_cli` 的四个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在\
+    \ `.omo/debt/items/` 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，缺省字段由解析层默认值补齐（`id='UNKNOWN'`、`severity='P3'`、`lifecycle_state='active'`），直接进入指标面。逐\
+    \ verb 隔离实测（2026-11-24 08:35:35Z，每个 verb 一份全新沙箱根 `/tmp/sbx-v/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\
+    \n| verb | rc | 是否落孤儿 | 孤儿实际内容（除 history） |\n|---|---|---|---|\n| `schedule --next-review-at\
+    \ 2026-12-08` | **0** | 是 | `lifecycle_state: scheduled` + `next_review_at` |\n\
+    | `reopen` | **0** | 是 | `lifecycle_state: identified` |\n| `escalate --gate-level\
+    \ advisory` | **0** | 是 | `gate_level: advisory`（**无** `lifecycle_state` 键） |\n\
+    | `reclassify --dimension governance --subdimension consistency` | **0** | 是 |\
+    \ `dimension` + `subdimension` |\n| `desc --description …` | 1 | 否 | `❌ 未知 debt_id:\
+    \ GHOST-X (不在 .omo/debt/items)`（闸在 `omo_debt_cli.py:126`） |\n| `close --confirm`\
+    \ | 1 | 否 | 同上措辞（闸在 `omo_debt_cli.py:71-74`） |\n| `approve` / `revalidate` | 1\
+    \ | 否 | 先炸于 `FileNotFoundError: missing dispatch packet …`，另一条路径 |\n\n默认值出处可直接读死：`omo_debt_registry.py:146\
+    \ id=str(payload.get(\"id\",\"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"\
+    severity\") or payload.get(\"priority\") or \"P3\")`、\n`:155 lifecycle_state=str(payload.get(\"\
+    lifecycle_state\") or payload.get(\"status\") or \"active\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84\
+    \ schedule_item`（`:74` 直接拼 `items/{id}.yaml`、`:75` 读、`:84` 落盘，全程无 `exists()` 判定）\n\
+    与 `omo_debt_cli.py:455-456 reopen` / `:393 escalate` / `:378 reclassify`（都走 `update_item`，\n\
+    而 `omo_debt_lifecycle.py:87-104` 在两个候选路径都不存在时**返回 canonical 路径而不报错**，其 docstring\
+    \ 明写「由调用方以明确的 not found 失败」——\n实测只有 `close`/`desc` 履行了这句，其余四个动词直接把返回值当已存在条目写下去）。\n\
+    \n指标面影响 A/B（同一沙箱，只删/留这 1 个孤儿文件，真条目不变）：\n`debt_health 87.5 → 75.0`（−12.5）。即**一个拼错的\
+    \ id 就能改动债务健康分读数**。\n不夸大另一面：孤儿带 `gate_level: advisory` 时 `debt_gate_count` 仍为\
+    \ 0（该车道另有前置条件），\n`state_entropy` 在 escalate 单条样本里未变，故本条只主张 `debt_health` 与在册条数被污染，不主张闸面被污染。\n\
+    另有碰撞面：两次不同拼写会落两个文件、`id` 同为哨兵 `UNKNOWN`，在 ledger/dashboard 里不可区分。\n\n现网洁净度实测为**未被污染**，故本条不主张已发生事故：按「文件缺\
+    \ `id` 键」「`id` 为空」「`id == UNKNOWN`」\n「`title` 为空」「`severity == P3`」五条判据扫 `.omo/debt/items/`\
+    \ 107 个文件与 `load_debt_ledger` 读回的 107 条，\n命中全为 0；`lifecycle_state` 取值集为 closed\
+    \ 35 / resolved 32 / identified 35 / in_progress 4（本批立案后另见），\n`active`/`scheduled`\
+    \ 在真实条目里均无使用者——而上面四个动词恰好会往这三个词里塞。\n\n仪器自纠（同批留痕，避免读者复现到假读数）：首轮把 `schedule` 与 `desc`\
+    \ 连跑在**同一**沙箱，\n`desc` 报 rc=0 + 「已更新」，当时被我读成「`desc` 也铸孤儿」；逐 verb 全新沙箱重跑后证实该 rc=0\
+    \ 是\n前一步 `schedule` 已把文件建出来的**继承效应**，`desc` 自身有闸（`omo_debt_cli.py:126`）返回 rc=1。\n\
+    本条正文按隔离重测的读数写，不用连跑读数。\n\n待裁（三选一，属 CLI rc 语义与数据模型契约变更，留 principal）：\n① 把 `close:71-74`\
+    \ 的存在性闸同款补进 `schedule_item`/`reopen`/`escalate`/`reclassify`，或让 `update_item`\n\
+    \   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n② 让 `load_debt_ledger` 对缺 `id`/缺 `title` 的文件出\
+    \ typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155` 的三个默认值，把\
+    \ `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n三条都会改变现网读数口径，agent\
+    \ 不代为选定；本轮零代码、零判据、零指标面改动。' to '`omo.omo_debt_cli` 的四个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在\
+    \ `.omo/debt/items/` 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，缺省字段由解析层默认值补齐（`id='UNKNOWN'`、`severity='P3'`、`lifecycle_state='active'`），直接进入指标面。逐\
+    \ verb 隔离实测（2026-11-24 08:35:35Z，每个 verb 一份全新沙箱根 `/tmp/sbx-v/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\
+    \n| verb | rc | 是否落孤儿 | 孤儿实际内容（除 history） |\n|---|---|---|---|\n| `schedule --next-review-at\
+    \ 2026-12-08` | **0** | 是 | `lifecycle_state: scheduled` + `next_review_at` |\n\
+    | `reopen` | **0** | 是 | `lifecycle_state: identified` |\n| `escalate --gate-level\
+    \ advisory` | **0** | 是 | `gate_level: advisory`（**无** `lifecycle_state` 键） |\n\
+    | `reclassify --dimension governance --subdimension consistency` | **0** | 是 |\
+    \ `dimension` + `subdimension` |\n| `desc --description …` | 1 | 否 | `❌ 未知 debt_id:\
+    \ GHOST-X (不在 .omo/debt/items)`（闸在 `omo_debt_cli.py:126`） |\n| `close --confirm`\
+    \ | 1 | 否 | 同上措辞（闸在 `omo_debt_cli.py:71-74`） |\n| `approve` / `revalidate` | 1\
+    \ | 否 | 先炸于 `FileNotFoundError: missing dispatch packet …`，另一条路径 |\n\n默认值出处可直接读死：`omo_debt_registry.py:146\
+    \ id=str(payload.get(\"id\",\"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"\
+    severity\") or payload.get(\"priority\") or \"P3\")`、\n`:155 lifecycle_state=str(payload.get(\"\
+    lifecycle_state\") or payload.get(\"status\") or \"active\")`。\n写面穷举（非抽样）：`omo_debt_cli.py`\
+    \ 调 `update_item` 共 6 处（`:71` close、`:124` desc、`:378` reclassify、:393 escalate、`:409`\
+    \ revalidate、`:454` reopen），另有 `omo_debt_lifecycle.py:74 schedule_item` 不经 `update_item`\
+    \ 直接拼路径，合计 7 个入口；`if not item_path.exists()` 这道闸只出现在 `:72` 与 `:125` 两处，故上表按全部\
+    \ 7 个入口逐一实测，不是抽样。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84 schedule_item`（`:74`\
+    \ 直接拼 `items/{id}.yaml`、`:75` 读、`:84` 落盘，全程无 `exists()` 判定）\n与 `omo_debt_cli.py:455-456\
+    \ reopen` / `:393 escalate` / `:378 reclassify`（都走 `update_item`，\n而 `omo_debt_lifecycle.py:87-104`\
+    \ 在两个候选路径都不存在时**返回 canonical 路径而不报错**，其 docstring 明写「由调用方以明确的 not found 失败」——\n\
+    实测只有 `close`/`desc` 履行了这句，其余四个动词直接把返回值当已存在条目写下去）。\n\n指标面影响 A/B（同一沙箱，只删/留这 1 个孤儿文件，真条目不变）：\n\
+    `debt_health 87.5 → 75.0`（−12.5）。即**一个拼错的 id 就能改动债务健康分读数**。\n不夸大另一面：孤儿带 `gate_level:\
+    \ advisory` 时 `debt_gate_count` 仍为 0（该车道另有前置条件），\n`state_entropy` 在 escalate 单条样本里未变，故本条只主张\
+    \ `debt_health` 与在册条数被污染，不主张闸面被污染。\n另有碰撞面：两次不同拼写会落两个文件、`id` 同为哨兵 `UNKNOWN`，在 ledger/dashboard\
+    \ 里不可区分。\n\n现网洁净度实测为**未被污染**，故本条不主张已发生事故：按「文件缺 `id` 键」「`id` 为空」「`id == UNKNOWN`」\n\
+    「`title` 为空」「`severity == P3`」五条判据扫 `.omo/debt/items/` 107 个文件与 `load_debt_ledger`\
+    \ 读回的 107 条，\n命中全为 0；`lifecycle_state` 取值集为 closed 35 / resolved 32 / identified\
+    \ 35 / in_progress 4（本批立案后另见），\n`active`/`scheduled` 在真实条目里均无使用者——而上面四个动词恰好会往这三个词里塞。\n\
+    \n仪器自纠（同批留痕，避免读者复现到假读数）：首轮把 `schedule` 与 `desc` 连跑在**同一**沙箱，\n`desc` 报 rc=0 +\
+    \ 「已更新」，当时被我读成「`desc` 也铸孤儿」；逐 verb 全新沙箱重跑后证实该 rc=0 是\n前一步 `schedule` 已把文件建出来的**继承效应**，`desc`\
+    \ 自身有闸（`omo_debt_cli.py:126`）返回 rc=1。\n本条正文按隔离重测的读数写，不用连跑读数。\n\n待裁（三选一，属 CLI rc\
+    \ 语义与数据模型契约变更，留 principal）：\n① 把 `close:71-74` 的存在性闸同款补进 `schedule_item`/`reopen`/`escalate`/`reclassify`，或让\
+    \ `update_item`\n   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n② 让 `load_debt_ledger` 对缺 `id`/缺\
+    \ `title` 的文件出 typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155`\
+    \ 的三个默认值，把 `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n\
+    三条都会改变现网读数口径，agent 不代为选定；本轮零代码、零判据、零指标面改动。'."
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Tool
-description: "`omo.omo_debt_cli` 的四个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/` 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，缺省字段由解析层默认值补齐（`id='UNKNOWN'`、`severity='P3'`、`lifecycle_state='active'`），直接进入指标面。逐 verb 隔离实测（2026-11-24 08:35:35Z，每个 verb 一份全新沙箱根 `/tmp/sbx-v/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\n| verb | rc | 是否落孤儿 | 孤儿实际内容（除 history） |\n|---|---|---|---|\n| `schedule --next-review-at 2026-12-08` | **0** | 是 | `lifecycle_state: scheduled` + `next_review_at` |\n| `reopen` | **0** | 是 | `lifecycle_state: identified` |\n| `escalate --gate-level advisory` | **0** | 是 | `gate_level: advisory`（**无** `lifecycle_state` 键） |\n| `reclassify --dimension governance --subdimension consistency` | **0** | 是 | `dimension` + `subdimension` |\n| `desc --description …` | 1 | 否 | `❌ 未知 debt_id: GHOST-X (不在 .omo/debt/items)`（闸在 `omo_debt_cli.py:126`） |\n| `close --confirm` | 1 | 否 | 同上措辞（闸在 `omo_debt_cli.py:71-74`） |\n| `approve` / `revalidate`\
-  \ | 1 | 否 | 先炸于 `FileNotFoundError: missing dispatch packet …`，另一条路径 |\n\n默认值出处可直接读死：`omo_debt_registry.py:146 id=str(payload.get(\"id\",\"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"severity\") or payload.get(\"priority\") or \"P3\")`、\n`:155 lifecycle_state=str(payload.get(\"lifecycle_state\") or payload.get(\"status\") or \"active\")`。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84 schedule_item`（`:74` 直接拼 `items/{id}.yaml`、`:75` 读、`:84` 落盘，全程无 `exists()` 判定）\n与 `omo_debt_cli.py:455-456 reopen` / `:393 escalate` / `:378 reclassify`（都走 `update_item`，\n而 `omo_debt_lifecycle.py:87-104` 在两个候选路径都不存在时**返回 canonical 路径而不报错**，其 docstring 明写「由调用方以明确的 not found 失败」——\n实测只有 `close`/`desc` 履行了这句，其余四个动词直接把返回值当已存在条目写下去）。\n\n指标面影响 A/B（同一沙箱，只删/留这 1 个孤儿文件，真条目不变）：\n`debt_health 87.5 → 75.0`（−12.5）。即**一个拼错的 id 就能改动债务健康分读数**。\n不夸大另一面：孤儿带 `gate_level: advisory` 时 `debt_gate_count` 仍为 0（该车道另有前置条件），\n`state_entropy` 在 escalate 单条样本里未变，故本条只主张 `debt_health` 与在册条数被污染，不主张闸面被污染。\n另有碰撞面：两次不同拼写会落两个文件、`id` 同为哨兵 `UNKNOWN`，在\
-  \ ledger/dashboard 里不可区分。\n\n现网洁净度实测为**未被污染**，故本条不主张已发生事故：按「文件缺 `id` 键」「`id` 为空」「`id == UNKNOWN`」\n「`title` 为空」「`severity == P3`」五条判据扫 `.omo/debt/items/` 107 个文件与 `load_debt_ledger` 读回的 107 条，\n命中全为 0；`lifecycle_state` 取值集为 closed 35 / resolved 32 / identified 35 / in_progress 4（本批立案后另见），\n`active`/`scheduled` 在真实条目里均无使用者——而上面四个动词恰好会往这三个词里塞。\n\n仪器自纠（同批留痕，避免读者复现到假读数）：首轮把 `schedule` 与 `desc` 连跑在**同一**沙箱，\n`desc` 报 rc=0 + 「已更新」，当时被我读成「`desc` 也铸孤儿」；逐 verb 全新沙箱重跑后证实该 rc=0 是\n前一步 `schedule` 已把文件建出来的**继承效应**，`desc` 自身有闸（`omo_debt_cli.py:126`）返回 rc=1。\n本条正文按隔离重测的读数写，不用连跑读数。\n\n待裁（三选一，属 CLI rc 语义与数据模型契约变更，留 principal）：\n① 把 `close:71-74` 的存在性闸同款补进 `schedule_item`/`reopen`/`escalate`/`reclassify`，或让 `update_item`\n   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n② 让 `load_debt_ledger` 对缺 `id`/缺 `title` 的文件出 typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155` 的三个默认值，把 `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n三条都会改变现网读数口径，agent 不代为选定；本轮零代码、零判据、零指标面改动。"
-decision_needed: "待裁（三选一，属 CLI rc 语义与数据模型契约变更，留 principal）：\n① 把 `close:71-74` 的存在性闸同款补进 `schedule_item`/`reopen`/`escalate`/`reclassify`，或让 `update_item`\n   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n② 让 `load_debt_ledger` 对缺 `id`/缺 `title` 的文件出 typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155` 的三个默认值，把 `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n三条都会改变现网读数口径，agent 不代为选定；本轮零代码、零判据、零指标面改动。"
+description: "`omo.omo_debt_cli` 的四个写动词对**不存在的 debt_id** 返回 rc=0、打印成功语，并在 `.omo/debt/items/`\
+  \ 落一个无 `id`、无 `title`、无 `severity` 的孤儿 YAML；该孤儿随后被 kernel 当在册条目读入，缺省字段由解析层默认值补齐（`id='UNKNOWN'`、`severity='P3'`、`lifecycle_state='active'`），直接进入指标面。逐\
+  \ verb 隔离实测（2026-11-24 08:35:35Z，每个 verb 一份全新沙箱根 `/tmp/sbx-v/.omo`，只含 1 条真条目 `REAL-ITEM`，`PYTHONPATH=projects/omo/src`，工作区零效应）：\n\
+  \n| verb | rc | 是否落孤儿 | 孤儿实际内容（除 history） |\n|---|---|---|---|\n| `schedule --next-review-at\
+  \ 2026-12-08` | **0** | 是 | `lifecycle_state: scheduled` + `next_review_at` |\n\
+  | `reopen` | **0** | 是 | `lifecycle_state: identified` |\n| `escalate --gate-level\
+  \ advisory` | **0** | 是 | `gate_level: advisory`（**无** `lifecycle_state` 键） |\n\
+  | `reclassify --dimension governance --subdimension consistency` | **0** | 是 | `dimension`\
+  \ + `subdimension` |\n| `desc --description …` | 1 | 否 | `❌ 未知 debt_id: GHOST-X\
+  \ (不在 .omo/debt/items)`（闸在 `omo_debt_cli.py:126`） |\n| `close --confirm` | 1 | 否\
+  \ | 同上措辞（闸在 `omo_debt_cli.py:71-74`） |\n| `approve` / `revalidate` | 1 | 否 | 先炸于\
+  \ `FileNotFoundError: missing dispatch packet …`，另一条路径 |\n\n默认值出处可直接读死：`omo_debt_registry.py:146\
+  \ id=str(payload.get(\"id\",\"UNKNOWN\"))`、\n`:143 severity = str(payload.get(\"\
+  severity\") or payload.get(\"priority\") or \"P3\")`、\n`:155 lifecycle_state=str(payload.get(\"\
+  lifecycle_state\") or payload.get(\"status\") or \"active\")`。\n写面穷举（非抽样）：`omo_debt_cli.py`\
+  \ 调 `update_item` 共 6 处（`:71` close、`:124` desc、`:378` reclassify、:393 escalate、`:409`\
+  \ revalidate、`:454` reopen），另有 `omo_debt_lifecycle.py:74 schedule_item` 不经 `update_item`\
+  \ 直接拼路径，合计 7 个入口；`if not item_path.exists()` 这道闸只出现在 `:72` 与 `:125` 两处，故上表按全部 7\
+  \ 个入口逐一实测，不是抽样。\n缺存在性闸的写路径：`omo_debt_lifecycle.py:66-84 schedule_item`（`:74` 直接拼\
+  \ `items/{id}.yaml`、`:75` 读、`:84` 落盘，全程无 `exists()` 判定）\n与 `omo_debt_cli.py:455-456\
+  \ reopen` / `:393 escalate` / `:378 reclassify`（都走 `update_item`，\n而 `omo_debt_lifecycle.py:87-104`\
+  \ 在两个候选路径都不存在时**返回 canonical 路径而不报错**，其 docstring 明写「由调用方以明确的 not found 失败」——\n\
+  实测只有 `close`/`desc` 履行了这句，其余四个动词直接把返回值当已存在条目写下去）。\n\n指标面影响 A/B（同一沙箱，只删/留这 1 个孤儿文件，真条目不变）：\n\
+  `debt_health 87.5 → 75.0`（−12.5）。即**一个拼错的 id 就能改动债务健康分读数**。\n不夸大另一面：孤儿带 `gate_level:\
+  \ advisory` 时 `debt_gate_count` 仍为 0（该车道另有前置条件），\n`state_entropy` 在 escalate 单条样本里未变，故本条只主张\
+  \ `debt_health` 与在册条数被污染，不主张闸面被污染。\n另有碰撞面：两次不同拼写会落两个文件、`id` 同为哨兵 `UNKNOWN`，在 ledger/dashboard\
+  \ 里不可区分。\n\n现网洁净度实测为**未被污染**，故本条不主张已发生事故：按「文件缺 `id` 键」「`id` 为空」「`id == UNKNOWN`」\n\
+  「`title` 为空」「`severity == P3`」五条判据扫 `.omo/debt/items/` 107 个文件与 `load_debt_ledger`\
+  \ 读回的 107 条，\n命中全为 0；`lifecycle_state` 取值集为 closed 35 / resolved 32 / identified\
+  \ 35 / in_progress 4（本批立案后另见），\n`active`/`scheduled` 在真实条目里均无使用者——而上面四个动词恰好会往这三个词里塞。\n\
+  \n仪器自纠（同批留痕，避免读者复现到假读数）：首轮把 `schedule` 与 `desc` 连跑在**同一**沙箱，\n`desc` 报 rc=0 + 「已更新」，当时被我读成「`desc`\
+  \ 也铸孤儿」；逐 verb 全新沙箱重跑后证实该 rc=0 是\n前一步 `schedule` 已把文件建出来的**继承效应**，`desc` 自身有闸（`omo_debt_cli.py:126`）返回\
+  \ rc=1。\n本条正文按隔离重测的读数写，不用连跑读数。\n\n待裁（三选一，属 CLI rc 语义与数据模型契约变更，留 principal）：\n① 把\
+  \ `close:71-74` 的存在性闸同款补进 `schedule_item`/`reopen`/`escalate`/`reclassify`，或让 `update_item`\n\
+  \   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n② 让 `load_debt_ledger` 对缺 `id`/缺 `title` 的文件出 typed\
+  \ warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n③ 去掉 `:146`/`:143`/`:155` 的三个默认值，把 `DebtItem.id`/`severity`/`lifecycle_state`\
+  \ 变必填（改数据模型，历史无键文件会当场炸）。\n三条都会改变现网读数口径，agent 不代为选定；本轮零代码、零判据、零指标面改动。"
+decision_needed: "待裁（三选一，属 CLI rc 语义与数据模型契约变更，留 principal）：\n① 把 `close:71-74` 的存在性闸同款补进\
+  \ `schedule_item`/`reopen`/`escalate`/`reclassify`，或让 `update_item`\n   在两个候选路径都不存在时直接抛（一处收口，最小面）；\n\
+  ② 让 `load_debt_ledger` 对缺 `id`/缺 `title` 的文件出 typed warning 或跳过（改读取面，会让既有孤儿从「计入」变「不计」）；\n\
+  ③ 去掉 `:146`/`:143`/`:155` 的三个默认值，把 `DebtItem.id`/`severity`/`lifecycle_state` 变必填（改数据模型，历史无键文件会当场炸）。\n\
+  三条都会改变现网读数口径，agent 不代为选定；本轮零代码、零判据、零指标面改动。"
