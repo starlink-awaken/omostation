@@ -3,7 +3,7 @@ id: bin/ssot/scene-reflection.py
 name: Scene Reflection
 category: governance
 owner: governance-team
-description: ""
+description: "Scene reflection executor — reads reflection_contract, generates self-evaluation, stores results."
 inputs: []
 outputs:
   - type: exit_code

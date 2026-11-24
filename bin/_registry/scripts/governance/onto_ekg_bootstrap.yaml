@@ -3,7 +3,7 @@ id: bin/ssot/onto_ekg_bootstrap.py
 name: Onto Ekg Bootstrap
 category: governance
 owner: governance-team
-description: ""
+description: "onto_ekg_bootstrap.py — OntoEKG 自举（LLM 知识工程 Wave 2 MVP）"
 inputs: []
 outputs:
   - type: exit_code

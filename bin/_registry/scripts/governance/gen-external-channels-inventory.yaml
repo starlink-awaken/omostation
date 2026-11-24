@@ -3,7 +3,7 @@ id: bin/ssot/gen-external-channels-inventory.py
 name: Gen External Channels Inventory
 category: governance
 owner: governance-team
-description: ""
+description: "External Channels Inventory 生成器 (ECCP P0)."
 inputs: []
 outputs:
   - type: exit_code

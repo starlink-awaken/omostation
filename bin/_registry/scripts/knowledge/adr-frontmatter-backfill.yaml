@@ -3,7 +3,7 @@ id: bin/adr/adr-frontmatter-backfill.py
 name: Adr Frontmatter Backfill
 category: knowledge
 owner: governance-team
-description: ""
+description: "C3 (ADR-0367): backfill missing/invalid `id: ADR-NNNN` frontmatter on historical ADRs."
 inputs: []
 outputs:
   - type: exit_code

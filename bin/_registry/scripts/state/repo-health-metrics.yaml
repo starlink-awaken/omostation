@@ -3,7 +3,7 @@ id: bin/gac/repo-health-metrics.py
 name: Repo Health Metrics
 category: state
 owner: governance-team
-description: ""
+description: "repo-health-metrics.py — 仓库健康度指标采集与周报生成 (BET-Y1Q4-T10-130)."
 inputs: []
 outputs:
   - type: exit_code

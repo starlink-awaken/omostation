@@ -3,7 +3,7 @@ id: bin/ssot/gen-help-docs.py
 name: Gen Help Docs
 category: governance
 owner: governance-team
-description: ""
+description: "文档生成器 — 从 capability-registry.yaml 生成所有派生文档."
 inputs: []
 outputs:
   - type: exit_code

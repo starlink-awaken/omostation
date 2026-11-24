@@ -3,7 +3,7 @@ id: bin/collab/export-dualtrack.py
 name: Export Dualtrack
 category: governance
 owner: governance-team
-description: ""
+description: "P84 W1.3 双轨指标导出器 — 能力轨(场景库) + 产能轨(真实 tasks)."
 inputs: []
 outputs:
   - type: exit_code

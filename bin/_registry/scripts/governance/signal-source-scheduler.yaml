@@ -3,7 +3,7 @@ id: bin/gac/signal-source-scheduler.py
 name: Signal Source Scheduler
 category: governance
 owner: governance-team
-description: ""
+description: "信号源调度器 — 定时扫描日历/ inbox 并路由到场景卡。"
 inputs: []
 outputs:
   - type: exit_code

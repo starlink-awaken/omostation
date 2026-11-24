@@ -3,7 +3,7 @@ id: bin/gac/adr-link-validator.py
 name: Adr Link Validator
 category: knowledge
 owner: governance-team
-description: ""
+description: "adr-link-validator.py — Validate ADR file path references."
 inputs: []
 outputs:
   - type: exit_code

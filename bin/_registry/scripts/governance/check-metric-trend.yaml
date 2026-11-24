@@ -3,7 +3,7 @@ id: bin/gac/check-metric-trend.py
 name: Check Metric Trend
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X2-METRIC-TREND — 治理指标趋势检查."
 inputs: []
 outputs:
   - type: exit_code

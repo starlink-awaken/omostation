@@ -3,7 +3,7 @@ id: bin/gac/documents-content-plane-migration-check.py
 name: Documents Content Plane Migration Check
 category: governance
 owner: governance-team
-description: ""
+description: "Validate Documents runtime/cache migration coverage without mutating content."
 inputs: []
 outputs:
   - type: exit_code

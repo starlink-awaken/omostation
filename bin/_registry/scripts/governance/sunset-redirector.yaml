@@ -3,7 +3,7 @@ id: bin/panorama/sunset-redirector.py
 name: Sunset Redirector
 category: governance
 owner: governance-team
-description: ""
+description: "sunset-redirector.py — CLI entry for sunset_redirector."
 inputs: []
 outputs:
   - type: exit_code

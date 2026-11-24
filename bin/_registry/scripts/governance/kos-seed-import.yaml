@@ -3,7 +3,7 @@ id: bin/gac/kos-seed-import.py
 name: Kos Seed Import
 category: governance
 owner: governance-team
-description: ""
+description: "G-CONV.6 / KOS-Q-GROWTH seed import — index markdown into data/kos/kos-index.sqlite."
 inputs: []
 outputs:
   - type: exit_code

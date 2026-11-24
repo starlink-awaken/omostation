@@ -3,7 +3,7 @@ id: bin/ssot/knowledge-sediment.py
 name: Knowledge Sediment
 category: governance
 owner: governance-team
-description: ""
+description: "knowledge-sediment — turn workflow-mesh events into knowledge drafts."
 inputs: []
 outputs:
   - type: exit_code

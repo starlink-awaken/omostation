@@ -3,7 +3,7 @@ id: bin/ssot/alert-handler.py
 name: Alert Handler
 category: governance
 owner: governance-team
-description: ""
+description: "Alert Handler — 主动告警引擎 (OBS-02)."
 inputs: []
 outputs:
   - type: exit_code

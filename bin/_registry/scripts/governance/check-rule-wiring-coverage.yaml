@@ -3,7 +3,7 @@ id: bin/gac/check-rule-wiring-coverage.py
 name: Check Rule Wiring Coverage
 category: governance
 owner: governance-team
-description: ""
+description: "规则接线覆盖率清单 (rule wiring inventory) — 让\"声明了规则但没人执行\"可见."
 inputs: []
 outputs:
   - type: exit_code

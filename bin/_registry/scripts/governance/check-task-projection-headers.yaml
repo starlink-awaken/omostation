@@ -3,7 +3,7 @@ id: bin/gac/check-task-projection-headers.py
 name: Check Task Projection Headers
 category: governance
 owner: governance-team
-description: ""
+description: "任务投影头部 — 引用的脚本路径必须真实存在."
 inputs: []
 outputs:
   - type: exit_code

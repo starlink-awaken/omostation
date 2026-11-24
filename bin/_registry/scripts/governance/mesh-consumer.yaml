@@ -3,7 +3,7 @@ id: bin/ssot/mesh-consumer.py
 name: Mesh Consumer
 category: governance
 owner: governance-team
-description: ""
+description: "Mesh Consumer — Workflow Mesh 事件实时消费者 (FACE-05)."
 inputs: []
 outputs:
   - type: exit_code

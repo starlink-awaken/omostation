@@ -3,7 +3,7 @@ id: bin/ssot/gen-scene-card-lineage.py
 name: Gen Scene Card Lineage
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Card Lineage 生成器 (ECCP N8)."
 inputs: []
 outputs:
   - type: exit_code

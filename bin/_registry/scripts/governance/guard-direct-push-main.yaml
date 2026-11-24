@@ -3,7 +3,7 @@ id: bin/gac/guard-direct-push-main.py
 name: Guard Direct Push Main
 category: governance
 owner: governance-team
-description: ""
+description: "拒绝直接 push 到 main 分支 (work/* 和 pr/* 除外)."
 inputs: []
 outputs:
   - type: exit_code

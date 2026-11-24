@@ -3,7 +3,7 @@ id: bin/ssot/chaos-governance-drill.py
 name: Chaos Governance Drill
 category: governance
 owner: governance-team
-description: ""
+description: "Unified Governance Chaos & Red-Teaming Drill Suite (ADR-0194)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/commit-assist.py
 name: Commit Assist
 category: governance
 owner: governance-team
-description: ""
+description: "commit-assist.py — P76 Phase 7.1 LLM-assisted commit (aetherforge-first)"
 inputs: []
 outputs:
   - type: exit_code

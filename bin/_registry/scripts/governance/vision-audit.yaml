@@ -3,7 +3,7 @@ id: bin/ssot/vision-audit.py
 name: Vision Audit
 category: governance
 owner: governance-team
-description: ""
+description: "Vision Audit — Vision 自评估 (EVO-03)."
 inputs: []
 outputs:
   - type: exit_code

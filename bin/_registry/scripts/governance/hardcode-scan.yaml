@@ -3,7 +3,7 @@ id: bin/gac/hardcode-scan.py
 name: Hardcode Scan
 category: governance
 owner: governance-team
-description: ""
+description: "hardcode-scan.py — Scan for hardcoded values that should be in SSOT."
 inputs: []
 outputs:
   - type: exit_code

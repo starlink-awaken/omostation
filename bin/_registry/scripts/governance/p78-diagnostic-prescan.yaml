@@ -3,7 +3,7 @@ id: bin/gac/p78-diagnostic-prescan.py
 name: P78 Diagnostic Prescan
 category: governance
 owner: governance-team
-description: ""
+description: "p78-diagnostic-prescan — P78 诊断前置 4 问自动扫描。"
 inputs: []
 outputs:
   - type: exit_code

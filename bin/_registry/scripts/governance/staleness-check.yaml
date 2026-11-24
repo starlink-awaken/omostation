@@ -3,7 +3,7 @@ id: bin/kb/staleness-check.py
 name: Staleness Check
 category: governance
 owner: governance-team
-description: ""
+description: "staleness-check — detect stale knowledge assets."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ops/registry_drift_monitor.py
 name: Registry Drift Monitor
 category: governance
 owner: governance-team
-description: ""
+description: "Registry drift monitor — detect script-registry registration omissions."
 inputs: []
 outputs:
   - type: exit_code

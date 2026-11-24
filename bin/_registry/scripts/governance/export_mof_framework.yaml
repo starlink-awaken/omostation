@@ -3,7 +3,7 @@ id: bin/ssot/export_mof_framework.py
 name: Export Mof Framework
 category: governance
 owner: governance-team
-description: ""
+description: "export_mof_framework.py — MOF 治理框架导出（Wave 3 平台化）"
 inputs: []
 outputs:
   - type: exit_code

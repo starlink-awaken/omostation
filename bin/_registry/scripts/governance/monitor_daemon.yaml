@@ -3,7 +3,7 @@ id: bin/ops/monitor_daemon.py
 name: Monitor Daemon
 category: governance
 owner: governance-team
-description: ""
+description: "Continuous Monitoring Daemon for Service Gateway."
 inputs: []
 outputs:
   - type: exit_code

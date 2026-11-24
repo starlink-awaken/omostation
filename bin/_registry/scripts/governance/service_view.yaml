@@ -3,7 +3,7 @@ id: bin/svc/service_view.py
 name: Service View
 category: governance
 owner: governance-team
-description: ""
+description: "service_view — workspace 服务统一视图引擎(SSOT join + 实时探活)。"
 inputs: []
 outputs:
   - type: exit_code

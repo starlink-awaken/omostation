@@ -3,7 +3,7 @@ id: bin/gac/ecosystem-expander.py
 name: Ecosystem Expander
 category: governance
 owner: governance-team
-description: ""
+description: "Ecosystem Expander — 生态化服务扩展."
 inputs: []
 outputs:
   - type: exit_code

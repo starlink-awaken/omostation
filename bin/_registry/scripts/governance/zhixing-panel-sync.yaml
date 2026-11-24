@@ -3,7 +3,7 @@ id: bin/gac/zhixing-panel-sync.py
 name: Zhixing Panel Sync
 category: governance
 owner: governance-team
-description: ""
+description: "织星驾驶舱（:43191）面板资产 — 版本化、幂等注入与漂移自愈."
 inputs: []
 outputs:
   - type: exit_code

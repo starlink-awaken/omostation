@@ -3,7 +3,7 @@ id: bin/ssot/check-cross-repo-consistency.py
 name: Check Cross Repo Consistency
 category: governance
 owner: governance-team
-description: ""
+description: "check-cross-repo-consistency.py — P77 Phase 1 跨仓一致性 detector"
 inputs: []
 outputs:
   - type: exit_code

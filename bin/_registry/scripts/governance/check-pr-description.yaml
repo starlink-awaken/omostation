@@ -3,7 +3,7 @@ id: bin/gac/check-pr-description.py
 name: Check Pr Description
 category: governance
 owner: governance-team
-description: ""
+description: "CR-PR-DESCRIPTION-NON-EMPTY: 校验 PR 描述非空."
 inputs: []
 outputs:
   - type: exit_code

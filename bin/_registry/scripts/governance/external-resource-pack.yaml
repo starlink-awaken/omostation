@@ -3,7 +3,7 @@ id: bin/ssot/external-resource-pack.py
 name: External Resource Pack
 category: governance
 owner: governance-team
-description: ""
+description: "Validate an external-resource extension pack without loading its provider."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/kernel-bridge.py
 name: Kernel Bridge
 category: governance
 owner: governance-team
-description: ""
+description: "Kernel Bridge — MetaOS ↔ OMO 连接桥."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/ecosystem-doctor.py
 name: Ecosystem Doctor
 category: governance
 owner: governance-team
-description: ""
+description: "ecosystem-doctor — 生态统一巡检入口。"
 inputs: []
 outputs:
   - type: exit_code

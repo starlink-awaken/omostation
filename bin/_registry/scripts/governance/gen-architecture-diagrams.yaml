@@ -3,7 +3,7 @@ id: bin/ssot/gen-architecture-diagrams.py
 name: Gen Architecture Diagrams
 category: governance
 owner: governance-team
-description: ""
+description: "eCOS 架构块图生成器 (Generated — 请勿手改输出文件)"
 inputs: []
 outputs:
   - type: exit_code

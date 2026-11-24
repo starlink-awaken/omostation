@@ -3,7 +3,7 @@ id: bin/ssot/est-minutes-coefficient.py
 name: Est Minutes Coefficient
 category: governance
 owner: governance-team
-description: ""
+description: "est-minutes-coefficient — 时间账本估算系数表 读取/校验/建议 (骨架)."
 inputs: []
 outputs:
   - type: exit_code

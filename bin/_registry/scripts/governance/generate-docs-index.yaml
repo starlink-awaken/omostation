@@ -3,7 +3,7 @@ id: bin/ssot/generate-docs-index.py
 name: Generate Docs Index
 category: governance
 owner: governance-team
-description: ""
+description: "文档索引自动生成脚本 (Phase 5 of DocGov)"
 inputs: []
 outputs:
   - type: exit_code

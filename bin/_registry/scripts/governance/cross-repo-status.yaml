@@ -3,7 +3,7 @@ id: bin/mof/cross-repo-status.py
 name: Cross Repo Status
 category: governance
 owner: governance-team
-description: ""
+description: "cross-repo-status.py — B2.2 跨子模块统一 status 报告."
 inputs: []
 outputs:
   - type: exit_code

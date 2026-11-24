@@ -3,7 +3,7 @@ id: bin/gac/gac-healthcheck.py
 name: Gac Healthcheck
 category: governance
 owner: governance-team
-description: ""
+description: "GaC 治理即代码 — 体系健康检查 (ADR-0106, 元治理递归自检)."
 inputs: []
 outputs:
   - type: exit_code

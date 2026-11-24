@@ -3,7 +3,7 @@ id: bin/ssot/god-module-13-error-list.py
 name: God Module 13 Error List
 category: governance
 owner: governance-team
-description: ""
+description: "P94 R2 + P109-B: god-module error 文件清单 + 拆解建议 + 智能化."
 inputs: []
 outputs:
   - type: exit_code

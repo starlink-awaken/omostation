@@ -3,7 +3,7 @@ id: bin/gac/poe-validator.py
 name: Poe Validator
 category: governance
 owner: governance-team
-description: ""
+description: "Proof of Execution (PoE) Validator — 物理测量收据校验器."
 inputs: []
 outputs:
   - type: exit_code

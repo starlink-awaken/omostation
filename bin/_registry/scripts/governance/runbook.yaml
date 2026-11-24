@@ -3,7 +3,7 @@ id: bin/ops/runbook.py
 name: Runbook
 category: governance
 owner: governance-team
-description: ""
+description: "Automated Runbook — common incident response procedures."
 inputs: []
 outputs:
   - type: exit_code

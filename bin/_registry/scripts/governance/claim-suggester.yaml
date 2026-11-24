@@ -3,7 +3,7 @@ id: bin/ssot/claim-suggester.py
 name: Claim Suggester
 category: governance
 owner: governance-team
-description: ""
+description: "claim-suggester.py — 根据 git log + retro + ledger 自动建议 candidate BETs (B1.2)."
 inputs: []
 outputs:
   - type: exit_code

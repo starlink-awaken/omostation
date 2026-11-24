@@ -3,7 +3,7 @@ id: bin/gac/risk-profile.py
 name: Risk Profile
 category: governance
 owner: governance-team
-description: ""
+description: "Risk Profile Router — infer PR risk level from staged files."
 inputs: []
 outputs:
   - type: exit_code

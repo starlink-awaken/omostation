@@ -3,7 +3,7 @@ id: bin/ssot/m0_feedback.py
 name: M0 Feedback
 category: governance
 owner: governance-team
-description: ""
+description: "m0_feedback.py — M0 运行时快照 → 模型反向反馈漂移检测"
 inputs: []
 outputs:
   - type: exit_code

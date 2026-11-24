@@ -3,7 +3,7 @@ id: bin/gac/anti-corruption.py
 name: Anti Corruption
 category: governance
 owner: governance-team
-description: ""
+description: "CR-ANTI-CORRUPTION: 防腐机制 CI 校验."
 inputs: []
 outputs:
   - type: exit_code

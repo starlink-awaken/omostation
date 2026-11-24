@@ -3,7 +3,7 @@ id: bin/ssot/gen-real-evalset.py
 name: Gen Real Evalset
 category: governance
 owner: governance-team
-description: ""
+description: "BET-Y1Q4-T4-01: 真实评测集 v1 生成器."
 inputs: []
 outputs:
   - type: exit_code

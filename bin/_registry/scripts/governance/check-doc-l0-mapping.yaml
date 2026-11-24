@@ -3,7 +3,7 @@ id: bin/ssot/check-doc-l0-mapping.py
 name: Check Doc L0 Mapping
 category: governance
 owner: governance-team
-description: ""
+description: "check-doc-l0-mapping.py — 文档 ↔ L0 ↔ MOF 映射验证 (doc-ssot-contract L0/MOF 映射关联)"
 inputs: []
 outputs:
   - type: exit_code

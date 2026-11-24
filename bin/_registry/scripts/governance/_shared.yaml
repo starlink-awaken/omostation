@@ -3,7 +3,7 @@ id: bin/ssot/_shared.py
 name:  Shared
 category: governance
 owner: governance-team
-description: ""
+description: "Shared utilities for bin/ssot/ scripts."
 inputs: []
 outputs:
   - type: exit_code

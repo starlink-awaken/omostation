@@ -3,7 +3,7 @@ id: bin/ssot/gen-projects-index.py
 name: Gen Projects Index
 category: governance
 owner: governance-team
-description: ""
+description: "Generate INDEX-PROJECTS.md from project-registry.yaml."
 inputs: []
 outputs:
   - type: exit_code

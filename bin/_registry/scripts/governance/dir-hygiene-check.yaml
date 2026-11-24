@@ -3,7 +3,7 @@ id: bin/ssot/dir-hygiene-check.py
 name: Dir Hygiene Check
 category: governance
 owner: governance-team
-description: ""
+description: "Directory hygiene check — detects root-level directories that are"
 inputs: []
 outputs:
   - type: exit_code

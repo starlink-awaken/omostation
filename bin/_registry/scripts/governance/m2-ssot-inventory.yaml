@@ -3,7 +3,7 @@ id: bin/mof/m2-ssot-inventory.py
 name: M2 Ssot Inventory
 category: governance
 owner: governance-team
-description: ""
+description: "MOF D3 / ADR-0240 P1-1 — M2 YAML SSOT 清单 (批迁移前置)."
 inputs: []
 outputs:
   - type: exit_code

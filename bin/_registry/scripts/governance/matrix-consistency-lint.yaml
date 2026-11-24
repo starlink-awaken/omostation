@@ -3,7 +3,7 @@ id: bin/ssot/matrix-consistency-lint.py
 name: Matrix Consistency Lint
 category: governance
 owner: governance-team
-description: ""
+description: "Matrix SSOT consistency linter (ADR-0120 Layer 3)."
 inputs: []
 outputs:
   - type: exit_code

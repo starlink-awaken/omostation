@@ -3,7 +3,7 @@ id: bin/gac/resident-lock-monitor.py
 name: Resident Lock Monitor
 category: governance
 owner: governance-team
-description: ""
+description: "resident-lock-monitor — Resident Agent 锁监控与自动恢复。"
 inputs: []
 outputs:
   - type: exit_code

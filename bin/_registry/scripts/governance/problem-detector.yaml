@@ -3,7 +3,7 @@ id: bin/ssot/problem-detector.py
 name: Problem Detector
 category: governance
 owner: governance-team
-description: ""
+description: "Problem Detector — Meta-2 反思层: 自动扫描系统异常 → debt台账 (P3-T7)."
 inputs: []
 outputs:
   - type: exit_code

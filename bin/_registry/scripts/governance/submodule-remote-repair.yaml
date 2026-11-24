@@ -3,7 +3,7 @@ id: bin/gac/submodule-remote-repair.py
 name: Submodule Remote Repair
 category: governance
 owner: governance-team
-description: ""
+description: "submodule-remote-repair.py — 按 .gitmodules 全量重置子模块 remote URL (批次 24-30 复盘固化)."
 inputs: []
 outputs:
   - type: exit_code

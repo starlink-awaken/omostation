@@ -3,7 +3,7 @@ id: bin/gac/check-ruff-scope-stable.py
 name: Check Ruff Scope Stable
 category: governance
 owner: governance-team
-description: ""
+description: "CR-RUFF-SCOPE-STABLE: 验证 ruff scope 未漂移。"
 inputs: []
 outputs:
   - type: exit_code

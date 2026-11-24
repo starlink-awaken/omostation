@@ -3,7 +3,7 @@ id: bin/gac/remote-hygiene-check.py
 name: Remote Hygiene Check
 category: governance
 owner: governance-team
-description: ""
+description: "远程仓库 origin 指向校验 — 确保 origin 指向正确的 remote."
 inputs: []
 outputs:
   - type: exit_code

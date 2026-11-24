@@ -3,7 +3,7 @@ id: bin/gac/test_agent_clone.py
 name: Test Agent Clone
 category: governance
 owner: governance-team
-description: ""
+description: "test_agent_clone.py - D1 pilot contract tests for bin/gac/agent-clone.py."
 inputs: []
 outputs:
   - type: exit_code

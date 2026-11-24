@@ -3,7 +3,7 @@ id: bin/gac/mass-deletion-gate.py
 name: Mass Deletion Gate
 category: governance
 owner: governance-team
-description: ""
+description: "批量删除闸门 — 拦住\"工作树被清空后 git add -A\"这类事故。"
 inputs: []
 outputs:
   - type: exit_code

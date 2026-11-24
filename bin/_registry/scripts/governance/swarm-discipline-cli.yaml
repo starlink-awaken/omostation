@@ -3,7 +3,7 @@ id: bin/gac/swarm-discipline-cli.py
 name: Swarm Discipline Cli
 category: governance
 owner: governance-team
-description: ""
+description: "CLI for G-CONV.7 / ADR-0220 swarm discipline gates."
 inputs: []
 outputs:
   - type: exit_code

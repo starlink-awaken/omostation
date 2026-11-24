@@ -3,7 +3,7 @@ id: bin/gac/documents-codex-profile.py
 name: Documents Codex Profile
 category: governance
 owner: governance-team
-description: ""
+description: "Generate and verify the dedicated Codex profile for Documents domains."
 inputs: []
 outputs:
   - type: exit_code

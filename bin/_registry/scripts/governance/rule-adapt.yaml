@@ -3,7 +3,7 @@ id: bin/ssot/rule-adapt.py
 name: Rule Adapt
 category: governance
 owner: governance-team
-description: ""
+description: "Rule Adapt — 治理规则自适应审计 (GOV-02)."
 inputs: []
 outputs:
   - type: exit_code

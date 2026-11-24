@@ -3,7 +3,7 @@ id: bin/ssot/value-recorder.py
 name: Value Recorder
 category: governance
 owner: governance-team
-description: ""
+description: "Authority-bound value sampling, baseline freezing, and evidence validation."
 inputs: []
 outputs:
   - type: exit_code

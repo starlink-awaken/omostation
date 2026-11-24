@@ -3,7 +3,7 @@ id: bin/gac/documents-chatgpt-tunnel.py
 name: Documents Chatgpt Tunnel
 category: governance
 owner: governance-team
-description: ""
+description: "Render and check the ChatGPT Secure MCP Tunnel prerequisites."
 inputs: []
 outputs:
   - type: exit_code

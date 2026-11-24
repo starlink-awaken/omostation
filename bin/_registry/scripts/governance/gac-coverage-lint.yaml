@@ -3,7 +3,7 @@ id: bin/gac/gac-coverage-lint.py
 name: Gac Coverage Lint
 category: governance
 owner: governance-team
-description: ""
+description: "gac-coverage-lint — 声明即执行覆盖率 (P3 治根, ADR-0227 原则2 衍生)."
 inputs: []
 outputs:
   - type: exit_code

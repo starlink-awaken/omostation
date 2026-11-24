@@ -3,7 +3,7 @@ id: bin/ssot/auto-pruner.py
 name: Auto Pruner
 category: governance
 owner: governance-team
-description: ""
+description: "auto-pruner.py — 4 类 drift 自动修复 (BET-Y2Q4-SH-1)."
 inputs: []
 outputs:
   - type: exit_code

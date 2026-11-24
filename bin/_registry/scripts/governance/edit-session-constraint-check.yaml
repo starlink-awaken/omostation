@@ -3,7 +3,7 @@ id: bin/gac/edit-session-constraint-check.py
 name: Edit Session Constraint Check
 category: governance
 owner: governance-team
-description: ""
+description: "edit-session-constraint-check — 编辑会话约束检查 (CLAUDE.md B.0.5)。"
 inputs: []
 outputs:
   - type: exit_code

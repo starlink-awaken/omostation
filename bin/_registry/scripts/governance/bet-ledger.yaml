@@ -3,7 +3,7 @@ id: bin/plan/bet-ledger.py
 name: Bet Ledger
 category: governance
 owner: governance-team
-description: ""
+description: "bet-ledger.py — 三年规划执行台账 CLI."
 inputs: []
 outputs:
   - type: exit_code

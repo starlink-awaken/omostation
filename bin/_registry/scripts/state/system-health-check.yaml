@@ -3,7 +3,7 @@ id: bin/ssot/system-health-check.py
 name: System Health Check
 category: state
 owner: governance-team
-description: ""
+description: "system-health-check — monitor resident system component health."
 inputs: []
 outputs:
   - type: exit_code

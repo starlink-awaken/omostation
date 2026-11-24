@@ -3,7 +3,7 @@ id: bin/gac/uhs-dashboard.py
 name: Uhs Dashboard
 category: governance
 owner: governance-team
-description: ""
+description: "UHS Dashboard — 统一健康评分趋势仪表盘."
 inputs: []
 outputs:
   - type: exit_code

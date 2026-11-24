@@ -3,7 +3,7 @@ id: bin/ssot/log-rotate.py
 name: Log Rotate
 category: governance
 owner: governance-team
-description: ""
+description: "日志轮转 — 可观测性 P1.2 (design: docs/observability-unified-architecture.md)."
 inputs: []
 outputs:
   - type: exit_code

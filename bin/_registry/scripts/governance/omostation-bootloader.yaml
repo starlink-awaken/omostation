@@ -3,7 +3,7 @@ id: bin/gac/omostation-bootloader.py
 name: Omostation Bootloader
 category: governance
 owner: governance-team
-description: ""
+description: "omostation-bootloader.py — P76 Phase 5 自演化平台雏形"
 inputs: []
 outputs:
   - type: exit_code

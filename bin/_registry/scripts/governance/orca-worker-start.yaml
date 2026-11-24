@@ -3,7 +3,7 @@ id: bin/gac/orca-worker-start.py
 name: Orca Worker Start
 category: governance
 owner: governance-team
-description: ""
+description: "Fail-closed Orca adapter for starting a supervised Crush worker."
 inputs: []
 outputs:
   - type: exit_code

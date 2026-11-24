@@ -3,7 +3,7 @@ id: bin/ssot/mesh-iris-executor.py
 name: Mesh Iris Executor
 category: governance
 owner: governance-team
-description: ""
+description: "mesh-iris-executor.py — mesh worker 执行 iris connector (N1+N9 P0)."
 inputs: []
 outputs:
   - type: exit_code

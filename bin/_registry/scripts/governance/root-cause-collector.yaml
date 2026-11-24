@@ -3,7 +3,7 @@ id: bin/gac/root-cause-collector.py
 name: Root Cause Collector
 category: governance
 owner: governance-team
-description: ""
+description: "root-cause-collector.py — Collect root-cause evidence on failure."
 inputs: []
 outputs:
   - type: exit_code

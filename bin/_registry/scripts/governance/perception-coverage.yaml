@@ -3,7 +3,7 @@ id: bin/gac/perception-coverage.py
 name: Perception Coverage
 category: governance
 owner: governance-team
-description: ""
+description: "Perception Coverage - report generator."
 inputs: []
 outputs:
   - type: exit_code

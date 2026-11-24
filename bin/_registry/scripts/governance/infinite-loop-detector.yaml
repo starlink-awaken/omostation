@@ -3,7 +3,7 @@ id: bin/gac/infinite-loop-detector.py
 name: Infinite Loop Detector
 category: governance
 owner: governance-team
-description: ""
+description: "infinite-loop-detector — 死循环自检。"
 inputs: []
 outputs:
   - type: exit_code

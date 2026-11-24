@@ -3,7 +3,7 @@ id: bin/ssot/owl_adapter.py
 name: Owl Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "owl_adapter.py — L0 约束 → OWL 适配层（Wave 3）"
 inputs: []
 outputs:
   - type: exit_code

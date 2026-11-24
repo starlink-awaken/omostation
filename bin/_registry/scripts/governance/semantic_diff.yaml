@@ -3,7 +3,7 @@ id: bin/ssot/semantic_diff.py
 name: Semantic Diff
 category: governance
 owner: governance-team
-description: ""
+description: "semantic_diff.py — L0 约束语义级 Diff 报告器"
 inputs: []
 outputs:
   - type: exit_code

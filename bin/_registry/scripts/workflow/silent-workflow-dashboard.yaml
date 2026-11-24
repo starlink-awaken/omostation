@@ -3,7 +3,7 @@ id: bin/gac/silent-workflow-dashboard.py
 name: Silent Workflow Dashboard
 category: workflow
 owner: governance-team
-description: ""
+description: "silent-workflow-dashboard.py — Dedicated silent workflow dashboard."
 inputs: []
 outputs:
   - type: exit_code

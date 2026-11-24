@@ -3,7 +3,7 @@ id: bin/gac/drift-history-insight.py
 name: Drift History Insight
 category: governance
 owner: governance-team
-description: ""
+description: "P83 R2: drift history insight tool."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/git-divergence-check.py
 name: Git Divergence Check
 category: governance
 owner: governance-team
-description: ""
+description: "git-divergence-check — root main 与 origin/main 分叉检测 (ADR-0202 D3)."
 inputs: []
 outputs:
   - type: exit_code

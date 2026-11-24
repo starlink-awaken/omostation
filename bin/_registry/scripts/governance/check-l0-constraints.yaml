@@ -3,7 +3,7 @@ id: bin/gac/check-l0-constraints.py
 name: Check L0 Constraints
 category: governance
 owner: governance-team
-description: ""
+description: "CR-L0-ENFORCE: L0 协议约束 CI 校验."
 inputs: []
 outputs:
   - type: exit_code

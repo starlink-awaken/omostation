@@ -3,7 +3,7 @@ id: bin/gac/gac-hook-pre-edit.py
 name: Gac Hook Pre Edit
 category: governance
 owner: governance-team
-description: ""
+description: "GaC PreToolUse hook (ADR-0106, 机制 3, Claude Code 编辑时强制)."
 inputs: []
 outputs:
   - type: exit_code

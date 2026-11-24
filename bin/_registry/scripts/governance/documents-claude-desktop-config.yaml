@@ -3,7 +3,7 @@ id: bin/gac/documents-claude-desktop-config.py
 name: Documents Claude Desktop Config
 category: governance
 owner: governance-team
-description: ""
+description: "Install and verify the governed Documents MCP entry in Claude Desktop."
 inputs: []
 outputs:
   - type: exit_code

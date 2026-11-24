@@ -3,7 +3,7 @@ id: bin/gac/architecture-check.py
 name: Architecture Check
 category: governance
 owner: governance-team
-description: ""
+description: "Architecture Check — 架构合规校验引擎 (ADR-0190 系列, Phase 2 校验层)."
 inputs: []
 outputs:
   - type: exit_code

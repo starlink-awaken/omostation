@@ -3,7 +3,7 @@ id: bin/gac/check-meta-health.py
 name: Check Meta Health
 category: state
 owner: governance-team
-description: ""
+description: "CR-X-META-HEALTH: GaC 治理系统自检."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/bc-os/signal_router.py
 name: Signal Router
 category: governance
 owner: governance-team
-description: ""
+description: "signal_router.py — BCOS 统一信号路由器 (W1-D2)."
 inputs: []
 outputs:
   - type: exit_code

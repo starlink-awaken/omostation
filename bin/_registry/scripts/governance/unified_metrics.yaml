@@ -3,7 +3,7 @@ id: bin/ops/unified_metrics.py
 name: Unified Metrics
 category: governance
 owner: governance-team
-description: ""
+description: "Unified Metrics Aggregator — collect from all existing metrics sources."
 inputs: []
 outputs:
   - type: exit_code

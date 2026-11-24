@@ -3,7 +3,7 @@ id: bin/gac/governance-summary.py
 name: Governance Summary
 category: governance
 owner: governance-team
-description: ""
+description: "governance-summary: GaC 治理系统摘要指标."
 inputs: []
 outputs:
   - type: exit_code

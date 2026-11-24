@@ -3,7 +3,7 @@ id: bin/ssot/onto_reconcile.py
 name: Onto Reconcile
 category: governance
 owner: governance-team
-description: ""
+description: "onto_reconcile.py — ontology 补全（bootstrap 候选 → ontology 缺口对比）"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/unified-orchestrator.py
 name: Unified Orchestrator
 category: governance
 owner: governance-team
-description: ""
+description: "Unified Orchestration Engine — 统一编排引擎."
 inputs: []
 outputs:
   - type: exit_code

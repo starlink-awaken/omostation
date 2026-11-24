@@ -3,7 +3,7 @@ id: bin/ssot/scene-trigger.py
 name: Scene Trigger
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Trigger — 信号匹配场景并触发旅程."
 inputs: []
 outputs:
   - type: exit_code

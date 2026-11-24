@@ -3,7 +3,7 @@ id: bin/mof/gen-mof-artifacts.py
 name: Gen Mof Artifacts
 category: governance
 owner: governance-team
-description: ""
+description: "gen-mof-artifacts.py — Generate or verify BOS and Cockpit configurations from MOF registry."
 inputs: []
 outputs:
   - type: exit_code

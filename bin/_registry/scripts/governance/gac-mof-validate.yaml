@@ -3,7 +3,7 @@ id: bin/gac/gac-mof-validate.py
 name: Gac Mof Validate
 category: governance
 owner: governance-team
-description: ""
+description: "GaC MOF 元模型校验 (ADR-0106, 机制 7, 规则用 GacRule M2 type 约束)."
 inputs: []
 outputs:
   - type: exit_code

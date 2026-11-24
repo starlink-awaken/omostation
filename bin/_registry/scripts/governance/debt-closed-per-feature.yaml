@@ -3,7 +3,7 @@ id: bin/gac/debt-closed-per-feature.py
 name: Debt Closed Per Feature
 category: governance
 owner: governance-team
-description: ""
+description: "debt-closed-per-feature.py — P76 Phase 3 指标"
 inputs: []
 outputs:
   - type: exit_code

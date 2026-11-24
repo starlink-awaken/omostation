@@ -3,7 +3,7 @@ id: bin/ssot/shadow-reporter.py
 name: Shadow Reporter
 category: governance
 owner: governance-team
-description: ""
+description: "Shadow Reporter — Shadow 场景观察报告器."
 inputs: []
 outputs:
   - type: exit_code

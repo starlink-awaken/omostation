@@ -3,7 +3,7 @@ id: bin/ssot/check-toolbox-ssot.py
 name: Check Toolbox Ssot
 category: governance
 owner: governance-team
-description: ""
+description: "check-toolbox-ssot.py — Validate ToolBox docs against live SSOT"
 inputs: []
 outputs:
   - type: exit_code

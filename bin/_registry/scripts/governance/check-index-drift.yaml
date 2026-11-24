@@ -3,7 +3,7 @@ id: bin/ssot/check-index-drift.py
 name: Check Index Drift
 category: governance
 owner: governance-team
-description: ""
+description: "Check index drift - verify index files match actual content."
 inputs: []
 outputs:
   - type: exit_code

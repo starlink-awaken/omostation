@@ -3,7 +3,7 @@ id: bin/ssot/management-cross-ref-check.py
 name: Management Cross Ref Check
 category: governance
 owner: governance-team
-description: ""
+description: "P81 R4: management 跨文件引用检查."
 inputs: []
 outputs:
   - type: exit_code

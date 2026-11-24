@@ -3,7 +3,7 @@ id: bin/kb/search.py
 name: Search
 category: governance
 owner: governance-team
-description: ""
+description: "search — query the knowledge graph by keyword or reference."
 inputs: []
 outputs:
   - type: exit_code

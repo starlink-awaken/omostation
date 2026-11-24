@@ -3,7 +3,7 @@ id: bin/gac/retro-reference-engine.py
 name: Retro Reference Engine
 category: governance
 owner: governance-team
-description: ""
+description: "Retro Reference Engine — 复盘引用引擎."
 inputs: []
 outputs:
   - type: exit_code

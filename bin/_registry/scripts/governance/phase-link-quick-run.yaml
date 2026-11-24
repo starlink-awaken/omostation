@@ -3,7 +3,7 @@ id: bin/gac/phase-link-quick-run.py
 name: Phase Link Quick Run
 category: governance
 owner: governance-team
-description: ""
+description: "phase-link-quick-run — 链路闭环工具一键运行。"
 inputs: []
 outputs:
   - type: exit_code

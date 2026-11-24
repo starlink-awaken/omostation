@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-task-bridge.py
 name: Scene Card Task Bridge
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Card → OMO Task 映射桥接."
 inputs: []
 outputs:
   - type: exit_code

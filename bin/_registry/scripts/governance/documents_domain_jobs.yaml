@@ -3,7 +3,7 @@ id: bin/gac/documents_domain_jobs.py
 name: Documents Domain Jobs
 category: governance
 owner: governance-team
-description: ""
+description: "Shared validation for Workspace-bound Documents owner jobs."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ops/lighthouse-stub.py
 name: Lighthouse Stub
 category: governance
 owner: governance-team
-description: ""
+description: "Lighthouse CI 采集 stub."
 inputs: []
 outputs:
   - type: exit_code

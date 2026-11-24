@@ -3,7 +3,7 @@ id: bin/ssot/consumer_index.py
 name: Consumer Index
 category: governance
 owner: governance-team
-description: ""
+description: "consumer-index.py — 约束 → 抽象族/规则反向索引生成器"
 inputs: []
 outputs:
   - type: exit_code

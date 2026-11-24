@@ -3,7 +3,7 @@ id: bin/ssot/signal-poller.py
 name: Signal Poller
 category: governance
 owner: governance-team
-description: ""
+description: "Signal Poller — 感知面信号检测器 (四面一脊 ①)."
 inputs: []
 outputs:
   - type: exit_code

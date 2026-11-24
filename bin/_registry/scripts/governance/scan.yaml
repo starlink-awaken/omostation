@@ -3,7 +3,7 @@ id: bin/sweep/scan.py
 name: Scan
 category: governance
 owner: governance-team
-description: ""
+description: "A4 (ADR-0367) + ADR-0373: scan Python projects with pyright, collect suppression metrics, archive report."
 inputs: []
 outputs:
   - type: exit_code

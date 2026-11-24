@@ -3,7 +3,7 @@ id: bin/gac/governance-health-monitor.py
 name: Governance Health Monitor
 category: state
 owner: governance-team
-description: ""
+description: "Governance Health Monitor — daily metrics collector."
 inputs: []
 outputs:
   - type: exit_code

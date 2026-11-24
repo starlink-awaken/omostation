@@ -3,7 +3,7 @@ id: bin/ssot/predictive-governance.py
 name: Predictive Governance
 category: governance
 owner: governance-team
-description: ""
+description: "Predictive Governance Engine — 治理推荐引擎 (GOV-01)."
 inputs: []
 outputs:
   - type: exit_code

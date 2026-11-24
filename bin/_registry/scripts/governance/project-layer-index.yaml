@@ -3,7 +3,7 @@ id: bin/mof/project-layer-index.py
 name: Project Layer Index
 category: governance
 owner: governance-team
-description: ""
+description: "Generate the project layer index digest from docs/project-registry.yaml."
 inputs: []
 outputs:
   - type: exit_code

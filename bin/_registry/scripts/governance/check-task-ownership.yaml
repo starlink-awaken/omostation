@@ -3,7 +3,7 @@ id: bin/gac/check-task-ownership.py
 name: Check Task Ownership
 category: governance
 owner: governance-team
-description: ""
+description: "任务所有权强制 — 非终态任务必须有 owner."
 inputs: []
 outputs:
   - type: exit_code

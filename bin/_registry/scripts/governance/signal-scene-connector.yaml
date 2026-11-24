@@ -3,7 +3,7 @@ id: bin/gac/signal-scene-connector.py
 name: Signal Scene Connector
 category: governance
 owner: governance-team
-description: ""
+description: "Signal → Scene Card 连接器."
 inputs: []
 outputs:
   - type: exit_code

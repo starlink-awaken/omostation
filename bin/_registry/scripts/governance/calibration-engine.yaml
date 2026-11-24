@@ -3,7 +3,7 @@ id: bin/ssot/calibration-engine.py
 name: Calibration Engine
 category: governance
 owner: governance-team
-description: ""
+description: "Calibration Engine — continuous scene trust scoring with sliding window."
 inputs: []
 outputs:
   - type: exit_code

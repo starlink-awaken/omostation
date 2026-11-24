@@ -3,7 +3,7 @@ id: bin/ssot/prune-ci-runs-cron.py
 name: Prune Ci Runs Cron
 category: governance
 owner: governance-team
-description: ""
+description: "CI runs scheduled pruner (ADR-0385 A2)."
 inputs: []
 outputs:
   - type: exit_code

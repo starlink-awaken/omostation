@@ -3,7 +3,7 @@ id: bin/ssot/health_agent.py
 name: Health Agent
 category: state
 owner: governance-team
-description: ""
+description: "Health Agent — 健康域感知+认知 agent."
 inputs: []
 outputs:
   - type: exit_code

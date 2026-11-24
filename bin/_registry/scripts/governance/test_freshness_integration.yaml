@@ -3,7 +3,7 @@ id: bin/ssot/test_freshness_integration.py
 name: Test Freshness Integration
 category: governance
 owner: governance-team
-description: ""
+description: "Integration tests for W0-03 freshness-health wiring."
 inputs: []
 outputs:
   - type: exit_code

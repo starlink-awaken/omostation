@@ -3,7 +3,7 @@ id: bin/ssot/admin_scenes.py
 name: Admin Scenes
 category: governance
 owner: governance-team
-description: ""
+description: "Admin Workflow Scenes — 9步行政流程的 scene dispatch 实现."
 inputs: []
 outputs:
   - type: exit_code

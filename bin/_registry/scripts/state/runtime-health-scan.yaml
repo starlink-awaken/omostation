@@ -3,7 +3,7 @@ id: bin/runtime-health-scan.py
 name: Runtime Health Scan
 category: state
 owner: governance-team
-description: ""
+description: "L1 运行时健康探针扫描器"
 inputs: []
 outputs:
   - type: exit_code

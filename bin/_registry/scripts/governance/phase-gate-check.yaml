@@ -3,7 +3,7 @@ id: bin/gac/phase-gate-check.py
 name: Phase Gate Check
 category: governance
 owner: governance-team
-description: ""
+description: "Phase gate hard check (ADR-0223 + ADR-0225 caliber) — stdlib + optional PyYAML."
 inputs: []
 outputs:
   - type: exit_code

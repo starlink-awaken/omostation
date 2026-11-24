@@ -3,7 +3,7 @@ id: bin/plan/bet-closeout-auto.py
 name: Bet Closeout Auto
 category: governance
 owner: governance-team
-description: ""
+description: "bet-closeout-auto.py — 5 步 closeout 工作流自动化 (A2 SOP)."
 inputs: []
 outputs:
   - type: exit_code

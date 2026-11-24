@@ -3,7 +3,7 @@ id: bin/delivery/measure_physical.py
 name: Measure Physical
 category: governance
 owner: governance-team
-description: ""
+description: "Physical multi-host G-DEL.1 / G-DEL.3 measurement (ADR-0225)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/alert-aggregator.py
 name: Alert Aggregator
 category: governance
 owner: governance-team
-description: ""
+description: "P65 R2: 告警聚合 — 避免 alert storm."
 inputs: []
 outputs:
   - type: exit_code

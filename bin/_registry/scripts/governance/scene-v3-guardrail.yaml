@@ -3,7 +3,7 @@ id: bin/ssot/scene-v3-guardrail.py
 name: Scene V3 Guardrail
 category: governance
 owner: governance-team
-description: ""
+description: "Scene v3 Guardrail — schema validation and anti-corruption hooks."
 inputs: []
 outputs:
   - type: exit_code

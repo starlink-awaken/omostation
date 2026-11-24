@@ -3,7 +3,7 @@ id: bin/ssot/check-god-module.py
 name: Check God Module
 category: governance
 owner: governance-team
-description: ""
+description: "God Module 检测 — 单文件 >800L warn, >1500L error."
 inputs: []
 outputs:
   - type: exit_code

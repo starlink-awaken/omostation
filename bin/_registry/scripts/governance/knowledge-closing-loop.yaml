@@ -3,7 +3,7 @@ id: bin/gac/knowledge-closing-loop.py
 name: Knowledge Closing Loop
 category: governance
 owner: governance-team
-description: ""
+description: "knowledge-closing-loop.py — Post-fix knowledge capture workflow."
 inputs: []
 outputs:
   - type: exit_code

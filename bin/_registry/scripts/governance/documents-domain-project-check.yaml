@@ -3,7 +3,7 @@ id: bin/gac/documents-domain-project-check.py
 name: Documents Domain Project Check
 category: governance
 owner: governance-team
-description: ""
+description: "Validate the Workspace binding for standalone Documents domain projects."
 inputs: []
 outputs:
   - type: exit_code

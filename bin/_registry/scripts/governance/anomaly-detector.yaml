@@ -3,7 +3,7 @@ id: bin/gac/anomaly-detector.py
 name: Anomaly Detector
 category: governance
 owner: governance-team
-description: ""
+description: "Anomaly Detector — scan metrics-store.jsonl and emit anomaly events."
 inputs: []
 outputs:
   - type: exit_code

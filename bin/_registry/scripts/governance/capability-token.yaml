@@ -3,7 +3,7 @@ id: bin/ssot/capability-token.py
 name: Capability Token
 category: governance
 owner: governance-team
-description: ""
+description: "Capability token generator — scoped, time-limited execution tokens for scene dispatch."
 inputs: []
 outputs:
   - type: exit_code

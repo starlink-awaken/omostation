@@ -3,7 +3,7 @@ id: bin/delivery/physical_client.py
 name: Physical Client
 category: governance
 owner: governance-team
-description: ""
+description: "TCP client for physical_node agents (ADR-0225)."
 inputs: []
 outputs:
   - type: exit_code

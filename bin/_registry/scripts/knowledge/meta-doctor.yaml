@@ -3,7 +3,7 @@ id: bin/gac/meta-doctor.py
 name: Meta Doctor
 category: knowledge
 owner: governance-team
-description: ""
+description: "meta-doctor.py — 治理机制自身的活性巡检 (自进化框架 M1+M2 载体)."
 inputs: []
 outputs:
   - type: exit_code

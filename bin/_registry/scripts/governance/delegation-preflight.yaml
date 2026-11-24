@@ -3,7 +3,7 @@ id: bin/delegation-preflight.py
 name: Delegation Preflight
 category: governance
 owner: governance-team
-description: ""
+description: "P2: delegation preflight — check subagent delegation infrastructure before an orchestration session starts."
 inputs: []
 outputs:
   - type: exit_code

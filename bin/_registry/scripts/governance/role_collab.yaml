@@ -3,7 +3,7 @@ id: bin/delivery/role_collab.py
 name: Role Collab
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL.2b — Role collaboration runtime (process-local CollabBus)."
 inputs: []
 outputs:
   - type: exit_code

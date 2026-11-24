@@ -3,7 +3,7 @@ id: bin/gac/predictive-governance.py
 name: Predictive Governance
 category: governance
 owner: governance-team
-description: ""
+description: "Predictive Governance — trend prediction + prescriptive recommendations."
 inputs: []
 outputs:
   - type: exit_code

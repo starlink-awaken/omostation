@@ -3,7 +3,7 @@ id: bin/ops/nfr-stub.py
 name: Nfr Stub
 category: governance
 owner: governance-team
-description: ""
+description: "NFR 非功能性需求指标 stub."
 inputs: []
 outputs:
   - type: exit_code

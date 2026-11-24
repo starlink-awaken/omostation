@@ -3,7 +3,7 @@ id: bin/gac/submodule-guard.py
 name: Submodule Guard
 category: governance
 owner: governance-team
-description: ""
+description: "统一子模块守卫 — 检查子模块指针变更的 fast-forward 一致性."
 inputs: []
 outputs:
   - type: exit_code

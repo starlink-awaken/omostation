@@ -3,7 +3,7 @@ id: bin/gac/skill-recommender.py
 name: Skill Recommender
 category: governance
 owner: governance-team
-description: ""
+description: "skill-recommender — 基于 diff 推荐适用的 skill/workflow。"
 inputs: []
 outputs:
   - type: exit_code

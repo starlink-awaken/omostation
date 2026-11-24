@@ -3,7 +3,7 @@ id: bin/gac/documents-zcode-config.py
 name: Documents Zcode Config
 category: governance
 owner: governance-team
-description: ""
+description: "Install and verify the governed Documents MCP entry in ZCode."
 inputs: []
 outputs:
   - type: exit_code

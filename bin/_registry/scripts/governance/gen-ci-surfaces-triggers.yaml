@@ -3,7 +3,7 @@ id: bin/ssot/gen-ci-surfaces-triggers.py
 name: Gen Ci Surfaces Triggers
 category: governance
 owner: governance-team
-description: ""
+description: "ci-surfaces workflow_triggers 生成器 (ADR-0381 E-5 补充, ADR-0387)."
 inputs: []
 outputs:
   - type: exit_code

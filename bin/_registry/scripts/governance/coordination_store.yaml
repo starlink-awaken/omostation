@@ -3,7 +3,7 @@ id: bin/gac/coordination_store.py
 name: Coordination Store
 category: governance
 owner: governance-team
-description: ""
+description: "coordination_store.py — BET-Y1Q1-T1-05A 共享运行时协调层 (shadow)."
 inputs: []
 outputs:
   - type: exit_code

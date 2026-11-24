@@ -3,7 +3,7 @@ id: bin/check_health_ssot.py
 name: Check Health Ssot
 category: governance
 owner: governance-team
-description: ""
+description: "check-health-ssot: 校验 health_score SSOT 引用一致性 + 保鲜."
 inputs: []
 outputs:
   - type: exit_code

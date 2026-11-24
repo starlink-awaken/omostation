@@ -3,7 +3,7 @@ id: bin/gac/gac-m1-sync.py
 name: Gac M1 Sync
 category: governance
 owner: governance-team
-description: ""
+description: "GaC M1 实例同步器 (ADR-0106, 机制 7, Phase 4B)."
 inputs: []
 outputs:
   - type: exit_code

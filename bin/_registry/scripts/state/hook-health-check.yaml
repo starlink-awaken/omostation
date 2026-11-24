@@ -3,7 +3,7 @@ id: bin/gac/hook-health-check.py
 name: Hook Health Check
 category: state
 owner: governance-team
-description: ""
+description: "Hook 完整性校验 — 检查已安装 hook 的版本、hash、缺失、孤儿."
 inputs: []
 outputs:
   - type: exit_code

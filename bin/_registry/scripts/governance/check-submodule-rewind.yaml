@@ -3,7 +3,7 @@ id: bin/gac/check-submodule-rewind.py
 name: Check Submodule Rewind
 category: governance
 owner: governance-team
-description: ""
+description: "CR-SUBMODULE-REWIND: 检测子模块指针回退 (rewind)."
 inputs: []
 outputs:
   - type: exit_code

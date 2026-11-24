@@ -3,7 +3,7 @@ id: bin/ssot/sema-distill.py
 name: Sema Distill
 category: governance
 owner: governance-team
-description: ""
+description: "SEMA 记忆自蒸馏与技能自动结晶流水线 (ADR-0426)."
 inputs: []
 outputs:
   - type: exit_code

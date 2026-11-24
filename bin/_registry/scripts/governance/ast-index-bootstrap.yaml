@@ -3,7 +3,7 @@ id: bin/gac/ast-index-bootstrap.py
 name: Ast Index Bootstrap
 category: governance
 owner: governance-team
-description: ""
+description: "AST Index Bootstrap (全仓 AST 语义符号与调用链自举索引器)."
 inputs: []
 outputs:
   - type: exit_code

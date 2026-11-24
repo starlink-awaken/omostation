@@ -3,7 +3,7 @@ id: bin/gac/rule-history-insight.py
 name: Rule History Insight
 category: governance
 owner: governance-team
-description: ""
+description: "P89 R1: X2 rule 历史与命中情况洞察工具."
 inputs: []
 outputs:
   - type: exit_code

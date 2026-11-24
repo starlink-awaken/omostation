@@ -3,7 +3,7 @@ id: bin/ssot/mail_agent.py
 name: Mail Agent
 category: governance
 owner: governance-team
-description: ""
+description: "Mail Agent — LLM 邮件分类 + 任务提取 + 日报生成."
 inputs: []
 outputs:
   - type: exit_code

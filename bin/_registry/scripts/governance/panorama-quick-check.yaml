@@ -3,7 +3,7 @@ id: bin/gac/panorama-quick-check.py
 name: Panorama Quick Check
 category: governance
 owner: governance-team
-description: ""
+description: "panorama-quick-check — 8D 全景入口一键检查。"
 inputs: []
 outputs:
   - type: exit_code

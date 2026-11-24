@@ -3,7 +3,7 @@ id: bin/bc-os/north_star_meter_v2.py
 name: North Star Meter V2
 category: governance
 owner: governance-team
-description: ""
+description: "Read-only North Star projection over OMO's causal Event Ledger."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/ssot-writeback.py
 name: Ssot Writeback
 category: governance
 owner: governance-team
-description: ""
+description: "SSOT Write-back 写侧 —— CR-C2G-V3-01 的执行端."
 inputs: []
 outputs:
   - type: exit_code

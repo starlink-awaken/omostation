@@ -3,7 +3,7 @@ id: bin/ssot/gen-agents-index.py
 name: Gen Agents Index
 category: governance
 owner: governance-team
-description: ""
+description: "Generate INDEX-AGENTS.md from .agents/ scan."
 inputs: []
 outputs:
   - type: exit_code

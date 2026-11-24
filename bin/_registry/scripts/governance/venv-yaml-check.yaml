@@ -3,7 +3,7 @@ id: bin/ssot/venv-yaml-check.py
 name: Venv Yaml Check
 category: governance
 owner: governance-team
-description: ""
+description: "P96 R2: venv 依赖一致性检查工具."
 inputs: []
 outputs:
   - type: exit_code

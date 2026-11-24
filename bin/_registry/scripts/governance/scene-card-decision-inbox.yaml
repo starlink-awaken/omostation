@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-decision-inbox.py
 name: Scene Card Decision Inbox
 category: governance
 owner: governance-team
-description: ""
+description: "Decision Inbox — Scene Card 决策收件箱核心引擎."
 inputs: []
 outputs:
   - type: exit_code

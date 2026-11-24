@@ -3,7 +3,7 @@ id: bin/ssot/freshness.py
 name: Freshness
 category: governance
 owner: governance-team
-description: ""
+description: "Canonical freshness-based health projection (W0-03)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/scene-outcome-recorder.py
 name: Scene Outcome Recorder
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Outcome Recorder — 结果面人类裁决记录 (四面一脊 ④)."
 inputs: []
 outputs:
   - type: exit_code

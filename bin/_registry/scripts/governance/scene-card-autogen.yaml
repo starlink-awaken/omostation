@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-autogen.py
 name: Scene Card Autogen
 category: governance
 owner: governance-team
-description: ""
+description: "scene-card-autogen.py — C2.2 场景自适应生成器."
 inputs: []
 outputs:
   - type: exit_code

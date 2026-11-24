@@ -3,7 +3,7 @@ id: bin/ssot/submodule-reachability-gate.py
 name: Submodule Reachability Gate
 category: governance
 owner: governance-team
-description: ""
+description: "Verify that root gitlinks point to commits reachable from submodule remotes."
 inputs: []
 outputs:
   - type: exit_code

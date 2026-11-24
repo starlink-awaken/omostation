@@ -3,7 +3,7 @@ id: bin/delivery/shared-context-cli.py
 name: Shared Context Cli
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL.4 shared-context CLI — cross-process agent handoff."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/devil-chaos-runner.py
 name: Devil Chaos Runner
 category: governance
 owner: governance-team
-description: ""
+description: "Devil Chaos Runner (红队混沌变异注入引擎) — B.D.S.K. @Devil 防腐核心."
 inputs: []
 outputs:
   - type: exit_code

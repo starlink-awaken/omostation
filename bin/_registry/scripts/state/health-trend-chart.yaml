@@ -3,7 +3,7 @@ id: bin/gac/health-trend-chart.py
 name: Health Trend Chart
 category: state
 owner: governance-team
-description: ""
+description: "health-trend-chart — render health.jsonl as an ASCII line chart."
 inputs: []
 outputs:
   - type: exit_code

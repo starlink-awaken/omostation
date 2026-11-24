@@ -3,7 +3,7 @@ id: bin/gac/anti-pattern-detector.py
 name: Anti Pattern Detector
 category: governance
 owner: governance-team
-description: ""
+description: "anti-pattern-detector: 5 战略反模式识别 + 状态计数."
 inputs: []
 outputs:
   - type: exit_code

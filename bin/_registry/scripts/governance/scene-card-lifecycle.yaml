@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-lifecycle.py
 name: Scene Card Lifecycle
 category: governance
 owner: governance-team
-description: ""
+description: "Scene card lifecycle management — check readiness and activate internal pipeline scenes."
 inputs: []
 outputs:
   - type: exit_code

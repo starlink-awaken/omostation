@@ -3,7 +3,7 @@ id: bin/bc-os/evolution-proposal-triage.py
 name: Evolution Proposal Triage
 category: governance
 owner: governance-team
-description: ""
+description: "Evolution Proposal Triage — 提案质量分层与 BCOS 四阶段."
 inputs: []
 outputs:
   - type: exit_code

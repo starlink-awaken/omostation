@@ -3,7 +3,7 @@ id: bin/gac/worktree-janitor.py
 name: Worktree Janitor
 category: governance
 owner: governance-team
-description: ""
+description: "worktree-janitor.py — PR-C worktree 三条件安全清理"
 inputs: []
 outputs:
   - type: exit_code

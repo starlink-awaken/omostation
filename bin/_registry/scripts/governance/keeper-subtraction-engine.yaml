@@ -3,7 +3,7 @@ id: bin/gac/keeper-subtraction-engine.py
 name: Keeper Subtraction Engine
 category: governance
 owner: governance-team
-description: ""
+description: "Keeper Subtraction Engine (减法配额与日落退役引擎) — B.D.S.K. @Keeper 核心."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/ci-local-fast.py
 name: Ci Local Fast
 category: governance
 owner: governance-team
-description: ""
+description: "Run the local pre-push checks without losing producer exit codes."
 inputs: []
 outputs:
   - type: exit_code

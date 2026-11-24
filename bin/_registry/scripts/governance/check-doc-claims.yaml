@@ -3,7 +3,7 @@ id: bin/mof/check-doc-claims.py
 name: Check Doc Claims
 category: governance
 owner: governance-team
-description: ""
+description: "check-doc-claims — 文档测试宣称失真防复发门 (P0-5)."
 inputs: []
 outputs:
   - type: exit_code

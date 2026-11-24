@@ -3,7 +3,7 @@ id: bin/ssot/knowledge-shadow-runner.py
 name: Knowledge Shadow Runner
 category: governance
 owner: governance-team
-description: ""
+description: "knowledge-shadow-runner.py — P1 Shadow 模式运行器 (BET-Y3H1 业务落地)."
 inputs: []
 outputs:
   - type: exit_code

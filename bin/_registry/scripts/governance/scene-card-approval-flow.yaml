@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-approval-flow.py
 name: Scene Card Approval Flow
 category: governance
 owner: governance-team
-description: ""
+description: "HITL 审批流引擎 — 场景卡意图审批与证据面板."
 inputs: []
 outputs:
   - type: exit_code

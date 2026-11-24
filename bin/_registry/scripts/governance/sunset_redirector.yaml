@@ -3,7 +3,7 @@ id: bin/panorama/sunset_redirector.py
 name: Sunset Redirector
 category: governance
 owner: governance-team
-description: ""
+description: "sunset_redirector.py — 治理双核下线平稳过渡与端口导流守护器 (BET-Y2Q2-T11-04)."
 inputs: []
 outputs:
   - type: exit_code

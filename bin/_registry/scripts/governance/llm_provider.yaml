@@ -3,7 +3,7 @@ id: bin/ssot/llm_provider.py
 name: Llm Provider
 category: governance
 owner: governance-team
-description: ""
+description: "llm_provider.py — LLM 提供方适配器（aetherforge BOS + 门面 HTTP 回退）"
 inputs: []
 outputs:
   - type: exit_code

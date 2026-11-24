@@ -3,7 +3,7 @@ id: bin/gac/alert-check.py
 name: Alert Check
 category: governance
 owner: governance-team
-description: ""
+description: "Alert Check — 统一告警检查入口."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/dim-weight.py
 name: Dim Weight
 category: governance
 owner: governance-team
-description: ""
+description: "P71 R3: 维度权重动态调整 (简化版)."
 inputs: []
 outputs:
   - type: exit_code

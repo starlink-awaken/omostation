@@ -3,7 +3,7 @@ id: bin/gac/execution-environment-steward.py
 name: Execution Environment Steward
 category: governance
 owner: governance-team
-description: ""
+description: "execution-environment-steward — produce digest-bound A1..A9 evidence."
 inputs: []
 outputs:
   - type: exit_code

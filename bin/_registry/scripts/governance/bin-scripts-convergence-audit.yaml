@@ -3,7 +3,7 @@ id: bin/ssot/bin-scripts-convergence-audit.py
 name: Bin Scripts Convergence Audit
 category: governance
 owner: governance-team
-description: ""
+description: "Audit the bin/scripts convergence manifest against the working tree."
 inputs: []
 outputs:
   - type: exit_code

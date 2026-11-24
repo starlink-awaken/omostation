@@ -3,7 +3,7 @@ id: bin/gac/gac-drift.py
 name: Gac Drift
 category: governance
 owner: governance-team
-description: ""
+description: "GaC 治理即代码 — drift 检测器 (ADR-0106, 阶段 2/4, 机制 4)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/submodule-gitlink-check.py
 name: Submodule Gitlink Check
 category: governance
 owner: governance-team
-description: ""
+description: "submodule-gitlink-check.py — 检测 submodule gitlink 漂移."
 inputs: []
 outputs:
   - type: exit_code

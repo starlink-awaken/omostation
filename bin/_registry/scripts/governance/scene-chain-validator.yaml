@@ -3,7 +3,7 @@ id: bin/ssot/scene-chain-validator.py
 name: Scene Chain Validator
 category: governance
 owner: governance-team
-description: ""
+description: "Validate scene card downstream_refs — check targets exist and detect cycles."
 inputs: []
 outputs:
   - type: exit_code

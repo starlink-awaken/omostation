@@ -3,7 +3,7 @@ id: bin/ssot/event-ingest-adapter.py
 name: Event Ingest Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "event-ingest-adapter — publish workflow-mesh JSONL events to the unified bus."
 inputs: []
 outputs:
   - type: exit_code

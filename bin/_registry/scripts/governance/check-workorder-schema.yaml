@@ -3,7 +3,7 @@ id: bin/gac/check-workorder-schema.py
 name: Check Workorder Schema
 category: governance
 owner: governance-team
-description: ""
+description: "check-workorder-schema: enforce the workorder authoring standard."
 inputs: []
 outputs:
   - type: exit_code

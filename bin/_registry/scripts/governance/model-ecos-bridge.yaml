@@ -3,7 +3,7 @@ id: bin/gac/model-ecos-bridge.py
 name: Model Ecos Bridge
 category: governance
 owner: governance-team
-description: ""
+description: "Model-Driven ↔ ECOS 连接桥."
 inputs: []
 outputs:
   - type: exit_code

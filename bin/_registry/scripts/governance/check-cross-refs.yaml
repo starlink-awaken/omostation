@@ -3,7 +3,7 @@ id: bin/ssot/check-cross-refs.py
 name: Check Cross Refs
 category: governance
 owner: governance-team
-description: ""
+description: "P58 R1: 跨面引用一致性深度检查."
 inputs: []
 outputs:
   - type: exit_code

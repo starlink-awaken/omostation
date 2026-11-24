@@ -3,7 +3,7 @@ id: bin/gac/x2-freshness-check.py
 name: X2 Freshness Check
 category: governance
 owner: governance-team
-description: ""
+description: "P84 R2: X2 freshness check tool."
 inputs: []
 outputs:
   - type: exit_code

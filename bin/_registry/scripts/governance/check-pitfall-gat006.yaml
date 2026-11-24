@@ -3,7 +3,7 @@ id: bin/gac/check-pitfall-gat006.py
 name: Check Pitfall Gat006
 category: governance
 owner: governance-team
-description: ""
+description: "PITFALL-GAT-006: 检测当前分支是否在 main 已自愈后重复造轮子。"
 inputs: []
 outputs:
   - type: exit_code

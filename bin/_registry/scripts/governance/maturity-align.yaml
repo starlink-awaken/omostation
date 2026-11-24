@@ -3,7 +3,7 @@ id: bin/gac/maturity-align.py
 name: Maturity Align
 category: governance
 owner: governance-team
-description: ""
+description: "maturity-align: 三方成熟度口径对齐 (BET-Y1Q3-T10-10)."
 inputs: []
 outputs:
   - type: exit_code

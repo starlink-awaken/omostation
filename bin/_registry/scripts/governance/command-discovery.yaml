@@ -3,7 +3,7 @@ id: bin/gac/command-discovery.py
 name: Command Discovery
 category: governance
 owner: governance-team
-description: ""
+description: "UX-NOISE 命令发现层 (差距治理 S5)."
 inputs: []
 outputs:
   - type: exit_code

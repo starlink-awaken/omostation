@@ -3,7 +3,7 @@ id: bin/ssot/internal-scene-preflight.py
 name: Internal Scene Preflight
 category: governance
 owner: governance-team
-description: ""
+description: "Read-only preflight for internal pipeline scene activation."
 inputs: []
 outputs:
   - type: exit_code

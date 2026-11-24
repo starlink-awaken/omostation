@@ -3,7 +3,7 @@ id: bin/ssot/adr-number-check.py
 name: Adr Number Check
 category: knowledge
 owner: governance-team
-description: ""
+description: "Check ADR numbering for duplicates and enforce ADR-0443 decision tiers."
 inputs: []
 outputs:
   - type: exit_code

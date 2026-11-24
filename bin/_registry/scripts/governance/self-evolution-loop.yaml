@@ -3,7 +3,7 @@ id: bin/gac/self-evolution-loop.py
 name: Self Evolution Loop
 category: governance
 owner: governance-team
-description: ""
+description: "Self-Evolution Loop — 数据驱动的自进化反馈循环."
 inputs: []
 outputs:
   - type: exit_code

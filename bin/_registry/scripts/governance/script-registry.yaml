@@ -3,7 +3,7 @@ id: bin/ssot/script-registry.py
 name: Script Registry
 category: governance
 owner: governance-team
-description: ""
+description: "script-registry.py — bin/ script registry management tool."
 inputs: []
 outputs:
   - type: exit_code

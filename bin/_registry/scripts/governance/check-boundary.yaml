@@ -3,7 +3,7 @@ id: bin/ssot/check-boundary.py
 name: Check Boundary
 category: governance
 owner: governance-team
-description: ""
+description: "建包前边界检查 — 防违反目标项目 CLAUDE.md 约束."
 inputs: []
 outputs:
   - type: exit_code

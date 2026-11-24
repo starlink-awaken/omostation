@@ -3,7 +3,7 @@ id: bin/gac/decision-inbox-sla.py
 name: Decision Inbox Sla
 category: governance
 owner: governance-team
-description: ""
+description: "Decision Inbox SLA — 决策收件箱 SLA 管理."
 inputs: []
 outputs:
   - type: exit_code

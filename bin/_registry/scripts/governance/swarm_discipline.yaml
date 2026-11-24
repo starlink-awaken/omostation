@@ -3,7 +3,7 @@ id: bin/gac/swarm_discipline.py
 name: Swarm Discipline
 category: governance
 owner: governance-team
-description: ""
+description: "G-CONV.7 / ADR-0220 swarm coordination discipline — pure gates + FS helpers."
 inputs: []
 outputs:
   - type: exit_code

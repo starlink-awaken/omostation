@@ -3,7 +3,7 @@ id: bin/panorama/panel-collect.py
 name: Panel Collect
 category: governance
 owner: governance-team
-description: ""
+description: "驾驶舱三板块（logs / metrics / value）的真实数据采集层."
 inputs: []
 outputs:
   - type: exit_code

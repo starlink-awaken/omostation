@@ -3,7 +3,7 @@ id: bin/delivery/physical_recovery.py
 name: Physical Recovery
 category: governance
 owner: governance-team
-description: ""
+description: "STRAT-P81 Batch2 C1 — physical recovery entry (dry-run safe, fail-closed)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/daemon/mail_ingress.py
 name: Mail Ingress
 category: governance
 owner: governance-team
-description: ""
+description: "Mail/Calendar Ingress Daemon — poll for new signals and dispatch LECP events."
 inputs: []
 outputs:
   - type: exit_code

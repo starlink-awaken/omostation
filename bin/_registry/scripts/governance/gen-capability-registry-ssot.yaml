@@ -3,7 +3,7 @@ id: bin/ssot/gen-capability-registry.py
 name: Gen Capability Registry
 category: governance
 owner: governance-team
-description: ""
+description: "能力注册表生成器 — 扫描全生态 MCP/BOS/CLI，输出 capability-registry.yaml."
 inputs: []
 outputs:
   - type: exit_code

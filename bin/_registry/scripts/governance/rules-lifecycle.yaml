@@ -3,7 +3,7 @@ id: bin/gac/rules-lifecycle.py
 name: Rules Lifecycle
 category: governance
 owner: governance-team
-description: ""
+description: "rules-lifecycle — L4 约束层规则生命周期治理 (ADR-0431 D2, 2026-08-28)."
 inputs: []
 outputs:
   - type: exit_code

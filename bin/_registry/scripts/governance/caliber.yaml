@@ -3,7 +3,7 @@ id: bin/delivery/caliber.py
 name: Caliber
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL metrics caliber helpers (ADR-0225 / ADR-0226)."
 inputs: []
 outputs:
   - type: exit_code

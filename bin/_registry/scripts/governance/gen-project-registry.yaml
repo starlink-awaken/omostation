@@ -3,7 +3,7 @@ id: bin/mof/gen-project-registry.py
 name: Gen Project Registry
 category: governance
 owner: governance-team
-description: ""
+description: "gen-project-registry — registry vs 实际代码 drift 检测 (doc-ssot 第4步)."
 inputs: []
 outputs:
   - type: exit_code

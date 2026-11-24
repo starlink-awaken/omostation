@@ -3,7 +3,7 @@ id: bin/ssot/risk_engine.py
 name: Risk Engine
 category: governance
 owner: governance-team
-description: ""
+description: "Risk Engine — 动态风险策略引擎."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/gac-executor.py
 name: Gac Executor
 category: governance
 owner: governance-team
-description: ""
+description: "gac-executor — GaC 执行器注册 drift 检测 (机制 3/4 深化)."
 inputs: []
 outputs:
   - type: exit_code

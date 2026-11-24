@@ -3,7 +3,7 @@ id: bin/ssot/verify.py
 name: Verify
 category: governance
 owner: governance-team
-description: ""
+description: "Task Verify -- 任务完成验证门禁 + 能力缺口清零率 (统一验证入口)."
 inputs: []
 outputs:
   - type: exit_code

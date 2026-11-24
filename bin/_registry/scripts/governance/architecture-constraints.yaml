@@ -3,7 +3,7 @@ id: bin/gac/architecture-constraints.py
 name: Architecture Constraints
 category: governance
 owner: governance-team
-description: ""
+description: "architecture-constraints.py — 架构约束与驱动机制."
 inputs: []
 outputs:
   - type: exit_code

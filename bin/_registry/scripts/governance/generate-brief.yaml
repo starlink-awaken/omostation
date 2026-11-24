@@ -3,7 +3,7 @@ id: bin/mof/generate-brief.py
 name: Generate Brief
 category: governance
 owner: governance-team
-description: ""
+description: "Generate BRIEF.md containing Decision Inbox and X3 Value Metrics."
 inputs: []
 outputs:
   - type: exit_code

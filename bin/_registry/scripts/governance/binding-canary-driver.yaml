@@ -3,7 +3,7 @@ id: bin/ssot/binding-canary-driver.py
 name: Binding Canary Driver
 category: governance
 owner: governance-team
-description: ""
+description: "binding-canary-driver — Exact Capability Binding 正向生产 canary (T1-12 operational 证据)."
 inputs: []
 outputs:
   - type: exit_code

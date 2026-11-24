@@ -3,7 +3,7 @@ id: bin/ssot/memory-ingest-adapter.py
 name: Memory Ingest Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "memory-ingest-adapter — publish CodeBuddy local memory into Memory OS."
 inputs: []
 outputs:
   - type: exit_code

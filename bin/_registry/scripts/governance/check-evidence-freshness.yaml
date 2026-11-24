@@ -3,7 +3,7 @@ id: bin/gac/check-evidence-freshness.py
 name: Check Evidence Freshness
 category: governance
 owner: governance-team
-description: ""
+description: "check-evidence-freshness: verify evidence-smoke report is recent."
 inputs: []
 outputs:
   - type: exit_code

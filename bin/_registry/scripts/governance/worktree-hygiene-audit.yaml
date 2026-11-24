@@ -3,7 +3,7 @@ id: bin/gac/worktree-hygiene-audit.py
 name: Worktree Hygiene Audit
 category: governance
 owner: governance-team
-description: ""
+description: "worktree-hygiene-audit: detect stale/abandoned worktrees and unregistered dirs."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/gac-local-gate.py
 name: Gac Local Gate
 category: governance
 owner: governance-team
-description: ""
+description: "Run the local Governance-as-Code gate used by hooks and CI, driven by SGF-v1 metadata policy."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/_llm_helper.py
 name:  Llm Helper
 category: governance
 owner: governance-team
-description: ""
+description: "Shared LLM helper — 经 aetherforge 门面调用 LLM."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-intake.py
 name: Scene Card Intake
 category: governance
 owner: governance-team
-description: ""
+description: "Normalize a Scene Card into a safe, proposal-only intake projection."
 inputs: []
 outputs:
   - type: exit_code

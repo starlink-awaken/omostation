@@ -3,7 +3,7 @@ id: bin/ssot/ssot-guardian.py
 name: Ssot Guardian
 category: governance
 owner: governance-team
-description: ""
+description: "ssot-guardian: SSOT 漂移守门员."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-doc-freshness-gate.py
 name: Check Doc Freshness Gate
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X2-DOC-FRESHNESS-GATE — 文档新鲜度检查. 检查 docs/ 下 md 文件是否在 90 天内更新过."
 inputs: []
 outputs:
   - type: exit_code

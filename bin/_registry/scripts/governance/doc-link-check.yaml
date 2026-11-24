@@ -3,7 +3,7 @@ id: bin/ssot/doc-link-check.py
 name: Doc Link Check
 category: governance
 owner: governance-team
-description: ""
+description: "Check local Markdown links in workspace entry documents."
 inputs: []
 outputs:
   - type: exit_code

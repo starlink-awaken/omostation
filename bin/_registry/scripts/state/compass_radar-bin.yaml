@@ -3,7 +3,7 @@ id: bin/compass_radar.py
 name: Compass Radar
 category: state
 owner: governance-team
-description: ""
+description: "compass-radar: 调 c2g.strategy 真实审计 + 写治理健康分 SSOT."
 inputs: []
 outputs:
   - type: exit_code

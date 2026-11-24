@@ -3,7 +3,7 @@ id: bin/gac/pipeline-orchestrator.py
 name: Pipeline Orchestrator
 category: governance
 owner: governance-team
-description: ""
+description: "全链路流水线编排器 — 信号→场景→旅程→价值→进化。"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-pr-lifecycle.py
 name: Check Pr Lifecycle
 category: governance
 owner: governance-team
-description: ""
+description: "check-pr-lifecycle.py — PR 生命周期可见性检查 (ci_only)."
 inputs: []
 outputs:
   - type: exit_code

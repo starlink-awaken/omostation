@@ -3,7 +3,7 @@ id: bin/gac/l3-remediation.py
 name: L3 Remediation
 category: governance
 owner: governance-team
-description: ""
+description: "l3-remediation — detect L3 high-risk tasks and emit concrete remediation."
 inputs: []
 outputs:
   - type: exit_code

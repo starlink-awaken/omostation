@@ -3,7 +3,7 @@ id: bin/gac/omo-runtime-stamp-policy.py
 name: Omo Runtime Stamp Policy
 category: governance
 owner: governance-team
-description: ""
+description: "Runtime stamp policy guard (P74 stage 2, runtime/.watch-dispatch-stamps.json 治理)."
 inputs: []
 outputs:
   - type: exit_code

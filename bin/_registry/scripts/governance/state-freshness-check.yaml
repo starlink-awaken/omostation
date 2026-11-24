@@ -3,7 +3,7 @@ id: bin/gac/state-freshness-check.py
 name: State Freshness Check
 category: governance
 owner: governance-team
-description: ""
+description: "state-freshness-check — OMO 状态面新鲜度独立检测 (ADR-0119 S2-5)."
 inputs: []
 outputs:
   - type: exit_code

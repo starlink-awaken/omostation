@@ -3,7 +3,7 @@ id: bin/ssot/gen-agent-constraints.py
 name: Gen Agent Constraints
 category: governance
 owner: governance-team
-description: ""
+description: "Gen Agent Constraints — 模型驱动: 从Agent本体yaml自动生成约束制品 (ADR-0403 P1)."
 inputs: []
 outputs:
   - type: exit_code

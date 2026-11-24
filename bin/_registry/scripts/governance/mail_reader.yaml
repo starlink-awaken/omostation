@@ -3,7 +3,7 @@ id: bin/ssot/mail_reader.py
 name: Mail Reader
 category: governance
 owner: governance-team
-description: ""
+description: "Mail Reader — 统一读取 Apple Mail + 网易邮箱大师, 输出标准化邮件列表."
 inputs: []
 outputs:
   - type: exit_code

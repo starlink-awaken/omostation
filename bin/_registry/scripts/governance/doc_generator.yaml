@@ -3,7 +3,7 @@ id: bin/ssot/doc_generator.py
 name: Doc Generator
 category: governance
 owner: governance-team
-description: ""
+description: "Doc Generator — 公文模板生成."
 inputs: []
 outputs:
   - type: exit_code

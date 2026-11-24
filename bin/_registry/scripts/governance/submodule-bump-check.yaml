@@ -3,7 +3,7 @@ id: bin/ssot/submodule-bump-check.py
 name: Submodule Bump Check
 category: governance
 owner: governance-team
-description: ""
+description: "submodule-bump-check.py — P76 Phase 4 主仓-子仓对称修复"
 inputs: []
 outputs:
   - type: exit_code

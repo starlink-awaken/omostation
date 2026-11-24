@@ -3,7 +3,7 @@ id: bin/gac/check-project-health-freshness.py
 name: Check Project Health Freshness
 category: state
 owner: governance-team
-description: ""
+description: "CR-X2-PROJECT-HEALTH-FRESHNESS: 检查项目健康分新鲜度."
 inputs: []
 outputs:
   - type: exit_code

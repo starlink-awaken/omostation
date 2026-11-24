@@ -3,7 +3,7 @@ id: bin/ssot/external-activation-preflight.py
 name: External Activation Preflight
 category: governance
 owner: governance-team
-description: ""
+description: "Build a read-only preflight for external connection activation."
 inputs: []
 outputs:
   - type: exit_code

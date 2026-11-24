@@ -3,7 +3,7 @@ id: bin/mof/gen-service-configs.py
 name: Gen Service Configs
 category: governance
 owner: governance-team
-description: ""
+description: "gen-service-configs — 从 services.yaml 生成调度配置 (launchd plist)."
 inputs: []
 outputs:
   - type: exit_code

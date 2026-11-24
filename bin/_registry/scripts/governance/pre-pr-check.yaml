@@ -3,7 +3,7 @@ id: bin/gac/pre-pr-check.py
 name: Pre Pr Check
 category: governance
 owner: governance-team
-description: ""
+description: "pre-pr-check.py — Pre-PR sanity checklist for agents and humans."
 inputs: []
 outputs:
   - type: exit_code

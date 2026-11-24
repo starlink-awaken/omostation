@@ -3,7 +3,7 @@ id: bin/ssot/external-scene-trial.py
 name: External Scene Trial
 category: governance
 owner: governance-team
-description: ""
+description: "Build and optionally persist a proposal-only external scene trial."
 inputs: []
 outputs:
   - type: exit_code

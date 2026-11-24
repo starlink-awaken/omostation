@@ -3,7 +3,7 @@ id: bin/gac/check-main-workspace-commit.py
 name: Check Main Workspace Commit
 category: governance
 owner: governance-team
-description: ""
+description: "主工作区提交守卫 — 强制\"主工作区只读, 改动走 worktree\"."
 inputs: []
 outputs:
   - type: exit_code

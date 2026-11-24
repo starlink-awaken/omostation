@@ -3,7 +3,7 @@ id: bin/mof/m4-health-score.py
 name: M4 Health Score
 category: state
 owner: governance-team
-description: ""
+description: "M4 Health Score — 量化 M4 元模型闭环状态"
 inputs: []
 outputs:
   - type: exit_code

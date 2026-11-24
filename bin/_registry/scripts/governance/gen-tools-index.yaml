@@ -3,7 +3,7 @@ id: bin/ssot/gen-tools-index.py
 name: Gen Tools Index
 category: governance
 owner: governance-team
-description: ""
+description: "Generate INDEX-TOOLS.md from bin/ scan."
 inputs: []
 outputs:
   - type: exit_code

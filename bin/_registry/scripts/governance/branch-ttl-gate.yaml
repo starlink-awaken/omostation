@@ -3,7 +3,7 @@ id: bin/gac/branch-ttl-gate.py
 name: Branch Ttl Gate
 category: governance
 owner: governance-team
-description: ""
+description: "branch-ttl-gate.py — 分支 TTL 强制执行 (T10-127, 吸收 gac-worktree-prune.sh)"
 inputs: []
 outputs:
   - type: exit_code

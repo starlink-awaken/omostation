@@ -3,7 +3,7 @@ id: bin/gac/omp-worker-adapter.py
 name: Omp Worker Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "Run Oh My Pi as a bounded, no-tools local worker via AetherForge."
 inputs: []
 outputs:
   - type: exit_code

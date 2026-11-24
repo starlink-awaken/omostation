@@ -3,7 +3,7 @@ id: bin/ssot/deadline_tracker.py
 name: Deadline Tracker
 category: governance
 owner: governance-team
-description: ""
+description: "Deadline Tracker — 任务截止时间追踪 + 回复状态检测."
 inputs: []
 outputs:
   - type: exit_code

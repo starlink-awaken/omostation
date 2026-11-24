@@ -3,7 +3,7 @@ id: bin/ssot/autoloop-controller.py
 name: Autoloop Controller
 category: governance
 owner: governance-team
-description: ""
+description: "Autoloop Controller — 自主闭环执行引擎 (EVO-01)."
 inputs: []
 outputs:
   - type: exit_code

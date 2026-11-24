@@ -3,7 +3,7 @@ id: bin/delivery/measure_all.py
 name: Measure All
 category: governance
 owner: governance-team
-description: ""
+description: "Run all G-DEL execution-surface measurement harnesses; emit JSON."
 inputs: []
 outputs:
   - type: exit_code

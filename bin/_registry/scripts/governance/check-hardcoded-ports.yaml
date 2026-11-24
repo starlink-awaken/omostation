@@ -3,7 +3,7 @@ id: bin/ssot/check-hardcoded-ports.py
 name: Check Hardcoded Ports
 category: governance
 owner: governance-team
-description: ""
+description: "check-hardcoded-ports.py — P77 Phase 5/7 跨仓端口硬编码扫描 + env var 检验"
 inputs: []
 outputs:
   - type: exit_code

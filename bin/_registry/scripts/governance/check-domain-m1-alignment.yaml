@@ -3,7 +3,7 @@ id: bin/ssot/check-domain-m1-alignment.py
 name: Check Domain M1 Alignment
 category: governance
 owner: governance-team
-description: ""
+description: "check-domain-m1-alignment.py — Detect drift between project-registry.yaml and eCOS M1 nodes"
 inputs: []
 outputs:
   - type: exit_code

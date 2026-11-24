@@ -3,7 +3,7 @@ id: bin/layer-dependency-check.py
 name: Layer Dependency Check
 category: governance
 owner: governance-team
-description: ""
+description: "bin/layer-dependency-check.py — 分层依赖检查工具"
 inputs: []
 outputs:
   - type: exit_code

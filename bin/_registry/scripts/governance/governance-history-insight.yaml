@@ -3,7 +3,7 @@ id: bin/gac/governance-history-insight.py
 name: Governance History Insight
 category: governance
 owner: governance-team
-description: ""
+description: "P83 R1: governance history insight tool."
 inputs: []
 outputs:
   - type: exit_code

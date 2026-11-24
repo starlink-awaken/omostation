@@ -3,7 +3,7 @@ id: bin/delivery/shared_context_store.py
 name: Shared Context Store
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL.4 file-backed shared context store (cross-process agent handoff)."
 inputs: []
 outputs:
   - type: exit_code

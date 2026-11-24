@@ -3,7 +3,7 @@ id: bin/ssot/decision-agent.py
 name: Decision Agent
 category: governance
 owner: governance-team
-description: ""
+description: "decision-agent — event-driven decision proposals (WP-F)."
 inputs: []
 outputs:
   - type: exit_code

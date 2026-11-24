@@ -3,7 +3,7 @@ id: bin/gac/check-submodule-pointer-integrity.py
 name: Check Submodule Pointer Integrity
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X4-SUBMODULE-POINTER-INTEGRITY: 检查子模块指针完整性."
 inputs: []
 outputs:
   - type: exit_code
