@@ -1,0 +1,396 @@
+id: OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES
+title: evidence_refs『有效证据』口径两套判定分叉 —— 终态面把已核实修复的真闭局判『虚假完成』，非终态面把未在 schema 声明必填的 mitigation_refs
+  当硬条件（34 条非终态判掉 30 条）
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/ssot/_shared.py
+- bin/ssot/verify.py
+- projects/omo/src/omo/omo_debt_metrics.py
+- .omo/debt/items/
+- .omo/_truth/registry/debt.yaml
+evidence_refs:
+- bin/ssot/_shared.py
+- bin/ssot/verify.py
+- projects/omo/src/omo/omo_debt_metrics.py
+- projects/omo/src/omo/omo_debt_registry.py
+- projects/omo/tests/unit/test_omo_debt_metrics_terminal_vocab.py
+- bin/gac/gac-local-gate.py
+- bin/gac/check-debt-staleness.py
+- .omo/debt/items/DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT.yaml
+- .omo/debt/items/BET-LEDGER-CLI-AUTHORITY-SPLIT.yaml
+- .omo/debt/items/DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml
+mitigation_refs: []
+opened_at: '2026-11-24T10:53:52.608792+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T10:53:52.608792+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES.
+  actor: governance-agent
+- at: '2026-11-24T10:53:52.649510+00:00'
+  action: update_description
+  note: "Updated description from '' to '`evidence_refs` 的「有效证据」语义没有单一定义：终态面 `bin/ssot/_shared.py:check_evidence`\
+    \ 与非终态面\n`projects/omo/src/omo/omo_debt_metrics.py:collect_stale_evidence_item_ids`\
+    \ 对同一个字段各写各的判定，\n今日实测两处都出偏差 —— 前者把一条**已核实修复**的真闭局判成「虚假完成」（假阳性实证，非假想），\n后者把 schema\
+    \ 里从未声明必填的 `mitigation_refs` 当硬条件（34 条非终态判掉 30 条）。\n\n## 1. 两套判定，同一个字段\n\n| 判定面\
+    \ | 代码 | 规则 | 覆盖总体 | 今日读数 |\n|---|---|---|---|---|\n| 终态「虚假完成」校验 | `bin/ssot/_shared.py:171-198\
+    \ check_evidence` | 任一 ref 整串 `Path.exists()`；否则要求 `resolution_evidence`/`closed_evidence`\
+    \ 非空文本 | 76 条终态 | `python3 bin/ssot/verify.py --mode task` → rc=1，`75/76 (99%)`，1\
+    \ 条 RED FLAG |\n| 非终态「证据陈旧」判定 | `projects/omo/src/omo/omo_debt_metrics.py:73-96`\
+    \ | `not evidence_refs or not mitigation_refs` ⇒ stale；再「任一 ref 不存在」⇒ stale；再\
+    \ mtime>复审日 ⇒ stale | 34 条非终态 | 判 stale 30 条 |\n\n按源码分支顺序对 30 条归因（本 worktree 真实台账，`load_debt_ledger(\"\
+    .omo\")` 取 110 条）：\n\n```\n21  evidence_refs 非空但 mitigation_refs 为空  ⇒ 仅因这个未声明必填的字段判\
+    \ stale\n 1  两个字段都空\n 7  ref 指向不存在的文件（含「path:行号 (注解)」形态）\n 1  文件 mtime 晚于 last_reviewed_at\n\
+    ```\n\n## 2. `mitigation_refs` 的必填性没有任何权威出处，也没有用例能区分\n\n- `projects/omo/src/omo/omo_debt_registry.py`\
+    \ 的 `DebtItem` 有该字段（`mitigation_refs: tuple[str, ...]`），\n  但 `.omo/standards/`、`docs/governance/`、registry\
+    \ 三处均**没有**把它声明为必填的规范文字。\n- 全库 110 条里只有 28 条 `mitigation_refs` 非空 —— 即多数条目按现状永远不可能脱离\
+    \ stale。\n- 测试面：`rg -l collect_stale_evidence_item_ids projects/omo/tests/` 只有两个文件，其中\n\
+    \  `unit/test_omo_debt_naive_timestamps.py` 只在 docstring 里提到该函数，全仓唯一的**调用**在\n\
+    \  `unit/test_omo_debt_metrics_terminal_vocab.py:42`，其 fixture `_item()`（`:19`）恒\
+    \ `mitigation_refs=[]`，\n  且被断言项 `OPEN-2` 的 `evidence_refs` 也为空 ⇒ 两种规则下同判。\n-\
+    \ 变异实测：沙盒 `/tmp/b17mut` 里把 `if not item.evidence_refs or not item.mitigation_refs:`\
+    \ 改成\n  `if not item.evidence_refs:`，该文件 `3 passed`，与对照（真实源码）`3 passed` 同结果。\n\
+    \  **结论边界**：更宽的 omo 单元面在我的沙盒里 45 条采集错误（`IndexError: 4`，装置故障，不作结论），\n  所以只成立「唯一调用用例不区分该分支」，不成立「全仓无用例覆盖」。\n\
+    \n## 3. 四种形态修法都不改变规模结论（诚实边界，不夸大形态问题）\n\n同一 34 条总体上的反事实（`/tmp/b17/health.py`）：\n\
+    \n| 口径 | 判 stale | 扣分构成 | debt_health |\n|---|---|---|---|\n| 现判据 | 30 | 7.5(pointers)\
+    \ + 150.0(stale) = 157.5 | 0.0 |\n| 去掉 mitigation 必填 | 26 | 7.5 + 130.0 = 137.5\
+    \ | 0.0 |\n| 允许 `path:行号 (注解)` 形态 | 29 | 7.5 + 145.0 = 152.5 | 0.0 |\n| 两者都改 |\
+    \ 26 | 7.5 + 130.0 = 137.5 | 0.0 |\n\n`overdue=0`、`gate=0`、`missing_pointers=1`，所以\
+    \ health 完全由 `5.0 × stale_evidence` 决定；\nstale ≥ 20 就把 100 分预算吃穿 ⇒ **形态修法只把 30\
+    \ 挪到 26，读数仍是 0.0**。\n「debt_health 扣分已饱和」这一面已登记在册且闭局\n（`.omo/debt/items/DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml`，其\
+    \ title 即含「且 debt_health 扣分已饱和」），\n本条**不重复开设**，也不提修法；本条只登记「同一字段两套判定分叉」与「假阳性已发生」。\n\
+    \n## 4. 假阳性实证：被「需补 evidence 或降级为 open」指向的条目其实真修好了\n\n今日唯一 RED FLAG 打在 `DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT`（`lifecycle_state:\
+    \ resolved`，\n`closed_at: 2026-11-24`，`gate_level: watchlist`）：\n\n- 该条目 `evidence_refs`\
+    \ 10 条，**整串可解析 0 条**；按「去掉 `:行号 (注解)` 后缀」口径基路径存在 7 条，\n  其余 3 条是复现记录/同族引用（无本地基路径）；`resolution_evidence`\
+    \ 与 `closed_evidence` 两个字段**都不存在**\n  ⇒ `check_evidence` 的兜底也接不上，`found=False`。\n\
+    - 修复在本基线在位：`bin/gac/check-debt-staleness.py:55 _git_available()`、`:95 git_ok =\
+    \ _git_available(root)`、\n  `:151 stale_label = ... else \"无法取证 (git 不可读)\"`、`:160`\
+    \ 明示未判定。\n- 按该条目自己的复现口径重跑（`/tmp/b17chk2` = `git archive origin/main .omo bin`\
+    \ 解出，无 `.git`）：\n  `identified=30 候选(有 roots+复审日)=20 疑似陈旧=无法取证 (git 不可读)` rc=0\
+    \ —— 原缺陷症状\n  「疑似陈旧=0 + ✅ 无」不再出现 ⇒ 闭局成立，判红是假阳性。\n- 危害面（不夸大）：该判据在 `bin/gac/gac-local-gate.py:480-483`\
+    \ 动态追加、`:757` 列入 `SOFT_CHECKS`，\n  **advisory 不阻断**；`bin/gac/check-debt-closure-discipline.py:23`\
+    \ 明确把「终态但无证据」委派给\n  `verify.py --mode task`。所以没有会自动重开条目的消费者，实际风险是 advisory 噪声\
+    \ + 它打印的\n  处置建议「需补 evidence 或降级为 open」把后续 agent 推向**重开一条正确闭局**。\n- 同一机制的披露史（据实，不声称重复立案）：`BET-LEDGER-CLI-AUTHORITY-SPLIT`（closed）2026-11-23\
+    \ 的\n  review note 已逐字指出「`check_evidence` 只认能 stat 到的路径 … 判据把『证据写法不合口径』读成『没有证据』」，\n\
+    \  当时针对的是它自己那 11 条带行号 refs；今天同一机制在**另一条**上再现 ⇒ 说明这是书写约定与判据口径\n  的长期不一致，不是单条目的偶发。本条登记的是总体规模与第二判据面，不是那条\
+    \ note 的重述。\n\n## 5. 规模面：8 条终态项的 evidence_refs 对判据完全不起作用\n\n终态 76 条的 ref 形态普查（`/tmp/b17/census.txt`）：refs\
+    \ 共 233 条，整串即存在 92 (39%)，\n去掉 `:行号/注解` 后基路径存在 48 (20%)，其余 93 (40%)。\n\n其中**没有任何一条\
+    \ ref 能整串解析、纯靠文本证据兜底通过**的终态条目 8 条（格式：refs 数 / 去后缀可解析数）：\n\n```\nBET-LEDGER-CLI-AUTHORITY-SPLIT\
+    \ 11/3   CRON-INSTALLERS-OUTSIDE-SSOT 9/9\nCRON-REGISTRY-NO-HOST-SCOPE 3/2   \
+    \    DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP 12/12\nDOC_CLAIMS_SCOPE 2/1     \
+    \             INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED 7/1\nOMO-DEBT-CLOSE-GATE-LEVEL-LOSSY\
+    \ 4/3   OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT 11/9\n```\n\n即这 8 条（占终态 10.5%）的\
+    \ `evidence_refs` 字段在路径维度上从未被校验过 —— 判据只看那句\n`resolution_evidence` 文本非不非空。这与 `DEBT-SCHEMA-THREE-WAY-DESYNC`（resolved，管\
+    \ schema 键位三处不一致）\n是同族的另一面：那条讲**有哪些键**，本条讲**同一个键的值按哪套口径算有效**。\n\n## 6. 取数与仪器自纠（本批留痕）\n\
+    \n- 台账读取：`load_debt_ledger(Path(\".omo\"))` + 直调 kernel 函数，`repo_root` 显式传本 worktree\
+    \ 根，\n  零写入；`omo-debt list` 在本 worktree 报 `No debt state found`、`omo-debt report`\
+    \ 因缺\n  `.omo/debt/dispatch/current.yaml` 抛 `FileNotFoundError`（broker 动词依赖状态根的\
+    \ dispatch packet，\n  worktree 没有该文件）—— 属**装置限制**，不影响本节 kernel 直调读数。\n- `compute_debt_metrics`\
+    \ 权威函数读数：`debt_health=0.0`、`pointer_entropy=0.91`、`state_entropy=0.12`、\n  `backlog_pressure=4.9`、`watchlist=4`、`gate=0`（`now`\
+    \ 传 `2026-11-24T10:46:00Z`）。\n- 对外发布面：状态根 dashboard 目录 grep `debt_health` **零命中**；代码侧消费者是\n\
+    \  `omo_debt_io.py:88`、`projects/model-driven/src/model_driven/management/omo_bridge.py:355,463`、\n\
+    \  `projects/ecos/src/ecos/l0/governance/history_store.py:34-70`。因此**不声称**面板正显示\
+    \ 0.0，\n  只声称权威函数此刻算出 0.0 且经 `history_store` 入库。\n- 两次我自己的装置故障如实记录：① 用 `rg -rn\
+    \ '<词>'` 时 `-r` 把下一个参数当**替换串**，于是输出里\n  出现的 `n(repo_root…)`、`n_item_ids` 是被替换后的假文本，真实符号是\
+    \ `_resolve_ref_path` 与\n  `collect_stale_evidence_item_ids`（已用不带 `-r` 的 `rg -n`\
+    \ 重取）；② 首轮普查脚本里写了非法\n  `import X if False else None` 表达式，SyntaxError 后重跑，读数以上面为准。\n\
+    \n## 7. 待裁（principal，四选一）\n\n① **单点定义**：把「一条 evidence ref 算不算有效」收敛为一个函数（放 kernel\
+    \ 还是 `bin/ssot/_shared.py`\n   由 principal 定），两个消费者共用 —— 后果：终态 76 与非终态 34 的判定同时移动，RED\
+    \ FLAG 数与 stale 数\n   都会变，属判据面变化；\n② **只放开形态**：两处判定都接受 `path:行号 (注解)`（取基路径 stat）——\
+    \ 实测终态 RED FLAG 1 → 0，\n   非终态 stale 30 → 29，`debt_health` 仍 0.0（见 §3）；即形态修法对非终态面几乎无效，别期待它救活读数；\n\
+    ③ **只改 `mitigation_refs`**：把「空 mitigation 即证据陈旧」从判据里摘掉 —— stale 30 → 26，同时必须裁定\n\
+    \   该字段到底是不是必填（牵动 broker `register` 是否继续注入默认 `mitigation_refs: []`、以及 §2 里无用例\n\
+    \   区分这一事实要不要补回归用例）；\n④ **立书写规范**：规定 `evidence_refs` 只允许纯路径，注解一律写进 `description`/`history`，并对\
+    \ §5 那 8 条\n   decorative 条目做批量补写 —— 波及他人条目的既有字段，需逐条授权，agent 不代改。\n\n四条都改既有判定口径，不由\
+    \ agent 选定。本批落盘面只有本债务条目 + `.omo/_truth/registry/debt.yaml` 索引行；\n未改任何判据代码、未改任何他人条目字段、未动\
+    \ CI/门禁/指标面。\n'."
+- at: '2026-11-24T10:54:23.456554+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T10:55:00+00:00'
+  action: update_field
+  note: 登记 broker 不拥有的 4 个字段：evidence_refs 10 项（逐条 Path.exists 实测全部在位，见上一步输出）、affected_roots
+    5 项、last_reviewed_at '2026-11-24'、decision_needed 四选一。改法为 read→check→modify→write
+    定点插入（在 description 键前），未整文件 safe_dump 以免重排 broker 写的 description 块。
+- at: '2026-11-24T10:55:00+00:00'
+  action: restore_lifecycle_state
+  note: broker schedule --next-review-at 除排期字段外把 lifecycle_state 从 identified 改成 scheduled（projects/omo/src/omo/omo_debt_lifecycle.py:74
+    直改状态字段，即 OMO-DEBT-REGISTER-NO-REVIEW-DATES 决策项 (3) 的机制）。本条是「已登记待裁」不是「已排期处置」，故手工把状态字段改回
+    identified，排期字段 2026-12-08 保留 —— 改动在此留痕，不静默覆盖。
+- at: '2026-11-24T10:55:00+00:00'
+  action: measurement_provenance
+  note: 取数装置：PYTHONPATH=projects/omo/src + /opt/homebrew/bin/python3 -m omo.omo_debt
+    与各 kernel 函数直调（load_debt_ledger/compute_debt_metrics/collect_stale_evidence_item_ids），零写入；沙盒
+    /tmp/b17mut 变异实测、/tmp/b17chk2 无 .git 复现、/tmp/b17/{census,metrics,health}.py 读数。两处自身装置故障（rg
+    -r 把匹配词替换成 n、非法 import 表达式 SyntaxError）已在 description §6 如实登记，读数均以重取后的值为准。
+- at: '2026-11-24T10:55:59.837278+00:00'
+  action: update_description
+  note: "Updated description from '`evidence_refs` 的「有效证据」语义没有单一定义：终态面 `bin/ssot/_shared.py:check_evidence`\
+    \ 与非终态面\n`projects/omo/src/omo/omo_debt_metrics.py:collect_stale_evidence_item_ids`\
+    \ 对同一个字段各写各的判定，\n今日实测两处都出偏差 —— 前者把一条**已核实修复**的真闭局判成「虚假完成」（假阳性实证，非假想），\n后者把 schema\
+    \ 里从未声明必填的 `mitigation_refs` 当硬条件（34 条非终态判掉 30 条）。\n\n## 1. 两套判定，同一个字段\n\n| 判定面\
+    \ | 代码 | 规则 | 覆盖总体 | 今日读数 |\n|---|---|---|---|---|\n| 终态「虚假完成」校验 | `bin/ssot/_shared.py:171-198\
+    \ check_evidence` | 任一 ref 整串 `Path.exists()`；否则要求 `resolution_evidence`/`closed_evidence`\
+    \ 非空文本 | 76 条终态 | `python3 bin/ssot/verify.py --mode task` → rc=1，`75/76 (99%)`，1\
+    \ 条 RED FLAG |\n| 非终态「证据陈旧」判定 | `projects/omo/src/omo/omo_debt_metrics.py:73-96`\
+    \ | `not evidence_refs or not mitigation_refs` ⇒ stale；再「任一 ref 不存在」⇒ stale；再\
+    \ mtime>复审日 ⇒ stale | 34 条非终态 | 判 stale 30 条 |\n\n按源码分支顺序对 30 条归因（本 worktree 真实台账，`load_debt_ledger(\"\
+    .omo\")` 取 110 条）：\n\n```\n21  evidence_refs 非空但 mitigation_refs 为空  ⇒ 仅因这个未声明必填的字段判\
+    \ stale\n 1  两个字段都空\n 7  ref 指向不存在的文件（含「path:行号 (注解)」形态）\n 1  文件 mtime 晚于 last_reviewed_at\n\
+    ```\n\n## 2. `mitigation_refs` 的必填性没有任何权威出处，也没有用例能区分\n\n- `projects/omo/src/omo/omo_debt_registry.py`\
+    \ 的 `DebtItem` 有该字段（`mitigation_refs: tuple[str, ...]`），\n  但 `.omo/standards/`、`docs/governance/`、registry\
+    \ 三处均**没有**把它声明为必填的规范文字。\n- 全库 110 条里只有 28 条 `mitigation_refs` 非空 —— 即多数条目按现状永远不可能脱离\
+    \ stale。\n- 测试面：`rg -l collect_stale_evidence_item_ids projects/omo/tests/` 只有两个文件，其中\n\
+    \  `unit/test_omo_debt_naive_timestamps.py` 只在 docstring 里提到该函数，全仓唯一的**调用**在\n\
+    \  `unit/test_omo_debt_metrics_terminal_vocab.py:42`，其 fixture `_item()`（`:19`）恒\
+    \ `mitigation_refs=[]`，\n  且被断言项 `OPEN-2` 的 `evidence_refs` 也为空 ⇒ 两种规则下同判。\n-\
+    \ 变异实测：沙盒 `/tmp/b17mut` 里把 `if not item.evidence_refs or not item.mitigation_refs:`\
+    \ 改成\n  `if not item.evidence_refs:`，该文件 `3 passed`，与对照（真实源码）`3 passed` 同结果。\n\
+    \  **结论边界**：更宽的 omo 单元面在我的沙盒里 45 条采集错误（`IndexError: 4`，装置故障，不作结论），\n  所以只成立「唯一调用用例不区分该分支」，不成立「全仓无用例覆盖」。\n\
+    \n## 3. 四种形态修法都不改变规模结论（诚实边界，不夸大形态问题）\n\n同一 34 条总体上的反事实（`/tmp/b17/health.py`）：\n\
+    \n| 口径 | 判 stale | 扣分构成 | debt_health |\n|---|---|---|---|\n| 现判据 | 30 | 7.5(pointers)\
+    \ + 150.0(stale) = 157.5 | 0.0 |\n| 去掉 mitigation 必填 | 26 | 7.5 + 130.0 = 137.5\
+    \ | 0.0 |\n| 允许 `path:行号 (注解)` 形态 | 29 | 7.5 + 145.0 = 152.5 | 0.0 |\n| 两者都改 |\
+    \ 26 | 7.5 + 130.0 = 137.5 | 0.0 |\n\n`overdue=0`、`gate=0`、`missing_pointers=1`，所以\
+    \ health 完全由 `5.0 × stale_evidence` 决定；\nstale ≥ 20 就把 100 分预算吃穿 ⇒ **形态修法只把 30\
+    \ 挪到 26，读数仍是 0.0**。\n「debt_health 扣分已饱和」这一面已登记在册且闭局\n（`.omo/debt/items/DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml`，其\
+    \ title 即含「且 debt_health 扣分已饱和」），\n本条**不重复开设**，也不提修法；本条只登记「同一字段两套判定分叉」与「假阳性已发生」。\n\
+    \n## 4. 假阳性实证：被「需补 evidence 或降级为 open」指向的条目其实真修好了\n\n今日唯一 RED FLAG 打在 `DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT`（`lifecycle_state:\
+    \ resolved`，\n`closed_at: 2026-11-24`，`gate_level: watchlist`）：\n\n- 该条目 `evidence_refs`\
+    \ 10 条，**整串可解析 0 条**；按「去掉 `:行号 (注解)` 后缀」口径基路径存在 7 条，\n  其余 3 条是复现记录/同族引用（无本地基路径）；`resolution_evidence`\
+    \ 与 `closed_evidence` 两个字段**都不存在**\n  ⇒ `check_evidence` 的兜底也接不上，`found=False`。\n\
+    - 修复在本基线在位：`bin/gac/check-debt-staleness.py:55 _git_available()`、`:95 git_ok =\
+    \ _git_available(root)`、\n  `:151 stale_label = ... else \"无法取证 (git 不可读)\"`、`:160`\
+    \ 明示未判定。\n- 按该条目自己的复现口径重跑（`/tmp/b17chk2` = `git archive origin/main .omo bin`\
+    \ 解出，无 `.git`）：\n  `identified=30 候选(有 roots+复审日)=20 疑似陈旧=无法取证 (git 不可读)` rc=0\
+    \ —— 原缺陷症状\n  「疑似陈旧=0 + ✅ 无」不再出现 ⇒ 闭局成立，判红是假阳性。\n- 危害面（不夸大）：该判据在 `bin/gac/gac-local-gate.py:480-483`\
+    \ 动态追加、`:757` 列入 `SOFT_CHECKS`，\n  **advisory 不阻断**；`bin/gac/check-debt-closure-discipline.py:23`\
+    \ 明确把「终态但无证据」委派给\n  `verify.py --mode task`。所以没有会自动重开条目的消费者，实际风险是 advisory 噪声\
+    \ + 它打印的\n  处置建议「需补 evidence 或降级为 open」把后续 agent 推向**重开一条正确闭局**。\n- 同一机制的披露史（据实，不声称重复立案）：`BET-LEDGER-CLI-AUTHORITY-SPLIT`（closed）2026-11-23\
+    \ 的\n  review note 已逐字指出「`check_evidence` 只认能 stat 到的路径 … 判据把『证据写法不合口径』读成『没有证据』」，\n\
+    \  当时针对的是它自己那 11 条带行号 refs；今天同一机制在**另一条**上再现 ⇒ 说明这是书写约定与判据口径\n  的长期不一致，不是单条目的偶发。本条登记的是总体规模与第二判据面，不是那条\
+    \ note 的重述。\n\n## 5. 规模面：8 条终态项的 evidence_refs 对判据完全不起作用\n\n终态 76 条的 ref 形态普查（`/tmp/b17/census.txt`）：refs\
+    \ 共 233 条，整串即存在 92 (39%)，\n去掉 `:行号/注解` 后基路径存在 48 (20%)，其余 93 (40%)。\n\n其中**没有任何一条\
+    \ ref 能整串解析、纯靠文本证据兜底通过**的终态条目 8 条（格式：refs 数 / 去后缀可解析数）：\n\n```\nBET-LEDGER-CLI-AUTHORITY-SPLIT\
+    \ 11/3   CRON-INSTALLERS-OUTSIDE-SSOT 9/9\nCRON-REGISTRY-NO-HOST-SCOPE 3/2   \
+    \    DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP 12/12\nDOC_CLAIMS_SCOPE 2/1     \
+    \             INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED 7/1\nOMO-DEBT-CLOSE-GATE-LEVEL-LOSSY\
+    \ 4/3   OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT 11/9\n```\n\n即这 8 条（占终态 10.5%）的\
+    \ `evidence_refs` 字段在路径维度上从未被校验过 —— 判据只看那句\n`resolution_evidence` 文本非不非空。这与 `DEBT-SCHEMA-THREE-WAY-DESYNC`（resolved，管\
+    \ schema 键位三处不一致）\n是同族的另一面：那条讲**有哪些键**，本条讲**同一个键的值按哪套口径算有效**。\n\n## 6. 取数与仪器自纠（本批留痕）\n\
+    \n- 台账读取：`load_debt_ledger(Path(\".omo\"))` + 直调 kernel 函数，`repo_root` 显式传本 worktree\
+    \ 根，\n  零写入；`omo-debt list` 在本 worktree 报 `No debt state found`、`omo-debt report`\
+    \ 因缺\n  `.omo/debt/dispatch/current.yaml` 抛 `FileNotFoundError`（broker 动词依赖状态根的\
+    \ dispatch packet，\n  worktree 没有该文件）—— 属**装置限制**，不影响本节 kernel 直调读数。\n- `compute_debt_metrics`\
+    \ 权威函数读数：`debt_health=0.0`、`pointer_entropy=0.91`、`state_entropy=0.12`、\n  `backlog_pressure=4.9`、`watchlist=4`、`gate=0`（`now`\
+    \ 传 `2026-11-24T10:46:00Z`）。\n- 对外发布面：状态根 dashboard 目录 grep `debt_health` **零命中**；代码侧消费者是\n\
+    \  `omo_debt_io.py:88`、`projects/model-driven/src/model_driven/management/omo_bridge.py:355,463`、\n\
+    \  `projects/ecos/src/ecos/l0/governance/history_store.py:34-70`。因此**不声称**面板正显示\
+    \ 0.0，\n  只声称权威函数此刻算出 0.0 且经 `history_store` 入库。\n- 两次我自己的装置故障如实记录：① 用 `rg -rn\
+    \ '<词>'` 时 `-r` 把下一个参数当**替换串**，于是输出里\n  出现的 `n(repo_root…)`、`n_item_ids` 是被替换后的假文本，真实符号是\
+    \ `_resolve_ref_path` 与\n  `collect_stale_evidence_item_ids`（已用不带 `-r` 的 `rg -n`\
+    \ 重取）；② 首轮普查脚本里写了非法\n  `import X if False else None` 表达式，SyntaxError 后重跑，读数以上面为准。\n\
+    \n## 7. 待裁（principal，四选一）\n\n① **单点定义**：把「一条 evidence ref 算不算有效」收敛为一个函数（放 kernel\
+    \ 还是 `bin/ssot/_shared.py`\n   由 principal 定），两个消费者共用 —— 后果：终态 76 与非终态 34 的判定同时移动，RED\
+    \ FLAG 数与 stale 数\n   都会变，属判据面变化；\n② **只放开形态**：两处判定都接受 `path:行号 (注解)`（取基路径 stat）——\
+    \ 实测终态 RED FLAG 1 → 0，\n   非终态 stale 30 → 29，`debt_health` 仍 0.0（见 §3）；即形态修法对非终态面几乎无效，别期待它救活读数；\n\
+    ③ **只改 `mitigation_refs`**：把「空 mitigation 即证据陈旧」从判据里摘掉 —— stale 30 → 26，同时必须裁定\n\
+    \   该字段到底是不是必填（牵动 broker `register` 是否继续注入默认 `mitigation_refs: []`、以及 §2 里无用例\n\
+    \   区分这一事实要不要补回归用例）；\n④ **立书写规范**：规定 `evidence_refs` 只允许纯路径，注解一律写进 `description`/`history`，并对\
+    \ §5 那 8 条\n   decorative 条目做批量补写 —— 波及他人条目的既有字段，需逐条授权，agent 不代改。\n\n四条都改既有判定口径，不由\
+    \ agent 选定。本批落盘面只有本债务条目 + `.omo/_truth/registry/debt.yaml` 索引行；\n未改任何判据代码、未改任何他人条目字段、未动\
+    \ CI/门禁/指标面。\n' to ''."
+- at: '2026-11-24T10:56:09.523519+00:00'
+  action: update_description
+  note: "Updated description from '' to '`evidence_refs` 的「有效证据」语义没有单一定义：终态面 `bin/ssot/_shared.py:check_evidence`\
+    \ 与非终态面\n`projects/omo/src/omo/omo_debt_metrics.py:collect_stale_evidence_item_ids`\
+    \ 对同一个字段各写各的判定，\n今日实测两处都出偏差 —— 前者把一条**已核实修复**的真闭局判成「虚假完成」（假阳性实证，非假想），\n后者把 schema\
+    \ 里从未声明必填的 `mitigation_refs` 当硬条件（34 条非终态判掉 30 条）。\n\n## 1. 两套判定，同一个字段\n\n| 判定面\
+    \ | 代码 | 规则 | 覆盖总体 | 今日读数 |\n|---|---|---|---|---|\n| 终态「虚假完成」校验 | `bin/ssot/_shared.py:171-198\
+    \ check_evidence` | 任一 ref 整串 `Path.exists()`；否则要求 `resolution_evidence`/`closed_evidence`\
+    \ 非空文本 | 76 条终态 | `python3 bin/ssot/verify.py --mode task` → rc=1，`75/76 (99%)`，1\
+    \ 条 RED FLAG |\n| 非终态「证据陈旧」判定 | `projects/omo/src/omo/omo_debt_metrics.py:73-96`\
+    \ | `not evidence_refs or not mitigation_refs` ⇒ stale；再「任一 ref 不存在」⇒ stale；再\
+    \ mtime>复审日 ⇒ stale | 34 条非终态 | 判 stale 30 条 |\n\n按源码分支顺序对 30 条归因（本 worktree 真实台账，`load_debt_ledger(\"\
+    .omo\")` 取 110 条）：\n\n```\n21  evidence_refs 非空但 mitigation_refs 为空  ⇒ 仅因这个未声明必填的字段判\
+    \ stale\n 1  两个字段都空\n 7  ref 指向不存在的文件（含「path:行号 (注解)」形态）\n 1  文件 mtime 晚于 last_reviewed_at\n\
+    ```\n\n## 2. `mitigation_refs` 的必填性没有任何权威出处，也没有用例能区分\n\n- `projects/omo/src/omo/omo_debt_registry.py`\
+    \ 的 `DebtItem` 有该字段（`mitigation_refs: tuple[str, ...]`），\n  但 `.omo/standards/`、`docs/governance/`、registry\
+    \ 三处均**没有**把它声明为必填的规范文字。\n- 全库 110 条里只有 28 条 `mitigation_refs` 非空 —— 即多数条目按现状永远不可能脱离\
+    \ stale。\n- 测试面：`rg -l collect_stale_evidence_item_ids projects/omo/tests/` 只有两个文件，其中\n\
+    \  `unit/test_omo_debt_naive_timestamps.py` 只在 docstring 里提到该函数，全仓唯一的**调用**在\n\
+    \  `unit/test_omo_debt_metrics_terminal_vocab.py:42`，其 fixture `_item()`（`:19`）恒\
+    \ `mitigation_refs=[]`，\n  且被断言项 `OPEN-2` 的 `evidence_refs` 也为空 ⇒ 两种规则下同判。\n-\
+    \ 变异实测：沙盒 `/tmp/b17mut` 里把 `if not item.evidence_refs or not item.mitigation_refs:`\
+    \ 改成\n  `if not item.evidence_refs:`，该文件 `3 passed`，与对照（真实源码）`3 passed` 同结果。\n\
+    \  **结论边界**：更宽的 omo 单元面在我的沙盒里 45 条采集错误（`IndexError: 4`，装置故障，不作结论），\n  所以只成立「唯一调用用例不区分该分支」，不成立「全仓无用例覆盖」。\n\
+    - **本条自身就是一手演示**：登记后再跑 `collect_stale_evidence_item_ids`，本条目 10 条 `evidence_refs`\n\
+    \  全部 `Path.exists()` 为真，只因 broker `register` 注入的 `mitigation_refs: []` 为空即被判「证据陈旧」\n\
+    \  （实测 `OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES in stale = True`，总体随之变为非终态\
+    \ 35 / 判 stale 31）。\n\n## 3. 四种形态修法都不改变规模结论（诚实边界，不夸大形态问题）\n\n同一 34 条总体上的反事实（`/tmp/b17/health.py`）：\n\
+    \n| 口径 | 判 stale | 扣分构成 | debt_health |\n|---|---|---|---|\n| 现判据 | 30 | 7.5(pointers)\
+    \ + 150.0(stale) = 157.5 | 0.0 |\n| 去掉 mitigation 必填 | 26 | 7.5 + 130.0 = 137.5\
+    \ | 0.0 |\n| 允许 `path:行号 (注解)` 形态 | 29 | 7.5 + 145.0 = 152.5 | 0.0 |\n| 两者都改 |\
+    \ 26 | 7.5 + 130.0 = 137.5 | 0.0 |\n\n`overdue=0`、`gate=0`、`missing_pointers=1`，所以\
+    \ health 完全由 `5.0 × stale_evidence` 决定；\nstale ≥ 20 就把 100 分预算吃穿 ⇒ **形态修法只把 30\
+    \ 挪到 26，读数仍是 0.0**。\n「debt_health 扣分已饱和」这一面已登记在册且闭局\n（`.omo/debt/items/DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml`，其\
+    \ title 即含「且 debt_health 扣分已饱和」），\n本条**不重复开设**，也不提修法；本条只登记「同一字段两套判定分叉」与「假阳性已发生」。\n\
+    \n## 4. 假阳性实证：被「需补 evidence 或降级为 open」指向的条目其实真修好了\n\n今日唯一 RED FLAG 打在 `DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT`（`lifecycle_state:\
+    \ resolved`，\n`closed_at: 2026-11-24`，`gate_level: watchlist`）：\n\n- 该条目 `evidence_refs`\
+    \ 10 条，**整串可解析 0 条**；按「去掉 `:行号 (注解)` 后缀」口径基路径存在 7 条，\n  其余 3 条是复现记录/同族引用（无本地基路径）；`resolution_evidence`\
+    \ 与 `closed_evidence` 两个字段**都不存在**\n  ⇒ `check_evidence` 的兜底也接不上，`found=False`。\n\
+    - 修复在本基线在位：`bin/gac/check-debt-staleness.py:55 _git_available()`、`:95 git_ok =\
+    \ _git_available(root)`、\n  `:151 stale_label = ... else \"无法取证 (git 不可读)\"`、`:160`\
+    \ 明示未判定。\n- 按该条目自己的复现口径重跑（`/tmp/b17chk2` = `git archive origin/main .omo bin`\
+    \ 解出，无 `.git`）：\n  `identified=30 候选(有 roots+复审日)=20 疑似陈旧=无法取证 (git 不可读)` rc=0\
+    \ —— 原缺陷症状\n  「疑似陈旧=0 + ✅ 无」不再出现 ⇒ 闭局成立，判红是假阳性。\n- 危害面（不夸大）：该判据在 `bin/gac/gac-local-gate.py:480-483`\
+    \ 动态追加、`:757` 列入 `SOFT_CHECKS`，\n  **advisory 不阻断**；`bin/gac/check-debt-closure-discipline.py:23`\
+    \ 明确把「终态但无证据」委派给\n  `verify.py --mode task`。所以没有会自动重开条目的消费者，实际风险是 advisory 噪声\
+    \ + 它打印的\n  处置建议「需补 evidence 或降级为 open」把后续 agent 推向**重开一条正确闭局**。\n- 同一机制的披露史（据实，不声称重复立案）：`BET-LEDGER-CLI-AUTHORITY-SPLIT`（closed）2026-11-23\
+    \ 的\n  review note 已逐字指出「`check_evidence` 只认能 stat 到的路径 … 判据把『证据写法不合口径』读成『没有证据』」，\n\
+    \  当时针对的是它自己那 11 条带行号 refs；今天同一机制在**另一条**上再现 ⇒ 说明这是书写约定与判据口径\n  的长期不一致，不是单条目的偶发。本条登记的是总体规模与第二判据面，不是那条\
+    \ note 的重述。\n\n## 5. 规模面：8 条终态项的 evidence_refs 对判据完全不起作用\n\n终态 76 条的 ref 形态普查（`/tmp/b17/census.txt`）：refs\
+    \ 共 233 条，整串即存在 92 (39%)，\n去掉 `:行号/注解` 后基路径存在 48 (20%)，其余 93 (40%)。\n\n其中**没有任何一条\
+    \ ref 能整串解析、纯靠文本证据兜底通过**的终态条目 8 条（格式：refs 数 / 去后缀可解析数）：\n\n```\nBET-LEDGER-CLI-AUTHORITY-SPLIT\
+    \ 11/3   CRON-INSTALLERS-OUTSIDE-SSOT 9/9\nCRON-REGISTRY-NO-HOST-SCOPE 3/2   \
+    \    DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP 12/12\nDOC_CLAIMS_SCOPE 2/1     \
+    \             INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED 7/1\nOMO-DEBT-CLOSE-GATE-LEVEL-LOSSY\
+    \ 4/3   OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT 11/9\n```\n\n即这 8 条（占终态 10.5%）的\
+    \ `evidence_refs` 字段在路径维度上从未被校验过 —— 判据只看那句\n`resolution_evidence` 文本非不非空。这与 `DEBT-SCHEMA-THREE-WAY-DESYNC`（resolved，管\
+    \ schema 键位三处不一致）\n是同族的另一面：那条讲**有哪些键**，本条讲**同一个键的值按哪套口径算有效**。\n\n## 6. 取数与仪器自纠（本批留痕）\n\
+    \n- 台账读取：`load_debt_ledger(Path(\".omo\"))` + 直调 kernel 函数，`repo_root` 显式传本 worktree\
+    \ 根，\n  零写入；`omo-debt list` 在本 worktree 报 `No debt state found`、`omo-debt report`\
+    \ 因缺\n  `.omo/debt/dispatch/current.yaml` 抛 `FileNotFoundError`（broker 动词依赖状态根的\
+    \ dispatch packet，\n  worktree 没有该文件）—— 属**装置限制**，不影响本节 kernel 直调读数。\n- `compute_debt_metrics`\
+    \ 权威函数读数：`debt_health=0.0`、`pointer_entropy=0.91`、`state_entropy=0.12`、\n  `backlog_pressure=4.9`、`watchlist=4`、`gate=0`（`now`\
+    \ 传 `2026-11-24T10:46:00Z`）。\n- 对外发布面：状态根 dashboard 目录 grep `debt_health` **零命中**；代码侧消费者是\n\
+    \  `omo_debt_io.py:88`、`projects/model-driven/src/model_driven/management/omo_bridge.py:355,463`、\n\
+    \  `projects/ecos/src/ecos/l0/governance/history_store.py:34-70`。因此**不声称**面板正显示\
+    \ 0.0，\n  只声称权威函数此刻算出 0.0 且经 `history_store` 入库。\n- 两次我自己的装置故障如实记录：① 用 `rg -rn\
+    \ '<词>'` 时 `-r` 把下一个参数当**替换串**，于是输出里\n  出现的 `n(repo_root…)`、`n_item_ids` 是被替换后的假文本，真实符号是\
+    \ `_resolve_ref_path` 与\n  `collect_stale_evidence_item_ids`（已用不带 `-r` 的 `rg -n`\
+    \ 重取）；② 首轮普查脚本里写了非法\n  `import X if False else None` 表达式，SyntaxError 后重跑，读数以上面为准。\n\
+    \n## 7. 待裁（principal，四选一）\n\n① **单点定义**：把「一条 evidence ref 算不算有效」收敛为一个函数（放 kernel\
+    \ 还是 `bin/ssot/_shared.py`\n   由 principal 定），两个消费者共用 —— 后果：终态 76 与非终态 34 的判定同时移动，RED\
+    \ FLAG 数与 stale 数\n   都会变，属判据面变化；\n② **只放开形态**：两处判定都接受 `path:行号 (注解)`（取基路径 stat）——\
+    \ 实测终态 RED FLAG 1 → 0，\n   非终态 stale 30 → 29，`debt_health` 仍 0.0（见 §3）；即形态修法对非终态面几乎无效，别期待它救活读数；\n\
+    ③ **只改 `mitigation_refs`**：把「空 mitigation 即证据陈旧」从判据里摘掉 —— stale 30 → 26，同时必须裁定\n\
+    \   该字段到底是不是必填（牵动 broker `register` 是否继续注入默认 `mitigation_refs: []`、以及 §2 里无用例\n\
+    \   区分这一事实要不要补回归用例）；\n④ **立书写规范**：规定 `evidence_refs` 只允许纯路径，注解一律写进 `description`/`history`，并对\
+    \ §5 那 8 条\n   decorative 条目做批量补写 —— 波及他人条目的既有字段，需逐条授权，agent 不代改。\n\n四条都改既有判定口径，不由\
+    \ agent 选定。本批落盘面只有本债务条目 + `.omo/_truth/registry/debt.yaml` 索引行；\n未改任何判据代码、未改任何他人条目字段、未动\
+    \ CI/门禁/指标面。\n'."
+- at: '2026-11-24T10:56:00+00:00'
+  action: measurement_provenance
+  note: 事故留痕（我自己的装置故障，不是被测面缺陷）：补写 §2 自指演示时用 shell 命令替换 `--description "$(cat …)"` 取稿，而本机 macOS 27 无 /usr/bin/cat，替换返回空串 ⇒ broker `desc` 仍 rc=0 并打印「description 已更新」，把 6353 字符的证据文本静默写成 0 长度。发现方式：紧接着读回 len(description)=0。修复：按 argv 列表把 6614 字符稿件直接传给 subprocess（不经 shell），读回逐字节相等。**顺带登记的判据外事实**：`omo-debt desc` 对空 --description 无护栏、不告警、rc=0，本条目未据此另立债务项（是否值得补「空描述拒写」守卫属 §7 待裁之外的 broker 面，留 principal）。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: "`evidence_refs` 的「有效证据」语义没有单一定义：终态面 `bin/ssot/_shared.py:check_evidence`\
+  \ 与非终态面\n`projects/omo/src/omo/omo_debt_metrics.py:collect_stale_evidence_item_ids`\
+  \ 对同一个字段各写各的判定，\n今日实测两处都出偏差 —— 前者把一条**已核实修复**的真闭局判成「虚假完成」（假阳性实证，非假想），\n后者把 schema\
+  \ 里从未声明必填的 `mitigation_refs` 当硬条件（34 条非终态判掉 30 条）。\n\n## 1. 两套判定，同一个字段\n\n| 判定面\
+  \ | 代码 | 规则 | 覆盖总体 | 今日读数 |\n|---|---|---|---|---|\n| 终态「虚假完成」校验 | `bin/ssot/_shared.py:171-198\
+  \ check_evidence` | 任一 ref 整串 `Path.exists()`；否则要求 `resolution_evidence`/`closed_evidence`\
+  \ 非空文本 | 76 条终态 | `python3 bin/ssot/verify.py --mode task` → rc=1，`75/76 (99%)`，1\
+  \ 条 RED FLAG |\n| 非终态「证据陈旧」判定 | `projects/omo/src/omo/omo_debt_metrics.py:73-96`\
+  \ | `not evidence_refs or not mitigation_refs` ⇒ stale；再「任一 ref 不存在」⇒ stale；再 mtime>复审日\
+  \ ⇒ stale | 34 条非终态 | 判 stale 30 条 |\n\n按源码分支顺序对 30 条归因（本 worktree 真实台账，`load_debt_ledger(\"\
+  .omo\")` 取 110 条）：\n\n```\n21  evidence_refs 非空但 mitigation_refs 为空  ⇒ 仅因这个未声明必填的字段判\
+  \ stale\n 1  两个字段都空\n 7  ref 指向不存在的文件（含「path:行号 (注解)」形态）\n 1  文件 mtime 晚于 last_reviewed_at\n\
+  ```\n\n## 2. `mitigation_refs` 的必填性没有任何权威出处，也没有用例能区分\n\n- `projects/omo/src/omo/omo_debt_registry.py`\
+  \ 的 `DebtItem` 有该字段（`mitigation_refs: tuple[str, ...]`），\n  但 `.omo/standards/`、`docs/governance/`、registry\
+  \ 三处均**没有**把它声明为必填的规范文字。\n- 全库 110 条里只有 28 条 `mitigation_refs` 非空 —— 即多数条目按现状永远不可能脱离\
+  \ stale。\n- 测试面：`rg -l collect_stale_evidence_item_ids projects/omo/tests/` 只有两个文件，其中\n\
+  \  `unit/test_omo_debt_naive_timestamps.py` 只在 docstring 里提到该函数，全仓唯一的**调用**在\n \
+  \ `unit/test_omo_debt_metrics_terminal_vocab.py:42`，其 fixture `_item()`（`:19`）恒\
+  \ `mitigation_refs=[]`，\n  且被断言项 `OPEN-2` 的 `evidence_refs` 也为空 ⇒ 两种规则下同判。\n- 变异实测：沙盒\
+  \ `/tmp/b17mut` 里把 `if not item.evidence_refs or not item.mitigation_refs:` 改成\n\
+  \  `if not item.evidence_refs:`，该文件 `3 passed`，与对照（真实源码）`3 passed` 同结果。\n  **结论边界**：更宽的\
+  \ omo 单元面在我的沙盒里 45 条采集错误（`IndexError: 4`，装置故障，不作结论），\n  所以只成立「唯一调用用例不区分该分支」，不成立「全仓无用例覆盖」。\n\
+  - **本条自身就是一手演示**：登记后再跑 `collect_stale_evidence_item_ids`，本条目 10 条 `evidence_refs`\n\
+  \  全部 `Path.exists()` 为真，只因 broker `register` 注入的 `mitigation_refs: []` 为空即被判「证据陈旧」\n\
+  \  （实测 `OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES in stale = True`，总体随之变为非终态 35\
+  \ / 判 stale 31）。\n\n## 3. 四种形态修法都不改变规模结论（诚实边界，不夸大形态问题）\n\n同一 34 条总体上的反事实（`/tmp/b17/health.py`）：\n\
+  \n| 口径 | 判 stale | 扣分构成 | debt_health |\n|---|---|---|---|\n| 现判据 | 30 | 7.5(pointers)\
+  \ + 150.0(stale) = 157.5 | 0.0 |\n| 去掉 mitigation 必填 | 26 | 7.5 + 130.0 = 137.5\
+  \ | 0.0 |\n| 允许 `path:行号 (注解)` 形态 | 29 | 7.5 + 145.0 = 152.5 | 0.0 |\n| 两者都改 | 26\
+  \ | 7.5 + 130.0 = 137.5 | 0.0 |\n\n`overdue=0`、`gate=0`、`missing_pointers=1`，所以\
+  \ health 完全由 `5.0 × stale_evidence` 决定；\nstale ≥ 20 就把 100 分预算吃穿 ⇒ **形态修法只把 30 挪到\
+  \ 26，读数仍是 0.0**。\n「debt_health 扣分已饱和」这一面已登记在册且闭局\n（`.omo/debt/items/DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml`，其\
+  \ title 即含「且 debt_health 扣分已饱和」），\n本条**不重复开设**，也不提修法；本条只登记「同一字段两套判定分叉」与「假阳性已发生」。\n\
+  \n## 4. 假阳性实证：被「需补 evidence 或降级为 open」指向的条目其实真修好了\n\n今日唯一 RED FLAG 打在 `DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT`（`lifecycle_state:\
+  \ resolved`，\n`closed_at: 2026-11-24`，`gate_level: watchlist`）：\n\n- 该条目 `evidence_refs`\
+  \ 10 条，**整串可解析 0 条**；按「去掉 `:行号 (注解)` 后缀」口径基路径存在 7 条，\n  其余 3 条是复现记录/同族引用（无本地基路径）；`resolution_evidence`\
+  \ 与 `closed_evidence` 两个字段**都不存在**\n  ⇒ `check_evidence` 的兜底也接不上，`found=False`。\n\
+  - 修复在本基线在位：`bin/gac/check-debt-staleness.py:55 _git_available()`、`:95 git_ok = _git_available(root)`、\n\
+  \  `:151 stale_label = ... else \"无法取证 (git 不可读)\"`、`:160` 明示未判定。\n- 按该条目自己的复现口径重跑（`/tmp/b17chk2`\
+  \ = `git archive origin/main .omo bin` 解出，无 `.git`）：\n  `identified=30 候选(有 roots+复审日)=20\
+  \ 疑似陈旧=无法取证 (git 不可读)` rc=0 —— 原缺陷症状\n  「疑似陈旧=0 + ✅ 无」不再出现 ⇒ 闭局成立，判红是假阳性。\n- 危害面（不夸大）：该判据在\
+  \ `bin/gac/gac-local-gate.py:480-483` 动态追加、`:757` 列入 `SOFT_CHECKS`，\n  **advisory\
+  \ 不阻断**；`bin/gac/check-debt-closure-discipline.py:23` 明确把「终态但无证据」委派给\n  `verify.py\
+  \ --mode task`。所以没有会自动重开条目的消费者，实际风险是 advisory 噪声 + 它打印的\n  处置建议「需补 evidence 或降级为\
+  \ open」把后续 agent 推向**重开一条正确闭局**。\n- 同一机制的披露史（据实，不声称重复立案）：`BET-LEDGER-CLI-AUTHORITY-SPLIT`（closed）2026-11-23\
+  \ 的\n  review note 已逐字指出「`check_evidence` 只认能 stat 到的路径 … 判据把『证据写法不合口径』读成『没有证据』」，\n\
+  \  当时针对的是它自己那 11 条带行号 refs；今天同一机制在**另一条**上再现 ⇒ 说明这是书写约定与判据口径\n  的长期不一致，不是单条目的偶发。本条登记的是总体规模与第二判据面，不是那条\
+  \ note 的重述。\n\n## 5. 规模面：8 条终态项的 evidence_refs 对判据完全不起作用\n\n终态 76 条的 ref 形态普查（`/tmp/b17/census.txt`）：refs\
+  \ 共 233 条，整串即存在 92 (39%)，\n去掉 `:行号/注解` 后基路径存在 48 (20%)，其余 93 (40%)。\n\n其中**没有任何一条\
+  \ ref 能整串解析、纯靠文本证据兜底通过**的终态条目 8 条（格式：refs 数 / 去后缀可解析数）：\n\n```\nBET-LEDGER-CLI-AUTHORITY-SPLIT\
+  \ 11/3   CRON-INSTALLERS-OUTSIDE-SSOT 9/9\nCRON-REGISTRY-NO-HOST-SCOPE 3/2     \
+  \  DEBT-20260920-RULE-WIRING-DECL-EXEC-GAP 12/12\nDOC_CLAIMS_SCOPE 2/1         \
+  \         INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED 7/1\nOMO-DEBT-CLOSE-GATE-LEVEL-LOSSY\
+  \ 4/3   OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT 11/9\n```\n\n即这 8 条（占终态 10.5%）的\
+  \ `evidence_refs` 字段在路径维度上从未被校验过 —— 判据只看那句\n`resolution_evidence` 文本非不非空。这与 `DEBT-SCHEMA-THREE-WAY-DESYNC`（resolved，管\
+  \ schema 键位三处不一致）\n是同族的另一面：那条讲**有哪些键**，本条讲**同一个键的值按哪套口径算有效**。\n\n## 6. 取数与仪器自纠（本批留痕）\n\
+  \n- 台账读取：`load_debt_ledger(Path(\".omo\"))` + 直调 kernel 函数，`repo_root` 显式传本 worktree\
+  \ 根，\n  零写入；`omo-debt list` 在本 worktree 报 `No debt state found`、`omo-debt report`\
+  \ 因缺\n  `.omo/debt/dispatch/current.yaml` 抛 `FileNotFoundError`（broker 动词依赖状态根的\
+  \ dispatch packet，\n  worktree 没有该文件）—— 属**装置限制**，不影响本节 kernel 直调读数。\n- `compute_debt_metrics`\
+  \ 权威函数读数：`debt_health=0.0`、`pointer_entropy=0.91`、`state_entropy=0.12`、\n  `backlog_pressure=4.9`、`watchlist=4`、`gate=0`（`now`\
+  \ 传 `2026-11-24T10:46:00Z`）。\n- 对外发布面：状态根 dashboard 目录 grep `debt_health` **零命中**；代码侧消费者是\n\
+  \  `omo_debt_io.py:88`、`projects/model-driven/src/model_driven/management/omo_bridge.py:355,463`、\n\
+  \  `projects/ecos/src/ecos/l0/governance/history_store.py:34-70`。因此**不声称**面板正显示\
+  \ 0.0，\n  只声称权威函数此刻算出 0.0 且经 `history_store` 入库。\n- 两次我自己的装置故障如实记录：① 用 `rg -rn '<词>'`\
+  \ 时 `-r` 把下一个参数当**替换串**，于是输出里\n  出现的 `n(repo_root…)`、`n_item_ids` 是被替换后的假文本，真实符号是\
+  \ `_resolve_ref_path` 与\n  `collect_stale_evidence_item_ids`（已用不带 `-r` 的 `rg -n`\
+  \ 重取）；② 首轮普查脚本里写了非法\n  `import X if False else None` 表达式，SyntaxError 后重跑，读数以上面为准。\n\
+  \n## 7. 待裁（principal，四选一）\n\n① **单点定义**：把「一条 evidence ref 算不算有效」收敛为一个函数（放 kernel\
+  \ 还是 `bin/ssot/_shared.py`\n   由 principal 定），两个消费者共用 —— 后果：终态 76 与非终态 34 的判定同时移动，RED\
+  \ FLAG 数与 stale 数\n   都会变，属判据面变化；\n② **只放开形态**：两处判定都接受 `path:行号 (注解)`（取基路径 stat）——\
+  \ 实测终态 RED FLAG 1 → 0，\n   非终态 stale 30 → 29，`debt_health` 仍 0.0（见 §3）；即形态修法对非终态面几乎无效，别期待它救活读数；\n\
+  ③ **只改 `mitigation_refs`**：把「空 mitigation 即证据陈旧」从判据里摘掉 —— stale 30 → 26，同时必须裁定\n\
+  \   该字段到底是不是必填（牵动 broker `register` 是否继续注入默认 `mitigation_refs: []`、以及 §2 里无用例\n\
+  \   区分这一事实要不要补回归用例）；\n④ **立书写规范**：规定 `evidence_refs` 只允许纯路径，注解一律写进 `description`/`history`，并对\
+  \ §5 那 8 条\n   decorative 条目做批量补写 —— 波及他人条目的既有字段，需逐条授权，agent 不代改。\n\n四条都改既有判定口径，不由\
+  \ agent 选定。本批落盘面只有本债务条目 + `.omo/_truth/registry/debt.yaml` 索引行；\n未改任何判据代码、未改任何他人条目字段、未动\
+  \ CI/门禁/指标面。\n"
+decision_needed: '待裁（四选一，均属判据口径变更，留 principal）：
+
+
+  ① 单点定义 —— 把「一条 evidence ref 算不算有效」收敛为一个函数（放 kernel 侧还是 bin/ssot/_shared.py 由 principal
+  定），verify 与 metrics 两个消费者共用；后果：76 条终态与 34 条非终态的判定同时移动。
+
+
+  ② 只放开形态 —— 两处判定都接受 path:行号 (注解) 写法（取基路径 stat）；实测终态 RED FLAG 1 → 0，非终态 stale 30 →
+  29，debt_health 仍 0.0，即该修法对非终态面几乎无效。
+
+
+  ③ 只改 mitigation_refs —— 把「空 mitigation 即证据陈旧」摘出判据（stale 30 → 26），同时须裁定该字段是否必填（牵动
+  broker register 默认注入 mitigation_refs: [] 与 §2 实测「唯一调用用例不区分该分支」是否补回归）。
+
+
+  ④ 立书写规范 —— 规定 evidence_refs 只允许纯路径、注解写进 description/history，并对 §5 那 8 条 decorative
+  条目批量补写（波及他人条目既有字段，需逐条授权，agent 不代改）。
+
+
+  四条都不由 agent 代为选定；本批仅登记该条目与 debt.yaml 索引行，未改任何判据代码、未改任何他人条目字段。'
