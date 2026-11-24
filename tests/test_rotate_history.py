@@ -45,6 +45,21 @@ def _mk(path: Path, dates: list[str]) -> None:
     )
 
 
+def _ts(days_ago: int) -> str:
+    """相对 now 的时间戳。
+
+    `rotate-history.py` 的保留窗口是**相对** `datetime.now(UTC)` 算的 (`cutoff = now - keep_days`),
+    而 fixture 若写绝对日期, 窗口会随时间把记录推出去 —— 用例今天绿、几个月后红, 与真回归
+    无法用眼景区分 (AGENTS.md §7②「时钟炸弹」)。走 CLI 的用例一律用本 helper 派生时间。
+    """
+    return (
+        (datetime.now(UTC) - timedelta(days=days_ago))
+        .replace(hour=0, minute=0, second=0, microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
 def test_empty_file(rh):
     assert rh._load_records(Path("/nonexistent")) == []
 
@@ -70,10 +85,11 @@ def test_trim_all_within_window(rh):
 
 def test_apply_trims(rh, tmp_path: Path):
     p = tmp_path / "h.jsonl"
-    _mk(p, [f"2026-{m:02d}-15T00:00:00Z" for m in range(1, 13)])
+    # 1/10/30 天前落在 90 天窗口内, 120 天前在窗口外 —— 与真实运行时刻无关。
+    _mk(p, [_ts(d) for d in (1, 10, 30, 120)])
     assert rh.main(["--target", str(p), "--apply", "--keep", "90"]) == 0
     remaining = len(p.read_text(encoding="utf-8").strip().split("\n"))
-    assert 1 < remaining < 12
+    assert remaining == 3
 
 
 def test_missing_file(rh, tmp_path: Path, capsys):
@@ -85,9 +101,9 @@ def test_missing_file(rh, tmp_path: Path, capsys):
 def test_bad_json(rh, tmp_path: Path, capsys):
     p = tmp_path / "bad.jsonl"
     lines = [
-        json.dumps({"ts": "2026-08-23T00:00:00Z"}),
+        json.dumps({"ts": _ts(1)}),
         "NOT VALID JSON",
-        json.dumps({"ts": "2026-08-23T01:00:00Z"}),
+        json.dumps({"ts": _ts(2)}),
     ]
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
     rc = rh.main(["--target", str(p), "--keep", "90"])
@@ -98,7 +114,7 @@ def test_bad_json(rh, tmp_path: Path, capsys):
 
 def test_json_output(rh, tmp_path: Path):
     p = tmp_path / "h.jsonl"
-    _mk(p, ["2026-08-23T00:00:00Z"])
+    _mk(p, [_ts(1)])
     assert rh.main(["--target", str(p), "--json", "--keep", "90"]) == 0
 
 
@@ -111,7 +127,7 @@ def test_keep_180(rh):
 
 def test_idempotent(rh, tmp_path: Path):
     p = tmp_path / "h.jsonl"
-    _mk(p, ["2026-08-22T00:00:00Z", "2026-08-23T00:00:00Z"])
+    _mk(p, [_ts(1), _ts(2)])
     rh.main(["--target", str(p), "--apply", "--keep", "90"])
     c1 = len(p.read_text(encoding="utf-8").strip().split("\n"))
     rh.main(["--target", str(p), "--apply", "--keep", "90"])

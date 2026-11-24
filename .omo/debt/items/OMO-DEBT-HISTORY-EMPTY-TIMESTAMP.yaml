@@ -1,5 +1,6 @@
 id: OMO-DEBT-HISTORY-EMPTY-TIMESTAMP
-title: 'omo-debt reclassify/escalate/revalidate 三处 append_history 未传 timestamp/actor 写出 at: 空时间戳'
+title: 'omo-debt reclassify/escalate/revalidate 三处 append_history 未传 timestamp/actor
+  写出 at: 空时间戳'
 dimension: governance
 subdimension: tooling
 domain: workspace
@@ -7,7 +8,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-team
 affected_roots:
 - projects/omo/src/omo/omo_debt_cli.py
@@ -18,7 +19,7 @@ mitigation_refs: []
 opened_at: '2026-11-23T08:56:41.771829+00:00'
 last_reviewed_at: '2026-11-23'
 next_review_at: null
-gate_level: watchlist
+gate_level: none
 history:
 - at: '2026-11-23T08:56:41.771829+00:00'
   action: register
@@ -26,16 +27,34 @@ history:
   actor: governance-agent
 - at: '2026-11-23T08:58:31+00:00'
   action: identify
-  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python
-    read-check-write 补齐。'
+  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker ，字段用
+    Python read-check-write 补齐。'
+  actor: governance-agent
+- at: '2026-11-23T13:24:07.471307+00:00'
+  action: update_description
+  note: '进度（2026-11-23 更新）：时间戳半边已修并交付 —— omostation-omo#257 squash 合并为 omo main d87a680df，根仓
+    gitlink 经 PR #5477 前进到该 commit；新增 projects/omo/tests/test_omo_debt_history_timestamp.py（in-process
+    驱动真实 CLI main(argv)，对三条命令各断言 at 非空、aware、且为本次运行所写；负例：回退源码后 3 failed）。勿重复修时间戳半边。'
+  actor: governance-agent
+- at: '2026-11-23T13:47:14.711933+00:00'
+  action: close
+  note: Closed debt item.
   actor: governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
-description: '子模块 pin `47d9f2b51`：`src/omo/omo_debt_cli.py` 的 reclassify(`:351`)/escalate(`:363`)/revalidate(`:373`)
-  三处调用 `append_history(payload, <action>, <note>)` **未传** `timestamp=` / `actor=`；而 `omo_debt_lifecycle.py:9-17`
-  的签名默认 `timestamp=""` 且 `actor` 仅在有值时才写入条目 ⇒ 这三条状态流转落盘为 `at: ''''` 的历史，审计时间线断裂。同文件 close(`:80`)/desc(`:119`)/reopen(`:410`)
-  是正确写法（传 `_now_iso()` + actor），可直接照抄。实测：2026-11-23 对 BET-LEDGER-STATUS-LAGS-DELIVERY 跑一次 `debt revalidate`
-  即产出 `at: ''''` 并把整份 YAML 重排；已 `git checkout --` 回退，未进 main。'
-decision_needed: 三处补 `timestamp=_now_iso()`；actor 需要 reclassify/escalate 两个子命令先加 `--actor` （revalidate
-  也没有）。改动全在子模块 `projects/omo`，要走子模块 commit 三步走。是否顺带给 `_write_yaml` 加键序保持（避免整份重排）另议。
+description: '原缺陷（子模块 pin 47d9f2b51，修复前行号）：src/omo/omo_debt_cli.py 的 reclassify(:351)/escalate(:363)/revalidate(:373)
+  三处调用 append_history(payload, action, note) 未传 timestamp= 与 actor=；而 omo_debt_lifecycle.py:9
+  的签名默认 timestamp="" 且 actor 仅在有值时才写入条目 ⇒ 这三条状态流转落盘为 at 空字符串，审计时间线断裂。同文件 close(:80)/desc(:119)/reopen(:410)
+  传 _now_iso() + actor，是正确写法，可直接照抄。实测复现：2026-11-23 在 /tmp/repro-at 的临时 .omo 上跑一次 escalate，history
+  尾项即 at 空串，rc=0 静默通过。
+
+  进度（2026-11-23 更新）：时间戳半边 (omostation-omo#257 / PR #5477) 与 actor 半边 (omostation-omo
+  00b809d) 均已交付落地；reclassify/escalate/revalidate 统一支持 --actor 并写入有效 UTC 时间戳。'
+decision_needed: 时间戳与 actor 旗标面均已闭环落地（omostation-omo commit d87a680df + 00b809d）。残余
+  _write_yaml 键序保持另案讨论，本条结案。
+closed_at: '2026-11-23T13:47:14.711794+00:00'
+close_reason: '时间戳半边 (omostation-omo#257 / PR #5477) 与 actor 半边 (omostation-omo 00b809d)
+  均已交付落地；reclassify/escalate/revalidate 统一支持 --actor 并写入有效 UTC 时间戳。'
+resolution_evidence: projects/omo commit d87a680df + 00b809d。单测 test_cmd_debt_cli_reclassify_and_escalate_history_timestamp
+  验证两命令产生包含有效 ISO 时间戳和指定 actor 的 history 条目。

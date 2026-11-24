@@ -1,4 +1,4 @@
-"""BET-Y2Q4-T10-350 — scene-journey-autogen 数据源对齐 docs 体系.
+"""BET-Y2Q4-T10-351 — scene-journey-autogen 数据源对齐 docs 体系.
 
 根因: SCENES_DIR/JOURNEYS_DIR 原指向 .omo/_truth/{scenarios,journeys}/v3
 (与 journey-runner 的 docs/ 数据源分裂, scan 永远 0 missing 假阴); covered
@@ -22,7 +22,7 @@ def _module():
 
 
 def test_datasource_is_docs_tree():
-    """BET-Y2Q4-T10-350: 目录常量必须与 journey-runner 的数据源一致 (docs/ 体系)."""
+    """BET-Y2Q4-T10-351: 目录常量必须与 journey-runner 的数据源一致 (docs/ 体系)."""
     m = _module()
     assert m.SCENES_DIR == m.ROOT / "docs" / "scene-cards"
     assert m.JOURNEYS_DIR == m.ROOT / "docs" / "journey-specs"

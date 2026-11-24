@@ -296,6 +296,23 @@ jobs:
           # (canonical_root), 不是 __file__ 派生的 code_root」—— 跑在安装位时 code_root 指向
           # 安装位, 而安装位按构造没有 .omo/_delivery/agent-workflows/ ⇒ runs=0 ⇒ 恒 PARTIAL
           # (债条目 PANORAMA-A9-SOURCES-STALE-12D)。实测 1 pass。
+          # 2026-11-24 追加第三件: test_health_trend_chart —— 同批扫「相对窗口 × 钉死的钟点」
+          #   发现的时刻炸弹 (fixture 写死 T20:00, 而 cutoff 取 now 的当天时刻 ⇒ 运行时
+          #   UTC 越过 20:00 后读数从 2 掉到 1; 逐小时扫一天, 旧写法在 21/22/23 点必红)。
+          #   修 (#5501) 后实测 14 pass; HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小
+          #   venv 供给下同样 14 pass (不读 host profile)。
+          # 2026-11-24 追加两件（补 E2 在**顶层平面**的结构性失明面，同 §7「判据不被任何 CI
+          # 路径跑 = 不存在」）：顶层 tests/test_*.py 共 267 个, 本 job 此前只点名 32 个。
+          # ① test_rotate_history —— 修前它**本地红、CI 永不跑**。钉 rotate-history 的保留
+          #    窗口语义 (trim 幂等 / --keep 改窗口 / dry-run 不写); 它此前是时钟炸弹:
+          #    fixture 写死 2026-08-22/23 × 相对的 `now - keep_days` 窗口, 2026-11-24 实测
+          #    `assert 1 == 2` (#5483 改为从 now 派生)。实测 10 pass; 把 _ts() 换回写死日期
+          #    ⇒ 当场红 (牙齿验过)。
+          # ② test_kb_tools —— 同因: TestStaleness::test_check_fresh_file 写死
+          #    `last-reviewed: 2026-08-24` × `STALE_DAYS=90` (2026-11-24 实测 issue_count
+          #    1 != 0, #5486 改为从 now 派生)。实测 12 pass; 换回写死日期 ⇒ 当场红。
+          # 两件均在 HOME=<空目录> + env -u OMOSTATION_* 且依赖由最小 venv 供给下复验:
+          #   22 passed (不读 host profile)。
           uv run --with pytest-timeout pytest \
             tests/test_omo_ingress.py \
             tests/test_omo_gc.py \
@@ -347,6 +364,9 @@ jobs:
             ../../tests/unit/gac/test_gate_interpreter_roots.py \
             ../../tests/unit/gac/test_gate_test_host_hygiene.py \
             ../../tests/unit/gac/test_gate_x2_rule_lint.py \
+            ../../tests/test_rotate_history.py \
+            ../../tests/test_kb_tools.py \
+            ../../tests/test_health_trend_chart.py \
             -q || FAILED=1
           if [ $FAILED -ne 0 ]; then
             echo "❌ One or more governance checks failed."

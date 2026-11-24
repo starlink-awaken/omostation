@@ -6,6 +6,7 @@ import importlib.util
 import json
 import sys
 import time
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -116,13 +117,23 @@ class TestSearch:
         assert results[0]["node"]["type"] == "adr"
 
 
+def _reviewed(days_ago: int) -> str:
+    """相对 now 的 `last-reviewed`。
+
+    `bin/kb/staleness-check.py` 的窗口是**相对**的 (`STALE_DAYS = 90` 对 `datetime.now(UTC)`),
+    fixture 写死日期会变成时钟炸弹: 今天(2026-11-24)看 2026-08-24 已是 92 天, 于是
+    「fresh」那条用例当场转红, 而它与真回归无法用眼景区分 (AGENTS.md §7②)。
+    """
+    return (datetime.now(UTC) - timedelta(days=days_ago)).date().isoformat()
+
+
 # ── staleness-check ───────────────────────────────────────────────────────────
 
 class TestStaleness:
     def test_check_fresh_file(self, tmp_path: Path):
         st = _load("_st1", "bin/kb/staleness-check.py")
         f = tmp_path / "fresh.md"
-        f.write_text("last-reviewed: 2026-08-24\n# Fresh\n")
+        f.write_text(f"last-reviewed: {_reviewed(10)}\n# Fresh\n")
         r = st.check_file(tmp_path, f)
         assert r["issue_count"] == 0
 
@@ -130,7 +141,8 @@ class TestStaleness:
         import os
         st = _load("_st2", "bin/kb/staleness-check.py")
         f = tmp_path / "stale.md"
-        f.write_text("last-reviewed: 2026-08-24\n# Stale\n")
+        # last-reviewed 取新鲜的, 这条要钉的是 **mtime** 那条 issue, 不是日期漂移。
+        f.write_text(f"last-reviewed: {_reviewed(10)}\n# Stale\n")
         old_ts = time.time() - 200 * 86400  # 200 days ago
         os.utime(f, (old_ts, old_ts))
         r = st.check_file(tmp_path, f)
@@ -147,6 +159,6 @@ class TestStaleness:
     def test_check_broken_bin_ref(self, tmp_path: Path):
         st = _load("_st4", "bin/kb/staleness-check.py")
         f = tmp_path / "bad-ref.md"
-        f.write_text("last-reviewed: 2026-08-24\nUse `bin/nonexistent/tool.py`\n")
+        f.write_text(f"last-reviewed: {_reviewed(10)}\nUse `bin/nonexistent/tool.py`\n")
         r = st.check_file(tmp_path, f)
         assert any("broken ref" in i for i in r["issues"])

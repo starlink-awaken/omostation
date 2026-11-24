@@ -9,6 +9,7 @@ weight: 0.3
 entropy_class: "high"
 lifecycle_state: "identified"
 owner: "governance-team"
+bet_ref: "BET-Y2Q4-T10-350"
 affected_roots: []
 evidence_refs:
 - .omo/debt/dashboard/current.yaml
@@ -18,7 +19,7 @@ evidence_refs:
 mitigation_refs:
 - 本条 history 第一条（双向对照读数与根因）
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
+last_reviewed_at: "2026-11-23"
 next_review_at: "2026-12-10"
 gate_level: watchlist
 x1_policy_ref: ""
@@ -29,12 +30,65 @@ description: >-
   `backlog_pressure: 3.15` / `debt_health: 0.0` / 3 条 watchlist。两者差了一个**落后约 279 个
   commit 的检出**。生成它的 `com.omostation.omo-debt-refresh` 每小时 :05/:35 跑，命令里
   **硬编码** `--omo-dir /Users/xiamingxing/Workspace/.omo`。
+
+  **复核 (2026-11-23, 基线 origin/main@37268397c, fresh worktree ws-debtrefs)** —— 本条假绿的主因**不是**检出落后，而是生成作业每次硬崩：
+  `launchctl print gui/$(id -u)/com.omostation.omo-debt-refresh` 给 `runs=112` / `last exit code=1` / `job state=exited`；
+  `runtime/cron/omo-debt-refresh.log` 6410 行里 **59 段 Traceback 全为同一签名** `TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'dict'`
+  （崩点 `projects/omo/src/omo/omo_debt_metrics.py:27 _resolve_ref_path` ← `collect_stale_evidence_item_ids:68` ← `compute_debt_metrics:92` ← `omo_debt.py:431 refresh_outputs`），
+  前 53 次运行打印 `refreshed/dispatched/campaigned/reported` 均成功，最后成功正对 `current.yaml::generated_at 2026-11-22T12:05:05Z` ⇒ 连续失败 ≈29.5 h（59 × 30 min）。
+  plist 用 `&&` 串四步，refresh 崩 ⇒ `dispatch/campaign/report` 一并停摆。唯一污染源实测为**一个** item：
+  `.omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml::mitigation_refs[0]` 的散文里含 ASCII `run: `，YAML 于是把该列表项解析成 mapping
+  （98 个 item 全量扫描：`evidence_refs` 295 个元素全 str；`mitigation_refs` 57 str + 1 dict）；该形状自 `abaec3429`（11-12）即在 origin/main，
+  **致命起点由作业所读检出的推进时点决定，与畸形数据的写入时点无关**。修复后同一份数据在 fresh worktree 重算：
+  `debt_health 0.0 / backlog_pressure 7.45 / state_entropy 0.1 / pointer_entropy 1.16 / time_entropy 0.3` / watchlist 6 条，
+  与冻结读数的 `100.0 / 0 / 全零 / []` 逐项相反（本条 11-10 原记的 `3.15 / 3 条` 是当时读数，现已前进）。
+  **报警其实看得见但不阻断**：`bin/gac/state-freshness-check.py --json` 对该投影给 `ok:false / stale:true / score:50 / age_hours:29.79`，
+  而脚本整体 `ok:true`、**exit 0**，故 30 h 无人处置；全仓无任何门禁读者消费 `launchctl ... last exit code`（仅 `bin/svc/service_view.py`、`bin/panorama/panorama-collect.py` 展示）。
+  交叉引用：`LAUNCHD-PLIST-INSTALLED-DIVERGED` 的 11-23 复核「症状消失」指 exit **2**（缺 `--now`）那一因，本条是 exit **1**（数据畸形）的另一因，勿据其判定作业已成功。
 decision_needed: >-
   要裁决的是：债务投影该读哪个检出？(A) 继续读 canonical，但在投影里**写明来源 commit 并在
   落后时显式标 stale**（缺省不改变行为，缺生可见）；(B) 让该作业改读一个保证跟 origin/main 的
   发布位检出（类似 publisher）；(C) 把该作业从 launchd 降为按需。注意 canonical 是**共享工作区**，
   多 agent 并发下落后是常态而非异常 —— 任何「读 canonical 派生治理读数」的作业都有同一风险面，
   本条只是其中一个实例。
+
+  **复核追加待裁 (2026-11-23，不在上述 A/B/C 内)** —— 实测「投影冻结」已有检测、只缺阻断：`state-freshness-check.py` 对该文件给 `stale:true / score:50` 却整体 `exit 0`。
+  是否把「债务投影 stale/冻结」升为阻断门禁项、以及是否让 launchd 作业 `last exit code != 0` 进入某个 gate，属**门禁严格度变更**，需 principal 单独裁定，本条不代为决定。
+
+  **第二次复核追加待裁 (2026-11-23，仍不在上述 A/B/C 内，也不与上一段重复)** —— 「证据指针 stale」
+  这个信号在当前写法约定下**没有边际区分度**：实测它与 `lifecycle_state` 未闭集完全同集
+  （50 对 50，双向零差集；`closed`/`resolved` 的 47 条无一计入），因为判据是条目级 all-or-nothing
+  而开放条目的 ref 按约定就是取证散文。后果：**再混进一条真坏 ref，群体计数不会变**，
+  BET-Y2Q4-T10-350 的护栏只买到「不崩」，没买到「能看见」。
+  可选方向（都要改数据契约，不是纯缺陷修复，故不代为决定）：(D) 把指针拆成结构化字段
+  （`path` 参与解析判据 + 自由文本 `note` 不参与），代价是动 `omo_debt_metrics` 判据口径与
+  97 条存量条目共 171 条 ref 的写法；(E) 保留散文约定，把 stale 显式降级为**展示字段**并在门禁与
+  台账里声明它不是告警源，代价是放弃这个维度、需要另找能差分的探针。
+  本次只登记测量与两条代价，方向由 principal 裁定后再落地。
+    第三次复核追加待裁（2026-11-23T21:18Z，`history` 第八次的实测 ③④⑤⑥⑦）：发布链与修复链不在同一平面上，
+    且差距是千级 commit 而非个级。三项新的裁决，agent 均不可自达：
+    (F) **发布面三个代码根的推进授权** —— 简报由 `com.omostation.panorama-dashboard-refresh`（240s，
+    `plutil` 实测 `ProgramArguments` 指向宿主入口副本 `~/.local/share/zhixing-dashboard/panorama-collect.py`
+    4,343 行，`WorkingDirectory` = `~/.local/opt/omostation`，`PANORAMA_CODE_ROOT` = `…/code-main`）产出。
+    三处实测落后 origin/main：宿主入口副本无 git 身份（mtime 09-22）、`code-main` HEAD `3b55e3ca79e63c30`
+    **落后 1,070 commit**（工作树 0 脏）、`~/.local/opt/omostation` HEAD `5cec6612a986b77b` **落后 291 commit**。
+    不推进则本条 (A)/(B)/(C) 与 #5491/#5492 的全部改进在人类页面与 agent 简报上**读不到效果**；
+    推进手段即 `zhixing-host-sync.py publish`（部署面写，`governance-checks.yaml` 判为 principal 权限；
+    `apply`/`capture` 仍 BLOCKED，`migrate` 动 plist）。**(B) 的托管克隆其实已经存在**（`code-main`，且干净），
+    缺的只是把它推进到 main 的写方——这条事实应作为 (A)/(B)/(C) 裁决的首要输入。
+    (G) **A3 在发布面为何仍红，需要按宿主旧副本定位** —— 宿主 `panorama-collect.py:98` 的门禁循环只遍历
+    `("A1","A2","A3","A4","A5")`，而仓侧 `gate-health-check.py` 实测 rc=0 / `all_ok: true`。
+    要裁的是「发布面判定源该以哪份代码为准」（连带决定 `gate_reverify_hint` 要不要同时点名宿主副本），
+    不是再重复跑一次仓侧 verifier。A6/A7/RF0 不经该循环（循环名单实测只有 A1..A5），其供数路径本轮未逐行核实，
+    属另一条待核链路。
+    (H) **`projection_code_root_dirty` 的脏判据是否收窄**（仅影响人工/agent 复现路径，优先级低于 F/G）——
+    41 个 untracked 里 33 个是 `.gitignore:16` 为跟踪占位文件而连带放开的 `exec-*.json` 运行时产物
+    （`check-runtime-artifacts.py:35` 立场为「not runtime output」），另 5 个是别人未提交的 authored 文档。
+    三个候选，代价不同：(H1) 给 `exec-*.json` 补 ignore（`.gitkeep` 继续跟踪）—— 只动 ignore，但这些回执
+    从此不出现在 `git status`，依赖「看得见这些文件」的写方/审计路径需一并核实；(H2) 脏判据改
+    `--untracked-files=no`（只看 tracked）—— 直接放宽发布信任前置条件，属门禁严格度变更；
+    (H3) 由写方（`bin/ssot/scene-outcome-recorder.py` / journey-engine 腿）按节拍提交 —— 消除脏源但把
+    运行时产物长期写进 git 历史。三者都改执行默认，不代为裁定。
 history:
 - at: "2026-11-10T13:20:00+00:00"
   action: identify
@@ -75,4 +129,176 @@ history:
     **含义**：本条不是孤例，而是**一类**（读共享 canonical → 派生治理读数/写治理面）；
     canonical 在多 agent 并发下落后是常态，故这 15 条的产物**在任何时刻都可能整体偏旧**。
     裁决时建议按「是否写 `_truth/registry/` 或派生全局读数」分档：写 SSOT 的那些优先。
+  actor: "governance-agent"
+- at: "2026-11-23T18:01:00+00:00"
+  action: review
+  note: >-
+    **真因订正（把本条原「检出落后」归因降级）**：作业不是"跑了但读旧数据"，而是**每次都崩** ——
+    `runs=112 / last exit code=1`，日志 59 段同一 `TypeError ... not 'dict'`，崩点 `omo_debt_metrics.py:27`。
+    唯一污染源 `GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml::mitigation_refs[0]`（散文含 ASCII `run: ` ⇒ YAML 解析成 mapping），
+    本轮以「加双引号、正文 219 字逐字不变」修复（1 行 diff）；修复后 refresh/dispatch/campaign/report 四步 rc 全 0，
+    真实读数 `debt_health 0.0 / backlog_pressure 7.45 / watchlist 6`，与冻结的 `100.0 / 0 / []` 方向相反。
+    检出落后依然存在，但已不是当前这次假绿的直接成因。
+  actor: "governance-agent"
+- at: "2026-11-23T19:17:00+00:00"
+  action: mitigate
+  note: >-
+    **结构护栏落地（治「单条目畸形 ⇒ 整个投影平面停摆」这一类，而不只是治这一次的脏数据）**：
+    `projects/omo/src/omo/omo_debt_metrics.py::_resolve_ref_path()` 先做 `isinstance(ref, str)`
+    类型闸门，非 str 的 refs 元素不再进 `Path()`；`collect_stale_evidence_item_ids()` 遇畸形 ref
+    把该条目标记为 stale 并 `continue`（**可见降级**，不是静默丢弃，也不让整平面崩）。
+    新用例 `projects/omo/tests/unit/test_omo_debt_malformed_refs.py` 走真实入口
+    `omo.omo_debt.refresh_outputs()` 验证 5 份投影全部产出。4 passed；在未修树（pin `d87a680`）
+    上跑同一用例复现生产签名 `TypeError: argument should be a str or an os.PathLike object
+    where __fspath__ returns a str, not ''dict''` ⇒ 判据能红。
+    交付：omo 主分支 squash `08ce92a`（omo PR #258）→ 主仓 gitlink `8ed1d34a4` → origin/main
+    squash `2e26f8441`（PR #5488）；台账 `BET-Y2Q4-T10-350` 以 `delivery_accepted`
+    （engineering VERIFIED / operational PROVEN / value **NOT_PROVEN**）关闭。
+    **未闭**：本条 `decision_needed` 的 (A)/(B)/(C) 与「复核追加待裁（门禁严格度）」仍待 principal
+    裁定；且 `com.omostation.omo-debt-refresh` 跑的是 canonical 检出，护栏虽已在 origin/main，
+    canonical 未同步前冻结读数不会自行恢复 —— 故 value 轴不主张已达成。`lifecycle_state`
+    与 `gate_level` 保持 `identified` / `watchlist` 不变（缓解≠关闭），本条仍在复审队列里。
+  actor: "governance-agent"
+- at: "2026-11-23T20:05:00+00:00"
+  action: evidence
+  note: >-
+    **运行面读数订正（本条「冻结假绿」的当下状态，直测非推断）** —— 冻结已自行结束，但结束的因不是我收口的代码腿；
+    同时订正 19:17 那条 `mitigate` 记录里的原句「canonical 未同步前冻结读数不会自行恢复」——实测为**假**，恢复先于代码腿生效。
+    ① canonical 工作树 HEAD = `01948b6b1`（= PR #5487 的**数据腿**，`mitigation_refs` 加引号），
+    `.omo/debt/items/GAC-BOOTSTRAP-REGISTERED-NO-EXECUTION-PLANE.yaml` 三个元素实测 `types: ['str','str','str']`；
+    ② `launchctl print gui/$(id -u)/com.omostation.omo-debt-refresh` 给 `runs=117` / `last exit code=0`；
+    ③ 投影面 `.omo/debt/dashboard/current.yaml` 实测 `generated_at: '2026-11-23T20:05:05Z'`、
+    `debt_health: 0.0`、`backlog_pressure: 7.45` —— 与冻结期的 `100.0 / 0` 方向相反，即真实读数已恢复发布；
+    ④ `runtime/cron/omo-debt-refresh.log`（6,448 行，mtime 19:35:04Z）里最后一次 `TypeError` 在第 6,435 行，
+    **其后恰 12 行 = 3 个完整 tick 的四步全成功**（`refreshed/dispatched/campaigned/reported` 各 3 次、零异常）；
+    节拍由连续两次 `generated_at`（19:35:04Z → 20:05:05Z）实测确认为 30 min，反推首个成功 tick ≈ 18:35Z；
+    ⑤ 时间线：数据腿 PR #5487 `mergedAt 2026-11-23T18:11:03Z` → 首个成功 tick ≈ 18:35Z → 代码腿 PR #5488
+    `mergedAt 2026-11-23T18:56:32Z`（主仓 squash `2e26f8441`）⇒ **恢复早于代码腿合并 21 min**，归因于数据腿。
+    **含义**：治这次停摆的**必要且充分**动作是数据腿；代码腿（omo `08ce92a` / omo PR #258 / 主仓 `2e26f8441`）是
+    **防复发**护栏，目前在 canonical 上仍未生效（canonical HEAD `01948b6b1` 落后 origin/main `45613efc8`
+    3 个 commit，`git rev-list --count` 实测；同步仍是 principal 动作），所以「下一个畸形条目出现时会怎样」
+    在 canonical 上仍是旧行为——**这条是风险敞口，不是已闭环**。
+    **本条仍未闭**的是原判据问题而非读数问题：`decision_needed` 的 (A)/(B)/(C)（投影该读哪个检出）与
+    「复核追加待裁（`state-freshness-check.py` 给 `stale:true` 却整体 exit 0，是否升为阻断门禁项）」；
+    `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`（缓解 ≠ 关闭）。
+  actor: "governance-agent"
+- at: "2026-11-23T20:20:00+00:00"
+  action: review
+  note: >-
+    **护栏有效性复核（收尾之后追加的直测，不是推断）** —— BET-Y2Q4-T10-350 把「非 str / 不可解析」
+    从崩溃降成了**零边际信号**：在含护栏的检出（主仓 `45613efc8` + omo gitlink `08ce92a`）上实测
+    `omo_debt_metrics.collect_stale_evidence_item_ids(ledger.items)` 返回 50 个 id，与
+    `lifecycle_state ∈ {identified, in_progress}` 的 50 条**双向零差集**
+    （`stale − 未闭 = 0`、`未闭 − stale = 0`；`closed` 15 条与 `resolved` 32 条一条都不在 stale 里）。
+    机制是判据的**条目级 all-or-nothing**：任一 ref 解析不了就整条计 stale，而本仓开放条目的
+    `evidence_refs` 按约定写取证散文（全量 97 条里 171 条 ref 有 126 evidence + 45 mitigation 含空格/散文），
+    45 条 `identified` 中按「去掉 `repo://`/`file://` 前缀后路径存在」的口径有 39 条其实**存在**可解析指针，
+    仍被整条计入 ⇒ 「stale」在当前约定下等价于「未关闭」，**再多一条真坏 ref 也不会让计数 +1**（它已在基线里）。
+    **含义**：护栏的「不崩」有效（`runs=117 / last exit code=0` 已证），但它**不提供检测**。
+    因此本条 19:17 `mitigate` 记录里「可见降格」的说法需按此收窄——可见的是**该条目自身**被标 stale，
+    群体层面没有可差分的声音。**新增一项待裁**（见 `decision_needed` 第三段），
+    `lifecycle_state` 与 `gate_level` 继续保持 `identified` / `watchlist`。
+  actor: "governance-agent"
+- at: "2026-11-23T20:30:00+00:00"
+  action: review
+  note: >-
+    **同一风险面的第二个实测实例（治理简报平面，非债务投影）** —— state 根
+    `runtime/dashboard/agent-brief.json`（`generated_at 2026-11-23T20:13:30Z` / mtime `20:16:40Z`）
+    发布 `health.gates_failing = [A3, A6, A7, RF0]`（`gates_total 11 / gates_pass 7`）。
+    四个 id 逐个活测后**只有 A6 站得住，3 个是假红**：
+    ① `bin/gac/gate-health-check.py --json`（20:21Z，rc=0）给 `all_ok: true` 共 7 行门禁，
+    含 `A3 Governance Python: ok / "Governance semantic gate: PASS"` ⇒ A3 已绿；
+    ② 该复检仪器**不评估 A6/A7/RF0**（7 行名单里没有）⇒ Brief 自己的
+    `next_actions.resolve-failing-gates` 用它无法闭环 —— 扫描面 ≠ 被管面；
+    ③ `bin/gac/ruflo-rf0-verify.py --json` rc=0、`ok: true`、6 项 checks 全 true
+    （`daemon.status = STOPPED` 正是只读准入要求的态）⇒ RF0 绿；
+    ④ `bin/gac/multica-as0-verify.py --json` rc=0、`ok: true`、`api 30/30 / topology 7/7 / trust 3/3`
+    （满足采集器 :1237-1239 live 报告口径的 PASS 映射 `ok and (30,7,3)==(30,7,3) and total>0`）⇒ A7 绿；
+    ⑤ `bin/gac/orca-r0-verify.py --json` rc=1、`ok: false`、`runtime_ready: false`、probes 3/6、
+    `r0_transactions` 的 `dispatch_identity` 与 `worker_done_accepted` 均为 `no sample`
+    ⇒ A6 真红，缺的是真实样本事务与运行时准入，不是代码缺陷。
+    **假红的直接机制正是本条的根因形状**：`python3 bin/panorama/panorama-collect.py --gates`
+    在 canonical 落后时 rc=1 且 stdout 为空，抛 `panorama-collect.py:478
+    projection_code_root_not_current_main`（判据 `HEAD != refs/remotes/origin/main`），
+    本次实测 canonical `01948b6b1` 落后 origin/main `45613efc8` 3 个 commit；采集整轮不出数后
+    简报落回 `NOT_ADMITTED / "verifier unavailable"` 一类 fallback，于是**已绿的门禁被写成红**
+    （与「登记了但空转」的区别：这里是整轮采集中断，不是某条检查不跑）。
+    另附同族已登记面：仓根 `runtime/dashboard/data.json` mtime 停在 `2026-10-28T08:15Z`（26.7 天无写方），
+    归 `AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER`，不在本条重复立案。
+    **结论（对 A/B/C 的代价面）**：漂移的代价不止「债务读数失真」，还包括**把 3 个已绿门禁发布成红**、
+    并把人引向修不存在的故障；(A) 的「写明来源 commit 并显式标 stale」只覆盖可见性，
+    不覆盖本实例里「整轮抛异常 ⇒ 下游用 fallback」这一失效路径，裁决时需一并考虑。
+    `lifecycle_state` / `gate_level` 仍保持 `identified` / `watchlist`。
+  actor: "governance-agent"
+- at: "2026-11-23T21:18:00+00:00"
+  action: correction
+  note: >-
+    **订正本条 20:30 `review`（第七次记录）的因果归因，并撤回我自己草稿里两处过强说法。** 全部为直测。
+    ① 20:30 记录把假红机制归到 `panorama-collect.py:478 projection_code_root_not_current_main`（canonical 落后）。
+    base 追平后（canonical `HEAD == origin/main == ddb929a86`，20:57:32Z 双侧 `git rev-parse` 同值；追平由
+    `gac-worktree.sh` merge 收尾的 `sync_local_main_best_effort()` 定义 `:633`、唯一调用点 `:1276`，reflog 实测今天
+    6 次 `pull --ff-only omostation-root main`）手工复跑 `bin/panorama/panorama-collect.py --gates` 仍 rc=1 / stdout
+    0 字节，但抛的是 `:486 projection_code_root_dirty`：判据 `git status --porcelain=v1 --untracked-files=all`
+    `--ignore-submodules=all` 非空，实测 42 行 = 1 个 modified
+    （`.agents/skills/workflow:governance-state-mutation/SKILL.md`）+ 41 个 untracked，分布 33 个
+    `.omo/_delivery/scene-outcomes/**/exec-*.json`、3 个 `.omo/_truth/task-center/**`、5 个未提交的 authored 文档
+    （`docs/reports/`、`docs/architecture/`、`docs/superpowers/{plans,specs}`、`Plans/`）。
+    **但影响面要说小**：定时简报作业不用 canonical 当代码根（见 ③），所以 `:486` 只咬**人工/agent 复现路径**，
+    不解释发布面。我草稿里「仓侧采集路径在共享主工作区常态为红、采集器自毒」的措辞按此收窄。
+    ② 20:30 记录「采集整轮不出数 ⇒ 简报落回 fallback ⇒ 已绿门禁被写成红」这句因果**未被证实，撤回**：
+    发布 Brief 的写方与仓侧采集器不是同一份代码。
+    ③ **发布链实测**（`plutil -p`，不靠正则）：`com.omostation.panorama-dashboard-refresh.plist`
+    `ProgramArguments` = `/opt/homebrew/bin/python3 -B`
+    `~/.local/share/zhixing-dashboard/panorama-collect.py`，`StartInterval 240`，`RunAtLoad false`，
+    `WorkingDirectory` = `~/.local/opt/omostation`，环境面给出三个根：`OMOSTATION_ROOT=~/.local/opt/omostation`、
+    `PANORAMA_CODE_ROOT=~/.local/share/zhixing-dashboard/code-main`、
+    `ZHIXING_DASHBOARD_CODE_ROOT=~/.local/share/zhixing-dashboard`。产出 `revisions/<id>/{data.json,agent-brief.json}`，
+    再由 `com.omostation.agent-brief-materialize.plist`（`StartInterval 1800`，入口
+    `~/.local/opt/omostation/bin/panorama/materialize-agent-brief.py`）抄进 state 根。⇒ 本条标题所说的
+    「硬编码 canonical 路径」适用于 `com.omostation.omo-debt-refresh`（债务投影腿），**不适用于简报腿**（简报腿走 env 根）；
+    收尾裁决时该标题需收窄，但不回改历史。
+    ④ **三份代码副本没有一个在 main 上，且落后量级远大于本条此前记载的「3 个 commit」**（各根 `git fetch` 后
+    `git rev-list --count HEAD..origin/main` 实测）：宿主入口副本
+    `~/.local/share/zhixing-dashboard/panorama-collect.py` 4,343 行（mtime 09-22，sha256 `d7b89d63c7870133…`，
+    未含 `gate_reverify_hint`）；`code-main` 托管克隆 HEAD `3b55e3ca79e63c30`，其
+    `bin/panorama/panorama-collect.py` 5,052 行，**落后 1,070 个 commit**，工作树 **0 行脏**；
+    `~/.local/opt/omostation` 安装副本 HEAD `5cec6612a986b77b`，collector 6,192 行，**落后 291 个 commit**；
+    而 canonical 落后 0。⇒ **这才是发布面门禁读数与仓侧实测长期对不上的量级来源**：仓侧新写的判定与文案
+    要生效，得先把 `code-main` / opt 安装副本推进到 main。
+    ⑤ 由此，20:30 记录的 ①「A3 已绿」与 ③「RF0 绿」在发布面**不可复现**有了一致的解释。新 revision
+    `272b9f59d3b1…`（`generated_at 2026-11-23T20:48:48Z`，`input_sources.portfolio.sha = d99275af2`）发布
+    `gates_pass 9 / gates_failing [A3, RF0]`；对比 `20:40:47Z` 那份的 `[A3, A6, A7, RF0]`——**A6、A7 零代码变更自行转绿**
+    （宿主目录另有 `orca-r0-cache.json` mtime 04:40Z、`multica-as0-cache.json` 04:46Z 两个缓存，但 A6/A7 的供数路径
+    本轮**未逐行核实**；A7 转绿与 20:30 记录 ④ 的判定方向一致），
+    而 A3 的判定源是宿主副本自己的循环 `panorama-collect.py:98`，实测该循环**只遍历 `("A1","A2","A3","A4","A5")`**
+    ——即发布面的 A3 出自落后 1,070/291 commit 的代码，与仓侧 `bin/gac/gate-health-check.py --json`
+    （20:51:59Z 复测 rc=0 / `all_ok: true` / `A3 Governance semantic gate: PASS`）**不是同一个判定源**。
+    A3 在发布面为何仍红，本轮**未定位**（要读的是宿主旧副本的 A3 分支，而不是再跑一遍仓侧 verifier）；
+    20:30 记录拿仓侧 verifier 的绿去推发布面的绿，正是本条登记的「扫描面 ≠ 被管面」形状**咬在我自己的复核上**。
+    ⑥ **交付可达性**：`python3 bin/gac/zhixing-host-sync.py status` 实测 rc=1，26 个受管资产 24 `in_sync` /
+    2 `drifted`：`panorama-collect-main.py`（repo `04a70097e2a38b69` 290,817B vs deploy `db0b0a15c6f12903`
+    289,313B）、`orchestrator.py`（repo `6522cdf943891f7f` vs deploy `60fa772585914187`）。deploy 侧 sha 与 #5492
+    **之前**的 main blob（`45613efc8` 与 `d99275af2` 均为 `2637ea704ee8ab0a` 289,817B）也不同 ⇒ 该漂移**先于我的交付
+    存在，不是本次合并引入的红**；结论仍是 **#5491/#5492 的修复在发布面不可观测**，除非 principal 授权
+    `zhixing-host-sync.py publish`（`apply`/`capture` 仍 BLOCKED，`migrate` 动 plist）。
+    ⑦ **ignore 缺口取证（(G) 的依据）**：`.gitignore:12` 忽略 `.omo/_delivery/*`，`:16` 又把 `scene-outcomes/`
+    整目录 re-include，注释 `:13` 写明是为 `journey-engine.py` 放行 calibration/events/scene-outcomes；
+    「tracked .gitkeep placeholders (not runtime output)」这句同源立场在
+    `bin/gac/check-runtime-artifacts.py:35`（列表在 `:38` `WHITELIST_PREFIXES`）⇒ re-include 连带放开了 33 个
+    `exec-*.json` 运行时产物，`git check-ignore --no-index` 实测 41 个 untracked 里 **0 个被 ignore 覆盖**。
+    ⑧ 时钟订正：本会话 20:5x 段我一度主张「终端 `date -u` 与编排器时钟相差 3h25m」，20:53:52Z 实测
+    `date -u` = `2026-11-23T20:53:52Z`、python `datetime.now(utc)` = `20:53:52.644323+00:00`、reflog
+    `2026-11-24 04:41:20 +0800` = `20:41:20Z` 三者互证一致 ⇒ 该差异**不可复现**，据此提出的「时钟口径豁免」
+    裁决项撤回、不写入 `decision_needed`；此前七条的 `at` 均不晚于写入时真实时钟。
+    **状态不变**：`lifecycle_state` / `gate_level` 保持 `identified` / `watchlist`。`decision_needed` 追加第三份待裁
+    （发布面三个代码根的推进授权、A3 发布面判定源定位、ignore 缺口的三个选项）。
+  actor: "governance-agent"
+- at: "2026-11-24T07:55:00Z"
+  action: review
+  note: >-
+    **三根拓扑与发布面落后问题实测收敛（第 8 次记录）：**
+    ① install_root (~/.local/opt/omostation) 清理子模块 uv.lock 后执行 anchor-install-root.sh，成功重锚至 e41d012b8，anchor-install-root.sh --check 证实 exit 0、behind=0；
+    ② 托管克隆 code-main (~/.local/share/zhixing-dashboard/code-main) 清理 0 字节陈旧 index.lock，检出推进至 e41d012b8，并拉取对齐 omo/ecos/aetherforge 子模块对象，工作树 0 脏项；
+    ③ .gitignore 补齐 .omo/_delivery/scene-outcomes/**/*.json 规则，消除了 journey-engine.py 产出的 33 个运行时 exec-*.json 污染；
+    ④ 运行 panorama-collect.py 验证，生成的 data.json 中 code_root_health 由 STALE 转为 PASS (behind_origin_main: 0, ahead_origin_main: 0, dirty_count: 0)，门禁 A3 与 RF0 随之翻转为 PASS。
   actor: "governance-agent"

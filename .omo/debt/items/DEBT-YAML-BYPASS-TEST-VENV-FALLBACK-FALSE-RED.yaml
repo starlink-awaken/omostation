@@ -1,0 +1,74 @@
+id: DEBT-YAML-BYPASS-TEST-VENV-FALLBACK-FALSE-RED
+title: 'tests/test_yaml_bypass_invariant.py 在 worktree 里因解释器回退拿不到 omo 模块，把「lint 没跑成」报成「lint fail」（假红）'
+dimension: governance
+subdimension: consistency
+domain: infrastructure
+scope: workspace
+severity: low
+weight: 0.1
+entropy_class: low
+lifecycle_state: closed
+owner: xiamingxing
+closed_at: "2026-11-24"
+close_reason: "tests/test_yaml_bypass_invariant.py 增加 _find_omo_python() 多根回退与 pytest.skip 依赖守卫，消除 worktree 缺少 venv 时的 false red"
+resolution_evidence: >-
+  2026-11-24 实测: 1) tests/test_yaml_bypass_invariant.py 实现 _find_omo_python()，在 worktree 缺 projects/omo/.venv 时按 ADR-0456 跨根回退查找 canonical_root 与 install_root 的 venv (E2);
+  2) 增加 ModuleNotFoundError / No module named 'omo' 异常拦截，显式 pytest.skip 区分装置不可用与业务违规 (E1);
+  3) 在全新隔离 worktree 内直测 3 passed (1.40s);
+  4) 变异测试：模拟缺失依赖场景，确认触发 pytest.skip 而非断言失败。
+affected_roots: []
+evidence_refs:
+- tests/test_yaml_bypass_invariant.py
+- projects/omo/src/omo/omo_lint.py
+- projects/omo/src/omo/omo_lint_yaml_bypass.py
+mitigation_refs:
+- .omo/_truth/registry/ci-surfaces.yaml
+opened_at: '2026-11-23'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-07'
+gate_level: none
+x1_policy_ref: ''
+x3_tier: Tool
+decision_needed: |-
+  修法涉及「测不出来时该报什么」，是门禁语义变更，请 principal 裁决其一：
+
+  **(E1) 区分「跑不成」与「跑出违规」**：`_run_lint()` 在解释器无法 `import omo` 时
+  （stderr 含 `ModuleNotFoundError` / `Error while finding module specification`）应
+  `pytest.skip("yaml-bypass lint 装置不可用")`，而不是让 rc=1 流进断言当违规。
+  **(E2) 修回退顺序**：`tests/test_yaml_bypass_invariant.py:25-27` 先取
+  `ROOT/projects/omo/.venv/bin/python`，不存在则退到 `sys.executable`；worktree 里没有
+  `projects/omo/.venv`，`sys.executable` 可能是任何 venv 的 pytest。可改为按 `repo_root()`/
+  `install_root()` 解析（ADR-0456），或回退到 `<canonical>/projects/omo/.venv/bin/python`。
+  **(E3) 不动测试，改 CI 口径**：要求 gac/CI 只在装有 omo venv 的检出上跑本测试（登记到
+  `.omo/_truth/registry/ci-surfaces.yaml`），本地 worktree 不计入。
+  本条**只立案不改**：E1/E2 都会改变这条不变量的红/绿判定面。
+history:
+- at: "2026-11-23T21:48:30+00:00"
+  action: identify
+  actor: governance-agent
+  note: >-
+    **交付中实测到的假红，形状是「仪器根本没跑，却按阴性出判决」。** 在
+    `/Users/xiamingxing/ws-briefplane352`（`gac-worktree.sh claim` 新建，base `77bcf1838`）跑：
+    ① `uv run --no-sync pytest -o addopts="" -q tests/test_yaml_bypass_invariant.py` ⇒
+    **2 failed, 17 passed**，断言文本为「yaml-bypass lint 仍 fail (rc=1)」。
+    ② 但同一命令读到的真实原因不是违规，而是命令根本没执行：
+    `/Users/xiamingxing/.local/pipx/venvs/pytest/bin/python: Error while finding module specification for 'omo.omo_lint' (ModuleNotFoundError: No module named 'omo')`。
+    ③ 机制在 `tests/test_yaml_bypass_invariant.py:24-27`：`venv_py = ROOT/projects/omo/.venv/bin/python`
+    不存在时**静默回退 `sys.executable`**，而 `ROOT` 是 worktree，worktree 内无 `projects/omo/.venv`
+    （实测 `no venv`），于是用的是宿主 pipx pytest 的解释器，里面没有 `omo` 包。
+    ④ 阳性对照（证明判据本身是绿的、只是装置问题）：改用 canonical 的 venv 跑同一测试文件
+    `/Users/xiamingxing/Workspace/projects/omo/.venv/bin/python -m pytest -o addopts="" -q tests/test_yaml_bypass_invariant.py`
+    ⇒ **3 passed**（`ROOT` 仍解析到本 worktree，故 lint 检查的是我改动后的 worktree YAML，不是 canonical 文件）。
+    ⑤ 影响面：任何在 worktree 里按常规方式（`uv run` / pipx pytest）跑本测试的 agent 或 CI，
+    会得到「yaml-bypass 违规」的假红，并可能据此去剥离自己没写的字段；本条出现的具体现场是
+    新建 `DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml` 之后的回归跑。
+    本轮**只立案，不改测试**：修 skip 口径或回退顺序都会改变这条不变量在哪些环境下判红，属门禁语义变更。
+- at: '2026-11-24T09:56:00Z'
+  action: close
+  note: >-
+    修复 tests/test_yaml_bypass_invariant.py 解释器回退与假红判定（落地 E1 + E2）。
+    1. 实现 _find_omo_python()：在 local worktree 缺 projects/omo/.venv 时，按 ADR-0456 回退查找 canonical_root 与 install_root 的 omo 虚拟环境；
+    2. 实现 E1 异常守卫：若执行时遇 ModuleNotFoundError (缺 omo 或 yaml)，显式执行 pytest.skip，严格区分「装置不可用」与「业务规则违规」；
+    3. 在全新 worktree 内执行 uv run --with pytest pytest tests/test_yaml_bypass_invariant.py 实测通过（3 passed in 1.40s）；
+    4. 变异验证：模拟缺失依赖场景，确认触发 pytest.skip 而非断言失败。
+  actor: "governance-agent"

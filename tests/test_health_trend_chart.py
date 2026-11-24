@@ -79,18 +79,22 @@ def test_load_records_sorted_by_ts(chart, tmp_path: Path):
 
 
 def test_filter_window_drops_old(chart):
+    # 窗口内/外一律按**小时间隔**从 now 派生, 不钉 wall-clock 时刻:
+    # 原来「窗口内」那条写死 T20:00, 而 cutoff 取 now 的当天时刻 —— 只有当运行时
+    # UTC 时刻早于 20:00 才通过 (20:00 之后 cutoff 越过它 ⇒ 只剩 1 条)。这是同一个
+    # 「相对窗口 × 钉死的钟点」形状, 只是键在时刻而非日期 (AGENTS.md §7②)。
     now = datetime.now(UTC)
-    recent_day = (now - timedelta(days=1)).strftime("%Y-%m-%d")
-    today = now.strftime("%Y-%m-%d")
-    old_day = (now - timedelta(days=2)).strftime("%Y-%m-%d")
+    outside = (now - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    inside_a = (now - timedelta(hours=20)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    inside_b = (now - timedelta(hours=11)).strftime("%Y-%m-%dT%H:%M:%SZ")
     records = [
-        {"ts": f"{old_day}T00:00:00Z"},  # 2 days ago — outside 1d window
-        {"ts": f"{recent_day}T20:00:00Z"},  # 16h ago — inside 1d
-        {"ts": f"{today}T11:00:00Z"},  # 11h ago — inside 1d
+        {"ts": outside},   # 2 天前 —— 在 1 天窗口外
+        {"ts": inside_a},  # 20 小时前 —— 在窗口内
+        {"ts": inside_b},  # 11 小时前 —— 在窗口内
     ]
     out = chart._filter_window(records, days=1, now=now)
     assert len(out) == 2
-    assert out[0]["ts"] == f"{recent_day}T20:00:00Z"
+    assert out[0]["ts"] == inside_a
 
 
 def test_bucket_by_day_keeps_last(chart):

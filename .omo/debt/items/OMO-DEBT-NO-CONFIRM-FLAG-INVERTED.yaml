@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-team
 affected_roots:
 - projects/omo/src/omo/omo_debt_cli.py
@@ -17,7 +17,7 @@ mitigation_refs: []
 opened_at: '2026-11-23T08:56:41.828324+00:00'
 last_reviewed_at: '2026-11-23'
 next_review_at: null
-gate_level: watchlist
+gate_level: none
 history:
 - at: '2026-11-23T08:56:41.828324+00:00'
   action: register
@@ -25,15 +25,27 @@ history:
   actor: governance-agent
 - at: '2026-11-23T08:58:31+00:00'
   action: identify
-  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt register`，字段用 Python
-    read-check-write 补齐。'
+  note: '2026-11-23 债务闭环节律收口（PR #5465）当轮实测发现，判据命令与读数写进 description；登记走 broker `debt
+    register`，字段用 Python read-check-write 补齐。'
+  actor: governance-agent
+- at: '2026-11-23T13:46:49.984188+00:00'
+  action: close
+  note: Closed debt item.
   actor: governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
-description: '子模块 pin `47d9f2b51`：`--no-confirm` 定义为 `dest="confirm", action="store_false", default=True`（`:251-256`），help
-  写 "Refuse to close without this safety flag (default: confirm)"；但 `cmd_debt_close` 的分支是 `if not confirm:
-  print("❌ 请显式传入 confirm=True 以关闭债务项"); return 1`（`:91-92`）。组合后的真语义与 help 相反：**不带旗标 = 直接关闭**，**带 `--no-confirm`
-  = 拒绝关闭**（实测 2026-11-23，rc=1，未写盘）。即：这个旗标既不是「跳过确认」也不是「需要确认」，而是一个名字反着、行为是中止的开关；而 help 承诺的 fail-closed 默认并不存在。'
-decision_needed: 二选一：(a) 删掉 `--no-confirm` 与 `confirm` 形参，承认默认即执行、无确认步；(b) 真做 fail-closed —— 默认不写盘，必须显式
-  `--confirm` 才关闭。选 (b) 会改变既有调用方（omo-debt 被 cron/常驻 agent 以无旗标方式调用），需先扫调用面再改。本条不代决。
+description: '子模块 pin `47d9f2b51`：`--no-confirm` 定义为 `dest="confirm", action="store_false",
+  default=True`（`:251-256`），help 写 "Refuse to close without this safety flag (default:
+  confirm)"；但 `cmd_debt_close` 的分支是 `if not confirm: print("❌ 请显式传入 confirm=True 以关闭债务项");
+  return 1`（`:91-92`）。组合后的真语义与 help 相反：**不带旗标 = 直接关闭**，**带 `--no-confirm` = 拒绝关闭**（实测
+  2026-11-23，rc=1，未写盘）。即：这个旗标既不是「跳过确认」也不是「需要确认」，而是一个名字反着、行为是中止的开关；而 help 承诺的 fail-closed
+  默认并不存在。'
+decision_needed: 二选一：(a) 删掉 `--no-confirm` 与 `confirm` 形参，承认默认即执行、无确认步；(b) 真做 fail-closed
+  —— 默认不写盘，必须显式 `--confirm` 才关闭。选 (b) 会改变既有调用方（omo-debt 被 cron/常驻 agent 以无旗标方式调用），需先扫调用面再改。本条不代决。
+closed_at: '2026-11-23T13:46:49.984039+00:00'
+close_reason: 子模块 omostation-omo 提交 00b809d 已修复：close parser 增加显式 --confirm (default=True)
+  并将 --no-confirm 明确用于取消操作；cmd_debt_close 打印取消原因并退出，消除语义反转与误导性报错。
+resolution_evidence: 子模块 omostation-omo commit 00b809d (已 push 至 main)。单测 tests/test_omo_cli_modules.py
+  新增 test_cmd_debt_cli_close_confirm_flag_semantics 全绿通过 (70 passed)。实跑 omo-debt close
+  --id ... --actor ... 正常完成落盘关闭。

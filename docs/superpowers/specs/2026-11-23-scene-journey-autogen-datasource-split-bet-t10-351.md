@@ -6,13 +6,13 @@ lifecycle: spec
 owner: governance-team
 last-reviewed: 2026-11-23
 accepted: "2026-11-23 Principal 授权「处理吧」（全面授权链）— journey 域 5 张 404 卡根治, autogen 为治理体系自带工具"
-bet_id: BET-Y2Q4-T10-350
+bet_id: BET-Y2Q4-T10-351
 spec_version: 1.0.0
 ---
 
 # scene-journey-autogen 数据源分裂修复 — 对齐 docs 体系 + 5 张 404 卡根治
 
-台账：`docs/plans/3y-bet-ledger.yaml` `BET-Y2Q4-T10-350`
+台账：`docs/plans/3y-bet-ledger.yaml` `BET-Y2Q4-T10-351`
 
 ## 目标
 

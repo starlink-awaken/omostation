@@ -48286,7 +48286,7 @@ bets:
             第 3 条），部署侧仍另案；`bin/ops/launchd/*.plist` 模板注释保留（非目标第 2 条）。
     overall_state: delivery_accepted
 - id: BET-Y2Q4-T10-350
-  title: BET-Y2Q4-T10-350 scene-journey-autogen 数据源分裂修复 —— 对齐 docs 体系 + 5 张 404 卡根治
+  title: BET-Y2Q4-T10-351 scene-journey-autogen 数据源分裂修复 —— 对齐 docs 体系 + 5 张 404 卡根治
   goal: >-
     2026-11-23 实测: journey-runner 对 5 张卡报 spec FileNotFoundError (404), 而
     scene-journey-autogen 的 scan/generate/report 全部报 0 missing —— 根因两层:
@@ -48327,10 +48327,10 @@ bets:
   - docs/scene-cards/health-gov-doc-cycle.yaml
   - docs/journey-specs/
   accepted_specifications:
-  - spec_ref: repo://docs/superpowers/specs/2026-11-23-scene-journey-autogen-datasource-split-bet-t10-350.md
+  - spec_ref: repo://docs/superpowers/specs/2026-11-23-scene-journey-autogen-datasource-split-bet-t10-351.md
     spec_version: 1.0.0
-    content_digest: sha256:eb9f7054e502fa77a2722ddcd307e0965af10a8d9c25628874de340717670343
-    decision_ref: decision://accepted/BET-Y2Q4-T10-350
+    content_digest: sha256:a70678eba4d4e4989e086d4aadc1ca3498bd9ae34b869d3a5acacd4e29fbb05c
+    decision_ref: decision://accepted/BET-Y2Q4-T10-351
   non_goals:
   - 不改 journey-runner 与 shadow-scene-trials 落盘机制 (43 张异步型卡的 trial
     需真实消费者闭环, 与本 BET 无关)。
@@ -48353,6 +48353,108 @@ bets:
   circuit_breaker: >-
     若 .omo/_truth/{scenarios,journeys}/v3 存在活跃消费方 (导致 autogen 切换
     数据源破坏其读数), 停止并交 owner 裁决。
+  title: BET-Y2Q4-T10-350 omo-debt 单个畸形 ref 冻结投影平面 29.8h —— 非 str 条目 ref 判 stale 而非崩平面（代码腿）
+  goal: '`.omo/debt/items/*` 的 refs 写散文注解是既有用法（全库 352 个 ref 元素中 142 个带注解），散文里出现 ASCII
+    `: ` 时 YAML 把整个列表项解析成 mapping；装载器 `_as_tuple`（`omo_debt_registry.py:105-115`） 只归一顶层
+    dict、逐元素不做类型校验，`_resolve_ref_path()` 随即 `Path(dict)` 抛 TypeError。 该调用点是 `compute_debt_metrics()`
+    与 `build_review_queue()` 的共同下游，`refresh_outputs()` 一次写 5 份投影，且 launchd `com.omostation.omo-debt-refresh`
+    是 `refresh && dispatch && campaign && report` 的 `&&` 链 —— 2026-11-23 实测单个坏条目让它连崩
+    59 次（≈29.8h）、四份投影冻结，而冻结读数对外仍发布 `debt_health: 100.0` / 熵项全零 / 队列空（同一条数据重算为 `0.0 /
+    backlog_pressure 7.45 / pointer_entropy 1.16 / watchlist 6 项`）。数据腿已由主仓 #5487 修条目引号；本
+    BET 修代码： `_resolve_ref_path` 非 str 返回 None，`collect_stale_evidence_item_ids` 把该条目判
+    stale（可见）后继续， 使下一个畸形条目不再有能力停摆整个平面。'
+  status: done
+  done_at: 2026-11-23
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P1
+  appetite: 1 day
+  risk_level: L2
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: project-code-change
+  underlying_workflow: governance-state-mutation
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-23-omo-debt-malformed-ref-plane-freeze-bet-t10-350.md
+  - projects/omo
+  - .omo/debt/items/DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN.yaml
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-350.md
+  - docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-23-omo-debt-malformed-ref-plane-freeze-bet-t10-350.md
+    spec_version: 1.0.0
+    content_digest: sha256:8cbbcd6ea399dc38be75f8295218d651bed547bb451e6df926850ab9cf725050
+    decision_ref: decision://accepted/BET-Y2Q4-T10-350
+  non_goals:
+  - 不改装载器去拒绝或归一畸形 refs —— 会让 142 个既有用法当场报错，属数据迁移面，裁定权在 principal。
+  - 不把 stale/frozen 投影改成阻塞门禁（`state-freshness-check.py` 检出但 exit 0）—— 属门禁严格度变更，同一待裁项。
+  - 不批量给 142 个带注解 ref 补引号 —— 独立数据迁移，另案。
+  - 不动 `close` 旗标语义与 reclassify/escalate/revalidate 时间戳 —— 已由 `projects/omo@00b809d`
+    与主仓
+  done_when:
+  - 非 str 的 refs 元素不再抛 TypeError —— 用例走真实入口 `refresh_outputs`，5 份投影全部产出（含 `generated_at`
+    等于本次 `now`）。
+  - 畸形 ref 条目被判 stale 且仍出现在队列里（不是静默丢弃），`backlog_pressure` 不因它归零。
+  - 同文件其余条目的读数不受影响（既有用例无回归）。
+  - "变异证明：在未修树上跑同一用例必须红，且红的是生产签名 `TypeError: ... not 'dict'`。"
+  verify:
+  - cmd: cd projects/omo && uv run pytest tests/unit/test_omo_debt_malformed_refs.py
+      -q
+    expect: 4 passed（走 refresh_outputs 真实入口，含钉住「YAML 把该行解析成 dict」的前提用例）。
+  - cmd: cd projects/omo && uv run pytest tests/unit/test_omo_debt_naive_timestamps.py
+      tests/unit/test_omo_debt_metrics_terminal_vocab.py tests/unit/test_omo_debt_malformed_refs.py
+      -q
+    expect: 10 passed, 3 skipped —— 时间戳/终态词汇两条既有契约无回归。
+  - cmd: make gac-local-gate
+    expect: 全绿；`projects/omo` gitlink 指向已合并进 omo main 的 commit（远端可达，非悬空指针）。
+  circuit_breaker: 若为了让投影不崩而把畸形 ref 静默跳过（条目从 stale 计数里消失），停止并交 owner 裁决 —— 那等于把 「平面存活」用「假绿」换回来，正是本
+    BET 要修的病；判据必须让坏条目可见。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@2e26f844177061098cd4dead808516721dfabc5c
+          tests:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#受控测试
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          diff:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          rollback:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#rollback
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#operational-轴
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-350.md
+            sha256: sha256:8a1a9cae95e2b5cd86891728a356c3bd82be872cb3ea2b72ffbec4e6e9be7c03
+          cleanup:
+            ref: receipt://docs/reports/2026-11-23-omo-debt-malformed-ref-closeout.md#operational-轴
+            sha256: sha256:98fc99d3996be898c0379d6977eef27225eead9a2a7c85ca62186642aa79302a
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            已证平面存活与坏条目可见性在同一台机器上由真机 refresh_outputs 复现（rc=0、5 投影面、
+            backlog_pressure 1.5、BAD-REFS 可见），并由未修树变异证明判据能红。未做价值指标计量
+            （value_indicator_policy=false）；规范主检出同步前的运行面仍是旧码 —— canonical 未同步属
+            principal 动作，见收据「读数前置条件」与「未执行动作」。
+    overall_state: delivery_accepted
+
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -48491,7 +48593,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 598
+  total_bets: 599
   windows:
   - Y1Q1
   - Y1Q2

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
-# BET-Y2Q4-T10-350: 数据源对齐 docs/ 体系 —— 原指向 .omo/_truth/{scenarios,journeys}/v3
+# BET-Y2Q4-T10-351: 数据源对齐 docs/ 体系 —— 原指向 .omo/_truth/{scenarios,journeys}/v3
 # 与 journey-runner 实际数据源 (docs/scene-cards + docs/journey-specs) 分裂, scan 永远
 # 报 0 missing (假阴), 真实 404 缺口对工具不可见。旧目录保留不删 (消费方未盘点)。
 SCENES_DIR = ROOT / "docs" / "scene-cards"
@@ -142,7 +142,7 @@ def _journey_ref(scene: dict[str, Any]) -> str:
     """卡的真实挂接字段是顶层 journey_id (实测 70/70 卡);
 
     runtime.journey_ref 子字段零使用, 仅作向后兼容读取; fallback 保留
-    journey-<scene_id> 命名。BET-Y2Q4-T10-350。
+    journey-<scene_id> 命名。BET-Y2Q4-T10-351。
     """
     scene_id = scene.get("scene_id", "")
     return (
@@ -178,7 +178,7 @@ def generate_spec(scene: dict[str, Any]) -> dict[str, Any]:
     """Generate a journey spec from a scene card."""
     template = _get_template(scene)
     scene_id = scene.get("scene_id", "")
-    journey_ref = _journey_ref(scene)  # BET-Y2Q4-T10-350: 顶层 journey_id 优先
+    journey_ref = _journey_ref(scene)  # BET-Y2Q4-T10-351: 顶层 journey_id 优先
     name = scene.get("name", scene_id)
     description = scene.get("description", "")
 
