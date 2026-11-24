@@ -16,205 +16,282 @@ evidence_refs:
 - bin/panorama/panorama-collect.py
 mitigation_refs: []
 opened_at: '2026-11-10'
-last_reviewed_at: '2026-11-10'
+last_reviewed_at: '2026-11-24'
 next_review_at: '2026-11-13'
 gate_level: none
 x1_policy_ref: ''
 x3_tier: Operational
-decision_needed: 先定性质再决定修哪一侧：① 查 strategy 采集器自 2026-10-28T08:18Z、documents 采集器自 2026-10-29T03:22Z
-  之后为什么再无成功观测（进程通路失败，还是这两源在本机已无数据源）； ② 若属"结构性不可得"，则 A9 应把它们移出 required_sources 或给出显式
-  NOT_APPLICABLE 出口， 而不是让 A9 永远 PARTIAL；③ 若属"应当可得但坏了"，则修采集，并给 PARTIAL 加与 STALE_UNAVAILABLE/FAIL
-  同族的年龄界（现状是 PARTIAL 任何年龄都不接受，见 PANORAMA-A9-DEFERRED-UNBOUNDED）。判据复算： python3 -c "import
-  json;d=json.load(open('/Users/xiamingxing/.local/share/zhixing-dashboard/current.json'));print({k:(v.get('status'),v.get('last_success_at'))
-  for k,v in d['source_states'].items() if k in ('strategy','documents')})"
+decision_needed: |-
+  **裁决项已随事实变更（三次全量 revision 普查：11-23 22:12Z / 23:28Z、11-24 00:29Z）。**
+  原立案三问（① 查 strategy/documents 采集器为何再无成功观测 ② 是否移出 `required_sources`
+  ③ 修采集并给 PARTIAL 加年龄界）**已无对象**：三次取样（各 49 帧）都是 `47 PASS / 2 PARTIAL / 0 FAIL`；
+  `strategy`/`documents` 的 `last_success` 年龄 ≤ 0.12 h，`oldest required-source success age` 峰值
+  632s（前两次）/ 1930s（`scheduler`，第三次）对年龄界 21600s 余量 34×/11×。
+  那两帧 PARTIAL 的原因是 `cockpit_sources` 不完整 + `portfolio=PARTIAL`，与「源陈旧」不同链路。
+
+  **本条已被结案，本轮不 reopen。** `e41d012b8` (#5478) 由 governance-agent 于
+  2026-11-23T13:47:14.840677Z 走 broker `omo-debt close` 置 `lifecycle_state: closed`。
+  该结论与本普查一致（前提确已消解），故 `lifecycle_state`/`gate_level`/`closed_at`/
+  `close_reason`/`resolution_evidence` 五项本轮一律不动；待裁的只剩下面三组。
+
+  **(R1') 结案记录本身是否追认（三条实测缺陷，都不是「前提是否成立」）**
+  (a) 结案的 `history` note 是硬编码固定串 `Closed debt item.`（`projects/omo/src/omo/omo_debt_cli.py:80-86`），
+      真正的结案理由落在 `close_reason` / `resolution_evidence` 两个字段里，而 **broker 从不写这两字段**
+      （`omo_debt_cli.py` 全文 447 行对 `close_reason`/`resolution_evidence` 零命中）⇒ 它们是 broker
+      之外手写进账的，正是本条 history 反复记载的「闭环证据靠手写」结构性缺口的现场复现。
+  (b) `close` 顺带把 `gate_level` 由 `watchlist` 覆写为 `none`（`:74-75`），而 `reopen`（`:430-431`）只恢复
+      `lifecycle_state`、既不恢复 `gate_level` 也不清 `closed_at` ⇒ close→reopen 会**静默去闸并留下过期
+      `closed_at`**。已另立 OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY 跟踪，是否修 / 怎么修由 principal 裁。
+  (c) 同一文件里 `description` 称 last_success `2026-11-23T05:57`（写于 06:16Z），`close_reason` 称
+      `2026-11-23T12:09Z`（写于 13:47Z）—— 两个读数都对，但没人回头同步 description。
+  (d) 附带项（未变）：`evidence_refs` 第 1 项 `~/.local/share/zhixing-dashboard/current.json` 实测不是可信
+      verdict 面（每轮刷新先进入 11/11 门 `UNKNOWN` 占位态、`live: false`），第 2 项 `revisions/` 是容量 49
+      的滑动窗口（~4 h）⇒ 本条的历史断言在数小时内不可复算。是否把 evidence 收敛为「只指
+      `revisions/*/data.json` 并要求复核当场取帧」由用户定（本轮不自行改 evidence）。
+
+  判据可复算（A9 准入逻辑独立重跑；11-24 00:28:57Z 帧实测输出 `bad_sources = []` ↔ 发布值 `A9 PASS`）：
+
+  ```
+  python3 - <<'PY'
+  import json,glob,os,datetime
+  p=max(glob.glob(os.path.expanduser('~/.local/share/zhixing-dashboard/revisions/*/data.json')),key=os.path.getmtime)
+  d=json.load(open(p)); gen=d['generated_at']; now=datetime.datetime.fromisoformat(gen.replace('Z','+00:00'))
+  req={"catalog","strategy","strategy-projection","environment_evidence","portfolio","workflow","resident",
+       "scheduler","references","orca","multica","ruflo","documents","compute"}   # = panorama-collect.py:1511-1515
+  ss=d['source_states']
+  def age(s):
+      v=s.get('last_success_at')
+      return None if not v else (now-datetime.datetime.fromisoformat(str(v).replace('Z','+00:00'))).total_seconds()
+  bad=[]
+  for n in sorted(req):
+      s=ss.get(n) or {}; st=s.get('status'); a=age(s)
+      ok = st=='OK' or st=='DEFERRED' or (a is not None and a<=21600 and st in ('STALE_UNAVAILABLE','FAIL'))
+      print('%-22s %-18s age_s=%s accepted=%s' % (n,st,'None' if a is None else round(a),ok))
+      if not ok: bad.append(n)
+  print('recomputed bad_sources', bad)
+  print('published A9', [(g['verdict'],g['detail'][:90]) for g in d['gates'] if g.get('id')=='A9'])
+  PY
+  ```
+
+  **(R2') 两个 640 h 观测：不是「要不要立案」，而是「谁来拥有修法」。**
+  原判据问「是否另立案」，本轮自查后**改判问题本身**：`personal_value_truth` 与 `panorama_base`
+  的观测已在 `PANORAMA-GATE-DETAIL-UNRELIABLE:164-229`（机制：`orchestrator.py:509-516` 断言
+  `PANORAMA_ROOT == state_root()`；同记 10-28 冻结）与 `PANORAMA-A9-DEFERRED-UNBOUNDED:78-105`
+  （同记二者不在 `required_sources` 内）落账 ⇒ 再开一条只是抄观测。待裁的是否需要一个**拥有修法**
+  的条目（修法即 R3 的四候选），还是把 R3 挂到 GATE-DETAIL-UNRELIABLE 下继续跟。
+  实测年龄：`personal_value_truth` 2,304,630 s（640.2 h）、`panorama_base` 2,307,682 s（640.5 h），
+  均在 00:28:57Z 帧。
+  **同帧状态漂移（说明 status 字段本身帧间易变，不能拿单帧定性）**：`personal_value_truth`
+  由 23:27:56Z 帧的 `UNAVAILABLE` 变为 **`DEFERRED`** —— 而 `DEFERRED` 分支是**无年龄界**直接放行
+  （`:58` 复算逻辑），这正是 `PANORAMA-A9-DEFERRED-UNBOUNDED` 所指的放行路径，本次是它带 640 h
+  年龄的现场实例；`gantt` 由 `OK`（age 243s）变为 `STALE_UNAVAILABLE` 且 `last_success_at: None`；
+  `ruflo` 由 `FAIL`（age 249s）变为 `DEFERRED`（age 1279s）。三者都不在 A9 的 14 元
+  `required_sources`（`panorama-collect.py:1511-1515`）内，故既不放行也不拦截 A9。
+
+  **(R3) `panorama_base` 的修法仍待裁**（R2' 里两项算「坏」还是算「结构性不可得」取决于它）。
+  本轮新测到三条硬事实（未追采集器代码，因果不下结论）：
+  ① `source_states.panorama_base`：`source: /Users/xiamingxing/Workspace/runtime/dashboard/data.json`、
+  `source_lane: CANONICAL_BASE`、`available: false`，`source_health` 侧同一条还带 `error: FileNotFoundError`；
+  ② 该仓根文件**存在、463,261 B、mtime 冻结在 2026-10-28T08:15:07Z**——与本条 640 h 无成功的时间起点吻合，
+  即 CANONICAL_BASE lane 读的是一个自 10-28 起没人写的仓根 runtime 面（与
+  `AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER` 同族，那条只覆盖 `agent-brief.json`，本条是 `data.json`）；
+  ③ state 根对应文件 `~/.local/state/omostation/prod/runtime/dashboard/data.json` **不存在**
+  （同目录 `agent-brief.json` 存在且 21:46:40Z 新鲜）⇒ 「把 CANONICAL_BASE 改指 state 根」目前无源可指。
+  候选：(1) 给仓根 `runtime/dashboard/data.json` 配排班写方（部署面写，需 principal 授权）；
+  (2) 先在 state 根造 `data.json` 写方再把 lane 改指过去；(3) 判其结构性不可得并在 `source_health` 语义里降级
+  （改判准，需 principal）；(4) 维持现状不动。
 history:
 - at: '2026-11-10T02:39:00+00:00'
   action: identify
-  note: BET-Y2Q4-T10-343 发布收尾时顺带浮出：scheduler 的幻影 --json 消除后，A9 仍报 PARTIAL，剩余缺失证据是
-    strategy/documents 两项，陈旧时长分别约 306h 与 287h （2026-11-10 02:36Z 快照实测）。此前这两项被 scheduler
-    的 exit 2 排在同一条 detail 里而不显眼，不是本次发布引入的回归。
+  note: BET-Y2Q4-T10-343 发布收尾时顺带浮出：scheduler 的幻影 --json 消除后，A9 仍报 PARTIAL，剩余缺失证据是 strategy/documents 两项，陈旧时长分别约
+    306h 与 287h （2026-11-10 02:36Z 快照实测）。此前这两项被 scheduler 的 exit 2 排在同一条 detail 里而不显眼，不是本次发布引入的回归。
   actor: governance-agent
 - at: '2026-11-10T04:30:00+00:00'
   action: review
-  note: "decision_needed ① 的答案：**进程通路失败**, 不是「本己无数据源」。 实测链（2026-11-10T04:2xZ, 复算命令见下）:\n\
-    \  `strategy_sources.py:536` `_collect_runs` 走\n  `reader.discover(\"state\",\
-    \ \".omo/_delivery/agent-workflows/runs\", \"*.yaml\", required=True)`\n  —— 而\
-    \ `~/.local/state/omostation/prod/.omo/_delivery/agent-workflows`\n  是一条**符号链接**指向\
-    \ `/Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows`\n  （state 面的镜像桥,\
-    \ 与 AGENTS.md 记录的 delivery anchor symlink 桥同族）。\n  `discover()` 第 418 行 `(root/relative).resolve()`\
-    \ 跟着链跑出 state 根,\n  第 419 行 `is_relative_to(root)` 判 false ⇒ 报 `outside_allowlisted_root`。\n\
-    \  即便放行, 实际读取用的 `os.open(..., dir_fd=...)` 对**每个组件**都带\n  `O_NOFOLLOW`（第 108-115\
-    \ 行）, 符号链接目录会直接 ELOOP —— 即该 reader\n  的结构性设计就是「不可穿过软链」, 与状态面的镜像桥拓扑不兼容。\n同文件第 572\
-    \ 行读 `.omo/_knowledge/retros` 用的是 **workspace** 根（真目录, 可读）—— 同一文件里两种口径并存, 536\
-    \ 用 `state` 是笔误/历史遗留。 复算:\n  python3 -c \"import repo_root;from pathlib import\
-    \ Path;r=Path(repo_root.state_root()).resolve();p=(r/'.omo/_delivery/agent-workflows/runs').resolve();print(r,p,p.is_relative_to(r))\"\
-    \n  → /Users/xiamingxing/.local/state/omostation/prod /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows\
-    \ False\n  ls -ld ~/.local/state/omostation/prod/.omo/_delivery/agent-workflows\
-    \  → lrwxrwxr-x（指向 Workspace）\n  ls /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/runs\
-    \ | wc -l → 422（数据在, 且当天在写）\n**修法两条, 均需 owner 定调**（本条不擅改）:\n  ① 采集侧: 536/540 改用\
-    \ `workspace` 根（与 572 行口径一致, 真目录可读）\n     —— 改动最小, 但要确认 runs 的权威面是检出还是 state 根;\n\
-    \  ② 读取侧: 让 reader 支持「根内软链指向另一许可根」——需重审\n     `discover`/`read` 的 no-follow 穿越面,\
-    \ 属安全边界改动。\n另: `probe_strategy` 还依赖 PYTHONPATH 上有 `repo_root`（`refresh.py --probe\
-    \ strategy` 子进程不自带）——生产由 launchd `com.omostation.zhixing-dashboard-refresh` 的\
-    \ EnvironmentVariables.PYTHONPATH 提供, 但手工/其它入口直接跑会 `ModuleNotFoundError: No module\
-    \ named 'repo_root'`（同一族的脆弱点）。"
+  note: |-
+    decision_needed ① 的答案：**进程通路失败**, 不是「本己无数据源」。 实测链（2026-11-10T04:2xZ, 复算命令见下）:
+      `strategy_sources.py:536` `_collect_runs` 走
+      `reader.discover("state", ".omo/_delivery/agent-workflows/runs", "*.yaml", required=True)`
+      —— 而 `~/.local/state/omostation/prod/.omo/_delivery/agent-workflows`
+      是一条**符号链接**指向 `/Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows`
+      （state 面的镜像桥, 与 AGENTS.md 记录的 delivery anchor symlink 桥同族）。
+      `discover()` 第 418 行 `(root/relative).resolve()` 跟着链跑出 state 根,
+      第 419 行 `is_relative_to(root)` 判 false ⇒ 报 `outside_allowlisted_root`。
+      即便放行, 实际读取用的 `os.open(..., dir_fd=...)` 对**每个组件**都带
+      `O_NOFOLLOW`（第 108-115 行）, 符号链接目录会直接 ELOOP —— 即该 reader
+      的结构性设计就是「不可穿过软链」, 与状态面的镜像桥拓扑不兼容。
+    同文件第 572 行读 `.omo/_knowledge/retros` 用的是 **workspace** 根（真目录, 可读）—— 同一文件里两种口径并存, 536 用 `state` 是笔误/历史遗留。 复算:
+      python3 -c "import repo_root;from pathlib import Path;r=Path(repo_root.state_root()).resolve();p=(r/'.omo/_delivery/agent-workflows/runs').resolve();print(r,p,p.is_relative_to(r))"
+      → /Users/xiamingxing/.local/state/omostation/prod /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows False
+      ls -ld ~/.local/state/omostation/prod/.omo/_delivery/agent-workflows  → lrwxrwxr-x（指向 Workspace）
+      ls /Users/xiamingxing/Workspace/.omo/_delivery/agent-workflows/runs | wc -l → 422（数据在, 且当天在写）
+    **修法两条, 均需 owner 定调**（本条不擅改）:
+      ① 采集侧: 536/540 改用 `workspace` 根（与 572 行口径一致, 真目录可读）
+         —— 改动最小, 但要确认 runs 的权威面是检出还是 state 根;
+      ② 读取侧: 让 reader 支持「根内软链指向另一许可根」——需重审
+         `discover`/`read` 的 no-follow 穿越面, 属安全边界改动。
+    另: `probe_strategy` 还依赖 PYTHONPATH 上有 `repo_root`（`refresh.py --probe strategy` 子进程不自带）——生产由 launchd `com.omostation.zhixing-dashboard-refresh` 的 EnvironmentVariables.PYTHONPATH 提供, 但手工/其它入口直接跑会 `ModuleNotFoundError: No module named 'repo_root'`（同一族的脆弱点）。
   actor: governance-agent
 - at: '2026-11-17T00:00:00Z'
   action: mitigate
-  note: '**修了 (1) 采集侧, 且 owner 那问已由权威源回答。** 2026-11-17 复测: ① **「runs 的权威面是检出还是 state
-    根」不用裁 —— 权威源早已裁定**。 `projects/cockpit/src/cockpit/observatory/strategy_sources.py:424`
-    的 `_collect_runs` 用 `reader.discover("workspace", ...)`, 自 `8fd2290` (2026-09-11,
-    cockpit#159) 起就是如此 —— 同一份逻辑的**权威实现早就选了 workspace**, 漂移的是资产副本。 ② **真正坏了的是资产副本。**
+  note: '**修了 (1) 采集侧, 且 owner 那问已由权威源回答。** 2026-11-17 复测: ① **「runs 的权威面是检出还是 state 根」不用裁 —— 权威源早已裁定**。
+    `projects/cockpit/src/cockpit/observatory/strategy_sources.py:424` 的 `_collect_runs` 用 `reader.discover("workspace",
+    ...)`, 自 `8fd2290` (2026-09-11, cockpit#159) 起就是如此 —— 同一份逻辑的**权威实现早就选了 workspace**, 漂移的是资产副本。 ② **真正坏了的是资产副本。**
     线上 `refresh.py:931-932` 调 `collect_strategy_sources(workspace=code_root(), state_root=state_root(),
-    ...)`; 部署目录的 `strategy_sources.py` 与 `bin/panorama/assets/host/strategy_sources.py.asset`
-    **逐字节相同** (实测 diff 0 行), 而后者 `:536/:540` 用 `"state"` ⇒ 读 state 根下的 镜像桥软链 ⇒ `outside_allowlisted_root`
-    ⇒ runs 恒空、strategy 恒 PARTIAL。 **改动**: 资产两行 `"state"` → `"workspace"`, 与权威源对齐 (最小改动;
-    reader 的 no-follow 安全边界不必重审, 原 ② 修法不需要了)。 ③ **标题的「两个证据源」已过期**: `source_states.documents`
-    现为 `OK`, `last_success_at=2026-11-17T02:41:01` (立案时它是 2026-10-29 后的 PARTIAL)。
-    当前 PARTIAL 只剩 `strategy` 一项。 **验证**: 新增 `tests/test_strategy_sources_state_root.py`
+    ...)`; 部署目录的 `strategy_sources.py` 与 `bin/panorama/assets/host/strategy_sources.py.asset` **逐字节相同**
+    (实测 diff 0 行), 而后者 `:536/:540` 用 `"state"` ⇒ 读 state 根下的 镜像桥软链 ⇒ `outside_allowlisted_root` ⇒ runs
+    恒空、strategy 恒 PARTIAL。 **改动**: 资产两行 `"state"` → `"workspace"`, 与权威源对齐 (最小改动; reader 的 no-follow 安全边界不必重审,
+    原 ② 修法不需要了)。 ③ **标题的「两个证据源」已过期**: `source_states.documents` 现为 `OK`, `last_success_at=2026-11-17T02:41:01`
+    (立案时它是 2026-10-29 后的 PARTIAL)。 当前 PARTIAL 只剩 `strategy` 一项。 **验证**: 新增 `tests/test_strategy_sources_state_root.py`
     复刻线上三根 + 软链拓扑 (hermetic, 不读 host): 资产改回 `"state"` ⇒ 2 failed (`runs=[]` 且报 `outside_allowlisted_root`),
-    改回 `"workspace"` ⇒ 2 passed; 另一条与权威源 逐字对拍 `_collect_runs` 根选择 (需 cockpit 检出, CI
-    递归检出时会跑)。 **遗留**: `refresh.py:932` 仍传 `state_root=` —— 修完它已是**闲置根** (资产里再无 `"state"`
-    读), 但删参数属部署 API 变更, 本条不动; `probe_utils` 仍只存在于部署目录、仓里无 `.asset` 副本 (测试里打桩), 该模块未版本化是独立缺口。'
+    改回 `"workspace"` ⇒ 2 passed; 另一条与权威源 逐字对拍 `_collect_runs` 根选择 (需 cockpit 检出, CI 递归检出时会跑)。 **遗留**:
+    `refresh.py:932` 仍传 `state_root=` —— 修完它已是**闲置根** (资产里再无 `"state"` 读), 但删参数属部署 API 变更, 本条不动; `probe_utils`
+    仍只存在于部署目录、仓里无 `.asset` 副本 (测试里打桩), 该模块未版本化是独立缺口。'
   actor: governance-agent
 - at: '2026-11-22T15:30:00+00:00'
   action: mitigate
   actor: governance-agent
-  note: '**采集器侧已修并部署（#5406）**：资产的 `_collect_runs` 从 `"state"` 根改读 `"workspace"` 根（state
-    根下该目录是指向 workspace 的镜像桥软链, BoundedReader 按构造不可穿软链）。2026-11-22 用 `zhixing-host-sync.py
-    publish --file strategy_sources.py` 从 origin/main 检出部署（旧 release 只多这一个文件差异, 已核对）后,
-    用**与线上完全 相同的入参**复跑: `state=OBSERVED` / `hard_gaps=[]` / `runs=444`（改前 runs=0）。
-    **部署口径注意**: 必须从**含修复的检出**跑 `zhixing-host-sync.py` —— 从 canonical 跑会比到 canonical
-    的陈旧资产, 报 `in_sync` 不部署。 **残余（第二层, 未修）**: 线上 `source_states.strategy` 仍记 PARTIAL,
-    原因不在采集器, 而在 `refresh.py::apply_results` 的接纳判据 —— 它除了 `state == "PARTIAL"` 之外,
-    还要求 `documents` 与 `records` **非空**, 否则一律记 PARTIAL; 而 `documents` 为 0 是因为 `LIBRARY/.library/registry.yaml`
-    缺失（库侧数据缺口）。**两层的语义是矛盾的**: 采集器明确把「可选历史元数据缺席」归类为 soft gap（`"Absence of optional
-    historical metadata is evidence, but does not make the strategy source unavailable"`）,
+  note: '**采集器侧已修并部署（#5406）**：资产的 `_collect_runs` 从 `"state"` 根改读 `"workspace"` 根（state 根下该目录是指向 workspace
+    的镜像桥软链, BoundedReader 按构造不可穿软链）。2026-11-22 用 `zhixing-host-sync.py publish --file strategy_sources.py`
+    从 origin/main 检出部署（旧 release 只多这一个文件差异, 已核对）后, 用**与线上完全 相同的入参**复跑: `state=OBSERVED` / `hard_gaps=[]`
+    / `runs=444`（改前 runs=0）。 **部署口径注意**: 必须从**含修复的检出**跑 `zhixing-host-sync.py` —— 从 canonical 跑会比到 canonical
+    的陈旧资产, 报 `in_sync` 不部署。 **残余（第二层, 未修）**: 线上 `source_states.strategy` 仍记 PARTIAL, 原因不在采集器, 而在 `refresh.py::apply_results`
+    的接纳判据 —— 它除了 `state == "PARTIAL"` 之外, 还要求 `documents` 与 `records` **非空**, 否则一律记 PARTIAL; 而 `documents`
+    为 0 是因为 `LIBRARY/.library/registry.yaml` 缺失（库侧数据缺口）。**两层的语义是矛盾的**: 采集器明确把「可选历史元数据缺席」归类为 soft gap（`"Absence
+    of optional historical metadata is evidence, but does not make the strategy source unavailable"`）,
     而 refresh 把 `documents == []` 当成 PARTIAL。**要清掉这条红, 二选一**: ① 补 `织星主权智能操作系统文档库/.library/registry.yaml`（数据缺口）;
-    ② 让 refresh 的 接纳判据与采集器的 soft/hard 分类对齐（`state == OBSERVED` 就该接纳, 不看 documents）。
-    **未擅动**: ② 是 refresh 的行为变更, 且 ① 的库文件是否该存在属 owner 裁定。'
+    ② 让 refresh 的 接纳判据与采集器的 soft/hard 分类对齐（`state == OBSERVED` 就该接纳, 不看 documents）。 **未擅动**: ② 是 refresh
+    的行为变更, 且 ① 的库文件是否该存在属 owner 裁定。'
 - at: '2026-11-22T16:05:00+00:00'
   action: correct
   actor: governance-agent
-  note: "**订正上一条（#5428 的残余分析是错的）+ 找到真正的根因。** 上一条说「`documents` 为 0 是因为 `.library/registry.yaml`\
-    \ 缺失」—— 在**plist 的完整 env** 下复跑, `documents` 是 **59** 条, 那条不成立。我上次漏传了 plist 的 `OMOSTATION_ROOT`\
-    \ / `PANORAMA_*` / `PYTHONPATH`, 用错 env 得出了错结论。 **真正根因（三层）**: ① plist 的 `EnvironmentVariables.PYTHONPATH\
-    \ = ~/.local/opt/omostation/bin/lib`\n   ⇒ `refresh.py::probe_strategy` 里的 `repo_root.code_root()`\
-    \ 是 **`__file__` 派生**\n   （ADR-0456 设计如此, 两版 `repo_root.py` 逐字节相同）⇒ 解析到**安装根**。\n\
-    ② 安装根**没有** `.omo/_delivery/agent-workflows/`（该面 gitignored, release clone 按构造\n\
-    \   没有）⇒ 采集器读 `workspace:.omo/_delivery/agent-workflows/runs` 得\n   `empty_or_missing_directory`\
-    \ ⇒ `runs=0` ⇒ 采集器自己判 PARTIAL。\n③ 于是无论资产修得多对, 线上都恒 PARTIAL。 **验证**: 用 plist 的完整\
-    \ env 复跑探针 ⇒ `state=PARTIAL / runs=0`；把 `OMOSTATION_ROOT` 指向 `~/Workspace` 但 PYTHONPATH\
-    \ 仍指安装根 ⇒ **仍 PARTIAL**（因为 `code_root()` 是 `__file__` 派生, 无视该 env）。**这与「安装位落后\
-    \ 206 提交」是同一个病的两面** —— 安装位既是运行面又是读数面, 而它既旧又缺数据面。 **要清这条红, 只有两条路**: (a) 让安装位具备\
-    \ delivery 数据面（不现实: gitignored + release clone 按构造没有）; (b) **让 probe_strategy\
-    \ 读 canonical 检出** （`canonical_root()` 或显式 `~/Workspace`）而不是 `__file__` 派生的 code_root。\
-    \ (b) 是 `bin/panorama/assets/host/refresh.py.asset` 的一处改动 + 重新部署, **未擅动**。 **纪律**:\
-    \ 复算线上读数时, **env 必须逐项对齐 plist**（`OMOSTATION_ROOT` / `OMOSTATION_STATE_ROOT` /\
-    \ `PANORAMA_*` / `PYTHONPATH`）—— 漏一项就会得出一个 看起来很像真的错结论, 而它会以「已核实」的身份进债务条目。"
+  note: |-
+    **订正上一条（#5428 的残余分析是错的）+ 找到真正的根因。** 上一条说「`documents` 为 0 是因为 `.library/registry.yaml` 缺失」—— 在**plist 的完整 env** 下复跑, `documents` 是 **59** 条, 那条不成立。我上次漏传了 plist 的 `OMOSTATION_ROOT` / `PANORAMA_*` / `PYTHONPATH`, 用错 env 得出了错结论。 **真正根因（三层）**: ① plist 的 `EnvironmentVariables.PYTHONPATH = ~/.local/opt/omostation/bin/lib`
+       ⇒ `refresh.py::probe_strategy` 里的 `repo_root.code_root()` 是 **`__file__` 派生**
+       （ADR-0456 设计如此, 两版 `repo_root.py` 逐字节相同）⇒ 解析到**安装根**。
+    ② 安装根**没有** `.omo/_delivery/agent-workflows/`（该面 gitignored, release clone 按构造
+       没有）⇒ 采集器读 `workspace:.omo/_delivery/agent-workflows/runs` 得
+       `empty_or_missing_directory` ⇒ `runs=0` ⇒ 采集器自己判 PARTIAL。
+    ③ 于是无论资产修得多对, 线上都恒 PARTIAL。 **验证**: 用 plist 的完整 env 复跑探针 ⇒ `state=PARTIAL / runs=0`；把 `OMOSTATION_ROOT` 指向 `~/Workspace` 但 PYTHONPATH 仍指安装根 ⇒ **仍 PARTIAL**（因为 `code_root()` 是 `__file__` 派生, 无视该 env）。**这与「安装位落后 206 提交」是同一个病的两面** —— 安装位既是运行面又是读数面, 而它既旧又缺数据面。 **要清这条红, 只有两条路**: (a) 让安装位具备 delivery 数据面（不现实: gitignored + release clone 按构造没有）; (b) **让 probe_strategy 读 canonical 检出** （`canonical_root()` 或显式 `~/Workspace`）而不是 `__file__` 派生的 code_root。 (b) 是 `bin/panorama/assets/host/refresh.py.asset` 的一处改动 + 重新部署, **未擅动**。 **纪律**: 复算线上读数时, **env 必须逐项对齐 plist**（`OMOSTATION_ROOT` / `OMOSTATION_STATE_ROOT` / `PANORAMA_*` / `PYTHONPATH`）—— 漏一项就会得出一个 看起来很像真的错结论, 而它会以「已核实」的身份进债务条目。
 - at: '2026-11-22T16:15:00+00:00'
   action: mitigate
   actor: governance-agent
-  note: "**已闭环 (2026-11-22 16:06Z)。** 三处改动: ① 资产 `#5406` 的 `_collect_runs` 从 `\"state\"\
-    ` 改读 `\"workspace\"` —— 已部署; ② `refresh.py` 的 `probe_strategy` 读数面由 `code_root()`\
-    \ 改为 **`canonical_root()`**\n   (`#5430`): `code_root()` 由 `__file__` 派生, 跑在安装位时指向安装位,\
-    \ 而安装位按构造\n   没有 delivery 数据面; 采集器读的是**仓内数据面**, 属读平面的事;\n③ `com.omostation.zhixing-dashboard-refresh`\
-    \ plist 去掉 `OMOSTATION_ROOT`\n   (原值指向安装位 ⇒ `canonical_root()` 仍解析到安装位; 该 env\
-    \ 在本进程只被\n   `canonical_root()` 消费, `PANORAMA_ROOT` 是另一个 env, 不受影响), bootout+bootstrap。\n\
-    **读数**: `source_states.strategy` = **OK**, `last_success_at` 由 `2026-10-28T08:18:24`\
-    \ 前进到 **2026-11-22T16:06:02**; 服务 `runs=2 / last exit code=0`; 探针 `state=OBSERVED\
-    \ / runs=444 / documents=59 / hard_gaps=[]`。 **部署口径两条**: `zhixing-host-sync.py`\
-    \ 必须从**含修复的检出**跑(从 canonical 跑会比到 陈旧资产而报 `in_sync`); plist 改动必须 `bootout`+`bootstrap`,\
-    \ `kickstart -k` 不重读。 **仍未 OK 的其他源**(不在本条范围): `ruflo` FAIL、`personal_value_truth`\
-    \ UNAVAILABLE、 `panorama_base` STALE_UNAVAILABLE。"
+  note: |-
+    **已闭环 (2026-11-22 16:06Z)。** 三处改动: ① 资产 `#5406` 的 `_collect_runs` 从 `"state"` 改读 `"workspace"` —— 已部署; ② `refresh.py` 的 `probe_strategy` 读数面由 `code_root()` 改为 **`canonical_root()`**
+       (`#5430`): `code_root()` 由 `__file__` 派生, 跑在安装位时指向安装位, 而安装位按构造
+       没有 delivery 数据面; 采集器读的是**仓内数据面**, 属读平面的事;
+    ③ `com.omostation.zhixing-dashboard-refresh` plist 去掉 `OMOSTATION_ROOT`
+       (原值指向安装位 ⇒ `canonical_root()` 仍解析到安装位; 该 env 在本进程只被
+       `canonical_root()` 消费, `PANORAMA_ROOT` 是另一个 env, 不受影响), bootout+bootstrap。
+    **读数**: `source_states.strategy` = **OK**, `last_success_at` 由 `2026-10-28T08:18:24` 前进到 **2026-11-22T16:06:02**; 服务 `runs=2 / last exit code=0`; 探针 `state=OBSERVED / runs=444 / documents=59 / hard_gaps=[]`。 **部署口径两条**: `zhixing-host-sync.py` 必须从**含修复的检出**跑(从 canonical 跑会比到 陈旧资产而报 `in_sync`); plist 改动必须 `bootout`+`bootstrap`, `kickstart -k` 不重读。 **仍未 OK 的其他源**(不在本条范围): `ruflo` FAIL、`personal_value_truth` UNAVAILABLE、 `panorama_base` STALE_UNAVAILABLE。
 - at: '2026-11-23T06:00:44.103779+00:00'
   action: update_description
-  note: 'Updated description from '''' to ''**复测 (2026-11-23): 立案前提已不成立 —— 两个源都已恢复,
-    A9 已 PASS。**
-
+  note: |-
+    Updated description from '' to '**复测 (2026-11-23): 立案前提已不成立 —— 两个源都已恢复, A9 已 PASS。**
 
     本条称「A9 的两个证据源 12 天无成功观测」。实测 (投影 `revisions/7026733c…/data.json`, mtime 11-23 13:58):
 
-
     - `strategy` → **OK**, last_success_at **2026-11-23T05:57**
-
     - `documents` → **OK**, last_success_at **2026-11-23T05:57**
-
     - A9 门 → **PASS** (`cockpit projection age 13s; ASD COMPLETE`)
-
 
     ⇒ 「12 天无成功观测」与「A9 长期不可闭合」**都不再成立**。
 
-
-    **仍在的**（本条真正该跟的）: 剩下三个源 —— `ruflo` **FAIL**(11-23T05:57)、`personal_value_truth`
-    **UNAVAILABLE**(自 10-28T08:18)、`panorama_base` **STALE_UNAVAILABLE**(自 10-28T07:27)。后两个正是
-    `panorama_base` 修法 (3)（plist 追加 `PANORAMA_OUTPUT_ROOT`）要解冻的对象 —— **该修法仍待裁**。''.'
+    **仍在的**（本条真正该跟的）: 剩下三个源 —— `ruflo` **FAIL**(11-23T05:57)、`personal_value_truth` **UNAVAILABLE**(自 10-28T08:18)、`panorama_base` **STALE_UNAVAILABLE**(自 10-28T07:27)。后两个正是 `panorama_base` 修法 (3)（plist 追加 `PANORAMA_OUTPUT_ROOT`）要解冻的对象 —— **该修法仍待裁**。'.
 - at: '2026-11-23T06:16:25.597499+00:00'
   action: update_description
-  note: 'Updated description from ''**复测 (2026-11-23): 立案前提已不成立 —— 两个源都已恢复, A9 已 PASS。**
-
+  note: |-
+    Updated description from '**复测 (2026-11-23): 立案前提已不成立 —— 两个源都已恢复, A9 已 PASS。**
 
     本条称「A9 的两个证据源 12 天无成功观测」。实测 (投影 `revisions/7026733c…/data.json`, mtime 11-23 13:58):
 
-
     - `strategy` → **OK**, last_success_at **2026-11-23T05:57**
-
     - `documents` → **OK**, last_success_at **2026-11-23T05:57**
-
     - A9 门 → **PASS** (`cockpit projection age 13s; ASD COMPLETE`)
-
 
     ⇒ 「12 天无成功观测」与「A9 长期不可闭合」**都不再成立**。
 
+    **仍在的**（本条真正该跟的）: 剩下三个源 —— `ruflo` **FAIL**(11-23T05:57)、`personal_value_truth` **UNAVAILABLE**(自 10-28T08:18)、`panorama_base` **STALE_UNAVAILABLE**(自 10-28T07:27)。后两个正是 `panorama_base` 修法 (3)（plist 追加 `PANORAMA_OUTPUT_ROOT`）要解冻的对象 —— **该修法仍待裁**。' to '**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
 
-    **仍在的**（本条真正该跟的）: 剩下三个源 —— `ruflo` **FAIL**(11-23T05:57)、`personal_value_truth`
-    **UNAVAILABLE**(自 10-28T08:18)、`panorama_base` **STALE_UNAVAILABLE**(自 10-28T07:27)。后两个正是
-    `panorama_base` 修法 (3)（plist 追加 `PANORAMA_OUTPUT_ROOT`）要解冻的对象 —— **该修法仍待裁**。''
-    to ''**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
+    投影 `~/.local/share/zhixing-dashboard/revisions/*/data.json` 连续四轮 (13:58 / 14:06 / 14:10 / 14:14) 读数完全一致:
 
-
-    投影 `~/.local/share/zhixing-dashboard/revisions/*/data.json` 连续四轮 (13:58 / 14:06
-    / 14:10 / 14:14) 读数完全一致:
-
-
-    - A9 门 = **PASS** (`dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE`),
-    四轮皆然;
-
+    - A9 门 = **PASS** (`dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE`), 四轮皆然;
     - `strategy` / `documents` = **OK**, last_success_at 2026-11-23T05:57, 四轮皆然。
-
 
     ⇒ 本条立案时的「两个证据源 12 天无成功观测 / A9 长期不可闭合」**已彻底消解**, 且不是偶发单帧 —— 链路在真实调度节奏下稳定。
 
-
-    **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
-    (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
-    修法 (3) 解冻, **该修法仍待裁**。''.'
+    **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base` 修法 (3) 解冻, **该修法仍待裁**。'.
 - at: '2026-11-23T13:47:14.840677+00:00'
   action: close
   note: Closed debt item.
   actor: governance-agent
-description: '**已闭环 (2026-11-23 连续 4 轮实测, 非单帧快照)。**
+- at: '2026-11-24T00:35:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **第三次普查 + 与并发结案的调和（本轮不 reopen、不改 lifecycle_state/gate_level）。**
 
+    普查（00:28:57Z 帧，49 帧窗口）：`47 PASS / 2 PARTIAL / 0 FAIL`，与 22:12Z / 23:28Z 两次同形；
+    独立重跑 A9 准入逻辑 `bad_sources = []` ↔ 发布 `A9 PASS`；`oldest required-source success age`
+    = 1930 s（`scheduler`）对年龄界 21600 s 余量 11×。⇒ 前两条 history 的「已闭环」结论**成立**，
+    本条 premise 无残余。
 
-  投影 `~/.local/share/zhixing-dashboard/revisions/*/data.json` 连续四轮 (13:58 / 14:06
-  / 14:10 / 14:14) 读数完全一致:
+    **并发时序（为什么 #5499 会撞车）**：本 worktree claim 基线 `c221ed5f7`；结案 commit `e41d012b8`
+    (#5478) 的 committer 时间是 2026-11-24 07:44:39 +0800 = **23:44Z**，而我那批改动 push 在 **23:47Z**
+    —— 差 3 分钟，claim 时不可见。后果：PR #5499 `mergeable: CONFLICTING / mergeStateStatus: DIRTY`，
+    改走 full successor 重放（本 commit），#5499 关闭。教训已在仓内（PITFALL-GAT-006 动手前先查 main
+    是否已自愈），但**对「并发 agent 在 push 前 3 分钟结案同一条目」这条时序，claim 时点的检查不够**：
+    结案发生在 push 前 → 需要 push 前再 fetch 一次做内容等价核对，而不是只在 claim 时核对。
 
+    **broker 侧两项新事实（已另立 OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY）**：
+    ① `projects/omo/src/omo/omo_debt_cli.py:74-76` —— `close_debt_item` 无条件写
+       `lifecycle_state=closed` + **`gate_level=none`** + `closed_at`，原 `gate_level` 不留快照；
+       `:430-431` 的 `reopen` 只写 `lifecycle_state=identified`，既不恢复 `gate_level` 也不清 `closed_at`
+       ⇒ close→reopen 环路使条目**静默失去闸级**并携带过期 `closed_at`。本条即是活体：`watchlist` → `none`
+       （见 `git show e41d012b8 -- <本文件>`）。
+    ② 同文件 447 行内 `close_reason` / `resolution_evidence` **零命中**，`append_history` 的 note 是固定串
+       「Closed debt item.」⇒ 本条结案理由两字段是 broker 外手写；broker 现有 17 个子命令
+       （register/list/schedule/refresh/dispatch/approve/campaign/report/report-history/report-diff/
+       report-trend/reclassify/escalate/revalidate/close/desc/reopen）中**没有任何一个能写 evidence 类字段**，
+       与本条 history 2026-11-09 那条「结构性原因」记录一致，至今未修。
 
-  - A9 门 = **PASS** (`dashboard/asd age 0s; cockpit projection age 13s; ASD COMPLETE`),
-  四轮皆然;
+    **status 字段帧间易变（不能用单帧定性）**：`personal_value_truth` 23:27:56Z `UNAVAILABLE` →
+    00:28:57Z **`DEFERRED`**（`DEFERRED` 分支无年龄界 ⇒ 这是 `PANORAMA-A9-DEFERRED-UNBOUNDED` 所指放行
+    路径带 640.2 h 年龄的现场实例）；`gantt` `OK`(243s) → `STALE_UNAVAILABLE` 且 `last_success_at: None`；
+    `ruflo` `FAIL`(249s) → `DEFERRED`(1279s)。三者均不在 `required_sources` 内，对 A9 无影响。
 
-  - `strategy` / `documents` = **OK**, last_success_at 2026-11-23T05:57, 四轮皆然。
+    **取证面限制（复算前提）**：`revisions/` 容量 49 ≈ 4 h 滑动窗口 ⇒ 本次引用的 18:00Z 起帧在数小时后
+    不可复算；`current.json` 每轮刷新先进 `UNKNOWN` 占位态。因此本条所有断言都配了独立重跑脚本
+    （见 `decision_needed`），而不是只指路径。
+description: |-
+  **前提已消解并被结案；本轮把「单点快照」升级为三次全量普查，并订正结案记录的可追溯性。**
 
+  原命题「A9 的两个证据源 12 天无成功观测 / PARTIAL 永不被接受导致 A9 长期不可闭合」不再成立。
+  三次独立取样（投影 `~/.local/share/zhixing-dashboard/revisions/*/data.json`，各 49 帧，窗口
+  11-23 18:00:15Z–22:12:31Z、11-23 19:28:51Z–23:27:57Z、11-23 22:0x–11-24 00:28:57Z）读数同形：
 
-  ⇒ 本条立案时的「两个证据源 12 天无成功观测 / A9 长期不可闭合」**已彻底消解**, 且不是偶发单帧 —— 链路在真实调度节奏下稳定。
+  | 取样 | A9 verdict 分布 | `strategy` | `documents` | oldest required-source success age |
+  |---|---|---|---|---|
+  | 22:12Z | 47 PASS / 2 PARTIAL / 0 FAIL | OK, 年龄 ≤ 0.12 h | OK, 年龄 ≤ 0.12 h | 632 s（界 21600 s，余量 34×） |
+  | 23:28Z | 47 PASS / 2 PARTIAL / 0 FAIL | OK | OK | 632 s |
+  | 11-24 00:29Z | 47 PASS / 2 PARTIAL / 0 FAIL | OK | OK | 1930 s（`scheduler`，余量 11×） |
 
+  A9 准入逻辑独立重跑（非引用发布值）：00:28:57Z 帧 `bad_sources = []`，与同帧发布的 `A9 PASS` 一致。
+  两帧 PARTIAL 与「源陈旧」无关（`cockpit_sources` 不完整 + `portfolio=PARTIAL`）。
 
-  **剩余缺口 (与本条立案前提无关, 单列)**: `ruflo` FAIL (11-23T05:57); `personal_value_truth` UNAVAILABLE
-  (自 10-28T08:18); `panorama_base` STALE_UNAVAILABLE (自 10-28T07:27)。后两个由 `panorama_base`
-  修法 (3) 解冻, **该修法仍待裁**。'
+  **结案事实**：`e41d012b8` (#5478) 于 2026-11-23T13:47:14Z 由 governance-agent 走 broker `close` 结案，
+  结论与本普查一致，本轮不 reopen。但结案记录有三处可追溯性缺陷（详见 `decision_needed` R1'）：
+  close 的 history note 是 broker 硬编码串 `Closed debt item.`（`omo_debt_cli.py:80-86`），真正的理由写在
+  broker 从不写的 `close_reason`/`resolution_evidence`（全文零命中 ⇒ broker 外手写）；`close` 还把
+  `gate_level` 由 `watchlist` 覆写为 `none`（`:74-75`）而 `reopen`（`:430-431`）不恢复 ⇒ close→reopen 静默去闸。
+
+  **仍在（不属本条前提，但本条是它们最早的记录处）**：`panorama_base` 无成功 640.5 h（仓根
+  `runtime/dashboard/data.json` 自 2026-10-28T08:15:07Z 无写方）、`personal_value_truth` 640.2 h；
+  二者都不在 A9 的 14 元 `required_sources` 内。观测已由 `PANORAMA-GATE-DETAIL-UNRELIABLE:164-229`
+  与 `PANORAMA-A9-DEFERRED-UNBOUNDED:78-105` 记录，**修法（R3 四候选）仍待裁**。
 closed_at: '2026-11-23T13:47:14.840529+00:00'
-close_reason: 本条立案前提「strategy 与 documents 两大证据源 12 天无成功观测」已彻底消解。经连续实测与今日持续调度，两源状态均为
-  OK，last_success_at 保持新鲜。
-resolution_evidence: 投影 revisions/*/data.json 实测连续四轮及今日实时读数：source_states.strategy
-  = OK, source_states.documents = OK（last_success_at 2026-11-23T12:09Z）。其余三个独立源（ruflo、personal_value_truth、panorama_base）属于独立问题，已在
-  PANORAMA-A9-DEFERRED-UNBOUNDED 及 PANORAMA_OUTPUT_ROOT (#5466) 框架下跟踪，不阻塞本条结案。
+close_reason: 本条立案前提「strategy 与 documents 两大证据源 12 天无成功观测」已彻底消解。经连续实测与今日持续调度，两源状态均为 OK，last_success_at
+  保持新鲜。
+resolution_evidence: 投影 revisions/*/data.json 实测连续四轮及今日实时读数：source_states.strategy = OK, source_states.documents
+  = OK（last_success_at 2026-11-23T12:09Z）。其余三个独立源（ruflo、personal_value_truth、panorama_base）属于独立问题，已在 PANORAMA-A9-DEFERRED-UNBOUNDED
+  及 PANORAMA_OUTPUT_ROOT (#5466) 框架下跟踪，不阻塞本条结案。
