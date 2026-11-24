@@ -108,6 +108,10 @@ history:
   action: review
   actor: governance-agent
   note: 立案后复核：本条 `lifecycle_state` 被 broker 自己改成了 `scheduled` —— `omo_debt_lifecycle.py:66-84 schedule_item` 在写 `next_review_at`（`:77`）的同一段里无条件写 `payload["lifecycle_state"] = "scheduled"`（`:76`），而我本轮为补 `OMO-DEBT-REGISTER-NO-REVIEW-DATES` 决策项 (3) 所述的「立案后必须调 schedule」而调了 `schedule`，于是该键被连带改写。实测它是当时全库 107 条里唯一取 `scheduled` 的条目（closed 35 / resolved 32 / identified 35 / in_progress 4），即该词汇在现网无第二使用者，属 OMO-WRITEOWNER ⑥ 记的「词汇不在取值集内」形状；同文件 `reopen` 分支（`omo_debt_cli.py:456`）复位写的却是 `identified`，可见 broker 内部两套词汇。本轮把该键手工复位为 `identified`（不改任何判据、不改指标面），并在此留痕而非静默覆盖，理由：状态字段是治理面，排期字段才是我要写的，二者被一次 `schedule` 调用捆在一起正是待裁项。该副作用已作为复现证据登记进新案 OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID（同一函数还有更硬的一面：对不存在的 id 返回 rc=0 并铸孤儿文件）。
+- at: '2026-11-24T08:38:00Z'
+  action: review
+  actor: governance-agent
+  note: 把「今日四桶为 0」升级为「按当前排期约定结构上必为 0」：逐条量 41 条非终态条目的 `next_review_at` （本批立案后 = 原 39 + 本条 + OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID），落 `due_now`(`<=今日`) 0 条、落 `upcoming`(`<=今日+7d`，即 2026-12-01 前) **0 条**；最早一条是 2026-12-06（+12 天），最晚 2026-12-16（+22 天），8–14 天区间 23 条、>14 天 18 条。即四桶 0/0/0/0 不是「今天没到期」，而是**只要维持「复核后 +14 天」的排期约定，`REVIEW_WINDOW_DAYS=7` 就永远接不到任何条目**——本条描述的 all-none 是构造性的，不是时点性的。严重度分布 medium 32 / high 7 / low 2，41 条里 40 条挂着 `decision_needed`。该读数只加判据依据，不改任何窗口常量、排期约定与桶逻辑；三选一仍留 principal。
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Tool
