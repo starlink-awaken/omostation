@@ -210,9 +210,13 @@ def _scene_card_check(scene_card: dict[str, Any]) -> dict[str, Any]:
     #         并把锁改成「二选一」(要么 locked, 要么显式记录豁免);
     #     (b) 它们确实违反了 proposal-only → 把 3 张卡改回 locked。
     #   在裁定前不要简单删掉这条锁 —— 那会抹掉内部轨唯一的 red line。
-    if scene_card.get("activation") not in {None, "forbidden"}:
+    # BET-Y2Q4-T10-352: 锁改「二选一」—— 要么合规值 (forbidden/proposal_only,
+    # 已在 standards 正式化), 要么卡上显式记录 proposal_lock_exemption 豁免理由
+    # (源码注释 195-212 的 owner 裁定 (a) 路线)。红线本体保留: 无豁免照报。
+    exemption = scene_card.get("proposal_lock_exemption")
+    if scene_card.get("activation") not in {None, "forbidden"} and not exemption:
         missing.append("activation_must_be_forbidden")
-    if scene_card.get("lifecycle") not in {None, "proposal_only"}:
+    if scene_card.get("lifecycle") not in {None, "proposal_only"} and not exemption:
         missing.append("lifecycle_must_be_proposal_only")
 
     return {
