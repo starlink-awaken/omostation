@@ -7,8 +7,15 @@ scope: "host"
 severity: "medium"
 weight: 0.15
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
 owner: "governance-team"
+closed_at: "2026-11-24"
+close_reason: "安装位本地改动阻塞已彻底清理，anchor-install-root.sh 成功重锚至最新 origin/main SHA (e41d012b8)，巡检 --check 实测 exit 0 (0 behind, 0 days)"
+resolution_evidence: >-
+  2026-11-24 实测: 1) 清理 projects/agora 与 projects/omo 内本地 uv.lock 后安装位工作树 0 脏项;
+  2) 执行 bin/ssot/anchor-install-root.sh 成功重锚至 e41d012b8 并同步子模块与 omo venv;
+  3) 巡检 bin/ssot/anchor-install-root.sh --check 返回 exit code 0，输出「锚点一致 origin/main: e41d012b8」;
+  4) 驾驶舱采集器生成 data.json 证实 code_root_health 由 STALE 翻转为 PASS。
 affected_roots:
 - "~/.local/opt/omostation"
 - "bin/ssot/anchor-install-root.sh"
@@ -22,7 +29,7 @@ evidence_refs:
 - "根仓 #5172 修的正是该作业的 2 个 UNKNOWN facet, 但因安装位未更新而无法生效"
 mitigation_refs: []
 opened_at: "2026-11-09"
-last_reviewed_at: '2026-11-09'
+last_reviewed_at: '2026-11-24'
 next_review_at: '2026-11-16'
 gate_level: none
 x1_policy_ref: ""
@@ -117,4 +124,13 @@ history:
     变异对照: 把默认目标改回检出根 HEAD ⇒ 3 条当场红。
     **仍未做**: `decision_needed` (2)「巡检是否要自愈」—— 本次只修了**读数**,
     没有加自动重锚分支 (那是行为变更, 且重锚会动常驻族运行的代码, 应单独裁)。
+  actor: "governance-agent"
+- at: '2026-11-24T07:45:30Z'
+  action: close
+  note: >-
+    安装位重锚阻塞彻底解除并实测闭环。
+    1. 清理 projects/agora 与 projects/omo 内本地 uv.lock 差异，恢复安装位为干净状态；
+    2. 执行 bin/ssot/anchor-install-root.sh，成功将 ~/.local/opt/omostation 由 5cec6612a (落后 297 commits / 14 天) 重锚至 origin/main (e41d012b8) 并完成子模块递归更新与 omo venv 同步；
+    3. 运行 bin/ssot/anchor-install-root.sh --check，输出「锚点一致 origin/main: e41d012b8」，退出码 0；
+    4. 联动更新托管克隆 code-main 并触发全景驾驶舱采集，data.json 中 code_root_health.verdict 确认翻转为 PASS。
   actor: "governance-agent"

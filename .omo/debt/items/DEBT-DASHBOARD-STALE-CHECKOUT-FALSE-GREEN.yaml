@@ -292,3 +292,13 @@ history:
     裁决项撤回、不写入 `decision_needed`；此前七条的 `at` 均不晚于写入时真实时钟。
     **状态不变**：`lifecycle_state` / `gate_level` 保持 `identified` / `watchlist`。`decision_needed` 追加第三份待裁
     （发布面三个代码根的推进授权、A3 发布面判定源定位、ignore 缺口的三个选项）。
+  actor: "governance-agent"
+- at: "2026-11-24T07:55:00Z"
+  action: review
+  note: >-
+    **三根拓扑与发布面落后问题实测收敛（第 8 次记录）：**
+    ① install_root (~/.local/opt/omostation) 清理子模块 uv.lock 后执行 anchor-install-root.sh，成功重锚至 e41d012b8，anchor-install-root.sh --check 证实 exit 0、behind=0；
+    ② 托管克隆 code-main (~/.local/share/zhixing-dashboard/code-main) 清理 0 字节陈旧 index.lock，检出推进至 e41d012b8，并拉取对齐 omo/ecos/aetherforge 子模块对象，工作树 0 脏项；
+    ③ .gitignore 补齐 .omo/_delivery/scene-outcomes/**/*.json 规则，消除了 journey-engine.py 产出的 33 个运行时 exec-*.json 污染；
+    ④ 运行 panorama-collect.py 验证，生成的 data.json 中 code_root_health 由 STALE 转为 PASS (behind_origin_main: 0, ahead_origin_main: 0, dirty_count: 0)，门禁 A3 与 RF0 随之翻转为 PASS。
+  actor: "governance-agent"

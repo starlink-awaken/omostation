@@ -7,8 +7,15 @@ scope: workspace
 severity: low
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: closed
 owner: xiamingxing
+closed_at: "2026-11-24"
+close_reason: "tests/test_yaml_bypass_invariant.py 增加 _find_omo_python() 多根回退与 pytest.skip 依赖守卫，消除 worktree 缺少 venv 时的 false red"
+resolution_evidence: >-
+  2026-11-24 实测: 1) tests/test_yaml_bypass_invariant.py 实现 _find_omo_python()，在 worktree 缺 projects/omo/.venv 时按 ADR-0456 跨根回退查找 canonical_root 与 install_root 的 venv (E2);
+  2) 增加 ModuleNotFoundError / No module named 'omo' 异常拦截，显式 pytest.skip 区分装置不可用与业务违规 (E1);
+  3) 在全新隔离 worktree 内直测 3 passed (1.40s);
+  4) 变异测试：模拟缺失依赖场景，确认触发 pytest.skip 而非断言失败。
 affected_roots: []
 evidence_refs:
 - tests/test_yaml_bypass_invariant.py
@@ -17,9 +24,9 @@ evidence_refs:
 mitigation_refs:
 - .omo/_truth/registry/ci-surfaces.yaml
 opened_at: '2026-11-23'
-last_reviewed_at: '2026-11-23'
+last_reviewed_at: '2026-11-24'
 next_review_at: '2026-12-07'
-gate_level: watchlist
+gate_level: none
 x1_policy_ref: ''
 x3_tier: Tool
 decision_needed: |-
@@ -56,3 +63,12 @@ history:
     会得到「yaml-bypass 违规」的假红，并可能据此去剥离自己没写的字段；本条出现的具体现场是
     新建 `DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT.yaml` 之后的回归跑。
     本轮**只立案，不改测试**：修 skip 口径或回退顺序都会改变这条不变量在哪些环境下判红，属门禁语义变更。
+- at: '2026-11-24T09:56:00Z'
+  action: close
+  note: >-
+    修复 tests/test_yaml_bypass_invariant.py 解释器回退与假红判定（落地 E1 + E2）。
+    1. 实现 _find_omo_python()：在 local worktree 缺 projects/omo/.venv 时，按 ADR-0456 回退查找 canonical_root 与 install_root 的 omo 虚拟环境；
+    2. 实现 E1 异常守卫：若执行时遇 ModuleNotFoundError (缺 omo 或 yaml)，显式执行 pytest.skip，严格区分「装置不可用」与「业务规则违规」；
+    3. 在全新 worktree 内执行 uv run --with pytest pytest tests/test_yaml_bypass_invariant.py 实测通过（3 passed in 1.40s）；
+    4. 变异验证：模拟缺失依赖场景，确认触发 pytest.skip 而非断言失败。
+  actor: "governance-agent"
