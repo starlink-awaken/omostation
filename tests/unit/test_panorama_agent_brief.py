@@ -750,6 +750,30 @@ def test_resolve_failing_gates_names_each_gate_authority() -> None:
     assert "gate-health-check.py" in action["detail"]
 
 
+def test_resolve_failing_gates_names_verifier_when_health_check_cannot_see_them() -> None:
+    """A1–A5 都不红时，复检命令必须是这些门禁自己的 verifier。
+
+    gate-health-check.py 只产 A1..A5。失败集只有 RF0 时仍写
+    re-run bin/gac/gate-health-check.py，照做既不能证真也不能证伪。
+    """
+    module = _module()
+    payload = _payload()
+    payload["gates"] = [
+        {"id": "A1", "title": "Workflow", "verdict": "PASS", "live": True},
+        {"id": "A6", "title": "Orca R0 准入", "verdict": "NOT_ADMITTED", "live": False},
+        {"id": "RF0", "title": "Ruflo 只读协作准入", "verdict": "NOT_ADMITTED", "live": False},
+    ]
+    action = next(
+        a for a in module.collect_agent_visibility(payload)["next_actions"]
+        if a["id"] == "resolve-failing-gates"
+    )
+
+    assert "re-run bin/gac/orca-r0-verify.py --json / bin/gac/ruflo-rf0-verify.py --json" in action["detail"]
+    assert "re-run bin/gac/gate-health-check.py" not in action["detail"]
+    assert "point-in-time snapshot" in action["detail"]
+    assert "Resolve failing gates: A6, RF0" in action["detail"]
+
+
 def test_resolve_failing_gates_omits_verifier_hint_for_unlisted_gates() -> None:
     """只有判定源确实不同的门禁才该被点名, 否则细节会误导成「另有仪器」。"""
     module = _module()
