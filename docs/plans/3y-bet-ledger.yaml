@@ -48353,6 +48353,70 @@ bets:
   circuit_breaker: >-
     若 .omo/_truth/{scenarios,journeys}/v3 存在活跃消费方 (导致 autogen 切换
     数据源破坏其读数), 停止并交 owner 裁决。
+- id: BET-Y2Q4-T10-352
+  title: BET-Y2Q4-T10-352 场景卡就绪度双解锁 —— proposal-lock 二选一语义 + 8 张卡 owner 审批落地
+  goal: >-
+    2026-11-24 实测: scene-card 总检 ready=7/70。(1) internal-scene-preflight 的
+    proposal-only 红线自相矛盾 —— 它要求 activation=forbidden / lifecycle=
+    proposal_only, 但这两个值不在 standards 枚举里 (合法值 draft/shadow/assisted/
+    supervised/routine 与 preview/controlled/active), 显式写了合法值的卡必违反
+    (源码注释 195-212 行已标注 owner 待裁, 两路 (a) 补枚举+锁改二选一 / (b) 卡回
+    locked)。本 BET 取 (a): 补 proposal_only/forbidden 枚举正式化内部轨锁态; 锁
+    改「二选一」—— 要么合规值, 要么卡上显式记录 proposal_lock_exemption 豁免
+    理由。(b) 违反生命周期单向升级 (CLAUDE.md B.0.5), 53 张 supervised 既成事实
+    不可回退。(2) 8 张卡 approval_state 待批 (trial 已过, 唯一卡点) —— owner
+    于 2026-11-24 会话原话「go, 授权, 批」逐卡批准: admin-inbox/admin-submit/
+    agora-bos-gateway/health-archive/health-intake/health-visit-prep/health-visit/
+    knowledge-curation。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - .omo/standards/scene-card-lifecycle.yaml
+  - bin/ssot/internal-scene-preflight.py
+  - tests/test_internal_scene_preflight.py
+  - docs/scene-cards/admin-inbox.yaml
+  - docs/scene-cards/admin-submit.yaml
+  - docs/scene-cards/agora-bos-gateway.yaml
+  - docs/scene-cards/health-archive.yaml
+  - docs/scene-cards/health-intake.yaml
+  - docs/scene-cards/health-visit-prep.yaml
+  - docs/scene-cards/health-visit.yaml
+  - docs/scene-cards/knowledge-curation.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-24-scene-card-readiness-dual-unlock-bet-t10-352.md
+    spec_version: 1.0.0
+    content_digest: sha256:0493e0f3a08e308cd50633a97e882f92dbb43b730ab1c18d4d3269cfb657bae9
+    decision_ref: decision://accepted/BET-Y2Q4-T10-352
+  non_goals:
+  - 不为 8 张 preflight 卡补 missing_fields (activation_evidence_refs 等卡面数据
+    债另案)。
+  - 不处理 43 张异步 trial 与 4 张 pending 审批。
+  - 不删 proposal-only 红线本体 (保留内部轨 red line, 只加豁免通道)。
+  done_when:
+  - standards 枚举含 proposal_only (lifecycle) 与 forbidden (activation)。
+  - 有 proposal_lock_exemption 的卡违锁时 preflight 不再报两条 missing; 无豁免
+    仍报 (红线保留)。
+  - 8 张卡 approval_state=confirmed, 其 trial 已过的 8 张 ready 转绿 (实测
+    ready >= 13)。
+  - 新增测试覆盖 豁免路径/无豁免报锁/枚举存在。
+  verify:
+  - cmd: uv run --with pyyaml --with pytest python -m pytest tests/test_internal_scene_preflight.py -q
+    expect: 新增测试全过。
+  - cmd: make scene-card-check
+    expect: ready >= 13 (7 + 8 张审批落地; jsonl trial 判定在主仓运行时面)。
+  circuit_breaker: >-
+    若 proposal_lock_exemption 被用于批量洗白违规卡 (非显式个案理由), 停止并
+    交 owner 裁决。
 - id: BET-Y2Q4-T10-350
   title: BET-Y2Q4-T10-350 omo-debt 单个畸形 ref 冻结投影平面 29.8h —— 非 str 条目 ref 判 stale 而非崩平面（代码腿）
   goal: '`.omo/debt/items/*` 的 refs 写散文注解是既有用法（全库 352 个 ref 元素中 142 个带注解），散文里出现 ASCII
@@ -48594,7 +48658,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 599
+  total_bets: 600
   windows:
   - Y1Q1
   - Y1Q2
