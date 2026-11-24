@@ -69,7 +69,7 @@ principal_id_from_env = _pid_module.principal_id_from_env
 _LIB_DIR = _host_support_dir("lib")
 if _LIB_DIR not in sys.path:
     sys.path.insert(0, _LIB_DIR)
-from repo_root import canonical_root, event_ledger_path, state_file_read, state_root  # noqa: E402
+from repo_root import canonical_root, event_ledger_path, install_root, state_file_read, state_root  # noqa: E402
 
 _CONFIGURED_ROOT = os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
@@ -1549,18 +1549,13 @@ def collect_a9_gate(payload: dict | None = None, *, dashboard_live: bool | None 
         if age is not None:
             source_ages.append(age)
         # 真正的信号是**年龄**而不是状态标签: 只要这个源还留着一份界内的
-        # 上次成功观测, 门禁就应当认它。标签会因采集器而异 —— orchestrator 对
-        # error 路径报 STALE_UNAVAILABLE, 采集器对非零退出报 FAIL, 两者语义相同
-        # 却只有一个被接受 (2026-10-23 实测: 界内的 STALE_UNAVAILABLE/UNAVAILABLE
-        # 让 A9 转 PARTIAL, 尽管源的上次成功观测都在 6h 界内)。
+        # 上次成功观测, 门禁就应当认它。DEFERRED / PARTIAL / STALE_UNAVAILABLE /
+        # FAIL 在年龄口径上一致: 均须满足 last_success_at <= 21600s (6h);
+        # 仅 OK 无条件通过, UNAVAILABLE 即使在界内仍阻断。
         bounded = age is not None and age <= 21600
         if not isinstance(state, dict) or not (
             status == "OK"
-            # Deferred means the round was skipped because the host was overloaded,
-            # not that the source failed; the previous observation still stands.
-            or status == "DEFERRED"
-            # 界内的降级 (含采集器自报的 FAIL) 视同 STALE_UNAVAILABLE。
-            or (bounded and status in ("STALE_UNAVAILABLE", "FAIL"))
+            or (bounded and status in ("DEFERRED", "PARTIAL", "STALE_UNAVAILABLE", "FAIL"))
         ):
             bad_sources.append(name)
     # 降级必须带原因: 只看得到 "cockpit_sources" 时, 无法分辨是远端不可达、
@@ -2592,7 +2587,7 @@ def collect_role_registry() -> dict:
     verifies schema and digest integrity here so agents can distinguish a
     valid empty registry from an unavailable or tampered one.
     """
-    store = ROOT / ".omo" / "state" / "agent-cell" / "semantic" / "roles.jsonl"
+    store = state_file_read(".omo/state/agent-cell/semantic/roles.jsonl", root=ROOT)
     report = {
         "schema": "panorama-role-registry/v1",
         "source": "runtime://.omo/state/agent-cell/semantic/roles.jsonl",
@@ -4486,50 +4481,69 @@ def collect_experience_network() -> dict:
     import re
     nodes = []
     edges = []
-    # Pitfalls → 解析关联 decision/pattern
-    for f in sorted(glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml"))):
+    parse_errors: list[str] = []
+    # Pitfalls → 解析关联 decision/pattern（兼容顶层与分类子目录，兼容 frontmatter 与纯 YAML）
+    pitfall_files = sorted(
+        set(glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml")))
+        | set(glob(str(ROOT / ".omo/_knowledge/pitfalls/*/PITFALL-*.yaml")))
+    )
+    for f in pitfall_files:
         try:
-            raw = open(f).read()
-            fm = raw.split("---")[1] if raw.startswith("---") else ""
-            d = yaml.safe_load(fm) or {}
-            nid = f"PIT-{d.get('id','')}"
-            nodes.append({"id": nid, "type": "pitfall", "name": d.get("title", "")[:50]})
-            # 跨引用：pitfall → decision
-            for ref in re.findall(r'(ADR-\d{4})', raw):
+            raw = _P(f).read_text(encoding="utf-8")
+            if raw.startswith("---"):
+                parts = raw.split("---", 2)
+                doc_text = parts[1] if len(parts) >= 2 else raw
+            else:
+                doc_text = raw
+            d = yaml.safe_load(doc_text)
+            if not isinstance(d, dict):
+                parse_errors.append(f"{_P(f).name}:not_mapping")
+                continue
+            raw_id = str(d.get("id") or _P(f).stem).strip()
+            if not raw_id:
+                parse_errors.append(f"{_P(f).name}:missing_id")
+                continue
+            nid = raw_id if raw_id.startswith("PITFALL-") else f"PIT-{raw_id}"
+            title = str(d.get("title") or d.get("symptom") or raw_id)[:50]
+            nodes.append({"id": nid, "type": "pitfall", "name": title})
+            # 跨引用：pitfall → decision / pattern
+            for ref in re.findall(r"(ADR-\d{4})", raw):
                 edges.append({"from": nid, "to": f"DEC-{ref}", "rel": "resolved_by"})
-            for ref in re.findall(r'(P\d{2})', raw):
+            for ref in re.findall(r"(P\d{2})", raw):
                 edges.append({"from": nid, "to": f"PAT-{ref}", "rel": "pattern"})
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001 — surface parse errors instead of swallowing
+            parse_errors.append(f"{_P(f).name}:{type(exc).__name__}")
     # Decisions → 解析关联 ADR/pitfall
     for f in sorted(glob(str(ROOT / ".omo/_knowledge/decisions/0*.md"))):
         try:
-            raw = open(f).read()
+            raw = _P(f).read_text(encoding="utf-8")
             stem = _P(f).stem
             nid = f"DEC-{stem}"
             nodes.append({"id": nid, "type": "decision", "name": stem[:50]})
-            for ref in re.findall(r'PITFALL-(\d+)', raw):
+            for ref in re.findall(r"(PITFALL-[A-Z]{2,6}-\d{3,})", raw):
+                edges.append({"from": nid, "to": ref, "rel": "resolves"})
+            for ref in re.findall(r"PITFALL-(\d+)", raw):
                 edges.append({"from": nid, "to": f"PIT-{ref}", "rel": "resolves"})
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001
+            parse_errors.append(f"{_P(f).name}:{type(exc).__name__}")
     # Retros → 解析关联 BET/pattern
     for f in sorted(glob(str(ROOT / ".omo/_knowledge/retros/BET-*.md"))):
         try:
-            raw = open(f).read()
+            raw = _P(f).read_text(encoding="utf-8")
             stem = _P(f).stem
             nid = f"RET-{stem}"
             nodes.append({"id": nid, "type": "retro", "name": stem[:50]})
-            for ref in re.findall(r'(P\d{2})', raw):
+            for ref in re.findall(r"(P\d{2})", raw):
                 edges.append({"from": nid, "to": f"PAT-{ref}", "rel": "identifies"})
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001
+            parse_errors.append(f"{_P(f).name}:{type(exc).__name__}")
     # Patterns
     for f in sorted(glob(str(ROOT / ".omo/_knowledge/patterns/*.md"))):
         try:
             stem = _P(f).stem
             nodes.append({"id": f"PAT-{stem}", "type": "pattern", "name": stem[:50]})
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001
+            parse_errors.append(f"{_P(f).name}:{type(exc).__name__}")
     # 去重节点
     seen = set()
     uniq = []
@@ -4537,14 +4551,42 @@ def collect_experience_network() -> dict:
         if n["id"] not in seen:
             seen.add(n["id"])
             uniq.append(n)
+    # 均衡采样上限，防止某类节点过多挤占其它 3 类
+    if len(uniq) <= 160:
+        sampled_nodes = uniq
+    else:
+        buckets: dict[str, list[dict]] = {"pitfall": [], "decision": [], "retro": [], "pattern": []}
+        for n in uniq:
+            buckets.setdefault(n["type"], []).append(n)
+        sampled_nodes = []
+        picked: set[str] = set()
+        for t in ("pitfall", "decision", "retro", "pattern"):
+            for item in buckets.get(t, [])[:40]:
+                if item["id"] not in picked:
+                    picked.add(item["id"])
+                    sampled_nodes.append(item)
+        for item in uniq:
+            if len(sampled_nodes) >= 160:
+                break
+            if item["id"] not in picked:
+                picked.add(item["id"])
+                sampled_nodes.append(item)
     # 统计连接度
     degree = {}
     for e in edges:
         degree[e["from"]] = degree.get(e["from"], 0) + 1
         degree[e["to"]] = degree.get(e["to"], 0) + 1
     top_connected = sorted(degree.items(), key=lambda x: -x[1])[:8]
-    return {"nodes": uniq[:50], "edges": edges[:80], "total": len(uniq),
-            "edge_count": len(edges), "top_connected": [{"id": k, "links": v} for k, v in top_connected]}
+    pitfall_count = sum(1 for n in uniq if n["type"] == "pitfall")
+    return {
+        "nodes": sampled_nodes,
+        "edges": edges[:160],
+        "total": len(uniq),
+        "pitfall_count": pitfall_count,
+        "edge_count": len(edges),
+        "top_connected": [{"id": k, "links": v} for k, v in top_connected],
+        "parse_errors": parse_errors[:20],
+    }
 
 
 def collect_knowledge_inbound() -> dict:
@@ -5417,6 +5459,32 @@ def collect_autoloop_traces() -> dict:
     return {}
 
 
+def collect_release_manifest() -> dict:
+    """Read release-manifest.json from authoritative state/checkout/install root."""
+    candidates: list[Path] = [
+        state_file_read("runtime/release-manifest.json", root=ROOT),
+        ROOT / "runtime/release-manifest.json",
+    ]
+    inst = install_root()
+    if inst is not None:
+        candidates.append(inst / "runtime/release-manifest.json")
+    seen: set[Path] = set()
+    for path in candidates:
+        if path in seen:
+            continue
+        seen.add(path)
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            return {"available": False, "path": str(path), "reason": "invalid_json"}
+        if not isinstance(data, dict):
+            return {"available": False, "path": str(path), "reason": "invalid_json"}
+        return {"available": True, "path": str(path), **data}
+    return {"available": False, "reason": "missing"}
+
+
 def build_payload() -> dict:
     ci_data = collect_ci()
     asd = collect_asd()
@@ -5424,6 +5492,7 @@ def build_payload() -> dict:
     payload = {
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": "read-only-ssot-aggregation",
+        "release_manifest": collect_release_manifest(),
         "gates": collect_gates({"asd": asd}),
         "bets": collect_bets(),
         "agents": collect_agents(),

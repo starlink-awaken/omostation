@@ -169,15 +169,8 @@ def test_real_revision_read_and_http_response_are_bounded(modules, tmp_path, siz
 
 
 def test_artifact_caps_cover_real_projection_without_relaxing_control_or_document_limits(modules):
-    """两个上限用途不同，不要求相等 —— 要求的是「服务上限 ≤ 加载上限」且都留裕量。
-
-    #4875（`5d5ae5404`）把 runtime 的加载上限从 16 MiB 抬到 64 MiB：当时 data.json
-    16,836,519 字节越过了 16 MiB，导致 revision 加载整体失败。serve cap 未同步抬，
-    但真实 data.json 已回落（2026-11-12 实测 15,335,922 字节 ≈14.6 MiB），32 MiB
-    仍有约 2 倍裕量。这里不把真实字节数写死 —— 它会随每次投影滚动，写死就是时钟炸弹。
-    """
+    """Serve cap and revision loader cap must both align at 64 MiB (PROJECTION-SIZE-CAP-THREE-WAY-DRIFT)."""
     runtime, live = modules
-    assert live.MAX_PROJECTION_ARTIFACT_BYTES >= 32 * MIB
-    assert runtime._MAX_ARTIFACT_BYTES >= live.MAX_PROJECTION_ARTIFACT_BYTES
+    assert live.MAX_PROJECTION_ARTIFACT_BYTES == runtime._MAX_ARTIFACT_BYTES == 64 * MIB
     assert runtime._MAX_CONTROL_BYTES == 256 * 1024
     assert live.MAX_DOCUMENT_BYTES == MIB

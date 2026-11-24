@@ -94,8 +94,31 @@ check_registry_coverage() {
     echo "⚠️  登记面不存在 ($REGISTRY) —— 跳过覆盖检查" >&2
     return 0
   fi
-  if ! grep -q "omo.cli resident" "$REGISTRY"; then
-    echo "❌ resident 作业不在 .omo/cron/registry.yaml 里:" >&2
+  local py_runner=()
+  if [ -x "${WORKSPACE}/bin/gac/managed-python" ]; then
+    py_runner=("${WORKSPACE}/bin/gac/managed-python" run --profile pyyaml --)
+  else
+    py_runner=("${PYTHON_BIN}")
+  fi
+  if ! "${py_runner[@]}" - "$REGISTRY" <<'PYEOF'
+import sys
+from pathlib import Path
+import yaml
+
+reg_path = Path(sys.argv[1])
+docs = [d for d in yaml.safe_load_all(reg_path.read_text(encoding="utf-8")) if isinstance(d, dict)]
+jobs = docs[-1].get("jobs", []) if docs else []
+found = any(
+    isinstance(j, dict)
+    and j.get("status", "active") == "active"
+    and "crontab" in (j.get("planes") or [])
+    and "omo.cli resident" in str(j.get("command", ""))
+    for j in jobs
+)
+sys.exit(0 if found else 1)
+PYEOF
+  then
+    echo "❌ resident 作业不在 .omo/cron/registry.yaml 的 active crontab 条目里:" >&2
     echo "   装它们会让 scheduler-compile --check 报 orphan (门禁红)。" >&2
     echo "   请先把它们登记进 registry 并置 active, 或用 bin/ops/install-cron-plane.py。" >&2
     return 1

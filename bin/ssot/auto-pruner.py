@@ -32,6 +32,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+_LIB_DIR = str(WORKSPACE_ROOT / "bin" / "lib")
+if _LIB_DIR not in sys.path:
+    sys.path.insert(0, _LIB_DIR)
+from repo_root import state_file_read  # noqa: E402
 
 
 def _archive_dir() -> Path:
@@ -251,12 +255,13 @@ def prune_brief(dry_run: bool) -> list[dict]:
     ``dry_run`` 保留是为了不改注册表调用形状；本 handler 已无写操作，两者行为相同。
     """
     actions: list[dict] = []
-    p = WORKSPACE_ROOT / "runtime/dashboard/agent-brief.json"
+    p = state_file_read("runtime/dashboard/agent-brief.json", root=WORKSPACE_ROOT)
+    path_str = str(p.relative_to(WORKSPACE_ROOT)) if p.is_relative_to(WORKSPACE_ROOT) else str(p)
     if not p.is_file():
         actions.append({
             "class": "brief",
             "id": "BRIEF-MISSING",
-            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "path": path_str,
             "note": "brief file not present; gitignored or not generated",
             "applied": False,
         })
@@ -267,7 +272,7 @@ def prune_brief(dry_run: bool) -> list[dict]:
         actions.append({
             "class": "brief",
             "id": "BRIEF-MALFORMED",
-            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "path": path_str,
             "note": f"json parse failed: {exc}",
             "applied": False,
         })
@@ -276,7 +281,7 @@ def prune_brief(dry_run: bool) -> list[dict]:
         actions.append({
             "class": "brief",
             "id": "BRIEF-MALFORMED",
-            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "path": path_str,
             "note": "top-level is not an object",
             "applied": False,
         })
@@ -286,7 +291,7 @@ def prune_brief(dry_run: bool) -> list[dict]:
     actions.append({
         "class": "brief",
         "id": "BRIEF-CONTENT-AGE",
-        "path": str(p.relative_to(WORKSPACE_ROOT)),
+        "path": path_str,
         "note": (
             f"内容真实年龄 {age_hours:.1f}h (generated_at={generated_at!r}) —— "
             "TTL 已退役, 本 handler 不改写时间戳; 停更由 drift-face-detector 的 "

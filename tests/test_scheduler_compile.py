@@ -642,22 +642,36 @@ def test_unfoldable_interpreter_jobs_scopes_to_active_crontab() -> None:
     assert names == ["a"], names
 
 
-def test_check_drift_reports_interpreter_fold_as_shadow() -> None:
+def test_check_drift_reports_interpreter_fold_as_shadow(monkeypatch) -> None:
     """`check_drift` 带出 shadow 段, 且它不参与 ok 判定。
 
-    固定 venv 解释器是合法写法 (`local-ops-test-all` 就靠它), 所以这里只披露不阻断。
-    断言的是「当前登记面至少有一条不可折回」+「ok 与该段无关」, 不是把条数钉死 ——
-    钉死会让新增 venv 钉定的 PR 被无关判据拦下。
+    用合成 `/v/bin/python` 作业固定验证 shadow 披露而不依赖真实登记面是否存在不可折回写法。
     """
     sc = _load_compile_module()
-    installed = [line.split(" ", 5)[-1] for line in sc.compile_crontab(_load_registry_jobs())]
+    synthetic_jobs = [{
+        "name": "synthetic-venv-py",
+        "schedule": "23 7 * * *",
+        "status": "active",
+        "planes": ["crontab"],
+        "command": "/v/bin/python /x/test-all",
+    }]
+    monkeypatch.setattr(sc, "_load_jobs", lambda: synthetic_jobs)
+    installed = [line for line in sc.compile_crontab(synthetic_jobs) if not line.startswith("#")]
     res = sc.check_drift(installed_lines=installed)
+    assert res["ok"] is True, res
     fold = res["interpreter_fold"]
     assert fold["mode"] == "shadow", fold
     assert fold["blocks_gate"] is False, fold
     names = [e["name"] for e in fold["entries"]]
-    assert "local-ops-test-all" in names, names
-    assert fold["count"] == len(fold["entries"]) >= 1, fold
+    assert "synthetic-venv-py" in names, names
+    assert fold["count"] == len(fold["entries"]) == 1, fold
+
+
+def test_real_registry_has_zero_unfoldable_interpreter_jobs() -> None:
+    """真实登记面中所有 active crontab 作业必须都可被 normalize_interpreter 折回。"""
+    cn = _cron_normalize()
+    offenders = cn.unfoldable_interpreter_jobs(_load_registry_jobs())
+    assert offenders == [], f"存在不可折回解释器字面量: {offenders}"
 
 
 def test_interpreter_fold_shadow_failure_keeps_verdict(tmp_path, monkeypatch) -> None:

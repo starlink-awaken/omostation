@@ -27,6 +27,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+_LIB_DIR = str(WORKSPACE_ROOT / "bin" / "lib")
+if _LIB_DIR not in sys.path:
+    sys.path.insert(0, _LIB_DIR)
+from repo_root import state_file_read  # noqa: E402
 
 # SLA / cadence (来自各 detector 原工具的语义)
 DASHBOARD_SLA_HOURS = 336       # 14 天, 与 meta-doctor 同一档
@@ -109,17 +113,18 @@ def detect_brief() -> list[dict]:
     在 gitignored 情况下 brief "missing" 不是真 drift, 而是未生成 — 跳过.
     """
     findings: list[dict] = []
-    p = WORKSPACE_ROOT / "runtime/dashboard/agent-brief.json"
+    p = state_file_read("runtime/dashboard/agent-brief.json", root=WORKSPACE_ROOT)
     if not p.is_file():
         # gitignored 不算 drift (运行时不挂 cron 时常见)
         return findings
+    path_str = str(p.relative_to(WORKSPACE_ROOT)) if p.is_relative_to(WORKSPACE_ROOT) else str(p)
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         findings.append({
             "class": "brief",
             "id": "BRIEF-MALFORMED",
-            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "path": path_str,
             "severity": "medium",
             "age_hours": None,
             "sla_hours": BRIEF_CADENCE_HOURS,
@@ -133,7 +138,7 @@ def detect_brief() -> list[dict]:
         findings.append({
             "class": "brief",
             "id": "BRIEF-STALE",
-            "path": str(p.relative_to(WORKSPACE_ROOT)),
+            "path": path_str,
             "severity": "high" if age > BRIEF_CADENCE_HOURS * 3 else "medium",
             "age_hours": round(age, 1),
             "sla_hours": BRIEF_CADENCE_HOURS,

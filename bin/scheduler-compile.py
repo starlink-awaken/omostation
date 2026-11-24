@@ -13,9 +13,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import plistlib
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin" / "lib"))
@@ -124,12 +127,23 @@ def main():
     ap.add_argument("--check", action="store_true", help="校验登记↔安装一致性")
     ap.add_argument("--generate", choices=["crontab", "launchd"], help="生成指定格式")
     ap.add_argument("--diff", action="store_true", help="只读: 候选 crontab vs 已装 crontab 的差异 (装机前看会删/会加什么)")
+    ap.add_argument("--probe-reality", action="store_true", help="只读探测 crontab + launchd 实装现实并与 registry reality 比对")
+    ap.add_argument("--sync-reality", action="store_true", help="按 probe-reality 结果原子回写 registry 的 reality/status (支持 --dry-run)")
+    ap.add_argument("--dry-run", action="store_true", help="配合 --sync-reality 使用: 只输出变更计划，不改文件")
     ap.add_argument(
         "--no-resolve-interpreter",
         action="store_true",
         help="生成时保留登记面的裸 python3 (默认按本机解析成可证可用的绝对解释器)",
     )
     args = ap.parse_args()
+
+    if args.probe_reality:
+        print(json.dumps(probe_reality(), ensure_ascii=False, indent=2))
+        return 0
+    if args.sync_reality:
+        print(json.dumps(sync_reality(dry_run=args.dry_run), ensure_ascii=False, indent=2))
+        return 0
+
     jobs = _load_jobs()
 
     if args.diff:
@@ -359,8 +373,7 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
     except Exception as exc:  # noqa: BLE001 — shadow 段自身故障不得阻断 crontab 判定
         res["launchd"] = {"mode": "shadow", "blocks_gate": False, "error": str(exc)[:200]}
     # shadow: 登记面钉了解释器但写法折不回裸 python3 ⇒ 该行与安装态永远不可比。
-    # 不参与 ok 判定 —— 现有 1 条 (`local-ops-test-all` 钉 dev-venv/bin/python) 是
-    # 刻意固定 venv, 翻成阻断会把「口径不可比」误报成「作业坏了」。
+    # 不参与 ok 判定 —— 固定自定义 venv 时须使用 python3[.x] 以便比较键折叠。
     try:
         fold = _unfoldable_interpreter_jobs(registered)
         res["interpreter_fold"] = {
@@ -372,6 +385,274 @@ def check_drift(installed_lines: list[str] | None = None) -> dict:
     except Exception as exc:  # noqa: BLE001 — 同上
         res["interpreter_fold"] = {"mode": "shadow", "blocks_gate": False, "error": str(exc)[:200]}
     return res
+
+
+_INSTALLED_REALITIES = frozenset({"installed", "crontab_installed"})
+_LAUNCHD_CLI_ALIASES: tuple[tuple[str, str], ...] = (
+    ("omo debt refresh", "omo.omo_debt_cli"),
+)
+_SCRIPT_PATH_RE = re.compile(r"(?:bin|scripts)/\S+\.(?:py|sh)")
+
+
+def _read_installed_crontab() -> list[str]:
+    try:
+        r = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=10)
+        return r.stdout.splitlines() if r.returncode == 0 else []
+    except Exception:
+        return []
+
+
+def _read_installed_launchd_plists(la_dir: Path | None = None) -> dict[str, dict]:
+    la = la_dir or (Path.home() / "Library" / "LaunchAgents")
+    plists: dict[str, dict] = {}
+    if not la.is_dir():
+        return plists
+    for pref in _launchd_prefixes():
+        for pf in sorted(la.glob(pref + "*.plist")):
+            try:
+                data = plistlib.loads(pf.read_bytes())
+            except Exception:
+                continue
+            if not isinstance(data, dict):
+                continue
+            label = str(data.get("Label") or pf.stem)
+            plists[label] = data
+    return plists
+
+
+def _match_launchd_label(job: dict, plists: dict[str, dict]) -> str | None:
+    name = str(job.get("name") or "")
+    candidate_label = str(job.get("label") or f"com.omostation.{name}")
+    if candidate_label in plists:
+        return candidate_label
+    cmd = str(job.get("command") or "")
+    if not cmd:
+        return None
+    script_tokens = _SCRIPT_PATH_RE.findall(cmd)
+    for lbl in sorted(plists):
+        data = plists[lbl]
+        prog = " ".join(str(x) for x in (data.get("ProgramArguments") or []))
+        if any(alias_cmd in cmd and alias_plist in prog for alias_cmd, alias_plist in _LAUNCHD_CLI_ALIASES):
+            return lbl
+        if script_tokens and any(tok in prog for tok in script_tokens):
+            return lbl
+    return None
+
+
+def probe_reality(
+    jobs: list[dict] | None = None,
+    *,
+    installed_crontab: list[str] | None = None,
+    launchd_plists: dict[str, dict] | None = None,
+) -> dict:
+    """只读探测 crontab + launchd 双平面安装实态, 并与 registry 的 reality 字段比对。"""
+    target_jobs = _host_scoped(_load_jobs()) if jobs is None else list(jobs)
+    cron_lines = _read_installed_crontab() if installed_crontab is None else list(installed_crontab)
+    inst_cron_set = {
+        _normalize_interpreter(_normalize_installed_line(s))
+        for raw in cron_lines
+        if (s := raw.strip()) and not s.startswith("#")
+    }
+    plists = _read_installed_launchd_plists() if launchd_plists is None else dict(launchd_plists)
+
+    entries: list[dict] = []
+    mismatches: list[dict] = []
+    installed_count = 0
+    declared_only_count = 0
+
+    for j in target_jobs:
+        if not isinstance(j, dict) or not j.get("name"):
+            continue
+        name = str(j["name"])
+        declared_reality = str(j.get("reality") or "declared_only")
+        declared_status = str(j.get("status") or "active")
+        sched = str(j.get("schedule") or "")
+        cmd = str(j.get("command") or "")
+
+        in_crontab = False
+        if sched and sched != "always" and cmd:
+            expanded_line = f"{sched} {_expand_workspace(cmd)}"
+            key = _normalize_interpreter(_normalize_installed_line(expanded_line))
+            in_crontab = key in inst_cron_set
+
+        matched_label = _match_launchd_label(j, plists)
+        observed_planes: list[str] = []
+        if in_crontab:
+            observed_planes.append("crontab")
+        if matched_label:
+            observed_planes.append("launchd")
+
+        observed_reality = "installed" if observed_planes else "declared_only"
+        if observed_reality == "installed":
+            installed_count += 1
+        else:
+            declared_only_count += 1
+
+        declared_installed = declared_reality in _INSTALLED_REALITIES
+        drift = declared_installed != bool(observed_planes)
+        entry = {
+            "name": name,
+            "declared_reality": declared_reality,
+            "declared_status": declared_status,
+            "observed_reality": observed_reality,
+            "observed_planes": observed_planes,
+            "matched_label": matched_label,
+            "drift": drift,
+        }
+        entries.append(entry)
+        if drift:
+            mismatches.append(entry)
+
+    return {
+        "ok": len(mismatches) == 0,
+        "total_jobs": len(entries),
+        "installed_count": installed_count,
+        "declared_only_count": declared_only_count,
+        "mismatch_count": len(mismatches),
+        "mismatches": mismatches,
+        "entries": entries,
+    }
+
+
+def _rewrite_registry_reality(text: str, updates_by_name: dict[str, dict]) -> str:
+    """Update only matching job blocks' reality/status fields while preserving YAML structure/comments."""
+    lines = text.splitlines(keepends=True)
+    name_re = re.compile(r"^(\s*)-\s+name:\s*(.+?)\s*$")
+    field_re = re.compile(r"^(\s*)(reality|status)\s*:\s*(.*)$")
+    top_re = re.compile(r"^[A-Za-z0-9_]+\s*:")
+
+    out: list[str] = []
+    cur_name: str | None = None
+    cur_indent = 0
+    saw_reality = False
+    saw_status = False
+
+    def _flush_missing() -> None:
+        if cur_name and cur_name in updates_by_name:
+            upd = updates_by_name[cur_name]
+            indent_str = " " * (cur_indent + 2)
+            if not saw_reality:
+                out.append(f"{indent_str}reality: {upd['new_reality']}\n")
+            if not saw_status:
+                out.append(f"{indent_str}status: {upd['new_status']}\n")
+
+    for line in lines:
+        m_name = name_re.match(line.rstrip("\r\n"))
+        if m_name:
+            _flush_missing()
+            raw_val = m_name.group(2).split("#", 1)[0].strip().strip('"').strip("'")
+            cur_name = raw_val
+            cur_indent = len(m_name.group(1))
+            saw_reality = False
+            saw_status = False
+            out.append(line)
+            continue
+
+        stripped = line.rstrip("\r\n")
+        if cur_name and stripped and not stripped.lstrip().startswith("#"):
+            line_indent = len(stripped) - len(stripped.lstrip())
+            if line_indent <= cur_indent and top_re.match(stripped):
+                _flush_missing()
+                cur_name = None
+
+        if cur_name and cur_name in updates_by_name:
+            m_field = field_re.match(stripped)
+            if m_field and len(m_field.group(1)) == cur_indent + 2:
+                key = m_field.group(2)
+                upd = updates_by_name[cur_name]
+                nl = "\n" if line.endswith("\n") else ""
+                if key == "reality":
+                    saw_reality = True
+                    out.append(f"{m_field.group(1)}reality: {upd['new_reality']}{nl}")
+                    continue
+                if key == "status":
+                    saw_status = True
+                    out.append(f"{m_field.group(1)}status: {upd['new_status']}{nl}")
+                    continue
+
+        out.append(line)
+
+    _flush_missing()
+    return "".join(out)
+
+
+def sync_reality(
+    registry_path: Path = REGISTRY,
+    *,
+    installed_crontab: list[str] | None = None,
+    launchd_plists: dict[str, dict] | None = None,
+    dry_run: bool = False,
+) -> dict:
+    """Reconcile registry reality/status against probe_reality() (atomic write when dry_run=False)."""
+    import yaml
+
+    if not registry_path.exists():
+        return {"ok": False, "error": f"registry_not_found:{registry_path}", "updated_count": 0, "updates": []}
+
+    raw_text = registry_path.read_text(encoding="utf-8")
+    docs = [d for d in yaml.safe_load_all(raw_text) if isinstance(d, dict)]
+    jobs = docs[-1].get("jobs", []) if docs else []
+    target_jobs = _host_scoped(jobs) if registry_path.resolve() == REGISTRY.resolve() else jobs
+
+    probe = probe_reality(
+        jobs=target_jobs,
+        installed_crontab=installed_crontab,
+        launchd_plists=launchd_plists,
+    )
+    updates: list[dict] = []
+    updates_by_name: dict[str, dict] = {}
+    for m in probe["mismatches"]:
+        obs = m["observed_reality"]
+        new_reality = (
+            m["declared_reality"]
+            if obs == "installed" and m["declared_reality"] in _INSTALLED_REALITIES
+            else obs
+        )
+        new_status = "active" if obs == "installed" else "proposed"
+        upd = {
+            "name": m["name"],
+            "old_reality": m["declared_reality"],
+            "new_reality": new_reality,
+            "old_status": m["declared_status"],
+            "new_status": new_status,
+            "observed_planes": m["observed_planes"],
+            "matched_label": m["matched_label"],
+        }
+        updates.append(upd)
+        updates_by_name[m["name"]] = upd
+
+    applied = False
+    if updates_by_name and not dry_run:
+        updated_text = _rewrite_registry_reality(raw_text, updates_by_name)
+        parsed = [d for d in yaml.safe_load_all(updated_text) if isinstance(d, dict)]
+        if not parsed or not isinstance(parsed[-1].get("jobs"), list):
+            raise ValueError("reconciled registry failed YAML validation")
+        tmp_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=registry_path.parent,
+                prefix=".registry-sync-",
+                suffix=".yaml",
+                delete=False,
+            ) as fh:
+                fh.write(updated_text)
+                tmp_path = Path(fh.name)
+            os.replace(tmp_path, registry_path)
+            applied = True
+        finally:
+            if tmp_path is not None and tmp_path.exists():
+                tmp_path.unlink(missing_ok=True)
+
+    return {
+        "ok": True,
+        "dry_run": dry_run,
+        "applied": applied,
+        "updated_count": len(updates),
+        "updates": updates,
+        "probe": {k: probe[k] for k in ("total_jobs", "installed_count", "declared_only_count", "mismatch_count")},
+    }
 
 
 if __name__ == "__main__":
