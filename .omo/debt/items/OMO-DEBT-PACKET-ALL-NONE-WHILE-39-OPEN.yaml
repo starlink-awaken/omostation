@@ -1,0 +1,177 @@
+id: OMO-DEBT-PACKET-ALL-NONE-WHILE-39-OPEN
+title: 债务 action packet 五条车道恒 all-none 而 39 条非终态在册 —— 车道只取带 7 天窗口的 queue 四桶, 同一次生成的 dashboard 却发布 5 条 watchlist
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- .omo
+evidence_refs:
+- projects/omo/src/omo/omo_debt_action_packet.py
+- projects/omo/src/omo/omo_debt_review_queue.py
+- projects/omo/src/omo/omo_debt.py
+- .omo/_knowledge/usage/AGENT.md
+- .omo/_truth/registry/debt.yaml
+mitigation_refs:
+- projects/omo/tests/test_omo_debt_action_packet.py
+- projects/omo/tests/test_omo_debt_outputs.py
+opened_at: '2026-11-24T08:19:28.264810+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T08:19:28.264810+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-PACKET-ALL-NONE-WHILE-39-OPEN.
+  actor: governance-agent
+- at: '2026-11-24T08:23:57.952658+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '现象（2026-11-24 08:05:05Z 同一次 refresh 生成的两个发布面读数相反）：
+    `.omo/debt/action-packet/current.yaml` 的 summary 是 `revalidate_now 0 / schedule_now 0 / escalate_now 0 / continue_mitigation 0 / watch_only 0`，
+    `.omo/debt/action-packet/current.md` 五个小节逐节 "- none"；而同一时刻 `.omo/debt/dashboard/current.yaml` 发布
+    `watchlist_item_ids` 共 **5** 条（ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP / OMO-DEBT-REGISTER-NO-REVIEW-DATES /
+    HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT / META-DOCTOR-RITUAL-PROPOSALS-NO-CONSUMER /
+    DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT）。在册非终态 **39** 条、其中 **38** 条挂着 `decision_needed`。
+    一个照 packet 办事的 operator 今日会读出「债务侧无事可做」。
+
+    机制（源码直读，非推断）：`projects/omo/src/omo/omo_debt_action_packet.py:32 build_action_packet(review_queue, now)`
+    的五条车道**只**遍历 `review_queue["unscheduled"]`(`:44`)、`["due_now"]`(`:57`)、`["escalation_candidates"]`(`:35` 取 id 集)、
+    `["upcoming"]`(`:109`)。而这四桶由 `projects/omo/src/omo/omo_debt_review_queue.py:89-92` 的两个分支决定 ——
+    只有 `due_at <= now` 与 `due_at <= now + REVIEW_WINDOW_DAYS(=7)` 入桶，`:78-100` 没有第三分支，
+    「已排期但在 7 天窗口外」的条目不进任何桶，也不进 summary 的四个 count。
+    kernel 直调复现：`build_review_queue(106 条, now=2026-11-24T08:00:00Z, repo_root)` 给 `due_now 0 / upcoming 0 / escalation 0 / unscheduled 0`，
+    而**同一返回值**的 `summary.by_severity` = high 7 + medium 30 + low 2 = 39，与内核 `TERMINAL_STATES = {closed, resolved}`
+    下数出的非终态 39 条相等 ⇒ 四桶全空不是「无债可核」，是 **39/39 全体出窗**：`min(next_review_at) = 2026-12-06`（12 天后）。
+    出窗成因是排期惯例：本轮批量复核补日一律写 +14 天，而窗口是 7 天。
+
+    静默期长度（纯函数逐日复算，不落盘）：把 `now` 从 11-22 推到 11-30 ⇒
+    **11-22 … 11-28 连续 7 天五车道全 0**，11-29 才出现第一条（watch_only 1），11-30 为 4。
+    ⇒ 本条立案时（11-24）起 packet 还要全静默 5 天，且该静默期在每次批量补日后都会复发。
+
+    覆盖面核查（为什么这不是既有测试钉住的语义）：`projects/omo/tests/test_omo_debt_action_packet.py` 只有 2 个用例
+    （`test_build_action_packet_routes_entries_into_primary_lanes`、`test_build_action_packet_keeps_revalidate_above_escalate_for_stale_items`），
+    两者都喂非空 queue；**没有任何用例覆盖「四桶全空而非终态条目非零」**，
+    所以 all-none 既不是被钉住的契约，也没有任何检查会在它误导 operator 时报警。消费面确有契约：
+    `.omo/_knowledge/usage/AGENT.md:268` 把 review-queue 声明为 "the operator-facing queue surface for due-now work,
+    escalation candidates, upcoming work, and unscheduled debts"。
+
+    反向前提先否证再立案（避免夸大）：
+    ① 不是投影冻结 —— packet 与 dashboard 的 `generated_at` 都是 `2026-11-24T08:05:05Z`，作业活着；
+    ② 不是 dashboard 也看不见 —— dashboard 的 `watchlist_item_ids` 由 metrics 按 `gate_level == watchlist` 算，与窗口无关，
+        5 条照常发布；分裂点只在 packet 只吃窗口化的 queue；
+    ③ 不是 cron 道也无从说话 —— `bin/gac/debt-review-scheduler.py --json`（只读，rc=0）给
+        `total_items 106 / needs_reassessment 0 / overdue 0`。两道的「零」含义不同（kernel = 全体出窗，
+        cron = 按 `INTERVAL_DAYS[severity]` 回推未到期），但都不表达「39 条在册」；
+    ④ 本会话一次逐日扫描因写了非法日期 2026-11-31 抛 `ValueError`，那是仪器自身的错（11 月只有 30 天），
+        不作为缺陷证据，重跑后读数见上。
+
+    三个发布面同刻三角对照（都由 `omo_debt.py:429 refresh_outputs()` 一次调用生成，`generated_at` 同为 08:05:05Z）：
+    `.omo/debt/action-packet/current.yaml` 五车道全 0；
+    `.omo/debt/owner-routing/current.yaml` 给 `owner_count 0 / total_routed_items 0 / lane_counts 全 0`，
+    且其 `source_action_packet_ref` 就写向 packet（`omo_debt.py:434 build_owner_routing_packet(action_packet)` 只吃 packet）
+    ⇒ **派发面今日把 0 个条目路由给 0 个 owner**；
+    而 `.omo/debt/reviews/current.md`（packet 的兄弟面，由 `write_review_pack(omo_dir, items, metrics, review_queue, now)` 生成）
+    在 "## Watchlist" 下**逐名列出 5 条**，紧接的 "## Due Now"、"## Escalation Candidates"、"## Upcoming Window"、
+    "## Unscheduled Debts" 四节都是 "- none" —— 同一份文档里「有 5 条要盯」与「到期/将到期/未排期全空」并列，
+    这正是「已排期但在 7 天窗口外」这一类没有任何表示的直接形状。
+    ⇒ 所以准确说法不是「operator 全瞎」：pack 面按 metrics（窗口无关）看得见 watchlist 5 条，
+       packet 与 routing 两面按窗口化的 queue 全隐，**39 条在册里没有任何一条进入 packet/routing 的任何一个车道**。
+
+    待裁（三选一，裁决前不动 kernel、不动 packet、不动任何条目的 `next_review_at`、不改 `REVIEW_WINDOW_DAYS` 常量）：
+    ① 给 kernel 加第五桶（如 `scheduled_out_of_window`），packet 的 watch_only 顺带吃到 —— 代价：queue 契约与投影 schema
+       扩字段，`omo_debt_render.py` / `omo_debt_io.py` / `omo_debt.py` / `omo_debt_action_packet.py` 四个下游消费点都要跟着改；
+    ② 让 `build_action_packet` 直接读 `metrics.watchlist_item_ids`（`omo_debt.py:433` 同一函数里两者都已可得）——
+       代价：packet 车道不再只由到期日语义决定，与 ① 「桶即契约」方向相反，两个发布面只是换一种方式各说各话；
+    ③ 只改补日惯例（批量复核后把 `next_review_at` 落在 +7d 内，或把 `REVIEW_WINDOW_DAYS` 提到 14）——
+       代价：动的是判据常量，`due_now`/`upcoming` 历史读数不可比，且不消除「全体同时出窗」这个结构性风险。'.
+- at: '2026-11-24T08:23:57.995858+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T08:22:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    立案即复核（全部 kernel 直调与只读 CLI，零落盘、零判据改动）：
+    ① 复现通道：在 canonical 里 PYTHONPATH=projects/omo/src python3，用 omo.omo_debt_registry.load_debt_ledger(Path(".omo").resolve()) 取 items，再 omo.omo_debt_review_queue.build_review_queue(items, "2026-11-24T08:00:00Z", repo_root)；读数 = 四桶 0/0/0/0，而同一返回值的 summary.by_severity = {high 7, medium 30, low 2}（合计 39），即本条机制段的第一手数据。
+    ② 只读 CLI：python3 bin/gac/debt-review-scheduler.py --json ⇒ rc=0 / total_items 106 / needs_reassessment 0 / overdue 0。
+    ③ 三面对照读 generated_at：action-packet/current.yaml、owner-routing/current.yaml、reviews/current.md 均为 2026-11-24T08:05:05Z，owner-routing 的 owner_count 0 / total_routed_items 0，reviews 的 Watchlist 5 条与 Due Now/Upcoming/Unscheduled 三节 - none 并列。
+    ④ 逐日静默期：纯函数把 now 从 2026-11-22 推到 2026-11-30，packet 五车道在 11-22…11-28 连续 7 天全 0，11-29 起 watch_only=1、11-30=4。
+    ⑤ 一次扫描脚本因写了非法日期 2026-11-31 抛 ValueError（11 月只有 30 天），是本会话仪器之错，已重跑并剔除该次读数，不作证据。
+    ⑥ 排期与可选字段按 OMO-DEBT-REGISTER-NO-REVIEW-DATES 记的隐性义务手工补齐（broker 默认把 next_review_at / last_reviewed_at / description / decision_needed / evidence_refs / mitigation_refs 六项留空），本条不改 broker、不改 kernel、不改任何既有条目。
+- at: '2026-11-24T08:33:00Z'
+  action: review
+  actor: governance-agent
+  note: 立案后复核：本条 `lifecycle_state` 被 broker 自己改成了 `scheduled` —— `omo_debt_lifecycle.py:66-84 schedule_item` 在写 `next_review_at`（`:77`）的同一段里无条件写 `payload["lifecycle_state"] = "scheduled"`（`:76`），而我本轮为补 `OMO-DEBT-REGISTER-NO-REVIEW-DATES` 决策项 (3) 所述的「立案后必须调 schedule」而调了 `schedule`，于是该键被连带改写。实测它是当时全库 107 条里唯一取 `scheduled` 的条目（closed 35 / resolved 32 / identified 35 / in_progress 4），即该词汇在现网无第二使用者，属 OMO-WRITEOWNER ⑥ 记的「词汇不在取值集内」形状；同文件 `reopen` 分支（`omo_debt_cli.py:456`）复位写的却是 `identified`，可见 broker 内部两套词汇。本轮把该键手工复位为 `identified`（不改任何判据、不改指标面），并在此留痕而非静默覆盖，理由：状态字段是治理面，排期字段才是我要写的，二者被一次 `schedule` 调用捆在一起正是待裁项。该副作用已作为复现证据登记进新案 OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID（同一函数还有更硬的一面：对不存在的 id 返回 rc=0 并铸孤儿文件）。
+- at: '2026-11-24T08:38:00Z'
+  action: review
+  actor: governance-agent
+  note: 把「今日四桶为 0」升级为「按当前排期约定结构上必为 0」：逐条量 41 条非终态条目的 `next_review_at` （本批立案后 = 原 39 + 本条 + OMO-DEBT-BROKER-MINTS-PHANTOM-ITEM-FOR-UNKNOWN-ID），落 `due_now`(`<=今日`) 0 条、落 `upcoming`(`<=今日+7d`，即 2026-12-01 前) **0 条**；最早一条是 2026-12-06（+12 天），最晚 2026-12-16（+22 天），8–14 天区间 23 条、>14 天 18 条。即四桶 0/0/0/0 不是「今天没到期」，而是**只要维持「复核后 +14 天」的排期约定，`REVIEW_WINDOW_DAYS=7` 就永远接不到任何条目**——本条描述的 all-none 是构造性的，不是时点性的。严重度分布 medium 32 / high 7 / low 2，41 条里 40 条挂着 `decision_needed`。该读数只加判据依据，不改任何窗口常量、排期约定与桶逻辑；三选一仍留 principal。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: Tool
+description: |-
+  现象（2026-11-24 08:05:05Z 同一次 refresh 生成的两个发布面读数相反）：
+  `.omo/debt/action-packet/current.yaml` 的 summary 是 `revalidate_now 0 / schedule_now 0 / escalate_now 0 / continue_mitigation 0 / watch_only 0`，
+  `.omo/debt/action-packet/current.md` 五个小节逐节 "- none"；而同一时刻 `.omo/debt/dashboard/current.yaml` 发布
+  `watchlist_item_ids` 共 **5** 条（ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP / OMO-DEBT-REGISTER-NO-REVIEW-DATES /
+  HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT / META-DOCTOR-RITUAL-PROPOSALS-NO-CONSUMER /
+  DEBT-STALENESS-SIGNAL-SILENT-GREEN-WITHOUT-GIT）。在册非终态 **39** 条、其中 **38** 条挂着 `decision_needed`。
+  一个照 packet 办事的 operator 今日会读出「债务侧无事可做」。
+
+  机制（源码直读，非推断）：`projects/omo/src/omo/omo_debt_action_packet.py:32 build_action_packet(review_queue, now)`
+  的五条车道**只**遍历 `review_queue["unscheduled"]`(`:44`)、`["due_now"]`(`:57`)、`["escalation_candidates"]`(`:35` 取 id 集)、
+  `["upcoming"]`(`:109`)。而这四桶由 `projects/omo/src/omo/omo_debt_review_queue.py:89-92` 的两个分支决定 ——
+  只有 `due_at <= now` 与 `due_at <= now + REVIEW_WINDOW_DAYS(=7)` 入桶，`:78-100` 没有第三分支，
+  「已排期但在 7 天窗口外」的条目不进任何桶，也不进 summary 的四个 count。
+  kernel 直调复现：`build_review_queue(106 条, now=2026-11-24T08:00:00Z, repo_root)` 给 `due_now 0 / upcoming 0 / escalation 0 / unscheduled 0`，
+  而**同一返回值**的 `summary.by_severity` = high 7 + medium 30 + low 2 = 39，与内核 `TERMINAL_STATES = {closed, resolved}`
+  下数出的非终态 39 条相等 ⇒ 四桶全空不是「无债可核」，是 **39/39 全体出窗**：`min(next_review_at) = 2026-12-06`（12 天后）。
+  出窗成因是排期惯例：本轮批量复核补日一律写 +14 天，而窗口是 7 天。
+
+  静默期长度（纯函数逐日复算，不落盘）：把 `now` 从 11-22 推到 11-30 ⇒
+  **11-22 … 11-28 连续 7 天五车道全 0**，11-29 才出现第一条（watch_only 1），11-30 为 4。
+  ⇒ 本条立案时（11-24）起 packet 还要全静默 5 天，且该静默期在每次批量补日后都会复发。
+
+  覆盖面核查（为什么这不是既有测试钉住的语义）：`projects/omo/tests/test_omo_debt_action_packet.py` 只有 2 个用例
+  （`test_build_action_packet_routes_entries_into_primary_lanes`、`test_build_action_packet_keeps_revalidate_above_escalate_for_stale_items`），
+  两者都喂非空 queue；**没有任何用例覆盖「四桶全空而非终态条目非零」**，
+  所以 all-none 既不是被钉住的契约，也没有任何检查会在它误导 operator 时报警。消费面确有契约：
+  `.omo/_knowledge/usage/AGENT.md:268` 把 review-queue 声明为 "the operator-facing queue surface for due-now work,
+  escalation candidates, upcoming work, and unscheduled debts"。
+
+  反向前提先否证再立案（避免夸大）：
+  ① 不是投影冻结 —— packet 与 dashboard 的 `generated_at` 都是 `2026-11-24T08:05:05Z`，作业活着；
+  ② 不是 dashboard 也看不见 —— dashboard 的 `watchlist_item_ids` 由 metrics 按 `gate_level == watchlist` 算，与窗口无关，
+      5 条照常发布；分裂点只在 packet 只吃窗口化的 queue；
+  ③ 不是 cron 道也无从说话 —— `bin/gac/debt-review-scheduler.py --json`（只读，rc=0）给
+      `total_items 106 / needs_reassessment 0 / overdue 0`。两道的「零」含义不同（kernel = 全体出窗，
+      cron = 按 `INTERVAL_DAYS[severity]` 回推未到期），但都不表达「39 条在册」；
+  ④ 本会话一次逐日扫描因写了非法日期 2026-11-31 抛 `ValueError`，那是仪器自身的错（11 月只有 30 天），
+      不作为缺陷证据，重跑后读数见上。
+
+  三个发布面同刻三角对照（都由 `omo_debt.py:429 refresh_outputs()` 一次调用生成，`generated_at` 同为 08:05:05Z）：
+  `.omo/debt/action-packet/current.yaml` 五车道全 0；
+  `.omo/debt/owner-routing/current.yaml` 给 `owner_count 0 / total_routed_items 0 / lane_counts 全 0`，
+  且其 `source_action_packet_ref` 就写向 packet（`omo_debt.py:434 build_owner_routing_packet(action_packet)` 只吃 packet）
+  ⇒ **派发面今日把 0 个条目路由给 0 个 owner**；
+  而 `.omo/debt/reviews/current.md`（packet 的兄弟面，由 `write_review_pack(omo_dir, items, metrics, review_queue, now)` 生成）
+  在 "## Watchlist" 下**逐名列出 5 条**，紧接的 "## Due Now"、"## Escalation Candidates"、"## Upcoming Window"、
+  "## Unscheduled Debts" 四节都是 "- none" —— 同一份文档里「有 5 条要盯」与「到期/将到期/未排期全空」并列，
+  这正是「已排期但在 7 天窗口外」这一类没有任何表示的直接形状。
+  ⇒ 所以准确说法不是「operator 全瞎」：pack 面按 metrics（窗口无关）看得见 watchlist 5 条，
+     packet 与 routing 两面按窗口化的 queue 全隐，**39 条在册里没有任何一条进入 packet/routing 的任何一个车道**。
+
+  待裁（三选一，裁决前不动 kernel、不动 packet、不动任何条目的 `next_review_at`、不改 `REVIEW_WINDOW_DAYS` 常量）：
+  ① 给 kernel 加第五桶（如 `scheduled_out_of_window`），packet 的 watch_only 顺带吃到 —— 代价：queue 契约与投影 schema
+     扩字段，`omo_debt_render.py` / `omo_debt_io.py` / `omo_debt.py` / `omo_debt_action_packet.py` 四个下游消费点都要跟着改；
+  ② 让 `build_action_packet` 直接读 `metrics.watchlist_item_ids`（`omo_debt.py:433` 同一函数里两者都已可得）——
+     代价：packet 车道不再只由到期日语义决定，与 ① 「桶即契约」方向相反，两个发布面只是换一种方式各说各话；
+  ③ 只改补日惯例（批量复核后把 `next_review_at` 落在 +7d 内，或把 `REVIEW_WINDOW_DAYS` 提到 14）——
+     代价：动的是判据常量，`due_now`/`upcoming` 历史读数不可比，且不消除「全体同时出窗」这个结构性风险。
+decision_needed: 三选一，裁决前不动 kernel、不动 packet、不动任何条目的 next_review_at、不改 REVIEW_WINDOW_DAYS 常量：① 给 build_review_queue 加第五桶（scheduled_out_of_window），packet 的 watch_only 顺带吃到 —— 代价是 queue 契约与投影 schema 扩字段，omo_debt_render / omo_debt_io / omo_debt / omo_debt_action_packet 四个下游消费点都要跟着改；② 让 build_action_packet 直接读 metrics.watchlist_item_ids（omo_debt.py:431-434 同一函数里两者都已可得）—— 代价是 packet 车道不再只由到期日语义决定，与 ① 的「桶即契约」方向相反，两个发布面只是换一种方式各说各话；③ 只改补日惯例（批量复核后把 next_review_at 落在 +7d 内，或把 REVIEW_WINDOW_DAYS 提到 14）—— 代价是动判据常量，due_now/upcoming 的历史读数不可比，且不消除「39 条同时出窗」这个结构性风险。
