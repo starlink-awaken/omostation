@@ -8,7 +8,11 @@ scope: workspace
 severity: high
 weight: 0.2
 entropy_class: medium
-lifecycle_state: in_progress
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Resolved via 3-tier convergence: (1) dynamic interpreter resolution in compile_crontab and install-cron-plane to host-available Python 3.13+ (PR #5171, #5174); (2) check-cron-interpreter-executability gate verifying installed_interpreter_gaps=0 and 43/43 cron parity; (3) managed-python runtime substrate injecting bytecode/unbuffered flags.'
+resolution_evidence: 'bin/lib/cron_normalize.py:132-175,405-420; bin/scheduler-compile.py:61-77; bin/ops/install-cron-plane.py; bin/gac/check-cron-interpreter-executability.py PASS (0 gaps, 43 paired); bin/gac/managed-python:160-165'
 owner: governance-team
 affected_roots:
 - crontab(已装面)
@@ -126,6 +130,14 @@ decision_needed: |-
   本轮不代改判据（判据面变更属 principal）。
 
 history:
+- at: '2026-11-24T06:04:00+00:00'
+  action: close
+  actor: governance-agent
+  note: |-
+    Closed via BET-Y2Q4-T10-361:
+    1. Dynamic interpreter resolution landed in PR #5171 and #5174, ensuring all installed crontab entries use host Python 3.13+.
+    2. Gate check-cron-interpreter-executability enforces 0 blocking gaps and 43/43 parity between registry and installed lines.
+    3. managed-python runtime substrate enhanced with PYTHONDONTWRITEBYTECODE=1 and PYTHONUNBUFFERED=1, ensuring clean cron/hook execution.
 - at: '2026-11-09T03:26:00+00:00'
   action: identify
   note: '立案依据是一次性差分实测: cron 同款 PATH 下 7 条作业 `--help` 即 rc=1 (ImportError: cannot import

@@ -340,3 +340,21 @@ def test_clone_make_target_executes_the_managed_stdlib_profile(tmp_path: Path) -
     assert proc.returncode == 0, proc.stderr
     call = log.read_text(encoding="utf-8").strip()
     assert call.startswith("run --profile stdlib -- bin/gac/clone-lifecycle.py snapshot")
+
+
+def test_managed_python_run_defaults_to_stdlib_and_injects_environment() -> None:
+    """managed-python defaults to stdlib when --profile omitted and injects standard env."""
+    proc = subprocess.run(
+        [
+            str(RUNNER), "run", "--", "-c",
+            "import os; print(os.environ.get('PYTHONDONTWRITEBYTECODE'), os.environ.get('PYTHONUNBUFFERED'))",
+        ],
+        cwd=ROOT,
+        env=_env(OMO_MANAGED_PYTHON=sys.executable, PATH="/usr/bin:/bin"),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.strip() == "1 1"
+

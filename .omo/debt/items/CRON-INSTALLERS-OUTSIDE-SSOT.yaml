@@ -7,7 +7,11 @@ scope: "host"
 severity: "medium"
 weight: 0.15
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'All 4 host cron installers are now 100% fail-closed and registry-governed: bin/ops/install-cron-plane.py (primary registry-driven), ops-cron-install.py (fail-closed, #5124), install-maturity-cron.sh (fail-closed, #5131), and install-resident-cron.sh (fail-closed coverage check, 2026-11-24).'
+resolution_evidence: 'bin/ops/install-cron-plane.py; bin/gac/ops-cron-install.py:80-115; bin/ssot/install-maturity-cron.sh:38-59; bin/ssot/install-resident-cron.sh:88-105; tests/unit/gac/test_install_resident_cron_ledger.py PASS; tests/unit/gac/test_install_maturity_cron.py PASS'
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
@@ -29,6 +33,12 @@ x1_policy_ref: ""
 x3_tier: "Principle"
 decision_needed: "先裁决「cron 作业的唯一 SSOT 是不是 .omo/cron/registry.yaml」。若是, 三个登记面外安装器要么改为从 registry 渲染(如 install-cron-plane.py), 要么补 fail-closed 校验并明确标注为 legacy; 若否, registry 的『单一登记源』定位要改写, 并说明哪些平面归它管。**不要**在裁决前逐个改工具 —— 那会把一个系统性问题拆成一串互相矛盾的单点修复。"
 history:
+- at: '2026-11-24T06:04:00+00:00'
+  action: close
+  actor: governance-agent
+  note: |-
+    Closed via BET-Y2Q4-T10-361:
+    Completed fail-closed registry-check guards across all legacy installers. install-resident-cron.sh now enforces check_registry_coverage before any crontab modifications, closing the last loophole for rogue cron installations.
 - at: '2026-11-07T06:45:00+00:00'
   action: identify
   note: >-

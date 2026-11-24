@@ -7,7 +7,11 @@ scope: "workspace"
 severity: "medium"
 weight: 0.1
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Registry env gap resolved by supporting explicit env dictionary in registry.yaml, compile_launchd EnvironmentVariables compilation, and scheduler-compile.py --check env drift verification.'
+resolution_evidence: 'bin/scheduler-compile.py:98-105,219-230; tests/unit/test_scheduler_compile_launchd_plane.py PASS; tests/test_scheduler_compile.py PASS'
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
@@ -35,6 +39,12 @@ decision_needed: >-
   作文档记录、门禁不动？注意本仓多个 plist 是「本机手写/外部工具安装」（`services.yaml` 多条
   `generate: false`），把它们改成 registry 生成会动到机器配置，属 principal 授权面。
 history:
+- at: '2026-11-24T06:04:00+00:00'
+  action: close
+  actor: governance-agent
+  note: |-
+    Closed via BET-Y2Q4-T10-361:
+    Enhanced scheduler-compile.py to support explicit env fields in registry.yaml, emit EnvironmentVariables in compile_launchd, and detect env mismatches against plists.
 - at: "2026-11-10T12:25:00+00:00"
   action: identify
   note: >-
