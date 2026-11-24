@@ -7,7 +7,11 @@ scope: "workspace"
 severity: "low"
 weight: 0.1
 entropy_class: "low"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
+closed_at: "2026-11-24"
+closed_by: "governance-team"
+close_reason: "Resolved via 2-stage convergence: 4 hook-internal rules updated to gac-hook-pre-edit.py (PR #5356); remaining 6 intent-only rules formally transitioned to lifecycle: declared with gac-bootstrap层4 check_indexed_integrity ignoring non-materialized declared refs (BET-Y2Q4-T10-362). indexed missing count is now 0."
+resolution_evidence: "bin/gac/gac-bootstrap.py:148; .omo/_truth/registry/governance-checks.yaml:654,2230-2358; tests/unit/gac/test_gac_declared_lifecycle.py"
 owner: "governance-team"
 affected_roots:
 - .omo/_truth/registry/governance-checks.yaml
@@ -100,4 +104,11 @@ history:
     要么**根本没有执行面** —— 后者就是「规则无实现」, 应单独登记而不是当引用陈旧修。
     **纪律**: 修一类「引用指向不存在」的缺陷前, 先把**已经修好的那批**拿来当样板
     (读规则描述), 再把剩下的逐条定性 —— 别用同一把扳手敲所有钉子。
+  actor: "governance-agent"
+- at: "2026-11-24T06:38:00+00:00"
+  action: close
+  note: >-
+    BET-Y2Q4-T10-362 落地闭环：余下 6 条规则均属于「声明意图但尚无落盘实现」的规则（CR-L0-SSOT-PATH-NORM
+    与 5 条 CR-AGE-*-01），统一正名为 `lifecycle: declared`。gac-bootstrap 层 4 过滤 declared/removed
+    规则，实测路径型规则缺席数从 6 降至 0（indexed 缺席始终为 0），全项标绿闭环。
   actor: "governance-agent"

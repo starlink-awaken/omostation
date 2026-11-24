@@ -7,7 +7,11 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
+closed_at: "2026-11-24"
+closed_by: "governance-team"
+close_reason: "Resolved via BET-Y2Q4-T10-362: introduced formal 'declared' lifecycle state across GacRule M2 schema and gac-validate. Reclassified the 5 CR-AGE-*-01 rules to lifecycle: declared and enforcement: advisory, maintaining architectural intent without falsely asserting active required execution."
+resolution_evidence: "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml:48; bin/gac/gac-validate.py:46; .omo/_truth/registry/governance-checks.yaml:2230-2358; tests/unit/gac/test_gac_declared_lifecycle.py"
 owner: "governance-team"
 affected_roots:
 - .omo/_truth/registry/governance-checks.yaml
@@ -80,4 +84,11 @@ history:
     reserved/retired** —— 保留号会永久占位, 引用它比引用不存在的编号更难发现。
     **纪律**：`source_ref` 死了可以修; **`adr` 指向保留号 + 无执行面**是另一类问题,
     别用「修个路径」糊过去。
+  actor: "governance-agent"
+- at: "2026-11-24T06:38:00+00:00"
+  action: close
+  note: >-
+    BET-Y2Q4-T10-362 落地闭环：通过在 GacRule M2 元模型及 gac-validate / check-governance-trend 中
+    正式引入 `declared` 生命周期状态，将 5 条 CR-AGE-*-01 规则降为 `lifecycle: declared` 且
+    `enforcement: advisory`。既保留了架构意图与事件驱动契约，又彻底消解了假 active / 假 required 声明。
   actor: "governance-agent"
