@@ -8,9 +8,12 @@
 #
 # 两种角色形态:
 #   tick 型  (sediment/decision/execute/monitor/heartbeat):
-#     uv run --project <omo> python -m omo.resident.cli daemon --once --role <role>
+#     uv run --frozen --project <omo> python -m omo.resident.cli daemon --once --role <role>
 #   直调型  (signals/inbox/promote):
-#     uv run --project <omo> python -m omo.resident.cli <sub>
+#     uv run --frozen --project <omo> python -m omo.resident.cli <sub>
+#
+# --frozen 强制 launchd 定时任务不改写安装位受跟踪的 projects/omo/uv.lock
+# (防止 pyproject 领先 uv.lock 时每 2 分钟把 install_root 弄脏并阻断重锚)。
 #
 # ADR-0456 B4b: 项目根由脚本自身位置推导 (BASH_SOURCE), 不写死检出根 ——
 # 检出根与安装位两份拷贝因此逐字节相同, 各自跑各自根下的 projects/omo;
@@ -30,11 +33,11 @@ OMO_PROJECT="$_REPO_ROOT/projects/omo"
 
 case "$ROLE" in
   sediment|decision|execute|monitor|heartbeat)
-    exec /opt/homebrew/bin/uv run --project "$OMO_PROJECT" \
+    exec /opt/homebrew/bin/uv run --frozen --project "$OMO_PROJECT" \
       python -m omo.resident.cli daemon --once --role "$ROLE"
     ;;
   signals|inbox|promote)
-    exec /opt/homebrew/bin/uv run --project "$OMO_PROJECT" \
+    exec /opt/homebrew/bin/uv run --frozen --project "$OMO_PROJECT" \
       python -m omo.resident.cli "$ROLE"
     ;;
   *)
