@@ -48285,6 +48285,74 @@ bets:
             对比层与渲染层判据由三处变异自证。未做机器级 plist 重装与 `--write` 安装路径收敛（spec 非目标
             第 3 条），部署侧仍另案；`bin/ops/launchd/*.plist` 模板注释保留（非目标第 2 条）。
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-351
+  title: BET-Y2Q4-T10-351 scene-journey-autogen 数据源分裂修复 —— 对齐 docs 体系 + 5 张 404 卡根治
+  goal: >-
+    2026-11-23 实测: journey-runner 对 5 张卡报 spec FileNotFoundError (404), 而
+    scene-journey-autogen 的 scan/generate/report 全部报 0 missing —— 根因两层:
+    (1) 工具数据源分裂 —— autogen 的 SCENES_DIR/JOURNEYS_DIR 指向
+    .omo/_truth/{scenarios,journeys}/v3 (另一套注册表), 与 runner 实际数据源
+    docs/scene-cards + docs/journey-specs 完全脱节, 真实缺口对工具不可见; 且
+    covered 判定读 runtime.journey_ref 子字段 (70/70 卡零使用, 真实挂接字段
+    是顶层 journey_id), fallback 命名 journey-<scene_id> 与实际 spec 命名
+    (xxx-journey/xxx-workflow) 从不匹配。(2) 5 张卡 journey_id 指向不存在的
+    spec: engineering-delivery→intent-to-evidence、family-asset-governance→
+    family-financial-audit-workflow、knowledge-curation→capture-to-retrieval、
+    research-deep-synthesis→research-deep-synthesis-workflow、
+    health-gov-doc-cycle→health-gov-doc-cycle (自指)。修复: autogen 目录常量
+    对齐 docs/ 体系, covered 判定读顶层 journey_id 并验证 spec 实际存在;
+    2 张改挂到既有真身 spec (铁证: meeting-to-delivery 的 steps 引用 scene:
+    engineering-delivery, knowledge-capture-pipeline 全程引用
+    knowledge-curation); 3 张欠账 (research-deep-synthesis/family-asset-
+    governance/health-gov-doc-cycle) 用修复后的 generate 程序化生成。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - bin/ssot/scene-journey-autogen.py
+  - tests/test_scene_journey_autogen.py
+  - docs/scene-cards/engineering-delivery-dogfood.yaml
+  - docs/scene-cards/knowledge-curation.yaml
+  - docs/scene-cards/research-deep-synthesis.yaml
+  - docs/scene-cards/family-asset-governance.yaml
+  - docs/scene-cards/health-gov-doc-cycle.yaml
+  - docs/journey-specs/
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-23-scene-journey-autogen-datasource-split-bet-t10-351.md
+    spec_version: 1.0.0
+    content_digest: sha256:a70678eba4d4e4989e086d4aadc1ca3498bd9ae34b869d3a5acacd4e29fbb05c
+    decision_ref: decision://accepted/BET-Y2Q4-T10-351
+  non_goals:
+  - 不改 journey-runner 与 shadow-scene-trials 落盘机制 (43 张异步型卡的 trial
+    需真实消费者闭环, 与本 BET 无关)。
+  - 不处理 12 张 approval 未确认与 8 张 preflight 缺口 (治理流程另案)。
+  - 不删除 .omo/_truth/{scenarios,journeys}/v3 旧目录 (其消费方未盘点, 只做
+    autogen 切换数据源)。
+  done_when:
+  - autogen scan 对 docs 体系实测报告与 journey-runner 404 实况一致 (修复前
+    5 缺, 数据修复后 0 缺)。
+  - 5 张卡 journey-runner dry-run 不再 FileNotFoundError; 2 张改挂卡与 3 张
+    生成卡均能加载真实 spec。
+  - 既有 scene-journey-autogen 测试无回归 (如无既有测试则新增)。
+  verify:
+  - cmd: uv run --with pyyaml python -m pytest tests/test_scene_journey_autogen.py -q
+    expect: 新增/既有测试全过。
+  - cmd: uv run --with pyyaml python bin/ssot/scene-journey-autogen.py scan
+    expect: 数据修复后 missing=0 (对 docs 体系)。
+  - cmd: uv run --with pyyaml python bin/ssot/journey-runner.py run --journey meeting-to-delivery --dry-run
+    expect: 正常执行不再 404。
+  circuit_breaker: >-
+    若 .omo/_truth/{scenarios,journeys}/v3 存在活跃消费方 (导致 autogen 切换
+    数据源破坏其读数), 停止并交 owner 裁决。
 - id: BET-Y2Q4-T10-350
   title: BET-Y2Q4-T10-350 omo-debt 单个畸形 ref 冻结投影平面 29.8h —— 非 str 条目 ref 判 stale 而非崩平面（代码腿）
   goal: '`.omo/debt/items/*` 的 refs 写散文注解是既有用法（全库 352 个 ref 元素中 142 个带注解），散文里出现 ASCII
@@ -48526,7 +48594,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 598
+  total_bets: 599
   windows:
   - Y1Q1
   - Y1Q2
