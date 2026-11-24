@@ -114,3 +114,4 @@ seed_items:
 - .omo/debt/items/ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP.yaml
 - .omo/debt/items/OMO-DEBT-REGISTER-NO-REVIEW-DATES.yaml
 - .omo/debt/items/HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT.yaml
+- .omo/debt/items/META-DOCTOR-RITUAL-PROPOSALS-NO-CONSUMER.yaml
