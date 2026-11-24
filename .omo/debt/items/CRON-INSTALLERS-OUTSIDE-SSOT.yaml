@@ -149,9 +149,20 @@ history:
     8 条路径**全部真实存在**（无"命令指向已删脚本"那种缺陷，我不据此立案）；
     但除 `signal-poller.py`（crontab 活行 1 + `com.omostation.signal-poller.plist`）外，
     其余 7 条（`remediation-engine.py`、`anti-corrosion-check.py`、`north-star-weekly.py`、`health-check-cron.py`、
-    `weekly-evolution-report.py`、`weekly-review.py`、`architecture-drift.py`）**在任何面都没在跑**。
+    `weekly-evolution-report.py`、`weekly-review.py`、`architecture-drift.py`）**没有任何调度面在跑**
+    —— crontab 活行 / LaunchAgents plist / cron registry 三面逐条皆为 0。
     最近提交时间：`weekly-evolution-report.py` 11-12、`architecture-drift.py` 11-24，其余停在 08-17~09-27。
-    ⇒ 闭案把「旁路安装」关掉了，没回答「这 7 条该不该活」。要裁的是二选一：
-    登记进 `.omo/cron/registry.yaml` 并置 active（则守卫放行、作业复活），还是删掉安装器里的 `JOBS` 条目（承认为死代码）。
+    但「没在跑」不等于「没有执行路径」，这半句是第二遍核验（07:24Z 逐条查调用方）才补上的：
+    `weekly-review.py` 仍被 `.github/workflows/governance-check.yml` 调用（文件内命中 2 次）、
+    `architecture-drift.py` 与 `health-check-cron.py` 各有 1 个 Makefile 目标 ⇒ 这 3 条是**按需可执行**，
+    安装器拒装并没有断掉它们唯一的执行路。真正只剩安装器一条路的只有 `weekly-evolution-report.py`
+    （Makefile 0 命中、CI 0 命中，调用方仅 `bin/gac/ops-cron-install.py` 与脚本登记）。
+    还有一面是本条没答的：7 条脚本在 `bin/_registry/scripts/**` **都有脚本登记**
+    （如 `bin/_registry/scripts/governance/architecture-drift.yaml`），那是与 `.omo/cron/registry.yaml` 不同的
+    第三个登记面；「脚本在册」与「作业在 cron 登记面在册」是否同一权威，直接决定「拒装」算不算缺陷。
+    ⇒ 闭案把「旁路安装」关掉了，没回答「这 7 条该不该由 cron 面跑」。要裁的是三选一：
+    登记进 `.omo/cron/registry.yaml` 并置 active（守卫放行、开始调度）；
+    还是删掉安装器里的 `JOBS` 条目（承认它们不该被调度，只保留按需/CI 路径）；
+    还是先把 `bin/_registry/scripts/**` 与 cron 登记面的权威关系钉清楚。
     我不代为选，也不新建债条目重复本条已载的事实面。
     本轮零改动：不动三个安装器、不动 registry、不动 crontab。
