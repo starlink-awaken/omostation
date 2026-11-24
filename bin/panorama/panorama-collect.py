@@ -4483,9 +4483,10 @@ def collect_experience_network() -> dict:
     edges = []
     parse_errors: list[str] = []
     # Pitfalls → 解析关联 decision/pattern（兼容顶层与分类子目录，兼容 frontmatter 与纯 YAML）
+    pitfalls_root = ROOT / ".omo/_knowledge/pitfalls"
     pitfall_files = sorted(
-        set(glob(str(ROOT / ".omo/_knowledge/pitfalls/PITFALL-*.yaml")))
-        | set(glob(str(ROOT / ".omo/_knowledge/pitfalls/*/PITFALL-*.yaml")))
+        {str(p) for p in pitfalls_root.glob("PITFALL-*.yaml")}
+        | {str(p) for p in pitfalls_root.glob("*/PITFALL-*.yaml")}
     )
     for f in pitfall_files:
         try:
@@ -5463,7 +5464,6 @@ def collect_release_manifest() -> dict:
     """Read release-manifest.json from authoritative state/checkout/install root."""
     candidates: list[Path] = [
         state_file_read("runtime/release-manifest.json", root=ROOT),
-        ROOT / "runtime/release-manifest.json",
     ]
     inst = install_root()
     if inst is not None:
