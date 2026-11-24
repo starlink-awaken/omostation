@@ -1,0 +1,164 @@
+id: HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT
+title: 心跳按被指向的树相对读取 ⇒ 安装位冻结拷贝判永久 stale (A2/A5 恒红); 面板门禁帧又由发布目录那份采集器副本产出 (48 帧里 A3 从未 PASS、RF0 恒 NOT_ADMITTED,
+  实跑均 PASS)
+dimension: governance
+subdimension: observability
+domain: governance
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/gac/meta-doctor.py
+- bin/gac/gate-health-check.py
+- bin/panorama/panorama-collect.py
+evidence_refs:
+- 'bin/gac/meta-doctor.py:38-50 (HEARTBEATS 表: system_health last_scan 48h / health generated_at 72h /
+  governance-data 168h)'
+- bin/gac/meta-doctor.py:158 (checked_file 相对解析) 与 :545 (reference_root = args.reference_root or ws_root)
+- bin/gac/gate-health-check.py:100 / :113 (stale_beats 计入 A2 与 A5 的非零项)
+- '实测 2026-11-24 04:43Z 安装位 meta-doctor --workspace .: summary.stale_beats=3, age_hours=412.7 / 431.3
+  / 598.3, dead_refs=0, ritual_lapsed=1'
+- '实测 04:44Z 两份树 mtime: canonical .omo/state/runtime = 11-24 12:17/12:31/12:29; 安装位 = 11-07 08:02 / 11-06
+  13:27 / 10-30 14:27; ~/.local/state/omostation/prod/.omo/state/runtime 不存在 (写方只写代码根)'
+- bin/panorama/panorama-collect.py:890-893 (collect_gates 以 --workspace ROOT --code-root CODE_ROOT 起探针)
+  与 :901-910 (ok 缺失即 FAIL)
+- bin/panorama/panorama-collect.py:4886 (failing 排除 PASS/SKIPPED/DEFERRED ⇒ 本会话「DEFERRED 被计入失败」的假设被实测否证)
+  与 :5132 (gates_failing)
+- '实测 04:44Z 48 帧门禁行聚合: A3 FAIL×38 (detail ''Governance semantic gate: FAIL'') / DEFERRED×10 / PASS×0;
+  RF0 NOT_ADMITTED×48'
+- '实测 04:41-04:43Z 同函数实跑 (canonical 与安装位两轮): A3=PASS, RF0=PASS (version 3.80.0, doctor 23 passed/13 warnings),
+  A6=NOT_ADMITTED (probes 3/6, R0 evidence 0/1, live=False)'
+- launchd:com.omostation.panorama-dashboard-refresh → /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py
+  (该副本路径由 meta-doctor references 面自证 exists=true)
+- '同夜对照: ~/.local/share/zhixing-dashboard/current/orchestrator.py 与仓内 asset 差 6 行 (PANORAMA-GATE-DETAIL-UNRELIABLE
+  / ZHIXING-PUBLISH-EFFECT-PROVENANCE), 部署副本漂移是既有形状而非孤例'
+mitigation_refs: []
+opened_at: '2026-11-24'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: watchlist
+history:
+- at: '2026-11-24T04:48:52.208824+00:00'
+  action: register
+  note: Registered debt item HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT.
+  actor: governance-agent
+- at: '2026-11-24T04:48:52.249123+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '机制缺口在两段，都在 production 侧，今天用同一组实跑把它们与「真红」分开。
+
+    段一：心跳判据按「被指向的那棵树」相对读取，于是安装位的冻结副本被永久判 stale。
+    `bin/gac/meta-doctor.py:38-50` 的 HEARTBEATS 表把三个运行时状态文件与 SLA 小时数钉在一起
+    （system_health last_scan 48h、health generated_at 72h、governance-data 168h），
+    读取路径在 `:158` 以 `checked_file` 相对解析，根取自 `--workspace`（`:545 reference_root = args.reference_root or ws_root`）。
+    今天同一台机器两份树的实测对照：
+    - canonical `/Users/xiamingxing/Workspace/.omo/state/runtime/` = `system_health.yaml` 11-24 12:17、
+      `health.yaml` 12:31、`governance-data.json` 12:29（本地时区，即 0.0–0.3 h 前）；
+    - 安装位 `/Users/xiamingxing/.local/opt/omostation/.omo/state/runtime/` 同三个文件 =
+      **11-07 08:02 / 11-06 13:27 / 10-30 14:27**，meta-doctor 算出 age
+      **412.7 h / 431.3 h / 598.3 h**，summary `stale_beats: 3`；
+    - 而 `~/.local/state/omostation/prod/.omo/state/runtime/` **不存在** ⇒ 写方只写代码根那一份，
+      安装位那份是 11 月初留下的静止拷贝，没有任何人在更新它。
+    `bin/gac/gate-health-check.py:100 / :113` 把 `stale_beats` 计入 A2 与 A5 的非零项 ⇒
+    只要门禁探针指向安装位，A2/A5 就恒红，与真实健康无关。
+    形状上与「干净检出里 absent 按放行」是同一条判据的两侧：文件**缺席**被原谅，
+    文件**存在但没人写**则判永久陈旧 —— 后者比前者更危险，因为它看起来像实测结果。
+
+    段二：面板帧不是由仓内代码产出的，是发布面那份采集器副本。
+    production 的采集作业是 `launchd:com.omostation.panorama-dashboard-refresh →
+    /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py`（该路径由 meta-doctor 自己的
+    references 面列出，exists=true）。今天对它产出的 48 帧（约 10 分钟一帧）逐个解析门禁行：
+    - A3：`FAIL × 38`（detail 均为 `Governance semantic gate: FAIL`）、`DEFERRED × 10`、**PASS × 0**；
+    - RF0：`NOT_ADMITTED × 48`（detail 均为 `failed=binary,daemon_stopped,doctor,no_second_queue,workers_off`）。
+    而在同一台机器上、用 `bin/gac/gate-health-check.py` 与 `collect_gates()` 各实跑一次（canonical 与安装位两轮）：
+    A3 = `PASS / Governance semantic gate: PASS`，RF0 = `PASS / isolated read-only verifier complete:
+    daemon stopped, workers off, version 3.80.0, doctor 23 passed/13 warnings`，
+    A6 = `NOT_ADMITTED`（probes 3/6、R0 evidence 0/1，live=False）。
+    ⇒ 面板上「A3 与 RF0  failing」既不是当前事实，也不是判据设计的结果，而是**采集器副本陈旧**的产物；
+    `agent-brief` 据它给出的 next_action「Resolve failing gates: A3, RF0」因此把人往不存在的问题上引。
+    顺带一条：`bin/panorama/panorama-collect.py:4886` 的 failing 口径本身是
+    `verdict not in {PASS, SKIPPED, DEFERRED}` —— DEFERRED **被排除**，
+    所以本会话一开始把 A3 的红猜成「负载延迟被计入失败」是错的，实测否证后才落到「陈旧副本」上；
+    这条否证过程本身值得留档，因为它说明面板红不能靠读聚合器代码猜。
+
+    两段的共同根：**production 侧到底以哪棵树为准**没有单一声明 ——
+    心跳读「被指向的树」，采集器跑「发布目录里的拷贝」，而写方只认 canonical。
+    今天所有 A2/A3/A5/RF0 的读数分歧都能在这一点上解释，且与既立的
+    RESIDENT-PLANE-SPLIT-LAUNCHD-INERT（驱动平面分裂）、PANORAMA-GATE-DETAIL-UNRELIABLE
+    （detail 字段在聚合面不可信）、ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP（基线与被扫面不同批）
+    都不重叠：那三条分别是「谁驱动 resident」「detail 可信度」「基线联动」，
+    本条讲的是**心跳与采集的读取根与被测状态所在根不一致，且部署副本无固定校验**。
+    '.
+- at: '2026-11-24T04:48:00Z'
+  action: review
+  actor: governance-agent
+  note: '立案即复核：三段判据 (心跳表 / checked_file 相对解析 / A2+A5 组成项) 均有行号, 龄期与 mtime 双读数取自同一台机器两份树, 面板 48 帧聚合与同函数实跑做了正反对照。本条的成因链是先否证两个假设才落定的:
+    ① 以为 DEFERRED 被计入 failing (:4886 实测排除); ② 以为安装位 A3 真红 (实跑 PASS, 红的是 A2/A5)。与 RESIDENT-PLANE-SPLIT-LAUNCHD-INERT
+    (驱动平面)、PANORAMA-GATE-DETAIL-UNRELIABLE (detail 可信度)、ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP (基线联动) 三条均不重叠,
+    主题分工见 description 末段。'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: |
+  机制缺口在两段，都在 production 侧，今天用同一组实跑把它们与「真红」分开。
+
+  段一：心跳判据按「被指向的那棵树」相对读取，于是安装位的冻结副本被永久判 stale。
+  `bin/gac/meta-doctor.py:38-50` 的 HEARTBEATS 表把三个运行时状态文件与 SLA 小时数钉在一起
+  （system_health last_scan 48h、health generated_at 72h、governance-data 168h），
+  读取路径在 `:158` 以 `checked_file` 相对解析，根取自 `--workspace`（`:545 reference_root = args.reference_root or ws_root`）。
+  今天同一台机器两份树的实测对照：
+  - canonical `/Users/xiamingxing/Workspace/.omo/state/runtime/` = `system_health.yaml` 11-24 12:17、
+    `health.yaml` 12:31、`governance-data.json` 12:29（本地时区，即 0.0–0.3 h 前）；
+  - 安装位 `/Users/xiamingxing/.local/opt/omostation/.omo/state/runtime/` 同三个文件 =
+    **11-07 08:02 / 11-06 13:27 / 10-30 14:27**，meta-doctor 算出 age
+    **412.7 h / 431.3 h / 598.3 h**，summary `stale_beats: 3`；
+  - 而 `~/.local/state/omostation/prod/.omo/state/runtime/` **不存在** ⇒ 写方只写代码根那一份，
+    安装位那份是 11 月初留下的静止拷贝，没有任何人在更新它。
+  `bin/gac/gate-health-check.py:100 / :113` 把 `stale_beats` 计入 A2 与 A5 的非零项 ⇒
+  只要门禁探针指向安装位，A2/A5 就恒红，与真实健康无关。
+  形状上与「干净检出里 absent 按放行」是同一条判据的两侧：文件**缺席**被原谅，
+  文件**存在但没人写**则判永久陈旧 —— 后者比前者更危险，因为它看起来像实测结果。
+
+  段二：面板帧不是由仓内代码产出的，是发布面那份采集器副本。
+  production 的采集作业是 `launchd:com.omostation.panorama-dashboard-refresh →
+  /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py`（该路径由 meta-doctor 自己的
+  references 面列出，exists=true）。今天对它产出的 48 帧（约 10 分钟一帧）逐个解析门禁行：
+  - A3：`FAIL × 38`（detail 均为 `Governance semantic gate: FAIL`）、`DEFERRED × 10`、**PASS × 0**；
+  - RF0：`NOT_ADMITTED × 48`（detail 均为 `failed=binary,daemon_stopped,doctor,no_second_queue,workers_off`）。
+  而在同一台机器上、用 `bin/gac/gate-health-check.py` 与 `collect_gates()` 各实跑一次（canonical 与安装位两轮）：
+  A3 = `PASS / Governance semantic gate: PASS`，RF0 = `PASS / isolated read-only verifier complete:
+  daemon stopped, workers off, version 3.80.0, doctor 23 passed/13 warnings`，
+  A6 = `NOT_ADMITTED`（probes 3/6、R0 evidence 0/1，live=False）。
+  ⇒ 面板上「A3 与 RF0  failing」既不是当前事实，也不是判据设计的结果，而是**采集器副本陈旧**的产物；
+  `agent-brief` 据它给出的 next_action「Resolve failing gates: A3, RF0」因此把人往不存在的问题上引。
+  顺带一条：`bin/panorama/panorama-collect.py:4886` 的 failing 口径本身是
+  `verdict not in {PASS, SKIPPED, DEFERRED}` —— DEFERRED **被排除**，
+  所以本会话一开始把 A3 的红猜成「负载延迟被计入失败」是错的，实测否证后才落到「陈旧副本」上；
+  这条否证过程本身值得留档，因为它说明面板红不能靠读聚合器代码猜。
+
+  两段的共同根：**production 侧到底以哪棵树为准**没有单一声明 ——
+  心跳读「被指向的树」，采集器跑「发布目录里的拷贝」，而写方只认 canonical。
+  今天所有 A2/A3/A5/RF0 的读数分歧都能在这一点上解释，且与既立的
+  RESIDENT-PLANE-SPLIT-LAUNCHD-INERT（驱动平面分裂）、PANORAMA-GATE-DETAIL-UNRELIABLE
+  （detail 字段在聚合面不可信）、ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP（基线与被扫面不同批）
+  都不重叠：那三条分别是「谁驱动 resident」「detail 可信度」「基线联动」，
+  本条讲的是**心跳与采集的读取根与被测状态所在根不一致，且部署副本无固定校验**。
+decision_needed: |
+  待裁三问，本轮只登记，不改判据、不改部署面、不清安装位:
+  (1) 心跳的**权威读取根**是哪一个: 继续 `--workspace` 相对 (现状, 于是任何非 canonical 的树都会读到静止拷贝或
+      absent), 还是固定读 `state_root()`/canonical 一份 (与写方同源), 还是给安装位那份也接上写方?
+      三者对 A2/A5 的语义不同: 现状 = 指向安装位即恒红; 固定根 = 探针与被测状态同源但失去 per-checkout 语义;
+      双写 = 需要给 production 侧加写方 (属部署面, 需 principal 授权)。
+  (2) `absent 放行 / frozen 判死` 这个不对称要不要收: 若给 `exists 但 mtime 早于某界限` 也按 absent 处理,
+      就再看不见「写方死了」这一类真故障; 若都不放行, 每个 worktree claim 都会红。
+      建议同批决定「冻结判定的比较基准是 mtime 还是文件内 last_scan/generated_at」——
+      meta-doctor 现在读的是**文件内字段**(:158 checked_file + HEARTBEATS 的 field), 而我把两份树的
+      文件 mtime 也一并列了实测, 两者今天给出的龄期一致, 但语义不同源, 后续若只统一其一会再次分叉。
+  (3) 采集器副本: 面板帧由 `~/.local/share/zhixing-dashboard/panorama-collect.py` 产出, 而 A3/RF0 的实跑用
+      仓内与安装位的代码 ⇒ 版本漂移直接变成门禁伪红。要不要把「发布副本 == 绑定提交」做成硬前置
+      (panorama-collect.py:515-526 已有 collector 自证绑定的先例, 见 ZHIXING-PUBLISH-EFFECT-PROVENANCE),
+      还是在 brief 面上显式标注「本帧 verdict 来自 <sha> 的副本」。后者是读数标注, 前者是部署校验, 取哪一个属主裁。
+  另: 本条不改 `agent-brief` 的 next_action 文案, 也不动 gate-health-check 的 A2/A5 组成项。
