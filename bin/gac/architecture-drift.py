@@ -33,21 +33,43 @@ def check_lifecycle_drift() -> list[str]:
     return warnings
 
 
+def registered_ids(registry_dir: Path) -> set[str]:
+    """登记面自己说谁是已登记 —— 不在这里按分类目录猜。
+
+    原实现只找 `registry/governance/<stem>.yaml`，于是登记在 `state/` `knowledge/`
+    `workflow/` 等分类下的脚本全被报成「未注册」（2026-11-24 实测 4 条误报：
+    `check-project-health-freshness.py` / `check-adr-iteration-rate.py` /
+    `check-silent-workflows.py` / `health-trend-predictor.py`，四条都在别的分类下）。
+    判据的来源必须是登记面本身 —— 与 `script-registry validate` 同一个集合。
+    """
+    import yaml
+
+    ids: set[str] = set()
+    for entry in registry_dir.rglob("*.yaml"):
+        try:
+            data = yaml.safe_load(entry.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001 — 单条坏条目不该让整次扫描崩
+            continue
+        if isinstance(data, dict) and data.get("id"):
+            ids.add(str(data["id"]))
+    return ids
+
+
 def check_registry_drift() -> list[str]:
     """Check registry completeness."""
-    warnings = []
+    warnings: list[str] = []
     registry_dir = REPO / "bin" / "_registry" / "scripts"
     if not registry_dir.exists():
         return warnings
 
-    # Check for unregistered scripts
+    registered = registered_ids(registry_dir)
+
     gac_dir = REPO / "bin" / "gac"
     if gac_dir.exists():
         for f in gac_dir.glob("*.py"):
             if f.name.startswith("_"):
                 continue
-            reg_file = registry_dir / "governance" / f"{f.stem}.yaml"
-            if not reg_file.exists():
+            if f"bin/gac/{f.name}" not in registered:
                 warnings.append(f"脚本未注册: {f.name}")
 
     return warnings
