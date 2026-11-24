@@ -107,7 +107,16 @@ SPEC_MARKER_READINGS = {
     # 2026-11-11 BET-Y2Q4-T10-347: gac-bootstrap 新增层6, 其登记面常量
     # CI_SURFACES = WORKSPACE / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
     # 是新的一处钉检出根站点 => `.omo/_truth` 163 -> 164。
-    ".omo/_truth": 164,
+    # 2026-11-24 BET-Y2Q4-T10-351 (PR #5498 / 9abcccfd6): bin/ssot/scene-journey-autogen.py 的
+    # SCENES_DIR / JOURNEYS_DIR 由 ROOT / ".omo" / "_truth" / {scenarios,journeys} / "v3"(:25-:26)
+    # 改挂 docs/scene-cards + docs/journey-specs（原指针与 journey-runner 实际数据源分裂, scan 恒报
+    # 0 missing = 假阴）⇒ 两处钉检出根站点**按决定**消失，bump 未随该 PR 落地，ISC-1 自此在 main 上红。
+    # 时间扫描（run 级 job 结论，不是 workflow 级）：8c2472a38 与 3a681a9e1 上 interface-check 均 success，
+    # 9abcccfd6 起 failure ⇒ 红源就是 #5498 这一提交；3a681a9e1 那次 workflow 红的是 governance-verify
+    # （与本读数无关，且在 9abcccfd6 已转绿）。本会话在 9abcccfd6 检出上复算 scan_checkout_pinned_sites
+    # 得 162，差异集精确为 scene-journey-autogen.py 的 2 -> 0（:25-:26 两条链）。
+    # 该桶是排除面, 不影响门禁管辖的 154/144/95（同 :103 那条批注的口径）。
+    ".omo/_truth": 162,
     ".omo/state": 103,
     ".omo/_delivery": 78,
     "runtime": 47,
