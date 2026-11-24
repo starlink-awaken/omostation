@@ -48285,7 +48285,7 @@ bets:
             对比层与渲染层判据由三处变异自证。未做机器级 plist 重装与 `--write` 安装路径收敛（spec 非目标
             第 3 条），部署侧仍另案；`bin/ops/launchd/*.plist` 模板注释保留（非目标第 2 条）。
     overall_state: delivery_accepted
-- id: BET-Y2Q4-T10-350
+- id: BET-Y2Q4-T10-351
   title: BET-Y2Q4-T10-351 scene-journey-autogen 数据源分裂修复 —— 对齐 docs 体系 + 5 张 404 卡根治
   goal: >-
     2026-11-23 实测: journey-runner 对 5 张卡报 spec FileNotFoundError (404), 而
