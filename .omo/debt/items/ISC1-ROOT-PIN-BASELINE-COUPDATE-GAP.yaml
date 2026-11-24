@@ -1,0 +1,137 @@
+id: ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP
+title: ISC-1 基线读数与被扫面无同批联动 —— 改 bin/ 的 root-pin 链不强制 bump 基线数字，且 tests/** 不在 governance-check.yml 触发面内，今晚
+  main 因欠账红约 29 分钟
+dimension: governance
+subdimension: ci
+domain: governance
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- .github/workflows/governance-check.yml
+- tests/unit/test_writeplane_root_pin.py
+- bin/ssot/scene-journey-autogen.py
+evidence_refs:
+- tests/unit/test_writeplane_root_pin.py:98-116 (SPEC_MARKER_READINGS 五桶) / :349 (scan_checkout_pinned_sites)
+  / :751-755 (逐桶相等断言)
+- tests/unit/test_writeplane_root_pin.py:102-109 (四条带日期手工批注 161→162→163→164 = 惯例证据)
+- .github/workflows/governance-check.yml:3 push 块与 :23 pull_request 块的 paths 均无 tests/** (PR 面 17 条, 只有
+  projects/omo/tests/**)
+- '实测 2026-11-24: PR #5510 (只改 tests/unit/test_writeplane_root_pin.py) → gh pr checks 报 no checks reported,
+  statusCheckRollup=[], gh run list --branch=[]'
+- 9abcccfd6 (#5498 / BET-Y2Q4-T10-351) 删 bin/ssot/scene-journey-autogen.py:25-:26 两条链未 bump 基线 ⇒ run 45313762566
+  (created 02:37:34Z) interface-check=failure
+- '164→162 的补账落在 0afea449d (#5507, 债务主题) —— git log -S''".omo/_truth": 162'' -- tests/unit/test_writeplane_root_pin.py
+  仅此一次 ⇒ run 45316372493 (03:00:03Z/updated 03:06:49Z) 转 success'
+- '差异集定位法: git archive 8c2472a38 bin | tar -x 到临时目录, 与当前树各跑一次同一 scan 函数按文件分组求差 ⇒ 唯一分叉 bin/ssot/scene-journey-autogen.py
+  2 -> 0'
+mitigation_refs: []
+opened_at: '2026-11-24'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: watchlist
+history:
+- at: '2026-11-24T03:35:53.849437+00:00'
+  action: register
+  note: Registered debt item ISC1-ROOT-PIN-BASELINE-COUPDATE-GAP.
+  actor: governance-agent
+- at: '2026-11-24T03:35:53.890586+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '机制缺口两两相扣，今晚在 main 上实咬了一次（红从 run 45313762566 created 02:37:34Z failure 起，到 run 45316372493 created 03:00:03Z / updated 03:06:49Z success 止，≈29 分钟）。
+
+    缺口 A —— 基线与被扫面之间没有同批强制联动。
+    `tests/unit/test_writeplane_root_pin.py:98-116` 的 `SPEC_MARKER_READINGS` 是对 `bin/**/*.py` 里
+    「钉检出根」字面链的**分类计数**，由同文件 `:349 scan_checkout_pinned_sites()` 扫描产出；
+    `test_one_scan_reproduces_the_spec_readings`(:749-755) 断言两者必须逐桶相等。
+    ⇒ 任何人改 `bin/` 里一条 `ROOT / ".omo" / "_truth" / ...` 链，都必须**同批**改这个测试文件的数字，
+    否则 ISC-1 在 main 上红。而这条约束没有任何机器强制：pre-commit 的 change-lane-check 只分道不联动，
+    `bin/gac/ci-check-runner.py` 也不判「被扫面改了、基线没改」。
+    既有做法全靠人自觉 —— `:102-:109` 四条带日期批注（161→162→163→164）就是四次手工登记的痕迹。
+    实例：`9abcccfd6`(#5498 / BET-Y2Q4-T10-351) 把 `bin/ssot/scene-journey-autogen.py:25-:26` 两条链
+    改挂 `docs/scene-cards` + `docs/journey-specs`（该文件 `:23-:24` 注释说明理由：旧指针与 journey-runner
+    实际数据源分裂，scan 恒报 `0 missing` = 假阴），**删站是决定，bump 却漏了**。
+
+    缺口 B —— 基线文件自身的改动不在 CI 触发面内，于是「补账」也无法被 CI 证明。
+    `.github/workflows/governance-check.yml` 的 `push` 块的 paths（`:3` `push:` 起）与
+    `pull_request` 块的 paths（`:23` `pull_request:` 起，17 条；`:42` 另有 schedule）里**都没有 `tests/**`**（只有 `projects/omo/tests/**`）。
+    实测本会话的 PR #5510（只改 `tests/unit/test_writeplane_root_pin.py`）：`gh pr checks` 报
+    `no checks reported on the 'agent/governance-agent/iscbaseline358' branch`，
+    `statusCheckRollup: []`，`gh run list --branch ... = []` ⇒ 一个 check 都没触发。
+    后果是双向的：改了被扫面而忘 bump ⇒ 红只在**下一次碰到 `.omo/**`/`docs/**`/`bin/**` 的 PR** 才暴露；
+    而 bump 本身的 PR ⇒ 无声通过，CI 既不证明它对也不证明它错。
+
+    两相扣的直接结果，今晚已经发生：那记 164→162 的补账最终是**夹带**在毫不相关的
+    `0afea449d`（#5507 `fix(debt): resolve SED-I-GUARD, OMO-DEBT-CLOSE-GATE-LEVEL, and DEBT-STALE-EVIDENCE debts`）
+    里落到 main 的 —— `git log -S'".omo/_truth": 162'` 对该测试文件只给出这一次。
+    一处 CI 接线的欠账靠另一个主题的 PR 顺带修，且修它的那个 PR 自己没有跑过任何 governance check。
+
+    差异集定位法（可复用，本会话用过一次即命中）：
+    `git archive <上一版基线> bin | tar -x -C /tmp/x` 之后，用**同一个** `scan_checkout_pinned_sites()`
+    分别扫两份树并按文件分组求差 ⇒ 直接得到「唯一分叉文件 + 消失的行号与链」，
+    本轮即 `bin/ssot/scene-journey-autogen.py 2 -> 0`（:25 `.omo/_truth/scenarios/v3` / :26 `.omo/_truth/journeys/v3`）。
+    比在 CI 日志里对 dict 猜要短，且不受本地浅历史影响（扫描只看当前树）。
+
+    本条只登记机制缺口，不改 workflow 文件、不改基线数字、不加门禁判据（见 decision_needed）。
+    '.
+- at: '2026-11-24T03:35:00Z'
+  action: review
+  actor: governance-agent
+  note: 立案即复核：两个缺口都在本会话现场跑到（#5510 零 check 触发是本次亲测，不是引用；红窗口两个 run 的 created/updated 时间与 job 级结论都取到）。检索既有条目：rg
+    'SPEC_MARKER_READINGS|writeplane_root_pin' .omo/debt/items/ 只命中 DEBT-20260927-RUN-REGISTRY-RACE ——
+    它是 :105-106 那记 162→163 的**站点来源**（auto-pruner 新增 _run_update_lock），主题是覆写竞态而非联动缺失，主题不同不并案；ISC-1 相关的既有债务是判定接线（OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS），主题不同。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: |
+  机制缺口两两相扣，今晚在 main 上实咬了一次（红从 run 45313762566 created 02:37:34Z failure 起，到 run 45316372493 created 03:00:03Z / updated 03:06:49Z success 止，≈29 分钟）。
+
+  缺口 A —— 基线与被扫面之间没有同批强制联动。
+  `tests/unit/test_writeplane_root_pin.py:98-116` 的 `SPEC_MARKER_READINGS` 是对 `bin/**/*.py` 里
+  「钉检出根」字面链的**分类计数**，由同文件 `:349 scan_checkout_pinned_sites()` 扫描产出；
+  `test_one_scan_reproduces_the_spec_readings`(:749-755) 断言两者必须逐桶相等。
+  ⇒ 任何人改 `bin/` 里一条 `ROOT / ".omo" / "_truth" / ...` 链，都必须**同批**改这个测试文件的数字，
+  否则 ISC-1 在 main 上红。而这条约束没有任何机器强制：pre-commit 的 change-lane-check 只分道不联动，
+  `bin/gac/ci-check-runner.py` 也不判「被扫面改了、基线没改」。
+  既有做法全靠人自觉 —— `:102-:109` 四条带日期批注（161→162→163→164）就是四次手工登记的痕迹。
+  实例：`9abcccfd6`(#5498 / BET-Y2Q4-T10-351) 把 `bin/ssot/scene-journey-autogen.py:25-:26` 两条链
+  改挂 `docs/scene-cards` + `docs/journey-specs`（该文件 `:23-:24` 注释说明理由：旧指针与 journey-runner
+  实际数据源分裂，scan 恒报 `0 missing` = 假阴），**删站是决定，bump 却漏了**。
+
+  缺口 B —— 基线文件自身的改动不在 CI 触发面内，于是「补账」也无法被 CI 证明。
+  `.github/workflows/governance-check.yml` 的 `push` 块的 paths（`:3` `push:` 起）与
+  `pull_request` 块的 paths（`:23` `pull_request:` 起，17 条；`:42` 另有 schedule）里**都没有 `tests/**`**（只有 `projects/omo/tests/**`）。
+  实测本会话的 PR #5510（只改 `tests/unit/test_writeplane_root_pin.py`）：`gh pr checks` 报
+  `no checks reported on the 'agent/governance-agent/iscbaseline358' branch`，
+  `statusCheckRollup: []`，`gh run list --branch ... = []` ⇒ 一个 check 都没触发。
+  后果是双向的：改了被扫面而忘 bump ⇒ 红只在**下一次碰到 `.omo/**`/`docs/**`/`bin/**` 的 PR** 才暴露；
+  而 bump 本身的 PR ⇒ 无声通过，CI 既不证明它对也不证明它错。
+
+  两相扣的直接结果，今晚已经发生：那记 164→162 的补账最终是**夹带**在毫不相关的
+  `0afea449d`（#5507 `fix(debt): resolve SED-I-GUARD, OMO-DEBT-CLOSE-GATE-LEVEL, and DEBT-STALE-EVIDENCE debts`）
+  里落到 main 的 —— `git log -S'".omo/_truth": 162'` 对该测试文件只给出这一次。
+  一处 CI 接线的欠账靠另一个主题的 PR 顺带修，且修它的那个 PR 自己没有跑过任何 governance check。
+
+  差异集定位法（可复用，本会话用过一次即命中）：
+  `git archive <上一版基线> bin | tar -x -C /tmp/x` 之后，用**同一个** `scan_checkout_pinned_sites()`
+  分别扫两份树并按文件分组求差 ⇒ 直接得到「唯一分叉文件 + 消失的行号与链」，
+  本轮即 `bin/ssot/scene-journey-autogen.py 2 -> 0`（:25 `.omo/_truth/scenarios/v3` / :26 `.omo/_truth/journeys/v3`）。
+  比在 CI 日志里对 dict 猜要短，且不受本地浅历史影响（扫描只看当前树）。
+
+  本条只登记机制缺口，不改 workflow 文件、不改基线数字、不加门禁判据（见 decision_needed）。
+decision_needed: |
+  三项待裁，本轮零改动（不动 workflow、不动基线数字、不加门禁判据）：
+  (1) 要不要把 `tests/**` 加进 `.github/workflows/governance-check.yml` 的 push/pull_request `paths`？
+      成本是 tests-only PR 也要跑整套 governance check（本轮实测 interface-check 单 job ≈4-6 分钟），
+      收益是「bump 基线的 PR 也能被 CI 证明对错」。CI 接线面变更需 principal 授权，故不代做。
+  (2) 要不要加一条联动门禁：diff 命中 `bin/**/*.py` 的 root-pin 字面链（按 `scan_checkout_pinned_sites`
+      同款 AST 判据）而未同批改 `tests/unit/test_writeplane_root_pin.py` ⇒ 拦。
+      难点是判据必须能识别「无需 bump」的情形（改链但未跨桶、或等量替换），否则按今晚形状会误拦大量正常 PR
+      —— 这条与「审批清单与落盘字符串出自两个函数」「测试逐字断言生产端 command 字符串」同族。
+  (3) 还是维持现状，把「改被扫面 ⇒ 同批 bump 基线」写成纪律条目（docs/pitfalls.md 正文由 owner 写，
+      本条不代写），并在 AGENTS.md 的 GaC pointer 处留一句指针。
+  另：今晚那记 bump 夹带在 #5507（债务主题）里落地，说明这类补账当前**没有归属要求**；
+  若采 (1)/(2)，顺带决定「基线补账该挂在什么要求下」，否则仍会被夹带。
