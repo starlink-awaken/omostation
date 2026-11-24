@@ -1,0 +1,123 @@
+id: OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT
+title: A2A 路径锁 heartbeat 宽度 1h 小于锁 TTL 24h 且无自动续期方 —— 活 run 闲置超 1h 即被下一次 acquire 静默接管, 原 run 从此 closeout
+  必失败
+dimension: governance
+subdimension: tooling
+domain: governance
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/workflow/lifecycle_locks.py
+- projects/omo/src/omo/workflow/lifecycle.py
+- projects/omo/src/omo/workflow/cli.py
+evidence_refs:
+- projects/omo/src/omo/workflow/lifecycle_locks.py:27 (_HEARTBEAT_STALE_SECONDS = 3600)
+- projects/omo/src/omo/workflow/lifecycle_locks.py:201-202 (expires_at = now + lock_ttl_hours, 缺省 24h)
+- projects/omo/src/omo/workflow/lifecycle_locks.py:85-106 (先 expires_at 后 last_heartbeat 两级判据)
+- projects/omo/src/omo/workflow/lifecycle_locks.py:241-245 (非 live 即 unlink 后以新 run_id 落锁)
+- projects/omo/src/omo/workflow/lifecycle_locks.py:112-149 (lock_scopes_past_expiry 只读 expires_at; 注释
+  :116-117 明确排除 heartbeat 宽度)
+- projects/omo/src/omo/workflow/lifecycle.py:1078 / :1092-1094 (missing lock file / lock run_id mismatch)
+- projects/omo/src/omo/workflow/lifecycle.py:1384 / :1687 (claim / closeout 前置 heartbeat_run)
+- projects/omo/src/omo/workflow/cli.py:315-316 / :341 (heartbeat 子命令 / verify 前置续期)
+- projects/omo/src/omo/workflow/diagnostics.py:229 (active run is missing lock files; 仅报表项)
+- '实测 2026-11-24 01:37-01:43Z: run 20261124T000534Z-…-4d3856a2 (claim 00:20:45Z) 与 20261124T013731Z-…-b8279e38
+  相撞后 closeout 两段报错'
+- '实测 2026-11-24 01:53Z: 近 60 个 runs/*.yaml 顶层 last_heartbeat 非空 0/60; locks/ 现存 9 把锁 expires_at 均为 +24h'
+mitigation_refs: []
+opened_at: '2026-11-24'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-01'
+gate_level: watchlist
+history:
+- at: '2026-11-24T01:53:53.817508+00:00'
+  action: register
+  note: Registered debt item OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT.
+  actor: governance-agent
+- at: '2026-11-24T01:55:25.139679+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '机制（代码原文，非推断）：路径锁的存活判据与锁自己的有效期不是同一个宽度。
+    `lifecycle_locks.py:27` `_HEARTBEAT_STALE_SECONDS = 3600`，而 `:201-202` 的 `expires_at` 由
+    `registry.runner.lock_ttl_hours`（缺省 24）算出，实测今天新建的锁写的是 `2026-11-25T01:51:38Z`（+24 h）。
+    `_classify_existing_lock` 先查 `expires_at`（`:85-93` zombie_expired），再查 `last_heartbeat`
+    （`:96-106`：age > 3600 s ⇒ `zombie_stale_heartbeat`）， acquire 侧对**任何非 live 分类**执行
+    `lock_path.unlink(missing_ok=True)`（`:241`）然后以自己的 run_id 落新锁（`:243-245`）。
+    ⇒ 一把 `expires_at` 还有 23 h 才到、但 heartbeat 已 1 h 没动的锁，会被下一次 `claim`/`start` 静默接管。
+
+    谁在续 heartbeat：只有四个点 —— `heartbeat` 子命令（`cli.py:315-316`）、`verify` 前置（`cli.py:341`）、
+    `claim` 前置（`lifecycle.py:1384` 注释 "SR-01: renew before claim"）、成功 closeout 前置（`lifecycle.py:1687`）。
+    纯读、改文件、跑测量、跑门禁这些执行主体动作**不续**。今天实测可见效果：01:51:42Z 一次 claim 把
+    `omo-broker.lock.yaml`（01:43:21Z 创建）等 9 把锁的 heartbeat 全刷成同一时刻，证明 claim 确实整轮刷新。
+
+    两个谓词口径相反：冲突放行侧 `lock_scopes_past_expiry`（`:112-149`）**只读 `expires_at`**，注释
+    `:116-117` 明确写「`_HEARTBEAT_STALE_SECONDS` 会把闲置一小时的活 run 判成僵尸（PITFALL-COO-008 实测 29 条里
+    22 条），那个宽度不得进入本判据」，并且不可证明过期即维持冲突（fail-closed）。
+    ⇒ 同一把锁，A2A 谓词说「没过期，算冲突」，acquire 说「heartbeat 超 1 h，算僵尸，删掉接管」。
+    本条登记的是这个口径分裂本身。
+
+    后果（本会话实测，2026-11-24 01:37–01:43Z）：run `…4d3856a2` 于 00:20:45Z claim `.omo/debt/items`；
+    01:37:31Z 起的 `start` 与之相撞（01:39:43Z 报 Path Lock Collision），随后原 run 的
+    `closeout` 连续失败 —— 先 `lock run_id mismatch`（`lifecycle.py:1092-1094`）、再 `missing lock file`
+    （`:1078`，锁已被兄弟 run 的 `release_locks` 按 run_id 整轮 unlink）。唯一可用出口是不跑 verify 的
+    `close --status ok --evidence …`，即治理证据从「verify 读数」降级为「自述」。
+    旁证：`diagnostics.py:229` 有 `active run is missing lock files` 这条读数，但它只是报表项，不在任何门禁里。
+    run 记录侧另有一个空转字段：近 60 个 `runs/*.yaml` 的**顶层** `last_heartbeat` 非空计数 **0 / 60**
+    （status 分布 blocked 28 / ok 31 / active 1）—— 锁面有 heartbeat，run 面没有写入方。
+
+    为什么算纯机制缺陷而不涉政策：本条不改任何 verdict 口径、指标默认值或闸级；三项待裁见 `decision_needed`。
+    '.
+- at: '2026-11-24T01:54:30Z'
+  action: review
+  actor: governance-agent
+  note: 立案即复核：三段判据（:27 1h / :201-202 24h / :116-117 口径排除）与 01:37-01:43Z 相撞时序均在源码与实测读数中复现，故证据一次到位；无既有条目重复此形状（全库
+    rg `zombie_stale_heartbeat` 仅 lifecycle_locks.py 与本条）。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: |
+  机制（代码原文，非推断）：路径锁的存活判据与锁自己的有效期不是同一个宽度。
+  `lifecycle_locks.py:27` `_HEARTBEAT_STALE_SECONDS = 3600`，而 `:201-202` 的 `expires_at` 由
+  `registry.runner.lock_ttl_hours`（缺省 24）算出，实测今天新建的锁写的是 `2026-11-25T01:51:38Z`（+24 h）。
+  `_classify_existing_lock` 先查 `expires_at`（`:85-93` zombie_expired），再查 `last_heartbeat`
+  （`:96-106`：age > 3600 s ⇒ `zombie_stale_heartbeat`）， acquire 侧对**任何非 live 分类**执行
+  `lock_path.unlink(missing_ok=True)`（`:241`）然后以自己的 run_id 落新锁（`:243-245`）。
+  ⇒ 一把 `expires_at` 还有 23 h 才到、但 heartbeat 已 1 h 没动的锁，会被下一次 `claim`/`start` 静默接管。
+
+  谁在续 heartbeat：只有四个点 —— `heartbeat` 子命令（`cli.py:315-316`）、`verify` 前置（`cli.py:341`）、
+  `claim` 前置（`lifecycle.py:1384` 注释 "SR-01: renew before claim"）、成功 closeout 前置（`lifecycle.py:1687`）。
+  纯读、改文件、跑测量、跑门禁这些执行主体动作**不续**。今天实测可见效果：01:51:42Z 一次 claim 把
+  `omo-broker.lock.yaml`（01:43:21Z 创建）等 9 把锁的 heartbeat 全刷成同一时刻，证明 claim 确实整轮刷新。
+
+  两个谓词口径相反：冲突放行侧 `lock_scopes_past_expiry`（`:112-149`）**只读 `expires_at`**，注释
+  `:116-117` 明确写「`_HEARTBEAT_STALE_SECONDS` 会把闲置一小时的活 run 判成僵尸（PITFALL-COO-008 实测 29 条里
+  22 条），那个宽度不得进入本判据」，并且不可证明过期即维持冲突（fail-closed）。
+  ⇒ 同一把锁，A2A 谓词说「没过期，算冲突」，acquire 说「heartbeat 超 1 h，算僵尸，删掉接管」。
+  本条登记的是这个口径分裂本身。
+
+  后果（本会话实测，2026-11-24 01:37–01:43Z）：run `…4d3856a2` 于 00:20:45Z claim `.omo/debt/items`；
+  01:37:31Z 起的 `start` 与之相撞（01:39:43Z 报 Path Lock Collision），随后原 run 的
+  `closeout` 连续失败 —— 先 `lock run_id mismatch`（`lifecycle.py:1092-1094`）、再 `missing lock file`
+  （`:1078`，锁已被兄弟 run 的 `release_locks` 按 run_id 整轮 unlink）。唯一可用出口是不跑 verify 的
+  `close --status ok --evidence …`，即治理证据从「verify 读数」降级为「自述」。
+  旁证：`diagnostics.py:229` 有 `active run is missing lock files` 这条读数，但它只是报表项，不在任何门禁里。
+  run 记录侧另有一个空转字段：近 60 个 `runs/*.yaml` 的**顶层** `last_heartbeat` 非空计数 **0 / 60**
+  （status 分布 blocked 28 / ok 31 / active 1）—— 锁面有 heartbeat，run 面没有写入方。
+
+  为什么算纯机制缺陷而不涉政策：本条不改任何 verdict 口径、指标默认值或闸级；三项待裁见 `decision_needed`。
+decision_needed: |
+  三项待裁，本轮不代做：
+  (1) 宽度口径往哪边统一：把 `_HEARTBEAT_STALE_SECONDS` 提到与 `lock_ttl_hours` 同源 / 保留 1h 但给
+      claim-verify-closeout 之外补一个自动续期方（= 新增常驻写方，属部署面，需 principal 授权）/
+      让 acquire 在「对方 run 仍 active 且 expires_at 未到」时不抢锁而是要求显式 force。
+      三者含义不同，且 `:116-117` 注释已经把「heartbeat 宽度不得进入冲突放行判据」写成既有决定，
+      动它等于改 PITFALL-COO-008 的处置结论。
+  (2) 锁被接管后原 run 的合法恢复通路：现在唯一出口是不跑 verify 的 `close`，等于把治理证据从 verify 读数
+      降级为自述；是否给 closeout 一条「锁已丢失但 run 归属可证」的重建路径，属生命周期语义变更。
+  (3) `diagnostics.py:229` 的 "active run is missing lock files" 是否从报表项升级为阻断门禁
+      （advisory → blocking 的接线变更，按既有边界不代裁）。
+  另：run 记录顶层 `last_heartbeat` 0/60 是「声明字段无写入方」的形状，是否补写入方或直接删字段，一并按裁决处理。

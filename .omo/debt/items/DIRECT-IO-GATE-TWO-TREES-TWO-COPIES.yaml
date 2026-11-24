@@ -27,8 +27,8 @@ evidence_refs:
 - "00:32 那次红与 quota_ledger.py 无关的直接证据: 子仓 aetherforge 在 2026-11-06T00:40Z 的 main 头 = `8639c682d`, 与 root `3a1c07702` **接受**的 pin 同一对象 (`gh api repos/starlink-awaken/omostation-aetherforge/commits?until=2026-11-06T00:40:00Z` 首行 vs `git ls-tree -r 3a1c07702 projects/aetherforge`); 违规提交 d48cfb6 的 committer date 01:06:02Z 晚于该 run"
 mitigation_refs: []
 opened_at: "2026-11-07"
-last_reviewed_at: '2026-11-07'
-next_review_at: '2026-11-14'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
@@ -114,3 +114,20 @@ history:
 
     (5) **取不到的东西如实记**: 00:32 那次究竟检测到**哪个子模块**的漂移**未确定** —— job 日志取不到 (`gh api .../actions/jobs/<id>/logs` 返回 0 字节; 带 token 直连 3 次 `SSL_ERROR_SYSCALL`, api.github.com 与 productionresultssa14.blob.core.windows.net 各中过; `.../actions/runs/42137562580/attempts/1` 亦 TLS 失败 2 次)。本条因此只写 step 级结论 (其判据 `actions/runs/<id>/jobs` 与 `actions/jobs/<id>` 均可复算), 不引用日志原文, 也不引用无法当场复算的早期会话措辞。
   actor: "governance-agent"
+- at: '2026-11-24T01:47:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 01:21Z)：副本面比立案更宽，判据 (1) 的覆盖面结论从 1 个子仓扩到 7 个。**
+    ① 全仓普查 `contract_gatekeeper.py`：**10 份、8 个不同 sha256** ——
+    `projects/ecos` 13197 B/`2c2479a8`（唯一带 MUTATION_* 的那份）、`projects/omo` 9388 B/`28e7addc`、
+    `projects/agora` 7764 B/`0bd41171`、`projects/runtime` 7653 B/`bd84fe10`、
+    `projects/cockpit`/`knowledge/kairon`/`knowledge/kairon-security` 各 7537 B/`4bdcc424`、
+    `projects/metaos`/`projects/aetherforge`/`agora/projects/aetherforge` 各 7536 B/`38320e3e`。
+    立案把它描述成「子仓那份 vs root 那份」两份拷贝，实际是 10 份 8 变体。
+    ② 覆盖面实测（`grep -c "MUTATION_METHOD_NAMES\|MUTATION_HELPER_NAMES"`）：ecos=**4**，而 omo / cockpit / kairon /
+    runtime / agora / aetherforge 全 = **0** ⇒ 「看不见 `mkdir()` 与 `open(..., "a")`」不是 omo 独一份，
+    **除 ecos 外每个子仓自家 CI 都能复发 PR #122 那种「自家绿、root 红」**。裁决项 (1) 的对象因此是 9 份副本，不是 1 份。
+    ③ 裁决项 (2)（freshness job 的 verify 腿按哪棵树评）本轮**未复测**：`.github/workflows/submodule-freshness-gatekeeper.yml:63`
+    `if: env.CHANGED == 'true'` 的跳过条件要在 CI 里读，不在本地可复算；且近 10 天该 job 无红（11-22 结论「红链因漂移条件
+    消失而停、不是被修」仍适用）。此项保持待裁，本轮不代为判定。

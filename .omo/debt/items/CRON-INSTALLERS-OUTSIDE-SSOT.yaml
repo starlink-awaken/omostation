@@ -22,8 +22,8 @@ evidence_refs:
 - "bin/gac/ops-cron-install.py:54 (`REGISTRY=`) 与 :80 (`unregistered_jobs()`) 与 :112-114 (`install()` 一进门见 missing 即 return 非零) 与 :165 (预检输出明说 `--install 会被拒`) —— #5124 的 fail-closed; 复算其 4 个作业确实 0 个在登记面"
 mitigation_refs: []
 opened_at: "2026-11-07"
-last_reviewed_at: '2026-11-07'
-next_review_at: '2026-11-14'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
@@ -91,3 +91,19 @@ history:
   review_refs:
   - "bash bin/ssot/install-maturity-cron.sh --dry-run ⇒ rc=1 (4 条不在册)"
   - "git show 5075c70e4 --stat ⇒ bin/ssot/install-maturity-cron.sh +32, tests/unit/gac/test_install_maturity_cron.py +100"
+- at: '2026-11-24T01:47:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 01:22Z)：核心未在册事实不变，但两条要订正，且暴露面归因要改。**
+    ① `bash bin/ssot/install-maturity-cron.sh --dry-run` 真 **rc=1**（订正方法学：此前用 `... | tail -N; echo $?` 读的是
+    tail 的 rc，管道会掩盖被pipe命令的退出码；本轮改重定向后取真 rc）。未在册 4 个：
+    `bin/ssot/signal-poller.py`、`bin/gac/remediation-engine.py`、`bin/gac/anti-corrosion-check.py`、`bin/ssot/north-star-weekly.py`
+    —— 与 11-23 读数一致，未自愈。
+    ② 原文「`ops-cron-install.py` 4 个作业, 0 个在登记面」已过期：按 `.omo/cron/registry.yaml`（87 条 jobs）逐名核对，
+    `weekly-review.py` **已在册**，`architecture-drift.py` 不在册 ⇒ 该安装器的未在册数不是 0 而是需按它自己的守卫复算；
+    本轮只做了 registry 存在性核对，**没有**跑它的 coverage 守卫，不据此下结论。
+    ③ **新的关键事实（改归因，不改裁决问题）**：本机 crontab 68 行（40 行含 `Workspace`），但
+    `omostation-ops` 与 `omostation-maturity` 两个标记各 **0** 条 ⇒ 两个登记面外安装器**当前在本机零安装**。
+    它们的暴露面是「可安装、装上就绕开 registry」，不是「已经在跑未登记的作业」。
+    ④ 裁决问题原文仍成立且**不该在裁决前逐个改工具**：唯一 registry-driven 的安装器仍是 `bin/ops/install-cron-plane.py`。

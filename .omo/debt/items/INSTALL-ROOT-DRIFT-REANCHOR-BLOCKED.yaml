@@ -22,8 +22,8 @@ evidence_refs:
 - "根仓 #5172 修的正是该作业的 2 个 UNKNOWN facet, 但因安装位未更新而无法生效"
 mitigation_refs: []
 opened_at: "2026-11-09"
-last_reviewed_at: '2026-11-09'
-next_review_at: '2026-11-16'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
@@ -118,3 +118,19 @@ history:
     **仍未做**: `decision_needed` (2)「巡检是否要自愈」—— 本次只修了**读数**,
     没有加自动重锚分支 (那是行为变更, 且重锚会动常驻族运行的代码, 应单独裁)。
   actor: "governance-agent"
+- at: '2026-11-24T01:47:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日复测 (11-24 01:19Z)：漂移前提当前不成立；阻塞形状换了位置，没消失。**
+    ① `bash bin/ssot/anchor-install-root.sh --check` **rc=0**，原文「锚点一致 origin/main: e41d012b8」；安装位
+    `~/.local/opt/omostation` HEAD = `e41d012b8` = 今日 origin/main tip ⇒ 落后 0 提交。
+    ② **判据修复在真实调度里生效**（不止测试）：`~/.local/log/anchor-install-root.log` 尾部序列是 11-17→11-23 每天
+    「锚点落后 0 个提交 (锚点距今 4…13 天) → 常驻族在跑旧代码」这条自相矛盾的话，修复后第一次运行即正确报
+    「锚点落后 origin/main **241** 个提交」并附「检出根 HEAD … 仅参考」行，随后一轮报「锚点一致」。
+    ③ 裁决项 (1) 的事实基础变了：原文「`scripts/tools/spine-daily-ingress.py` 未提交修改 + 两个 untracked」在本机已不存在
+    （安装位 root `git status --short` 只剩 ` m projects/omo`，`--untracked-files=all` 计数 **0**，该 spine 文件不再出现在
+    status 里）。现存唯一脏面是**安装位子模块** `projects/omo` 的 `M uv.lock`（子模块 HEAD `08ce92a2` 与 pin 一致）。
+    ⇒ 「脏所以拒重锚」这个机制仍然成立，但对象从 root 仓改成子模块工作树；(1) 的处置问题因此**换了题目**：要裁的是
+    安装位子模块里那份 `uv.lock` 改动（谁写的、该不该留），而不是原列的三个文件。
+    ④ 裁决项 (2) 未动：`.omo/cron/registry.yaml:1237-1240` 的排班仍只跑 `--check`（无自愈分支），今天没有任何自动重锚发生。
