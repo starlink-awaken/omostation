@@ -122,6 +122,61 @@ history:
     ⑦ 本条 `last_reviewed_at` 由 `2026-11-09` 推进到 `2026-11-23`，`next_review_at` 由已过期的 `2026-11-16`
     推到 `2026-12-07`；`lifecycle_state` / `gate_level` 保持 `identified` / `none`（本轮只补实测与订正时效，
     未新增机器服务、未改读契约、未改任何门禁判定逻辑）。
+- at: '2026-11-24T07:45:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **补一笔裁决级读数（11-24 07:43Z）：本条 `decision_needed` 的选项 (2) 单独不足以解除冻结读面 —— 因为 `state_root()` 在未声明 profile 的交互 shell 里就回落仓根。**
+
+    ① 先更新时效（直测 `os.stat` mtime + `generated_at` 双口径，07:36Z）：
+    | 根 | mtime (UTC) | `generated_at` | age | 判读 |
+    |---|---|---|---|---|
+    | 仓根 `runtime/dashboard/agent-brief.json` | 11-23 07:51:49Z | 11-23 07:45:03Z | **23.7 h** | 与 11-23 21:35Z 那条 review 记录的 mtime **完全相同** ⇒ 此后一整天没有任何写方碰过它，本条核心命题的观察窗从 13.7 h 拉长到 23.7 h |
+    | 状态根 `~/.local/state/omostation/prod/runtime/dashboard/agent-brief.json` | 11-24 07:16:42Z | 11-24 07:08:51Z | 20 min | 在更新 |
+    ⇒ 写方健康，不是坏掉的排班：`launchctl print gui/501/com.omostation.agent-brief-materialize` ⇒ `runs=139`、`last exit code=0`、`job state=exited`；
+    `~/.local/log/agent-brief-materialize.log` 尾部 6 条物化记录的时刻是 04:46 / 05:16 / 05:46 / 06:16 / 06:46 / 07:16Z ⇒ 30 min 节奏，`target=` 全部指向状态根。
+    所以冻结的不是"没有写方"，而是"写方只写状态根，仓根那份没人写" —— 与本条命题一致，只是把"排班缺失"与"排班在跑"这两件事分开钉住。
+
+    ② 新读数是**解析层**的，直接关系到选项 (2) 的可行性。我在 07:35Z 按 AGENTS.md §1.8 的字面指示
+    （"读 `<state_root()>/runtime/dashboard/agent-brief.json`"）取 brief，拿到的正是 23.7 h 的冻结副本；
+    原因不是路径写错，而是 `python3 bin/lib/repo_root.py --json` 在本机交互 shell 里报
+    **`state_root = /Users/xiamingxing/Workspace`、`state_root_declared = false`**（与 `code_root` 同值）。
+    代码即契约：`bin/lib/repo_root.py` 的 `state_root()` 实现是
+    `env = os.environ.get(STATE_ROOT_ENV)` → 有值用 `OMOSTATION_STATE_ROOT`，**没值就 `return code_root()`**，
+    docstring 自己写着「未声明 profile 时等于 code_root()，逐字节复现历史路径」。
+    实测对照：本 shell `OMOSTATION_STATE_ROOT = None`；
+    加 `OMOSTATION_STATE_ROOT=/Users/xiamingxing/.local/state/omostation/prod` 再跑 ⇒ `state_root` 翻到状态根、`declared = true`。
+    ⇒ **对选项 (2) 的直接含义**：只把 §1.8 的措辞改成"按 state_root 解析"并不能解除冻结 ——
+    agent 的交互 shell 今天不声明该变量，改完措辞后指针仍落在仓根。要让 (2) 生效，得配套其一并选择：
+    在 agent 会话环境里声明 `OMOSTATION_STATE_ROOT`（机器级环境变更），
+    或让 `state_root()` 在 declared=false 时对"读运行态投影"这类调用显式报警/拒绝（属 ADR-0456 契约变更，
+    会把当前刻意保留的向后兼容语义改掉），
+    或把 §1.8 的指针从"函数解析"改为"字面 XDG 路径 + 说明与 profile 的对应关系"。
+    ⇒ 第三方向本来最干净（内容寻址、天然带时效），但实测**它现在不可直接解析**（07:50Z 直测）：
+    `~/.local/share/zhixing-dashboard/revisions/` 存在、有 **48** 个 revision 目录，
+    每个里面是 `agent-brief.json`，而 store 下**没有 `latest`、没有 `CURRENT`、没有 `manifest.json`** 任一指针
+    （目录名是 revision hash，不是时间序 ⇒ 按名排序不等于按新旧排序）。
+    两份根副本的 `provenance.source_path` 恰好指向这里（状态根 `revision_id=d85a4810d2ce…`、
+    仓根 `9738a18d3507…`，两个不同 revision），说明真正的产出面是 store，**两个根都只是它的复制落点**。
+    ⇒ 所以若 owner 想让读契约直接指向 store，得先有"当前 revision"的解析器或 `latest` 指针；
+    否则读侧仍只能依赖复制落点，而复制落点之一无人写 —— 这正是本条的命题。
+
+    ③ 同一回落的**写侧**暴露面顺手量化（AST 级数 `state_root()` 调用点，范围 `bin` + `projects/omo/omo` + `.githooks` + `tests`，1429 个 py 文件）：
+    **27 个调用点、15 个文件**，其中两处值得单列：
+    `bin/gac/omo-state-write-guard.py` 的被保护路径是 `state_root() / ".omo" / "state" / "system.yaml"`，
+    `bin/gac/materialize-system-state.py` 的落点是 `state_root() / SYSTEM_YAML_REL`（其 docstring 亦自述
+    「未声明 profile 时 state_root()==code_root()」）。
+    ⇒ 未声明时，守门员与物化器守/写的都是 **git 检出内**那份 `system.yaml`，而不是状态根那份；
+    这与本条 ① 的读面冻结是同一个解析层的两个症状，不是两个独立故障。
+    我不据此新建条目（`PANORAMA-GATE-DETAIL-UNRELIABLE`、`HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT`、
+    `DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN` 已分别覆盖执行侧与判定侧），只把"根因同层"这条关系写进来，
+    供 owner 把三案的裁决放在一起看。
+
+    ④ 边界：本轮零机器变更 —— 不装 launchd 条目、不改 `services.yaml`、不改 `repo_root.py`、不改 AGENTS.md §1.8、
+    不 export 任何环境变量到别人的会话、不动 `scheduler-compile --check` 的比较口径。
+    ① 的"仓根装写方"与 ② 的"改读契约"都仍在待裁状态；
+    `description` / `decision_needed` / `lifecycle_state` / `gate_level` / `severity` / `weight` / `evidence_refs` 一字未动，
+    `next_review_at` 保持 2026-12-07。
 description: >-
   **实测补充 (2026-11-23T21:35Z 订正版, 基线 origin/main `77bcf1838`)。**
   三份 agent-brief 的时效与判定实测（`os.stat` mtime / `generated_at` / `health` 字段）：
