@@ -1,0 +1,287 @@
+id: OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS
+title: ledger-safe-insert 前置校验不查 meta 枚举与 lint 必填字段 —— 5 类非法 BET 载荷 rc=0 落盘，而 lint
+  判据在 CI 只是信息性
+dimension: governance
+subdimension: consistency
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- .omo
+evidence_refs:
+- bin/gac/ledger-safe-insert.py
+- bin/plan/bet-ledger.py
+- .github/workflows/bet-done-gate.yml
+- AGENTS.md
+- docs/plans/3y-bet-ledger.yaml
+mitigation_refs: []
+opened_at: '2026-11-24T09:20:53.027536+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T09:20:53.027536+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-LEDGER-INSERT-SKIPS-ENUM-CHECKS.
+  actor: agent:governance-agent
+- at: '2026-11-24T09:21:23.711452+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md
+    §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照 `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与
+    `.github/workflows/bet-done-gate.yml` 的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69
+    的隔离 worktree 内实测。
+
+
+    ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+    只检查 6 项：
+
+    - id 以 `BET-` 开头（`:75`）
+
+    - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+    - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+    - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+    - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+    外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+    绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层
+    `tracks` 或 `cmd_lint` 的 required 字段列表。
+
+
+    ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+    | 载荷 | 插入器 rc | 是否落盘 |
+
+    |---|---|---|
+
+    | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+    | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+    | C `window: Y9Q9` | 0 | 是 |
+
+    | D `priority: P9` | 0 | 是 |
+
+    | E `track: no-such-track` | 0 | 是 |
+
+    | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+    | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+    |
+
+
+    每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+    同步为 600（绝对派生，无漂移）。
+
+
+    ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+    `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+    track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+    status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+    把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+    window Y9Q9`、`未知 track no-such-track`。
+
+
+    priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+    / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority
+    取值清单。
+
+
+    ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+    `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+    对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败
+    grep 模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+    window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+    ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+    - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+    - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+    `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+    的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+    - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真
+    CLI，20.7s）。所以「把枚举类 finding 升级为阻断」当前没有历史回填成本。
+
+
+    ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+    1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+    git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+    行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+    2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+    BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+    ## 7. 待裁（principal，三选一；本轮零代码改动）
+
+
+    1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+    2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+    CI（§5 实测 rc=0，无回填成本）；
+
+    3. 或维持现状，另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+    本条只登记判据缺口与实测，不改 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml`
+    任何一行，不移动 `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。''.'
+- at: '2026-11-24T09:21:23.751331+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T09:23:42.980901+00:00'
+  action: review
+  note: broker 副作用复核：`schedule --next-review-at 2026-12-08` 除写 `next_review_at` 外还把 `lifecycle_state` 从 `identified` 改成 `scheduled`（`omo_debt_lifecycle.py:74` 直改状态字段，见 OMO-DEBT-REGISTER-NO-REVIEW-DATES 决策项 (3)）。本条为「已登记待裁」而非「已排期处置」，故手工把状态字段改回 `identified`，排期字段保留，改动在此留痕。
+  actor: agent:governance-agent
+- at: '2026-11-24T09:23:42.980901+00:00'
+  action: review
+  note: 覆盖面补测：`rg -l "ledger-safe-insert|ledger_safe_insert" tests/` 零命中 —— 插入器无任何测试用例，§2 的七类载荷是本次首次实测。命中清单集中在 docs/SOPs/ledger-closeout-sop.md、docs/operations/workflow-waiver-*.md 与 3y-bet-ledger.yaml，均为文字引用而非执行面。
+  actor: agent:governance-agent
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '实测范围：`bin/gac/ledger-safe-insert.py`（AGENTS.md §6「ledger BET 条目安全插入」指定入口）的前置校验覆盖面，对照
+  `bin/plan/bet-ledger.py` 的 `cmd_lint` 判据与 `.github/workflows/bet-done-gate.yml`
+  的 CI 处置。全部读数为 2026-11-24 在 origin/main@1d187bb69 的隔离 worktree 内实测。
+
+
+  ## 1. 插入器校验面（validate_entry，ledger-safe-insert.py:73-106 全文逐条读）
+
+
+  只检查 6 项：
+
+  - id 以 `BET-` 开头（`:75`）
+
+  - `accepted_specifications` 恰好 1 条绑定、四键集合（`:78-83`）
+
+  - `spec_ref` 指向的文件存在且 `content_digest` 匹配（`:87-95`）
+
+  - `decision_ref == decision://accepted/<id>`（`:96-98`）
+
+  - `completion_evidence.axes` 三轴集合、`overall_state` 非空（`:100-105`）
+
+
+  外加重复 id（`:187-188`）与插入后的结构自检（`parse_ledger_text` + `len(bets)` 递增 + `meta.total_bets`
+  绝对派生，`:206-241`）。全文没有任何一处引用 `data["meta"]["status_enum"]`、`meta["windows"]`、顶层 `tracks`
+  或 `cmd_lint` 的 required 字段列表。
+
+
+  ## 2. 七类载荷实测（沙盒 /tmp/b15root：三个文件逐字复制自 worktree，真实台账零写入）
+
+
+  | 载荷 | 插入器 rc | 是否落盘 |
+
+  |---|---|---|
+
+  | A 合法基线（BET-Y2Q4-T10-900） | 0 | 是 |
+
+  | B `status: finished`（不在 status_enum） | 0 | 是 |
+
+  | C `window: Y9Q9` | 0 | 是 |
+
+  | D `priority: P9` | 0 | 是 |
+
+  | E `track: no-such-track` | 0 | 是 |
+
+  | F 缺 `goal`/`done_when`/`verify` | 0 | 是 |
+
+  | G 缺 `accepted_specifications` | 1 | 否（`ERROR ... must contain exactly one binding`）
+  |
+
+
+  每条成功插入都打出 `OK: inserted BET-Y2Q4-T10-9xx | bets now 600 | last=BET-Y2Q4-T10-9xx`，`meta.total_bets`
+  同步为 600（绝对派生，无漂移）。
+
+
+  ## 3. lint 侧确实持有这些判据（bet-ledger.py:3012 cmd_lint）
+
+
+  `:3034-3045` 的 required 列表含 track/window/title/appetite/status/goal/done_when/verify/workflow/write_surfaces；`未知
+  track`（`:3052`）与 `未知 window`（`:3054`）仅在 `status != "candidate"` 时检查（`:3047`）；`非法
+  status`（`:3055-3056`）无条件对照 `data["meta"]["status_enum"]`。
+
+
+  把 B..E 四条非法载荷插进同一份沙盒台账后，lint ERROR 行数 4147 → 4181（差 34），新增行逐条命中 `非法 status finished`、`未知
+  window Y9Q9`、`未知 track no-such-track`。
+
+
+  priority 维度两侧都不检查，而且口径本身不存在：台账 `meta` 只有 horizon / schema_version / status_enum
+  / total_bets / windows 五个键，无 `priority_enum`，`tracks`、`windows` 里也没有 priority 取值清单。
+
+
+  ## 4. CI 处置：lint 结论不阻断（bet-done-gate.yml:36-58）
+
+
+  `:38` 跑 lint、`:39` 存 rc、`:42` 打印 `informational unless guard findings`；`:48-53`
+  对 rc=1 只要求尾部 5 行命中 `^[0-9]+ 个问题$|^\+ [0-9]+ 个 warning|^OK -- ` 即放行；`:58` 的硬失败 grep
+  模式仅 `BASE_LEDGER_UNREADABLE|BET_DONE_|META_TOTAL_BETS_DRIFT`，不含 `非法 status`/`未知
+  window`/`未知 track`。即一条越界枚举的 BET 可以「插入 rc=0 → CI 全绿 → 合进 main」。
+
+
+  ## 5. 在册人群现状（对真实 main 台账 599 条直接套用 lint 判据）
+
+
+  - `status` 越界：空；`track` 越界（非 candidate 全量 599 条）：空；`window` 越界：空。
+
+  - `priority` 取值分布：P1 279 / P0 235 / P2 78 / P3 4 / **high 3** —— `BET-Y1Q4-T6-17`、`BET-Y1Q4-T6-18`、`BET-Y1Q4-T6-19`（三条
+  `status: done`）用的是 `high` 而非 P*，是一处既成漂移。影响面核实：全仓 bet 级 priority 消费者只有 `bet-ledger.py:2247`
+  的 `why_now` 显示串，无排序、无门禁、无投影读取 → 当前惰性不咬人，但它是「无枚举口径 + 插入器不校验」叠加下已经发生的第一例。
+
+  - 真实 main 的 lint 读数：`OK -- 599 bets, 17 tracks, no errors`，rc=0（在 worktree 内跑真 CLI，20.7s）。所以「把枚举类
+  finding 升级为阻断」当前没有历史回填成本。
+
+
+  ## 6. 仪器自纠（两条，防止本条读数被误用）
+
+
+  1. §3 的「沙盒 lint 基线 4147 条 ERROR」不是 main 现状：沙盒里没有 `docs/superpowers/specs/` 实体文件、也没有
+  git base，于是每条 done BET 都报 `SPEC_FILE_MISSING`/`COMPLETION_FILE_REF_MISSING`。沙盒里有效的读数只有差值（34
+  行）与其中逐条枚举命中；main 的真实读数是 §5 末尾的 rc=0 / no errors。
+
+  2. 探针载荷自带的 `track: governance` 本身越界（真实 `tracks` 是 17 个 `T*-` 形式 ID，如 `T10-GOVERNANCE`），导致四条探针
+  BET 各额外命中一行 `未知 track governance`。这反向证明了同一件事：lint 查 track，插入器不查。
+
+
+  ## 7. 待裁（principal，三选一；本轮零代码改动）
+
+
+  1. 把 lint 的四类判据前置到 `validate_entry`——取值口径仍从同一份 `meta`/`tracks` 读，不建第二权威面，插入即拒；
+
+  2. 或维持插入器薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`，把拦截点后移到
+  CI（§5 实测 rc=0，无回填成本）；
+
+  3. 或维持现状，另立 priority 取值口径（`meta.priority_enum` 或引用既有标准），并处置已漂移的 3 条 `high`。
+
+
+  本条只登记判据缺口与实测，不改 `ledger-safe-insert.py` / `bet-ledger.py` / `bet-done-gate.yml`
+  任何一行，不移动 `lifecycle_state`/`severity`/`gate_level`/`weight`，不取消跟踪任何在册条目。'
+decision_needed: '待裁（三选一，属判据接线与 CI 硬失败口径变更，留 principal）：
+
+  ① 把 `bet-ledger.py:3046-3056` 的四类判据（status_enum / windows / tracks / required 字段）前置进 `ledger-safe-insert.py:validate_entry`，取值仍读同一份 `meta`/`tracks`（不建第二权威面），插入即拒；
+
+  ② 或插入器保持薄校验，改在 `bet-done-gate.yml:58` 的硬失败 grep 里加入 `非法 status|未知 window|未知 track`（实测 main 现状 `OK -- 599 bets, 17 tracks, no errors`、rc=0，无历史回填成本），把拦截点后移到 CI；
+
+  ③ 或维持现状，另立 priority 取值口径（`meta.priority_enum` 或引用既有标准）并处置已漂移的 3 条 `high`（BET-Y1Q4-T6-17/18/19）。
+
+  三条都改变既有交付口径，agent 不代为选定；本轮零代码、零判据、零 CI 面改动。'
