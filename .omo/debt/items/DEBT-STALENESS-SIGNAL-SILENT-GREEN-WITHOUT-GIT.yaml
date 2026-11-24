@@ -34,6 +34,7 @@ mitigation_refs: []
 opened_at: '2026-11-24'
 last_reviewed_at: '2026-11-24'
 closed_at: '2026-11-24'
+resolution_evidence: 'Wave 2 PR #5534 (f6d42bd48): bin/gac/check-debt-staleness.py (_commits_since returncode check + -1 sentinel + git_ok: false + inline self_test) and tests/unit/gac/test_check_debt_staleness.py.'
 next_review_at: '2026-12-08'
 gate_level: watchlist
 history:

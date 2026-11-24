@@ -32,6 +32,7 @@ mitigation_refs: []
 opened_at: '2026-11-24'
 last_reviewed_at: '2026-11-24'
 closed_at: '2026-11-24'
+resolution_evidence: 'Wave 3 starlink-awaken/omostation-omo#259 (16f68b1b8101): projects/omo/src/omo/omo_debt_lifecycle.py, projects/omo/src/omo/omo_debt_cli.py (--last-reviewed-at/--next-review-at + UTC today/+14d defaults), and projects/omo/tests/unit/test_omo_debt_broker_hardening.py.'
 next_review_at: '2026-12-08'
 gate_level: watchlist
 history:
