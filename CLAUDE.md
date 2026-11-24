@@ -1,8 +1,8 @@
 ---
 type: ssot
 owner: governance-team
-last_updated: 2026-11-09
-last-reviewed: 2026-11-09
+last_updated: 2026-11-24
+last-reviewed: 2026-11-24
 lifecycle: entry
 status: active
 ---

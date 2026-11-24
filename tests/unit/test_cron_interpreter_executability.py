@@ -479,8 +479,15 @@ def test_gate_is_wired_into_local_gate():
 
 
 def test_run_record_has_six_fields(tmp_path: Path, capsys) -> None:
+    """六字段与退出码**解耦** —— 本用例钉的是记录形态, 不是「今天该不该阻断」。
+
+    原写法断言 `main(...) == 0`, 那是 warn 期的读数。`ENFORCE_AFTER = 2026-11-24`
+    一过, 同一个 `/nonexistent/python3` 场景按设计返回 1 (门禁 docstring: 「0 = 无缺口 /
+    有缺口但仍在 warn 期; 1 = 过期限仍有缺口」), 于是本用例从「钉形态」退化成
+    「钉期限」—— 每天跟着日历翻红, 而它要守的东西一天都没变。
+    """
     registry = _registry(tmp_path)
-    assert gate.main(["--registry", str(registry), "--candidate", "/nonexistent/python3", "--json"]) == 0
+    gate.main(["--registry", str(registry), "--candidate", "/nonexistent/python3", "--json"])
     payload = json.loads(capsys.readouterr().out)
     assert sorted(payload["run_record"]) == [
         "approver",
