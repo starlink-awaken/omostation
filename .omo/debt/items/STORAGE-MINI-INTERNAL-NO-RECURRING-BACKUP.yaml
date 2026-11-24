@@ -16,8 +16,8 @@ evidence_refs:
 mitigation_refs:
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-12"
-last_reviewed_at: '2026-10-12'
-next_review_at: '2026-10-19'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
@@ -32,3 +32,21 @@ history:
     解密列表 / 还原抽样 / sha256 / NAS 回读均已校验), 脚本在仓库外的 ~/.local/share/mini-internal-backup/,
     没有排程、保留策略和定期还原演练, 不是持续机制。
   actor: "governance-agent"
+- at: '2026-11-24T02:39:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日 mini 实测 (11-24 02:31Z)：Time Machine 仍无可用目的地，但「Model 卷要先排空」这个前置条件看起来已满足。**
+    ① `tmutil destinationinfo` 只列出源盘块（Name: Macintosh HD / Kind: Local / ID 9FE59D4C-5A41-4821-AEF6-4251FB42AD54），随后
+    `Failed to mount backup destination, error … Code=17 "Failed to mount destination."`；`tmutil latestbackup` 同一错误。
+    ⇒ 与本条「上次备份 2026-03-16」的读数方向一致：内置盘当前没有任何可用的定期备份目标。
+    ② 新读数（直接决定裁决项 (1) 的成本）：mini `Model` 卷 1.0 TB、空闲 **954.9 GB** ⇒ 几乎全空。
+    原文写「Model 卷在 10-18 观察期后排空并重建」——今日容量与「已排空」相容，但我没有证据区分「已排空待重建」与
+    「本来就是空卷」，不下结论；要用户确认的是该卷现在的身份、以及是否需要在 `diskutil apfs` 层面重建。
+    ③ 代理不能代做的部分原样成立：`sudo tmutil setdestination` 需要 sudo（本会话经 BatchMode ssh 进 mini，无 tty 无 sudo 交互）。
+    另订正排障记录：本条原记的 error **45** 与今天的 error **17** 不是同一失败形状（17 = 目的地挂载失败）
+    ⇒ 现在的阻塞点是「目的地不可挂载」而不是「设不进去」，这一步差别决定用户该查线/查卷还是查 tmutil 权限。
+    ④ 裁决项 (2) 的定期化前置被 ②/③ 牵连：mini crontab 里指向 Lex/NAS 的内置盘整机 gpg 归档定期任务 **0 条**
+    （现有 3 条备份作业均非整机归档），而 Lex 冷备卷离线约 11 天（见 HW-DISK8-4TB-FLAKY ③）
+    ⇒ 即便现在决定做定期 gpg 归档，也没有可写的第二目的地。
+    ⑤ 口令单点（钥匙串 cold-backup 的离线副本）本轮**未复核** —— 读钥匙串需交互授权，不在只读复测范围内，保持未复测声明。

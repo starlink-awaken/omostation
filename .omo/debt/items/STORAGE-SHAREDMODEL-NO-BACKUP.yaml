@@ -17,8 +17,8 @@ mitigation_refs:
 - bin/ops/hot-tier-resilience.sh
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-11-09'
-next_review_at: '2026-10-18'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
@@ -56,3 +56,21 @@ history:
     (2) **备份读不到健康这件事没变**：载体仍是 studio-01 `/dev/disk4` = `DK5A1-4T Media`，`diskutil info disk4` 本轮再测 `Protocol: USB`、`SMART Status: Not Supported` ⇒ 经 USB 桥后 SMART 仍不可读，"先拿到盘的SMART 再决定备份策略"这类前置依赖在本机无解，得走别的证据（文件系统级校验或换桥）。
     (3) **观察窗内的实际风险敞口（对上一轮 11-07 那 25 分钟拒绝挂载的补数）**：11-07 07:27 之后到 11-09 09:49 共 ≈50.8 小时，`disk-keepalive.log` 无新异常（只有 11-08/11-09 各一条 MOVESPEED 写被拒 NOTE，属 TCC 而非盘故障）、ALERT 计数停在 9 未升级、USB 重新枚举 0 次。⇒ 这两天没有新的整卷不可用事件；但一次已发生的 25 分钟挂载拒绝 + 848.5 GiB 单副本，已足够让「等观察期满再决定备份」这个前置条件失效（上一轮已记），本轮只是确认风险没有在窗口内继续放大。
   actor: "governance-agent"
+- at: '2026-11-24T02:39:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日跨机实测 (11-24 02:34Z)：本条的测量对象今天不可测量 —— SHAREDMODEL 在两台都没挂载，备份侧的 Lex 也已离线 11 天。**
+    ① 挂载面：本机 `/Volumes` 无 SHARED*，mini `/Volumes` 仅 Macintosh HD / Model / Recovery
+    ⇒ 立案时 ~847G 热层体积今日**无法复测**（不是「变小」，是读不到）。此读数如实登记为未复测，
+    避免下一个复核者把 847G 当现行值。
+    ② 备份侧新事实：mini 上 `disk-keepalive` 守护的是 **Lex**（UUID 69B4517B-C234-404A-B774-2D693E87EB33），
+    状态为连续 **5285** 次未挂载 ≈ **11.0 天**、每轮 `REMOUNT SKIP: 物理层不可见` ⇒ 本条 decision_needed 里
+    「纳入 Lex 冷备排程」这条腿当前**没有可写入的目的地**。
+    ③ 候选目的地容量实测：mini `Model` = 1.0 TB 卷、`Container Free Space` **954.9 GB**（近乎全空）；
+    本机 `Model` = 2.0 TB 卷、仅剩 **235.0 GB** ⇒ 「用 Model 1T 卷做 SHAREDMODEL 增量镜像」在容量上只有 mini 侧成立，
+    本机侧连 847G 的一半都放不下。
+    ④ mini crontab 中与备份相关的只有 3 条（`scene-history.py backup` 每日 03:20、`clash-backup-icloud.sh`、`conf-backup.sh`），
+    `omostation-ops` 标记 **0** 条 ⇒ 没有任何在册且在跑的模型资产备份作业。本条「零备份」前提在当前状态下**更强**：
+    不仅没有排程，源卷与目标卷还同时不在位。
+    ⑤ 裁决项不变且更紧：坞接回后先复测体积，再定分批/增量方案；本轮不新建任何备份作业（部署面写，需 principal 授权）。
