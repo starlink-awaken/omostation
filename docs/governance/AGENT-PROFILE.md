@@ -3,7 +3,7 @@ schema: md/v1
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-25
+last-reviewed: 2026-11-24
 type: ephemeral
 ---
 
@@ -55,7 +55,7 @@ make agent-workflow-compliance  # P74 合规
 |---|---|---|
 | 环境/工具坑 | `.omo/_knowledge/pitfalls/{category}/` | `bin/gac/error-knowledge.py record`（dedup 只列候选，计数需 `--confirm-dup`） |
 | 可复用模式 | `.omo/_knowledge/patterns/` | retro 提炼 → 独立 pattern 文档 |
-| 架构决策 | ADR 编号体系 | ADR 模板 + `make adr-number-check` |
+| 架构决策 | ADR 编号体系 | ADR 模板 + `python3 bin/ssot/adr-number-check.py`（撞号 + 分级双查）|
 | BET 教训 | `.omo/_knowledge/retros/<BET-ID>.md` | complete 前必写（台账 DoD） |
 | 跨会话偏好 | auto-memory | 按"无记忆审计"标准写 |
 
