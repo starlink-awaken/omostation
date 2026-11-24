@@ -158,6 +158,10 @@ history:
   action: review
   note: 覆盖面补测：`rg -l "ledger-safe-insert|ledger_safe_insert" tests/` 零命中 —— 插入器无任何测试用例，§2 的七类载荷是本次首次实测。命中清单集中在 docs/SOPs/ledger-closeout-sop.md、docs/operations/workflow-waiver-*.md 与 3y-bet-ledger.yaml，均为文字引用而非执行面。
   actor: agent:governance-agent
+- at: '2026-11-24T09:30:06.359643+00:00'
+  action: review
+  note: 口径补正（对决策项 ② 的前提）：`bet-done-gate.yml:7-10` 无 paths 过滤、每个 PR 必跑，所以 lint 确实在每条 PR 上执行；`:31-32` 把「lint 自身 exit 1」注释为「历史非 transition 台账债务, 保持 informational」——即信息性是带着「有历史债务所以不能阻断」这一前提写下的。本条 §5 的实测读数 `OK -- 599 bets, 17 tracks, no errors`(rc=0) 说明该前提当前不成立，故选项 ② 的「无回填成本」是按今日读数测的，不是按注释里的假设立论。若日后台账重新积累错误，硬失败模式扩到枚举类会立刻把这些历史条目一并拦下 —— 这是选 ① 还是 ② 的实质差别，留 principal 权衡。
+  actor: agent:governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
