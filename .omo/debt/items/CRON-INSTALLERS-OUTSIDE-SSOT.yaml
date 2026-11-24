@@ -117,3 +117,41 @@ history:
     `omostation-ops` 与 `omostation-maturity` 两个标记各 **0** 条 ⇒ 两个登记面外安装器**当前在本机零安装**。
     它们的暴露面是「可安装、装上就绕开 registry」，不是「已经在跑未登记的作业」。
     ④ 裁决问题原文仍成立且**不该在裁决前逐个改工具**：唯一 registry-driven 的安装器仍是 `bin/ops/install-cron-plane.py`。
+- at: '2026-11-24T07:17:30Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **闭案核验（11-24 07:07Z，base `266619d3a`，即 #5523 闭案之后）：本条的结案主张核验为真，不重开；两笔残留照读数记下，另把我自己 ② 的一句话纠回。**
+
+    ① 结案主张「fail-closed registry-check guards across all legacy installers」逐个实测，成立：
+    `bin/ssot/install-maturity-cron.sh --dry-run` **rc=1**，列出 4 条未在册
+    （`bin/ssot/signal-poller.py`、`bin/gac/remediation-engine.py`、`bin/gac/anti-corrosion-check.py`、`bin/ssot/north-star-weekly.py`）；
+    `bin/gac/ops-cron-install.py --dry-run` **rc=1** 且明写「4/4 个作业不在登记面的 active crontab 条目里 —— **--install 会被拒**」；
+    `bin/ssot/install-resident-cron.sh` 在 #5523 新加 `check_registry_coverage()`（`:90-99`，挂在 `--dry-run` 与 `--install|""` 两支，`--remove` 不挂）。
+    ⇒ 三个非 registry-driven 安装器今天都不能把未登记作业写进 crontab，本条 11-07 立案的核心暴露面关闭。
+
+    ② 订正我自己 11-24 01:47Z 那条 ② 的下一步猜测：我当时准备写「按脚本名在册 1/4、按命令串在册 0/4 ⇒ 两套口径分裂」。
+    实测把这条猜测**否掉**：ops 的 4 条作业里 `bin/ops/health-check-cron.py`、`bin/gac/weekly-evolution-report.py`、
+    `bin/gac/architecture-drift.py` 的脚本名在 `.omo/cron/registry.yaml` 全文 **0 命中**，只有 `bin/gac/weekly-review.py` 名命中 1 次
+    （其命令串仍 0 命中）。⇒ 守卫报的 4/4 未在册基本就是事实，不是口径假象；我不据「口径分裂」给它加新结论。
+    唯一剩下的口径差是 `weekly-review.py` 一名：名在册 ≠ 该作业在册。
+
+    ③ 残留一（守卫强度不等，非现行漏洞）：resident 的判据是 `grep -q "omo.cli resident"` —— **单个子串存在性**，
+    实测 registry 里命中 4 次（其中 2 次在描述性文字里），`--dry-run` 因此 **rc=0 放行**；
+    它不枚举自己要写的作业行（脚本内 5 字段 cron 行只有 1 条字面量，其余来自 `${_ROLE_CRON}`/`${CRON_HEALTH}` 等变量）。
+    相对地 maturity/ops 用**逐条命令串覆盖**。⇒ 同一句「fail-closed」下面住着一强两弱：
+    resident 那支若哪天把 health/proposal 那几条从登记面摘掉，它不会报警。
+    现行后果为零：`python3 bin/scheduler-compile.py --check` **rc=0**，`drift_count=0, orphan_count=0`（`known_orphan_count=17`），
+    即今天没有作业在"未登记却被安装"的状态；而它的注释所说的「装它们会让 --check 报 orphan」目前是一次都没触发的前提。
+
+    ④ 残留二（8 条作业定义的去向，这才是留给 owner 的真问题）：两个安装器共 8 条被拒作业，逐条查它们是否经别的面在本机活着
+    （`crontab -l` 60 条活行 + 95 个 LaunchAgents plist + 文件存在性）：
+    8 条路径**全部真实存在**（无"命令指向已删脚本"那种缺陷，我不据此立案）；
+    但除 `signal-poller.py`（crontab 活行 1 + `com.omostation.signal-poller.plist`）外，
+    其余 7 条（`remediation-engine.py`、`anti-corrosion-check.py`、`north-star-weekly.py`、`health-check-cron.py`、
+    `weekly-evolution-report.py`、`weekly-review.py`、`architecture-drift.py`）**在任何面都没在跑**。
+    最近提交时间：`weekly-evolution-report.py` 11-12、`architecture-drift.py` 11-24，其余停在 08-17~09-27。
+    ⇒ 闭案把「旁路安装」关掉了，没回答「这 7 条该不该活」。要裁的是二选一：
+    登记进 `.omo/cron/registry.yaml` 并置 active（则守卫放行、作业复活），还是删掉安装器里的 `JOBS` 条目（承认为死代码）。
+    我不代为选，也不新建债条目重复本条已载的事实面。
+    本轮零改动：不动三个安装器、不动 registry、不动 crontab。
