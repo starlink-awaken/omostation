@@ -1,0 +1,74 @@
+id: OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY
+title: omo-debt close 覆写 gate_level 且 reopen 不恢复 —— close→reopen 环路使条目静默失去闸级并残留过期 closed_at
+dimension: governance
+subdimension: tooling
+domain: governance
+scope: workspace
+severity: medium
+weight: 0.1
+entropy_class: low
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/omo_debt_cli.py
+- .omo/debt/items/
+evidence_refs:
+- 'projects/omo/src/omo/omo_debt_cli.py:74-76 (close: lifecycle_state + gate_level=none + closed_at)'
+- 'projects/omo/src/omo/omo_debt_cli.py:429-431 (reopen: 只恢复 lifecycle_state)'
+- projects/omo/src/omo/omo_debt_cli.py:80-86 (append_history note 硬编码 'Closed debt item.')
+- git show e41d012b8 -- .omo/debt/items/PANORAMA-A9-SOURCES-STALE-12D.yaml (watchlist -> none 活体)
+mitigation_refs: []
+opened_at: '2026-11-24'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-01'
+gate_level: watchlist
+history:
+- at: '2026-11-24T00:44:41.303455+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-CLOSE-GATE-LEVEL-LOSSY.
+  actor: governance-agent
+- at: '2026-11-24T01:04:00Z'
+  action: review
+  actor: governance-agent
+  note: '立案即取证: 4 条 evidence_refs 全部指向可复算的行号或命令; 活体实例见 PANORAMA-A9-SOURCES-STALE-12D 在 e41d012b8 (#5478)
+    里的 gate_level 变化 (watchlist -> none)。本轮不改 broker、不改 schema、不回填历史条目。'
+- at: '2026-11-24T01:07:32.897693+00:00'
+  action: update_description
+  note: |-
+    Updated description from '' to '债务闭环 broker 在 close 时覆写 `gate_level` 且 reopen 不恢复，使条目静默失去闸级并携带过期 `closed_at`；`close` 的 history note 是硬编码固定串，真正的结案理由落在 broker 从不写的字段里。
+
+    实测三处（`projects/omo/src/omo/omo_debt_cli.py`，447 行）：
+    ① `:74-76` `close_debt_item` 无条件写 `lifecycle_state="closed"`、`gate_level="none"`、`closed_at=_now_iso()`，原 `gate_level` 不留任何快照；
+    ② `:429-431` `reopen` 只写 `lifecycle_state="identified"`，既不恢复 `gate_level`，也不清 `closed_at` ⇒ close→reopen 环路后条目「状态是待办、闸级是 none、还带着上一次的 closed_at」，且 `check-debt-closure-discipline.py` 的 `TERMINAL` 判据会把过期 `closed_at` 当合法结案时间读；
+    ③ `:80-86` `append_history(payload, "close", "Closed debt item.", ...)` 是固定串，全文对 `close_reason` / `resolution_evidence` 零命中 ⇒ 这两个字段只能 broker 外手写。
+
+    活体实例：`e41d012b8`（#5478）把 `PANORAMA-A9-SOURCES-STALE-12D` 的 `gate_level` 由 `watchlist` 覆写为 `none`，其 `history` close 条目原文即 `Closed debt item.`，而结案理由写在 broker 之外的 `close_reason`/`resolution_evidence`。broker 现有 17 个子命令（register/list/schedule/refresh/dispatch/approve/campaign/report/report-history/report-diff/report-trend/reclassify/escalate/revalidate/close/desc/reopen）中没有任何一个能写 evidence 类字段——本条自己的 `evidence_refs` 与 `decision_needed` 同样是 broker 外手写，即该缺口的再次复现。
+
+    为什么是缺陷而非风格问题：`gate_level` 是债务面「这条是否进门禁」的权威字段，被一个语义为「关闭」的写方静默降级为 `none`，且恢复路径不存在 ⇒ 任何 reopen 都会留下不可见的去闸状态；修复前无人能从条目本身判断原闸级是什么。
+    '.
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: Principle
+decision_needed: |-
+  broker 是治理面的写方, 改它等于改所有债务闭环的行为, 因此三项待裁, 本轮不代做:
+  (1) 采 (a) 快照字段 `gate_level_before_close` + reopen 恢复并清 `closed_at` /
+      (b) close 不再碰 `gate_level` (终态条目本就不该被闸级扫描计入) /
+      (c) 维持现状, 只在文档写明「reopen 需人工回填 gate_level」 —— 三选一;
+  (2) 若采 (a): 新字段是否进债务 schema 与 lint (涉及 DEBT-SCHEMA-THREE-WAY-DESYNC 的三处权威面同步);
+  (3) 历史上已被 close 打掉 gate_level 的条目 (至少 PANORAMA-A9-SOURCES-STALE-12D 一条) 是否回填前值
+      —— 回填要读 git 历史, 属数据修复而非判准变更。
+  **本条自身就是「broker 写不到 evidence/decision 字段」的又一次现场复现**: register 只接受
+  id/title/dimension/subdimension/severity/owner/x1/x2/x3, description 走 desc, 其余字段
+  (上面这段与 evidence_refs) 全部由 broker 外手写 —— 与 PANORAMA-A9-SOURCES-STALE-12D
+  history 2026-11-09 那条结构性记录一致, 至今未修。
+description: |
+  债务闭环 broker 在 close 时覆写 `gate_level` 且 reopen 不恢复，使条目静默失去闸级并携带过期 `closed_at`；`close` 的 history note 是硬编码固定串，真正的结案理由落在 broker 从不写的字段里。
+
+  实测三处（`projects/omo/src/omo/omo_debt_cli.py`，447 行）：
+  ① `:74-76` `close_debt_item` 无条件写 `lifecycle_state="closed"`、`gate_level="none"`、`closed_at=_now_iso()`，原 `gate_level` 不留任何快照；
+  ② `:429-431` `reopen` 只写 `lifecycle_state="identified"`，既不恢复 `gate_level`，也不清 `closed_at` ⇒ close→reopen 环路后条目「状态是待办、闸级是 none、还带着上一次的 closed_at」，且 `check-debt-closure-discipline.py` 的 `TERMINAL` 判据会把过期 `closed_at` 当合法结案时间读；
+  ③ `:80-86` `append_history(payload, "close", "Closed debt item.", ...)` 是固定串，全文对 `close_reason` / `resolution_evidence` 零命中 ⇒ 这两个字段只能 broker 外手写。
+
+  活体实例：`e41d012b8`（#5478）把 `PANORAMA-A9-SOURCES-STALE-12D` 的 `gate_level` 由 `watchlist` 覆写为 `none`，其 `history` close 条目原文即 `Closed debt item.`，而结案理由写在 broker 之外的 `close_reason`/`resolution_evidence`。broker 现有 17 个子命令（register/list/schedule/refresh/dispatch/approve/campaign/report/report-history/report-diff/report-trend/reclassify/escalate/revalidate/close/desc/reopen）中没有任何一个能写 evidence 类字段——本条自己的 `evidence_refs` 与 `decision_needed` 同样是 broker 外手写，即该缺口的再次复现。
+
+  为什么是缺陷而非风格问题：`gate_level` 是债务面「这条是否进门禁」的权威字段，被一个语义为「关闭」的写方静默降级为 `none`，且恢复路径不存在 ⇒ 任何 reopen 都会留下不可见的去闸状态；修复前无人能从条目本身判断原闸级是什么。

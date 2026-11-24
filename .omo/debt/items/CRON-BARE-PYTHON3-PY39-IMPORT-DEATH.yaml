@@ -87,32 +87,44 @@ mitigation_refs:
   登记面保持中性'
 - 'PR #5174 (origin/main@dabd44465) —— 解析改逐调用点判定, 收掉复合命令第二个之后的裸 python3'
 opened_at: '2026-11-09'
-last_reviewed_at: '2026-11-10'
+last_reviewed_at: '2026-11-23'
 next_review_at: '2026-11-24T00:00:00+00:00'
 gate_level: none
 x1_policy_ref: ''
 x3_tier: Principle
-decision_needed: '三问分开裁决, 有顺序依赖。(1) **计划任务的解释器口径三选一**: ① 登记面写各宿主都存在的绝对路径 — 依赖 `CRON-REGISTRY-NO-HOST-SCOPE`
-  先裁, 否则 mini 侧路径可能不存在, 把一个死因换成另一个; ② 要求所有 cron 可达脚本自带 3.9 兼容垫片 (把 189 处裸导入收敛到 14
-  处已有写法) — 纯代码、不依赖宿主, 但覆盖面大且对未来新脚本无自动约束; ③ 由 `scheduler-compile` 在生成/安装时按宿主解析并替换解释器
-  (把 `normalize_interpreter` 反向用作 codegen, 登记面保持中性) — 一处改动收全部, 需同时修 :71 的 launchd
-  硬编码。(2) **`normalize_interpreter` 的等价是否收窄**: 它现在同时承担「比较用等价」与「事实上的许可」两件事; 若保留比较用途,
-  需要另一个独立断言「声明的解释器能 import 目标脚本」, 否则任何解释器缺陷都会被折叠掉。(2026-11-10 决策(3) 落地后的实测口径: 可执行性断言已由
-  bin/gac/check-cron-interpreter-executability.py 独立承担, 收窄折叠不再等于放弃这条断言; 已装面解释器 token
-  共 6 种 (Workspace/.venv/bin/python3 ×19, /opt/homebrew/bin/python3 ×12, /opt/homebrew/bin/python3.13
-  ×10, projects/ecos/.venv/bin/python3 ×3, zhixing-dashboard/.venv ×1, local-ops/dev-venv/bin/python
-  ×1), 折叠口径把带版本后缀的折得回、把不带 3 的 venv 路径折不回 ⇒ local-ops-test-all 一条永远不可比, 这正是 scheduler-compile
-  的 interpreter_fold shadow 段今天唯一报出的那条; 登记面 43 条 active crontab 作业里 14 条钉了绝对解释器路径
-  (按 cron_normalize.python_call_sites 的调用点口径), 这类作业的 reconciliation_note 常写「命令抄自实际
-  crontab 行」—— 该措辞不准, 已装行是安装器按宿主重写解释器的产物 (实测 resolve_python_command 把 /usr/bin/python3
-  换成 /opt/homebrew/bin/python3.13), 所以登记面声明的解释器与 cron 真正执行的解释器是两个对象, 逐字比对既不成立也谈不上漂移;
-  由此改判 B′, 见 history 2026-11-10 末条。)(3) **已裁并落地** (principal 2026-11-10 选「先 warn +
-  限期收敛」, 限期 2026-11-24): 门禁 bin/gac/check-cron-interpreter-executability.py, 判据/限期/实测读数见
-  history 2026-11-10 两条条目; warn 期恒 exit 0, 过期未收敛自动转阻断。(2) **已裁并落地** (principal 2026-11-10
-  先选「B 加一条独立漂移检查」, 我用实测证明其前提不成立后改判「B′ 改成查已装行本身」): 折叠比较保持不变, 门禁在登记面之外增加已装面判据 installed_interpreter_gaps,
-  判已装行里 cron 实际执行的解释器在不在、跑不跑得动目标脚本。**剩 (1) 待裁** —— 它是把任何解释器读数真正收敛的前提, 也是限期 2026-11-24
-  转阻断前必须有的答案。**裁决前不要动手**: 逐个脚本改 import 会把 189 处碎片化; 手写 crontab 会撞上 EINTR 与 pitfalls:301
-  的登记面/已装面分裂; 两者都会留下「--check 绿但仍在死」的第三条通路。'
+decision_needed: |-
+  三问分开裁决, 有顺序依赖。(1) **计划任务的解释器口径三选一**: ① 登记面写各宿主都存在的绝对路径 — 依赖 `CRON-REGISTRY-NO-HOST-SCOPE` 先裁, 否则 mini 侧路径可能不存在, 把一个死因换成另一个; ② 要求所有 cron 可达脚本自带 3.9 兼容垫片 (把 189 处裸导入收敛到 14 处已有写法) — 纯代码、不依赖宿主, 但覆盖面大且对未来新脚本无自动约束; ③ 由 `scheduler-compile` 在生成/安装时按宿主解析并替换解释器 (把 `normalize_interpreter` 反向用作 codegen, 登记面保持中性) — 一处改动收全部, 需同时修 :71 的 launchd 硬编码。(2) **`normalize_interpreter` 的等价是否收窄**: 它现在同时承担「比较用等价」与「事实上的许可」两件事; 若保留比较用途, 需要另一个独立断言「声明的解释器能 import 目标脚本」, 否则任何解释器缺陷都会被折叠掉。(2026-11-10 决策(3) 落地后的实测口径: 可执行性断言已由 bin/gac/check-cron-interpreter-executability.py 独立承担, 收窄折叠不再等于放弃这条断言; 已装面解释器 token 共 6 种 (Workspace/.venv/bin/python3 ×19, /opt/homebrew/bin/python3 ×12, /opt/homebrew/bin/python3.13 ×10, projects/ecos/.venv/bin/python3 ×3, zhixing-dashboard/.venv ×1, local-ops/dev-venv/bin/python ×1), 折叠口径把带版本后缀的折得回、把不带 3 的 venv 路径折不回 ⇒ local-ops-test-all 一条永远不可比, 这正是 scheduler-compile 的 interpreter_fold shadow 段今天唯一报出的那条; 登记面 43 条 active crontab 作业里 14 条钉了绝对解释器路径 (按 cron_normalize.python_call_sites 的调用点口径), 这类作业的 reconciliation_note 常写「命令抄自实际 crontab 行」—— 该措辞不准, 已装行是安装器按宿主重写解释器的产物 (实测 resolve_python_command 把 /usr/bin/python3 换成 /opt/homebrew/bin/python3.13), 所以登记面声明的解释器与 cron 真正执行的解释器是两个对象, 逐字比对既不成立也谈不上漂移; 由此改判 B′, 见 history 2026-11-10 末条。)(3) **已裁并落地** (principal 2026-11-10 选「先 warn + 限期收敛」, 限期 2026-11-24): 门禁 bin/gac/check-cron-interpreter-executability.py, 判据/限期/实测读数见 history 2026-11-10 两条条目; warn 期恒 exit 0, 过期未收敛自动转阻断。(2) **已裁并落地** (principal 2026-11-10 先选「B 加一条独立漂移检查」, 我用实测证明其前提不成立后改判「B′ 改成查已装行本身」): 折叠比较保持不变, 门禁在登记面之外增加已装面判据 installed_interpreter_gaps, 判已装行里 cron 实际执行的解释器在不在、跑不跑得动目标脚本。**剩 (1) 待裁** —— 它是把任何解释器读数真正收敛的前提, 也是限期 2026-11-24 转阻断前必须有的答案。**裁决前不要动手**: 逐个脚本改 import 会把 189 处碎片化; 手写 crontab 会撞上 EINTR 与 pitfalls:301 的登记面/已装面分裂; 两者都会留下「--check 绿但仍在死」的第三条通路。
+
+  **2026-11-23T23:31Z 复测追加两项（原 (1)/(2)/(3) 的文字与顺序不动，实测见本条 `review` 条目 ③④）：**
+
+  **(F1) 限期的历法口径待裁。** `ENFORCE_AFTER = "2026-11-24"`（`bin/gac/check-cron-interpreter-executability.py:57`）
+  未声明是 UTC 日还是本地日，而 `:216` 取 `now = datetime.datetime.now().date()`（**本地日**，本机 CST=UTC+8）。
+  实测在本次运行里 `datetime.date.today()` = **2026-11-24** 而 UTC 仍是 **2026-11-23T23:33Z**
+  ⇒ `escalated = now >= enforce_after`（`:129`）**已为真**，输出原文 `enforcement=blocking, 限期=2026-11-24`
+  即 warn 宽限期比 UTC 口径**提前 ~7.5 h 结束**（本地日在 2026-11-23T16:00Z 就翻到 11-24）。
+  本次读数后果尚未发生：`阻断缺口=0 (登记面=0 已装面=0)` 且 `:131-132` 要求
+  `(blocking or plane_gaps) and (escalated or strict)` 才 FAIL，所以 verdict 仍 `WARN`／rc=0；
+  但此后若出现缺口即直接拦。选项：(i) 判定限期按 **UTC** 并在门禁内统一用
+  `datetime.datetime.now(datetime.timezone.utc).date()`；(ii) 判定按**本地日**并把这个口径写进
+  `governance-checks.yaml::CR-X2-CRON-INTERP-EXECUTABILITY.review_before` 的注释与
+  `tests/unit/test_cron_interpreter_executability.py` 的钉值（`:54-57` 自述三处必须同值）；
+  (iii) 维持现状、接受提前生效。改 (i)/(ii) 都要同批改这三处，否则钉值测试会反过来制造分裂。
+
+  **(F2) `ADV` 闭包提醒的谓词是否为脚本真实需求待裁。** 本次输出 1 条
+  `ADV capability-registry-sync-daily: no interpreter satisfies gen-capability-registry.py (needs 3.11+ and
+  ['codeanalyze','fastmcp','httpx','iris','kos','kronos','llm_gateway','minerva',…])`。
+  实测该作业**每日真的在跑且成功**：已装 crontab 第 36 行
+  `5 4 * * * cd /Users/xiamingxing/Workspace && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/gen-capability-registry.py >> runtime/cron/capability-registry-sync.log 2>&1 && …`，
+  日志 mtime `2026-11-23T20:05:01Z`、尾行 `✅ 能力注册表已生成 … MCP 服务器 27 | MCP 工具 643 | BOS 服务 325 | BOS 域 23 | CLI 命令 200`
+  并已自动提交（`[main 1beb2a883] chore(auto): capability-registry daily sync [skip ci]`）。
+  在同一解释器（`.venv/bin/python3`，`3.14.8`）用 `importlib.util.find_spec` 逐项探测：
+  `codeanalyze/iris/kos/kronos/minerva` = **False**，`fastmcp/httpx/llm_gateway` = True
+  ⇒ 缺 5 个模块仍正常产出，该「satisfies」谓词疑似把**能力清单**当成了 **import 硬需求**。
+  它按 `:131-132` 不参与退出码，所以后果是**噪声常驻**而非拦截。选项：(i) 谓词收敛为脚本真实硬依赖
+  （需先读 `bin/ssot/gen-capability-registry.py` 的 try/except 结构再定名单）；
+  (ii) 判其为可接受噪声并在输出行显式标注「advisory，不影响退出码」；(iii) 维持现状。
+  本轮不代改判据（判据面变更属 principal）。
+
 history:
 - at: '2026-11-09T03:26:00+00:00'
   action: identify
@@ -238,6 +250,41 @@ history:
     另: `install-cron-plane.py --status` 是唯一量「已装面真实收敛」的巡检 (缺失>0 时 rc=1), 而 `scheduler-compile
     --check` 的折叠口径**不能**替代它 —— 该巡检目前未接进任何执行面, 且登记面是跨机并集 (CRON-REGISTRY-NO-HOST-SCOPE),
     接线前需先定宿主范围。''.'
+
+- at: "2026-11-23T23:38:14+00:00"
+  action: review
+  actor: governance-agent
+  note: >-
+    **限期正日（2026-11-23T23:31:44Z，隔离 worktree `ws-a9drift353` @ origin/main `c221ed5f7`）实测三项，决策 (1) 仍待裁，本条不改 `lifecycle_state`。**
+    ① **收敛侧阳性对照**：`python3 bin/ops/install-cron-plane.py --status` →
+    **`登记面 crontab 条目: 43  本机已装: 43  缺失: 0`**，rc=0（22:15Z 与 23:31Z 两次同读数）
+    ⇒ 上一轮记的「已装面收敛不了这一半不再成立」仍然成立，`crontab` 写入未回退。
+    ② **门禁读数**：`python3 bin/gac/check-cron-interpreter-executability.py` →
+    `host=mbp plane=present verdict=WARN 扫描=30 非本机不判=0 阻断缺口=0 (登记面=0 已装面=0/扫60行 配对43 未登记坏0 裸写法0 登记面裸写法19) 闭包提醒=1 判不出=0 已装面调用点=33 (enforcement=blocking, 限期=2026-11-24)`，rc=0。
+    即 **`阻断缺口=0`、19 条 `REG-BARE` 属 advisory、1 条 `ADV` 闭包提醒**；`:131-132` 的口径是
+    `FAIL` 需要 `(blocking or plane_gaps) and (escalated or strict)`，advisory 不参与翻红。
+    ③ **新测缺陷 A（限期日历口径，不自行修）**：`:216` `now = datetime.datetime.now().date()` 取的是**本地日**
+    （本机 CST=UTC+8），而 `ENFORCE_AFTER="2026-11-24"` 未声明历法。实测在本次运行里
+    `datetime.date.today()` = **2026-11-24**、UTC 仍是 **2026-11-23T23:33Z** ⇒ `escalated=True`（`:129`）
+    已由输出 `enforcement=blocking` 证实——**warn 宽限期比 UTC 口径提前 ~7.5 h 结束**
+    （本地日在 2026-11-23T16:00Z 就已翻到 11-24）。本次读数下后果为零（缺口=0 所以仍 WARN），
+    但这 7.5 h 内若出现缺口即直接拦。principal 裁决的「限期 2026-11-24」按本地还是 UTC 属原裁决的歧义，
+    **不代为定历法**；`tests/unit/test_cron_interpreter_executability.py` 与
+    `governance-checks.yaml::CR-X2-CRON-INTERP-EXECUTABILITY.review_before` 同值（`:54-57` 自述），改历法要同批改这三处。
+    ④ **新测缺陷 B（`ADV` 闭包提醒是假阳性）**：该条说
+    `capability-registry-sync-daily: no interpreter satisfies gen-capability-registry.py (needs 3.11+ and ['codeanalyze','fastmcp','httpx','iris','kos','kronos','llm_gateway','minerva',…])`。
+    实测该作业**每天真的在跑且成功**：已装 crontab 第 36 行
+    `5 4 * * * cd … && /Users/xiamingxing/Workspace/.venv/bin/python3 bin/ssot/gen-capability-registry.py >> runtime/cron/capability-registry-sync.log`，
+    日志 mtime `2026-11-23T20:05:01Z`（= 本地 11-24 04:05）尾行 `✅ 能力注册表已生成 … MCP 服务器 27 | MCP 工具 643 | BOS 服务 325 | BOS 域 23 | CLI 命令 200`
+    并已自动提交（`[main 1beb2a883] chore(auto): capability-registry daily sync [skip ci]`）。
+    而在**同一解释器**（`.venv/bin/python3`，`3.14.8`）逐项探测 `find_spec`：
+    `codeanalyze/iris/kos/kronos/minerva` = **False**，`fastmcp/httpx/llm_gateway` = True
+    ⇒ 脚本对这串模块不是硬依赖（缺 5 个仍正常产出），门禁的「satisfies」谓词把**能力清单当成了 import 需求**。
+    按 `:131-132` 它不影响退出码，所以后果只是**噪声常驻**：本轮不自行收紧谓词（那是改判据），登记为 R-新待裁项。
+    ⑤ 上一轮 `description` 的另一点复核仍然成立：`install-cron-plane.py --status` 是量「已装面真实收敛」的巡检
+    而 `scheduler-compile --check` 的折叠口径不能替代它；本次未新增接线（登记面跨机并集，需先定宿主范围，见 `CRON-REGISTRY-NO-HOST-SCOPE`）。
+    字段一致性推进：`last_reviewed_at` `2026-11-10`→`2026-11-23`；`next_review_at` 保持 `2026-11-24T00:00:00+00:00`
+    （那就是裁决正日，不自行推后）；`lifecycle_state` 保持 `in_progress`，`decision_needed` 的 **(1) 解释器口径三选一** 原样待裁。
 description: '**阻塞面更新 (2026-11-23 实测):** 本条文献曾把「`crontab(1)` 写入持续 EINTR」列为**收敛阻塞**（登记面改了但已装面收敛不了,
   见 `docs/pitfalls.md` 该条）。实测该阻塞**已消失**:
 

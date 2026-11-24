@@ -15,8 +15,8 @@ evidence_refs:
 - docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
 mitigation_refs: []
 opened_at: '2026-11-10'
-last_reviewed_at: '2026-11-10'
-next_review_at: '2026-11-17'
+last_reviewed_at: '2026-11-23'
+next_review_at: '2026-12-07'
 gate_level: none
 x1_policy_ref: ''
 x3_tier: Principle
@@ -86,6 +86,39 @@ history:
 
     **仍未裁**（本条的原始问题）: DEFERRED 是否应与 ③ 同界、PARTIAL 界内是否应被接受、三条规则是否统一成「以年龄为主判据」。A9 转
     PASS 不改变这个裁决需求 —— 但**判据摆动的后果已经从「恒不放行」变成「摆动到 DEFERRED 侧才放行」**, 而当前源全是 OK, 摆动路径未被触发。''.'
+
+- at: "2026-11-23T23:38:14+00:00"
+  action: review
+  actor: governance-agent
+  note: >-
+    **代码口径复核（本轮逐行确认，行号为仓根 `bin/panorama/panorama-collect.py` @ origin/main）**：
+    `required_sources` 是 `:1511-1515` 的 14 元硬编码集合；`bounded = age is not None and age <= 21600` 在 `:1530`；
+    准入条件 `:1531-1538` 三条不对称——`OK` 无条件（`:1532`）、**`DEFERRED` 无任何年龄界**（`:1535`）、
+    `STALE_UNAVAILABLE`/`FAIL` 需界内（`:1537`），`PARTIAL` 不在接受集合 ⇒ `bad_sources`（`:1539`）。
+    门级同款不对称在 `:4886`：`failing = [g for g in gate_rows if g["verdict"] not in {"PASS","SKIPPED","DEFERRED"}]`。
+    ② **本条担心的「DEFERRED + 上次成功很久以前」组合，在数据面实测存在（此前只是纸面推演）**：
+    22:04:28Z 帧 `personal_value_truth` = **`DEFERRED`** 且 `last_success_at` = `2026-10-28T08:18:27Z`
+    （`source_health` 侧 age **637.76 h**）；同帧 `gantt` = **`DEFERRED`** 且 `last_success_at: None`（零成功观测）。
+    若这类源在 `required_sources` 内，`:1535` 会**无条件放行**、`:4886` 也不会算它 failing。
+    ③ **诚实边界（不能过度声称）**：A9 的 14 个 required 源在该帧 `last_success` 全部 ≤ 0.12 h，
+    所以**这一窗口的摆动没有落在 required 侧**，本缺陷仍是潜在态、未造成实际误放行；
+    且 `personal_value_truth`/`gantt`/`panorama_base`/`agent_brief` 都不在 `required_sources` 内（`:1511-1515`）。
+    ④ **PARTIAL 侧已从纸面变成实测频率**：22:12Z 与 23:28Z 两次普查（各 49 帧、窗口 ~4 h）都是
+    `47 PASS / 2 PARTIAL`，两个 PARTIAL 帧 `bd867637802c`（19:44:38Z）/`b6e84b51d4ad`（19:48:07Z）
+    detail 原文 `A9 evidence incomplete: cockpit_sources, portfolio=PARTIAL` ⇒ 「界内 PARTIAL 也不接受」
+    这条规则在保留窗口内实际生效 **2/49 ≈ 4%** 的帧（本条此前只说「不在接受集合里」，没有频率读数）。
+    ⑤ **另记一个同族的新形状（标签/年龄之外，第三维是「读哪个面」）**：实测 `current.json` 与 `dist/current.json`
+    在 22:13:40Z（gen `09714a5dece5012d4a15`）**11/11 道门 `UNKNOWN`**、A9 行 `source_verdict: PARTIAL` + `live: false`，
+    而同 gen 已发布 revision 是真实 verdict；`UNKNOWN` ∉ `:4886` 的非 failing 集合 ⇒
+    **谁在刷新窗口内读 `current.json`，就会把 11 道门全判 failing**，而同期 revision 读数是 9 PASS。
+    消费链路本轮未追（只测了两个面的同 gen 分裂 + 代码里的集合定义），故只登记形状不判影响面。
+    ⑥ **本条 `description` 引用的帧已不在盘上**：`revisions/7026733c…/data.json` 实测已不存在
+    （目录数恒 49，窗口 19:28:51Z–23:27:57Z）⇒ 本条与 `PANORAMA-A9-SOURCES-STALE-12D` 同处
+    「用 ~4 h 滑动窗口支撑日级/周级结论」的证据面，复核必须当场取帧。
+    裁决项本身（DEFERRED 是否与③同界、界内 PARTIAL 是否接受、是否统一为「以年龄为主判据、标签只做解释」）
+    **不代做**——这是判准变更。字段一致性推进：`last_reviewed_at` `2026-11-10`→`2026-11-23`、
+    已过期 `next_review_at` `2026-11-17`→`2026-12-07`；`lifecycle_state`/`gate_level` 保持
+    `identified`/`none`。
 description: '**复测 (2026-11-23, 投影在 `~/.local/share/zhixing-dashboard/revisions/7026733c…/data.json`,
   mtime 11-23 13:58): A9 已 PASS。**
 
