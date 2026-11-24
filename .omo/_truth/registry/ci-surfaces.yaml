@@ -206,15 +206,6 @@ surfaces:
   gate: true
   triggers: []
   status: active
-- id: bin-gac-check-dead-path-tool-fallback-py
-  tool: bin/gac/check-dead-path-tool-fallback.py
-  workflow: gac-gate.yml
-  gate: false
-  triggers:
-  - manual
-  - per_pr
-  - push
-  status: active
 - id: bin-gac-check-dual-track-purity-py
   tool: bin/gac/check-dual-track-purity.py
   workflow: (none)

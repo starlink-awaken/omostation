@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: medium
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - bin
@@ -20,6 +20,7 @@ evidence_refs:
 mitigation_refs: []
 opened_at: '2026-11-23T16:25:35.938626+00:00'
 last_reviewed_at: '2026-11-24'
+closed_at: '2026-11-24'
 next_review_at: '2026-12-08'
 gate_level: none
 history:
@@ -94,6 +95,10 @@ history:
     方法学与边界：这是 grep 级粗读数，不是 `LINK_RE` 精确命中数；采 (b) 之前应由 owner 用真 `LINK_RE` 复算一次。
     本轮零改动，`lifecycle_state`/`gate_level`/`severity`/`weight`/`evidence_refs`/`description`/`decision_needed` 均未动，
     `next_review_at` 保持 2026-12-08。
+- at: '2026-11-24T09:15:00Z'
+  action: resolve
+  actor: governance-agent
+  note: 'Wave 2 闭环 (方案 a): bin/gac/gac-local-gate.py 新增 _doc_link_globs()（单源读取 bin/ssot/doc-link-check.py::LOCAL_DOC_GLOBS）与段级精确匹配 _matches_doc_link_surface()（规避 PurePosixPath("docs/README.md").match("README.md") 误判），scoped_doc_link_command() 同步按 scope 解析候选并收敛至声明文档面；补单测 tests/unit/gac/test_doclink_scoped_surface.py。'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

@@ -192,7 +192,7 @@ def test_shell_test_suites_have_a_ci_entry_point() -> None:
 
 
 def test_advisory_job_still_runs_every_moved_step() -> None:
-    """搬迁不能顺手丢步骤：原 28 个 advisory 步应逐个出现在 aux job 里。
+    """搬迁不能顺手丢步骤：原 28 个 advisory 步（2026-11-24 退役 1 项 dead-path-tool-fallback 后为 27 项）应逐个出现在 aux job 里。
 
     按**内容属性**（`continue-on-error`）筛选，不按位置切片 —— 早先写成 `steps[:4]` 当 setup、
     `steps[4:]` 当搬迁集，结果任何在 job 首位新增的步骤（如 checkout 前的并行抓取配置）都会
@@ -200,7 +200,7 @@ def test_advisory_job_still_runs_every_moved_step() -> None:
     """
     moved = [step for step in _steps(ADVISORY_JOB) if step.get("continue-on-error", False)]
 
-    assert len(moved) == 28, [step.get("name") for step in moved][:5]
+    assert len(moved) == 27, [step.get("name") for step in moved][:5]
     named = {step.get("name") for step in moved}
     assert "CR-X2-EVIDENCE-FRESHNESS — 证据新鲜度检查 (advisory)" in named
     assert "mof-check (L0 约束对齐验证, advisory)" in named

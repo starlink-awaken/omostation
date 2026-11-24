@@ -116,7 +116,7 @@ ENFORCED_MAP = {
     "evidence-honest-closure": "CR-P76-7-4-EVIDENCE-HONEST-CLOSURE",
     "resolve-not-stub": "CR-P76-7-5-RESOLVE-NOT-STUB",
     "submodule-pr-not-coupling": "CR-P76-8-1-SUBMODULE-PR-INDEPENDENT",
-    "dead-path-tool-fallback": "CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK",
+    "dead-path-tool-fallback": "CR-PRINCIPLE-FOLLOWED",
     "incremental-commit-anti-clean": "CR-P76-8-4-INCREMENTAL-COMMIT",
     "heuristic-default": "CR-P76-9A-4-HEURISTIC-DEFAULT",
 }

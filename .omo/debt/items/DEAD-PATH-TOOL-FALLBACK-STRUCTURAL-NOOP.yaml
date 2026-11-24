@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
@@ -17,7 +17,8 @@ evidence_refs:
 mitigation_refs:
 - 本条 history 第一条（证据与口径）
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
+last_reviewed_at: "2026-11-24"
+closed_at: "2026-11-24"
 next_review_at: "2026-12-10"
 gate_level: none
 x1_policy_ref: ""
@@ -70,3 +71,12 @@ history:
     `gate=True` 只由 sgf-policy 的 gate command 赋值）。因此不能拿 `gate: false`
     推断「本检查器不阻塞」。
   actor: "governance-agent"
+- at: "2026-11-24T09:15:00Z"
+  action: resolve
+  actor: "governance-agent"
+  note: >-
+    Wave 2 闭环 (方案 ② 退役): 移除结构体恒真检查器 bin/gac/check-dead-path-tool-fallback.py 及
+    bin/_registry/scripts/governance/check-dead-path-tool-fallback.yaml，从 .github/workflows/gac-gate.yml、
+    .omo/_truth/registry/ci-surfaces.yaml、.omo/_truth/registry/governance-checks.yaml (relates_to 与
+    script_baseline 744->743) 及 bin/gac/registry-alias-map.yaml 清理全部声明，并将
+    bin/gac/check-principle-enforcement.py 中的 dead-path-tool-fallback 映射到 CR-PRINCIPLE-FOLLOWED。

@@ -19,6 +19,41 @@ BOS_SERVICES = ROOT / "projects" / "agora" / "etc" / "bos-services.yaml"
 _MCP_URIS: set[str] = set()
 
 
+def _services_registry_path() -> Path:
+    lib_dir = str(ROOT / "bin" / "lib")
+    if lib_dir not in sys.path:
+        sys.path.insert(0, lib_dir)
+    from repo_root import code_root
+
+    return code_root() / ".omo" / "_truth" / "registry" / "services.yaml"
+
+
+def load_manual_disabled_uris(services_path: Path | None = None) -> set[str]:
+    """Return BOS URIs marked as disabled manual non-daemon capabilities in services.yaml."""
+    import yaml
+
+    path = services_path or _services_registry_path()
+    if not path.is_file():
+        return set()
+    try:
+        docs = [d for d in yaml.safe_load_all(path.read_text(encoding="utf-8")) if isinstance(d, dict)]
+    except (OSError, yaml.YAMLError):
+        return set()
+    if not docs:
+        return set()
+    services = docs[-1].get("services") or []
+    manual_uris: set[str] = set()
+    for entry in services:
+        if not isinstance(entry, dict):
+            continue
+        uri = str(entry.get("uri") or "").strip()
+        if not uri:
+            continue
+        if entry.get("enabled") is False and str(entry.get("scheduler") or "").strip() == "manual":
+            manual_uris.add(uri)
+    return manual_uris
+
+
 def load_bos_services() -> list[dict[str, Any]]:
     import yaml
     with open(BOS_SERVICES, encoding="utf-8") as f:
@@ -154,9 +189,10 @@ def check_http(service: dict[str, Any]) -> dict[str, Any]:
         return {"status": "unreachable", "url": http_url, "error": str(e)[:80]}
 
 
-def verify_all(verbose: bool = False) -> dict[str, Any]:
+def verify_all(verbose: bool = False, *, services_path: Path | None = None) -> dict[str, Any]:
     global _MCP_URIS
     services = load_bos_services()
+    manual_disabled_uris = load_manual_disabled_uris(services_path)
     _MCP_URIS = load_mcp_registered_uris()
     results = {
         "total": len(services),
@@ -196,7 +232,13 @@ def verify_all(verbose: bool = False) -> dict[str, Any]:
         elif transport == "stdio":
             check = check_stdio(svc)
         elif transport == "http":
-            check = check_http(svc)
+            if uri in manual_disabled_uris:
+                check = {
+                    "status": "skipped",
+                    "reason": "manual on-demand capability (scheduler=manual, enabled=false)",
+                }
+            else:
+                check = check_http(svc)
         elif transport in ("mcp_stdio", "mcp_proxy"):
             check = {"status": "skipped", "reason": f"{transport} requires runtime"}
         else:

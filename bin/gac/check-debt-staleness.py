@@ -52,11 +52,27 @@ def _parse_ts(value: object) -> datetime.datetime | None:
     return parsed
 
 
+def _git_available(root: Path) -> bool:
+    """确认 root 是可读 git 工作区, 防止在无 .git 目录里把取证失败折叠成零改动."""
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return out.returncode == 0 and out.stdout.strip() == "true"
+
+
 def _commits_since(root: Path, path: str, ts: datetime.datetime) -> int:
     """`path` 在 `ts` 之后的 commit 数。文件/目录都支持 (`git log -- <path>`)。
 
     返回**计数**而不是布尔: 二元命中在活跃期会全绿/全红 (实测 21/21 全命中),
     没有区分度; 有梯度才能让人先看最可能陈旧的。
+    git 不可用 / 非 0 退出返回 -1 哨兵 (调用方据此标记 `git_ok=False`), 绝不伪装成 0。
     """
     try:
         out = subprocess.run(
@@ -67,13 +83,16 @@ def _commits_since(root: Path, path: str, ts: datetime.datetime) -> int:
             timeout=30,
         )
     except (OSError, subprocess.SubprocessError):
-        return 0
+        return -1
+    if out.returncode != 0:
+        return -1
     return len(out.stdout.split())
 
 
 def collect(items_dir: Path = ITEMS_DIR, *, root: Path = ROOT) -> dict:
     import yaml
 
+    git_ok = _git_available(root)
     identified = 0
     candidates = 0
     stale: list[dict] = []
@@ -92,8 +111,13 @@ def collect(items_dir: Path = ITEMS_DIR, *, root: Path = ROOT) -> dict:
         if not refs or reviewed is None:
             continue
         candidates += 1
+        if not git_ok:
+            continue
         per_root = {r: _commits_since(root, r, reviewed) for r in refs}
-        touched = {r: n for r, n in per_root.items() if n}
+        if any(n < 0 for n in per_root.values()):
+            git_ok = False
+            continue
+        touched = {r: n for r, n in per_root.items() if n > 0}
         if touched:
             stale.append(
                 {
@@ -103,7 +127,16 @@ def collect(items_dir: Path = ITEMS_DIR, *, root: Path = ROOT) -> dict:
                     "changed_commits": sum(touched.values()),
                 }
             )
+    if not git_ok:
+        return {
+            "git_ok": False,
+            "identified": identified,
+            "candidates": candidates,
+            "stale_count": None,
+            "stale": [],
+        }
     return {
+        "git_ok": True,
         "identified": identified,
         "candidates": candidates,
         "stale_count": len(stale),
@@ -113,24 +146,32 @@ def collect(items_dir: Path = ITEMS_DIR, *, root: Path = ROOT) -> dict:
 
 
 def _render(report: dict) -> str:
+    git_ok = report.get("git_ok", True)
+    self_ok = report.get("self_test_ok", True)
+    stale_label = str(report["stale_count"]) if git_ok else "无法取证 (git 不可读)"
     lines = [
         "=== 债务条目陈旧度信号 ===",
         f"identified={report['identified']} 候选(有 roots+复审日)={report['candidates']} "
-        f"疑似陈旧={report['stale_count']}",
+        f"疑似陈旧={stale_label}",
     ]
-    for row in report["stale"]:
-        lines.append(
-            f"  ⚠️  {row['id']}  (复审 {row['last_reviewed_at']}, "
-            f"{row['changed_commits']} commits 落在其 roots 上: {row['changed_roots'][:2]})"
-        )
-    if not report["stale"]:
-        lines.append("  ✅ 无: 所有候选条目的 affected_roots 自复审以来未被改动")
+    if not self_ok:
+        lines.append("  ❌ 自检失败: 检测器 self_test 未通过，本读数不可信")
+    if not git_ok:
+        lines.append("  ⚠️  无法取证: git 不可读或非 git 仓库，未判定 affected_roots 改动")
+    else:
+        for row in report["stale"]:
+            lines.append(
+                f"  ⚠️  {row['id']}  (复审 {row['last_reviewed_at']}, "
+                f"{row['changed_commits']} commits 落在其 roots 上: {row['changed_roots'][:2]})"
+            )
+        if not report["stale"]:
+            lines.append("  ✅ 无: 所有候选条目的 affected_roots 自复审以来未被改动")
     lines.append("判据是信号不是判决 (roots 变了 != 条目错了); 本检查 advisory, exit 0。")
     return "\n".join(lines)
 
 
-def self_test() -> int:
-    """检测器自证: 合成样本必须能被命中/放行, 否则「0 条陈旧」可能只是仪器没接上。"""
+def self_test(*, quiet: bool = False) -> int:
+    """检测器自证: 合成样本必须能被命中/放行, 且非 git 目录必须报 git_ok=False."""
     import tempfile
 
     import yaml
@@ -194,12 +235,34 @@ def self_test() -> int:
         )
         report = collect(items, root=root)
         ids = {row["id"] for row in report["stale"]}
-        if ids != {"STALE-X"}:
-            failures.append(f"合成样本读数应为 {{STALE-X}}, 实为 {ids}")
+        if not report.get("git_ok") or ids != {"STALE-X"}:
+            failures.append(f"合成样本读数应为 git_ok=True, {{STALE-X}}, 实为 {report.get('git_ok')}, {ids}")
+
+    with tempfile.TemporaryDirectory() as nongit_td:
+        nongit = Path(nongit_td)
+        items = nongit / "items"
+        items.mkdir()
+        (items / "candidate.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "id": "NONGIT-X",
+                    "lifecycle_state": "identified",
+                    "affected_roots": ["a.txt"],
+                    "last_reviewed_at": "2026-01-01",
+                },
+                allow_unicode=True,
+            ),
+            encoding="utf-8",
+        )
+        ng_report = collect(items, root=nongit)
+        if ng_report.get("git_ok") is not False or ng_report.get("stale_count") is not None:
+            failures.append(f"无 git 目录应报 git_ok=False / stale_count=None, 实为 {ng_report}")
+
     if failures:
-        print(f"SELF-TEST FAILED: {failures}")
+        print(f"SELF-TEST FAILED: {failures}", file=sys.stderr if quiet else sys.stdout)
         return 1
-    print("SELF-TEST PASSED")
+    if not quiet:
+        print("SELF-TEST PASSED")
     return 0
 
 
@@ -212,12 +275,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.self_test:
         return self_test()
 
+    self_ok = self_test(quiet=True) == 0
     report = collect()
+    report["self_test_ok"] = self_ok
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=1))
     else:
         print(_render(report))
-    return 0
+    return 0 if self_ok else 1
 
 
 if __name__ == "__main__":
