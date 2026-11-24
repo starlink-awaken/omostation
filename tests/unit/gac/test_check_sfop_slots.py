@@ -398,3 +398,117 @@ class TestShippedCli:
         assert "CR-SFOP-06" in data["constraint_ids"]
         assert "CR-DFSQ-01" in data["constraint_ids"]
         assert not any("CR-SFOP-06" in e for e in data["errors"])
+        assert not any("CR-SFOP-03" in e for e in data["errors"])
+
+
+_DIRECT_CELL = """
+def main(args):
+    if args and args[0] == "cell":
+        from omo.resident.cell_cli import main as cell_main
+        from omo.workflow_mesh import WorkflowMeshStore, dispatch_backend
+        omo_dir = _omo_dir()
+        store = WorkflowMeshStore(omo_dir) if omo_dir is not None else None
+        if store is not None:
+            return dispatch_backend(store, "cell", cell_main, args[1:])
+        return cell_main(args[1:])
+"""
+
+_HIDE_CELL = """
+def main(args):
+    if args and args[0] == "cell":
+        from omo.resident.cell_cli import main as cell_main
+        from omo.workflow_mesh import dispatch_backend
+        omo_dir = _omo_dir()
+        if omo_dir is None:
+            print("cell: no .omo directory", file=sys.stderr)
+            return 1
+        try:
+            store.append(event)
+        except Exception:
+            pass
+        return dispatch_backend(store, "cell", cell_main, args[1:])
+"""
+
+_NAME_ONLY_CELL = """
+def main(args):
+    if args and args[0] == "cell":
+        from omo.workflow_mesh import dispatch_backend
+        return dispatch_backend(store, "cell", cell_main, args[1:])
+"""
+
+_SWALLOW_DISPATCH = """
+def dispatch_backend(store, backend_name, fn, args):
+    try:
+        store.append(event)
+    except Exception:
+        pass
+    return fn(args)
+"""
+
+
+def _slot_check(mod, tmp_path: Path, cell_source: str | None = None, *, mesh: str | None = None):
+    nodes = tmp_path / "nodes"
+    _node(nodes, "omo", "S", "shu")
+    _node(nodes, "cockpit", "H", "qi")
+    registry = tmp_path / "registry.yaml"
+    registry.write_text("projects:\n  omo: {}\n  cockpit: {}\n", encoding="utf-8")
+    if mesh is not None:
+        mesh_path = tmp_path / "projects/omo/src/omo/workflow_mesh.py"
+        mesh_path.parent.mkdir(parents=True, exist_ok=True)
+        mesh_path.write_text(mesh, encoding="utf-8")
+    if cell_source is not None:
+        cli_path = tmp_path / "projects/omo/src/omo/cli.py"
+        cli_path.parent.mkdir(parents=True, exist_ok=True)
+        cli_path.write_text(cell_source, encoding="utf-8")
+    return mod.check(
+        nodes_dir=nodes,
+        registry_path=registry,
+        cron_registry_path=tmp_path / "cron.yaml",
+        projects_root=tmp_path / "projects",
+        baseline_path=tmp_path / "baseline.txt",
+        x3_path=tmp_path / "x3.yaml",
+        repo_root=tmp_path,
+        cell_entry_source=cell_source,
+    )
+
+
+class TestCellEntryBypass:
+    def test_direct_backend_when_no_store(self, tmp_path: Path) -> None:
+        mod = _load_mod()
+        result = _slot_check(mod, tmp_path, _DIRECT_CELL)
+        assert result["ok"] is False
+        assert any(
+            "calls the backend directly when no store exists" in err
+            for err in result["errors"]
+        )
+
+    def test_hides_event_write_error(self, tmp_path: Path) -> None:
+        mod = _load_mod()
+        result = _slot_check(mod, tmp_path, _HIDE_CELL)
+        assert result["ok"] is False
+        assert any("hides an event-write error" in err for err in result["errors"])
+        assert not any("calls the backend directly" in err for err in result["errors"])
+
+    def test_dispatcher_name_alone_is_not_a_pass(self, tmp_path: Path) -> None:
+        mod = _load_mod()
+        result = _slot_check(mod, tmp_path, _NAME_ONLY_CELL)
+        assert result["ok"] is False
+        assert any("naming dispatch_backend does not fail-close" in err for err in result["errors"])
+        assert mod.cell_entry_bypass_errors("dispatch_backend") != []
+
+    def test_swallowed_dispatch_function_fails(self, tmp_path: Path) -> None:
+        mod = _load_mod()
+        corrected = (REPO_ROOT / "projects/omo/src/omo/cli.py").read_text(encoding="utf-8")
+        result = _slot_check(mod, tmp_path, corrected, mesh=_SWALLOW_DISPATCH)
+        assert result["ok"] is False
+        assert any("dispatch_backend hides an event-write error" in err for err in result["errors"])
+
+    def test_corrected_tree_has_no_cr_sfop_03(self, tmp_path: Path) -> None:
+        mod = _load_mod()
+        cli = (REPO_ROOT / "projects/omo/src/omo/cli.py").read_text(encoding="utf-8")
+        mesh = (REPO_ROOT / "projects/omo/src/omo/workflow_mesh.py").read_text(encoding="utf-8")
+        assert mod.cell_entry_bypass_errors(cli) == []
+        assert mod.dispatch_backend_write_errors(mesh) == []
+        result = _slot_check(mod, tmp_path, cli, mesh=mesh)
+        assert result["ok"] is True
+        assert not any("CR-SFOP-03" in err for err in result["errors"])

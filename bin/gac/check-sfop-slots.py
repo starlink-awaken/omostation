@@ -212,6 +212,126 @@ def _x3_self_data(path: Path) -> list[str]:
     return hits
 
 
+_EXCEPT_PASS = re.compile(
+    r"except\b[^\n:]*:\s*(?:#[^\n]*)?(?:\n(?:[ \t]*#[^\n]*\n)*[ \t]+pass\b|pass\b)"
+)
+
+
+def _function_slice(source: str, name: str) -> str:
+    match = re.search(rf"^def {re.escape(name)}\(", source, re.M)
+    if not match:
+        return ""
+    nxt = re.search(r"^(?:def |class )", source[match.end():], re.M)
+    if not nxt:
+        return source[match.start():]
+    return source[match.start(): match.end() + nxt.start()]
+
+
+def _cell_branch_slice(source: str) -> str:
+    marker = 'args[0] == "cell"'
+    start = source.find(marker)
+    if start < 0:
+        return ""
+    line_start = source.rfind("\n", 0, start) + 1
+    lines = source[line_start:].splitlines(keepends=True)
+    if not lines:
+        return ""
+    base = len(lines[0]) - len(lines[0].lstrip(" "))
+    out = [lines[0]]
+    for line in lines[1:]:
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip(" "))
+        if stripped and indent <= base and stripped.startswith("if args"):
+            break
+        out.append(line)
+    return "".join(out)
+
+
+def _block_after(source: str, header_end: int) -> str:
+    lines = source[header_end:].splitlines(keepends=True)
+    body: list[str] = []
+    base: int | None = None
+    for line in lines:
+        if line.strip() == "":
+            if body:
+                body.append(line)
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        if base is None:
+            base = indent
+            if indent == 0:
+                return line
+        if indent < base:
+            break
+        body.append(line)
+    return "".join(body)
+
+
+def _missing_omo_fail_closed(cell_slice: str) -> bool:
+    match = re.search(r"if omo_dir is None\s*:", cell_slice)
+    if not match:
+        return False
+    block = _block_after(cell_slice, match.end())
+    if "cell_main(" in block:
+        return False
+    if "sys.stderr" not in block:
+        return False
+    return re.search(r"return\s+[1-9]\d*\b", block) is not None
+
+
+def _hides_write_error(source: str) -> bool:
+    return _EXCEPT_PASS.search(source) is not None
+
+
+def cell_entry_bypass_errors(source: str) -> list[str]:
+    """CR-SFOP-03 errors for one cell-entry source.
+
+    Naming ``dispatch_backend`` is not a pass. A direct ``cell_main(`` call when
+    the missing-``.omo`` branch is not fail-closed, and an ``except`` that only
+    ``pass``es a write error, are both errors.
+    """
+    cell = _cell_branch_slice(source)
+    target = cell if cell else source
+    if not cell and "dispatch_backend" not in source and "cell_main(" not in source:
+        return []
+    errors: list[str] = []
+    fail_closed = bool(cell) and _missing_omo_fail_closed(cell)
+    if "cell_main(" in target:
+        errors.append(
+            "CR-SFOP-03: cell entry calls the backend directly when no store exists"
+        )
+    if _hides_write_error(target):
+        errors.append("CR-SFOP-03: cell entry hides an event-write error")
+    if "dispatch_backend" in source and not fail_closed:
+        errors.append(
+            "CR-SFOP-03: naming dispatch_backend does not fail-close a missing .omo directory"
+        )
+    return errors
+
+
+def dispatch_backend_write_errors(source: str) -> list[str]:
+    """CR-SFOP-03 errors for a module that defines ``dispatch_backend``."""
+    body = _function_slice(source, "dispatch_backend")
+    if body and _hides_write_error(body):
+        return ["CR-SFOP-03: dispatch_backend hides an event-write error"]
+    return []
+
+
+def _mesh_inbox_errors(repo_root: Path, cell_entry_source: str | None) -> list[str]:
+    errors: list[str] = []
+    source = cell_entry_source
+    if source is None:
+        cli_py = repo_root / "projects/omo/src/omo/cli.py"
+        if cli_py.is_file():
+            source = cli_py.read_text(encoding="utf-8")
+    if source is not None:
+        errors.extend(cell_entry_bypass_errors(source))
+    mesh_py = repo_root / "projects/omo/src/omo/workflow_mesh.py"
+    if mesh_py.is_file():
+        errors.extend(dispatch_backend_write_errors(mesh_py.read_text(encoding="utf-8")))
+    return errors
+
+
 def check(
     *,
     nodes_dir: Path | None = None,
@@ -222,6 +342,7 @@ def check(
     x3_path: Path | None = None,
     repo_root: Path | None = None,
     skip_call_scan: bool = False,
+    cell_entry_source: str | None = None,
 ) -> dict:
     repo_root = Path(repo_root) if repo_root is not None else ROOT
     nodes_dir = Path(nodes_dir) if nodes_dir is not None else DEFAULT_NODES
@@ -244,8 +365,9 @@ def check(
 
     if not nodes_dir.is_dir():
         warnings.append(f"CR-SFOP-01: COMP-WS nodes dir missing ({nodes_dir}); skip slot scan")
+        errors.extend(_mesh_inbox_errors(repo_root, cell_entry_source))
         return {
-            "ok": True,
+            "ok": not errors,
             "errors": errors,
             "warnings": warnings,
             "components": annotated,
@@ -400,17 +522,10 @@ def check(
             f"{ns_hits} (preferred; north_star_meter_v2 already excludes self-data)"
         )
 
-    # CR-SFOP-03: B 槽后端不得拥有收件箱。cli.py 的 cell 分支必须经 Mesh
-    # (dispatch_backend) 分发，不得直连 cell_cli（否则后端独立充当收件箱）。
-    cli_py = repo_root / "projects/omo/src/omo/cli.py"
-    if cli_py.exists():
-        cli_src = cli_py.read_text(encoding="utf-8")
-        if 'args[0] == "cell"' in cli_src and "cell_cli" in cli_src:
-            if "dispatch_backend" not in cli_src:
-                errors.append(
-                    "CR-SFOP-03: cli.py cell 分支直连 cell_cli（后端拥有收件箱）；"
-                    "必须经 Mesh dispatch_backend 分发"
-                )
+    # CR-SFOP-03: the cell entry must fail closed. A dispatcher name in the
+    # source is not enough, a direct backend call with no store is an error,
+    # and swallowing the event write is an error.
+    errors.extend(_mesh_inbox_errors(repo_root, cell_entry_source))
 
     return {
         "ok": not errors,
