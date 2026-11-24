@@ -3,7 +3,7 @@ id: bin/gac/anti-corrosion-check.py
 name: Anti Corrosion Check
 category: governance
 owner: governance-team
-description: ""
+description: "Anti-Corrosion Check — 防腐检查."
 inputs: []
 outputs:
   - type: exit_code

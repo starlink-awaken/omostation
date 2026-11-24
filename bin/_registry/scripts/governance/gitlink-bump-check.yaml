@@ -3,7 +3,7 @@ id: bin/gac/gitlink-bump-check.py
 name: Gitlink Bump Check
 category: governance
 owner: governance-team
-description: ""
+description: "gitlink-bump-check.py — 主仓 gitlink bump 前置校验 (批次 28 复盘固化)."
 inputs: []
 outputs:
   - type: exit_code

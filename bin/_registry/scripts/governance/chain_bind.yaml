@@ -3,7 +3,7 @@ id: bin/plan/chain_bind.py
 name: Chain Bind
 category: governance
 owner: governance-team
-description: ""
+description: "Plan → BET → workflow → closeout → retro bind predicate."
 inputs: []
 outputs:
   - type: exit_code

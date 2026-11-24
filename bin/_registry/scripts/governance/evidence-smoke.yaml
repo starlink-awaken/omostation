@@ -3,7 +3,7 @@ id: bin/gac/evidence-smoke.py
 name: Evidence Smoke
 category: governance
 owner: governance-team
-description: ""
+description: "证据驱动 smoke — 量化 BOS 声明/执行鸿沟 + 反馈回路存活."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/external-resource-catalog.py
 name: External Resource Catalog
 category: governance
 owner: governance-team
-description: ""
+description: "Project and optionally observe dynamically discovered external resources."
 inputs: []
 outputs:
   - type: exit_code

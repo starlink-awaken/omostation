@@ -3,7 +3,7 @@ id: bin/ssot/god-module-roadmap.py
 name: God Module Roadmap
 category: governance
 owner: governance-team
-description: ""
+description: "P87 R1: god-module refactor roadmap tool."
 inputs: []
 outputs:
   - type: exit_code

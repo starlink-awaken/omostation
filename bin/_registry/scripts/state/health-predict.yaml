@@ -3,7 +3,7 @@ id: bin/ssot/health-predict.py
 name: Health Predict
 category: state
 owner: governance-team
-description: ""
+description: "health-predict.py — 提前 7 天预测 ledger drift (B1.3)."
 inputs: []
 outputs:
   - type: exit_code

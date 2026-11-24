@@ -3,7 +3,7 @@ id: bin/gac/doc-auto-update.py
 name: Doc Auto Update
 category: governance
 owner: governance-team
-description: ""
+description: "doc-auto-update.py — Detect stale documentation and generate update plans."
 inputs: []
 outputs:
   - type: exit_code

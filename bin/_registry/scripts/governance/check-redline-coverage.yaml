@@ -3,7 +3,7 @@ id: bin/gac/check-redline-coverage.py
 name: Check Redline Coverage
 category: governance
 owner: governance-team
-description: ""
+description: "check-redline-coverage: validate the redline registry itself."
 inputs: []
 outputs:
   - type: exit_code

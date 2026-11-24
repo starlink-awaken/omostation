@@ -3,7 +3,7 @@ id: bin/gac/check-scene-metrics-purity.py
 name: Check Scene Metrics Purity
 category: governance
 owner: governance-team
-description: ""
+description: "生产校准库纯度检查 — 拒绝测试夹具伪装成晋升证据."
 inputs: []
 outputs:
   - type: exit_code

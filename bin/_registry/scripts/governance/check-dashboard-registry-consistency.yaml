@@ -3,7 +3,7 @@ id: bin/ssot/check-dashboard-registry-consistency.py
 name: Check Dashboard Registry Consistency
 category: governance
 owner: governance-team
-description: ""
+description: "check-dashboard-registry-consistency: debt-dashboard vs debt.yaml 一致性检测 (ISC-12)."
 inputs: []
 outputs:
   - type: exit_code

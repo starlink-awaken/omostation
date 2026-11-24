@@ -3,7 +3,7 @@ id: bin/ssot/ssot-usage.py
 name: Ssot Usage
 category: governance
 owner: governance-team
-description: ""
+description: "SSOT usage reporter (ADR-0385 B2): 检查 _truth/registry/ 下 SSOT 文件的最近修改时间,"
 inputs: []
 outputs:
   - type: exit_code

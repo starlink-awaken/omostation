@@ -3,7 +3,7 @@ id: bin/ssot/bos-tracking-gate.py
 name: Bos Tracking Gate
 category: governance
 owner: governance-team
-description: ""
+description: "BOS 追踪门禁 — GaC 预提交检查"
 inputs: []
 outputs:
   - type: exit_code

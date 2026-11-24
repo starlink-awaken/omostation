@@ -3,7 +3,7 @@ id: bin/gac/rotate-history.py
 name: Rotate History
 category: state
 owner: governance-team
-description: ""
+description: "rotate-history — trim old entries from health.jsonl and similar append-only logs."
 inputs: []
 outputs:
   - type: exit_code

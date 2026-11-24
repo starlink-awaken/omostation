@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-review.py
 name: Scene Card Review
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Card Review — 每周复盘统计引擎."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-conflict-markers.py
 name: Check Conflict Markers
 category: governance
 owner: governance-team
-description: ""
+description: "check-conflict-markers: 检测入库文件的 git 合并冲突标记。"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ops/capacity_planner.py
 name: Capacity Planner
 category: governance
 owner: governance-team
-description: ""
+description: "Capacity Planner for Service Gateway."
 inputs: []
 outputs:
   - type: exit_code

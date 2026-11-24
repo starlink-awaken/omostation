@@ -3,7 +3,7 @@ id: bin/gac/orca-codex-supervisor.py
 name: Orca Codex Supervisor
 category: governance
 owner: governance-team
-description: ""
+description: "Create and observe a manually supervised Codex worker through Orca."
 inputs: []
 outputs:
   - type: exit_code

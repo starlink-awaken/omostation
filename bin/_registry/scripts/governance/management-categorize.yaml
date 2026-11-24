@@ -3,7 +3,7 @@ id: bin/ssot/management-categorize.py
 name: Management Categorize
 category: governance
 owner: governance-team
-description: ""
+description: "P75 R1: management 142 拆分 (frontmatter 分类)."
 inputs: []
 outputs:
   - type: exit_code

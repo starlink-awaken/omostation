@@ -3,7 +3,7 @@ id: bin/gac/agent-clone.py
 name: Agent Clone
 category: governance
 owner: governance-team
-description: ""
+description: "agent-clone.py - independent agent clone topology (BET-Y1Q1-T1-05 D1 pilot)."
 inputs: []
 outputs:
   - type: exit_code

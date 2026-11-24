@@ -3,7 +3,7 @@ id: bin/gac/check-memory-os-surfaces.py
 name: Check Memory Os Surfaces
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X4-MEMORY-OS-SURFACE-INTEGRITY: Memory OS light gate (blocking)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/metrics-store.py
 name: Metrics Store
 category: governance
 owner: governance-team
-description: ""
+description: "Governance Metrics Store — append-only time series for GaC check results."
 inputs: []
 outputs:
   - type: exit_code

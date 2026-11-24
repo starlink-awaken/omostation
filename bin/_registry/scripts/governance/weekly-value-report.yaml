@@ -3,7 +3,7 @@ id: bin/bc-os/weekly-value-report.py
 name: Weekly Value Report
 category: governance
 owner: governance-team
-description: ""
+description: "Weekly Value Report — 周度价值证明报告 (BET-Y1Q4-T4-03 主入口 + 旧 weekly-review)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-llm-advisory-only.py
 name: Check Llm Advisory Only
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P76-7-1-LLM-ADVISORY-ONLY: 检查 LLM 是否只 generate suggestion, 不 auto-apply."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/anti-corrosion-detector.py
 name: Anti Corrosion Detector
 category: governance
 owner: governance-team
-description: ""
+description: "Anti-Corrosion Detector — 治理规则陈旧检测."
 inputs: []
 outputs:
   - type: exit_code

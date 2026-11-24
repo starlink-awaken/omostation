@@ -3,7 +3,7 @@ id: bin/ops/cost_tracker.py
 name: Cost Tracker
 category: governance
 owner: governance-team
-description: ""
+description: "Cost Tracker for Service Gateway."
 inputs: []
 outputs:
   - type: exit_code

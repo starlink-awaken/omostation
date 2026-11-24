@@ -3,7 +3,7 @@ id: bin/gac/session-recovery.py
 name: Session Recovery
 category: governance
 owner: governance-team
-description: ""
+description: "session-recovery.py — Show what changed since last session."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/plan/chain-bind-audit.py
 name: Chain Bind Audit
 category: governance
 owner: governance-team
-description: ""
+description: "chain-bind-audit — 审计所有 active BET 的 chain-bind 合规性。"
 inputs: []
 outputs:
   - type: exit_code

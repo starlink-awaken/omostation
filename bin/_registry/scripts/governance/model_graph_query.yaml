@@ -3,7 +3,7 @@ id: bin/ssot/model_graph_query.py
 name: Model Graph Query
 category: governance
 owner: governance-team
-description: ""
+description: "model_graph_query.py — 模型图查询（GraphRAG Wave 2）"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/drift-face-detector.py
 name: Drift Face Detector
 category: governance
 owner: governance-team
-description: ""
+description: "drift-face-detector.py — 5 类 drift face-wide 检测 (BET-Y2Q4-SH-1)."
 inputs: []
 outputs:
   - type: exit_code

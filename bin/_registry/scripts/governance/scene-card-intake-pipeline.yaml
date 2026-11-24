@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-intake-pipeline.py
 name: Scene Card Intake Pipeline
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Card Intake Pipeline — 邮件/文件/消息→结构化事项摄入引擎."
 inputs: []
 outputs:
   - type: exit_code

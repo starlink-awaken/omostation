@@ -3,7 +3,7 @@ id: bin/ssot/validate-runbook-refs.py
 name: Validate Runbook Refs
 category: governance
 owner: governance-team
-description: ""
+description: "validate-runbook-refs — gate that runbook/prose bin/ references exist."
 inputs: []
 outputs:
   - type: exit_code

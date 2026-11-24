@@ -3,7 +3,7 @@ id: bin/gac/check-diff-debt.py
 name: Check Diff Debt
 category: governance
 owner: governance-team
-description: ""
+description: "check-diff-debt.py — 跟踪代码变更中的历史债务"
 inputs: []
 outputs:
   - type: exit_code

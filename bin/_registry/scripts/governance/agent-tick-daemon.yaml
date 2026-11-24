@@ -3,7 +3,7 @@ id: bin/ssot/agent-tick-daemon.py
 name: Agent Tick Daemon
 category: governance
 owner: governance-team
-description: ""
+description: "Agent Tick Daemon — AgentHost 持续运行 (AGENT-01)."
 inputs: []
 outputs:
   - type: exit_code

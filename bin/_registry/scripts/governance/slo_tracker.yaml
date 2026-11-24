@@ -3,7 +3,7 @@ id: bin/ops/slo_tracker.py
 name: Slo Tracker
 category: governance
 owner: governance-team
-description: ""
+description: "SLO (Service Level Objective) Tracker for Service Gateway."
 inputs: []
 outputs:
   - type: exit_code

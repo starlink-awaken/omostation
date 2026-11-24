@@ -3,7 +3,7 @@ id: bin/ssot/governance-migration.py
 name: Governance Migration
 category: governance
 owner: governance-team
-description: ""
+description: "governance-migration.py — Backfill owner/expected fields in governance-checks.yaml."
 inputs: []
 outputs:
   - type: exit_code

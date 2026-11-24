@@ -3,7 +3,7 @@ id: bin/ssot/sync-bet-digests.py
 name: Sync Bet Digests
 category: governance
 owner: governance-team
-description: ""
+description: "BET Digest Sync — detect/fix sha256 digest drift in bet-ledger.yaml."
 inputs: []
 outputs:
   - type: exit_code

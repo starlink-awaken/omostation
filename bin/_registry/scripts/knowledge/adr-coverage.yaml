@@ -3,7 +3,7 @@ id: bin/adr/adr-coverage.py
 name: Adr Coverage
 category: knowledge
 owner: governance-team
-description: ""
+description: "P85 R2: ADR coverage check tool."
 inputs: []
 outputs:
   - type: exit_code

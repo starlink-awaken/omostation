@@ -3,7 +3,7 @@ id: bin/gac/check-submodule-pr-independent.py
 name: Check Submodule Pr Independent
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P76-8-1-SUBMODULE-PR-INDEPENDENT: 检查子模块 PR 独立性。"
 inputs: []
 outputs:
   - type: exit_code

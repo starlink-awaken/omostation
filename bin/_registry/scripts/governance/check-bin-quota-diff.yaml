@@ -3,7 +3,7 @@ id: bin/gac/check-bin-quota-diff.py
 name: Check Bin Quota Diff
 category: governance
 owner: governance-team
-description: ""
+description: "bin-quota-diff: 配额\"变更侧问责\" — 每次变更自己负责守恒."
 inputs: []
 outputs:
   - type: exit_code

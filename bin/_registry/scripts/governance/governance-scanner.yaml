@@ -3,7 +3,7 @@ id: bin/ssot/governance-scanner.py
 name: Governance Scanner
 category: governance
 owner: governance-team
-description: ""
+description: "Governance Scanner — 异步深度扫描引擎."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/collab/bos-stdio-inventory.py
 name: Bos Stdio Inventory
 category: governance
 owner: governance-team
-description: ""
+description: "BOS stdio 占比盘点 — phase45 residual 工程债可执行面 (非假迁移)."
 inputs: []
 outputs:
   - type: exit_code

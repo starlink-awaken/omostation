@@ -3,7 +3,7 @@ id: bin/sweep/ruff.py
 name: Ruff
 category: governance
 owner: governance-team
-description: ""
+description: "Bounded ruff fix loop with convergence check."
 inputs: []
 outputs:
   - type: exit_code

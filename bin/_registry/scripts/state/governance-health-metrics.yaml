@@ -3,7 +3,7 @@ id: bin/gac/governance-health-metrics.py
 name: Governance Health Metrics
 category: state
 owner: governance-team
-description: ""
+description: "governance-health-metrics.py — 治理健康指标聚合."
 inputs: []
 outputs:
   - type: exit_code

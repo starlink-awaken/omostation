@@ -3,7 +3,7 @@ id: bin/gac/check-resident-bos.py
 name: Check Resident Bos
 category: governance
 owner: governance-team
-description: ""
+description: "CR-RESIDENT-BOS-01: resident 接口 BOS 路由 CI 校验."
 inputs: []
 outputs:
   - type: exit_code

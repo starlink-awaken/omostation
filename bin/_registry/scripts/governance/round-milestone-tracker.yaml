@@ -3,7 +3,7 @@ id: bin/plan/round-milestone-tracker.py
 name: Round Milestone Tracker
 category: governance
 owner: governance-team
-description: ""
+description: "round-milestone-tracker — Round 里程碑追踪。"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/task-inventory.py
 name: Task Inventory
 category: governance
 owner: governance-team
-description: ""
+description: "task-inventory.py — TLM 任务生命周期审计器 (2026-08-25, M1)"
 inputs: []
 outputs:
   - type: exit_code

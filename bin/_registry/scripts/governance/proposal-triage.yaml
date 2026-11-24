@@ -3,7 +3,7 @@ id: bin/bc-os/proposal-triage.py
 name: Proposal Triage
 category: governance
 owner: governance-team
-description: ""
+description: "proposal-triage — 提案池质量分层 + 归档工具 (第 0 段清淤, ADR-0431 D2/D3)."
 inputs: []
 outputs:
   - type: exit_code

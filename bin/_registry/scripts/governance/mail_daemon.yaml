@@ -3,7 +3,7 @@ id: bin/ssot/mail_daemon.py
 name: Mail Daemon
 category: governance
 owner: governance-team
-description: ""
+description: "Mail Daemon — 工作域邮件感知+认知+规划 守护进程."
 inputs: []
 outputs:
   - type: exit_code

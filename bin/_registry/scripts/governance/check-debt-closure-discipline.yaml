@@ -3,7 +3,7 @@ id: bin/gac/check-debt-closure-discipline.py
 name: Check Debt Closure Discipline
 category: governance
 owner: governance-team
-description: ""
+description: "债务闭环节律 — `resolved` 必须留闭环证据, 且状态字段须唯一."
 inputs: []
 outputs:
   - type: exit_code

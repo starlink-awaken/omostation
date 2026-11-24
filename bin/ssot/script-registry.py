@@ -10,6 +10,8 @@ Usage:
 """
 
 import argparse
+import ast
+import json
 import os
 import sys
 from pathlib import Path
@@ -61,6 +63,65 @@ def guess_owner(script_path: str) -> str:
     return "governance-team"
 
 
+MAX_DESCRIPTION = 160
+
+
+def derive_description(path: Path) -> str:
+    """从脚本自身的模块 docstring 派生登记描述 (首行, 折叠空白, 截断)。
+
+    登记面的意义是**可发现性**, 而 `register()` 此前把 `description` 硬写成 `""`
+    —— 744 条登记里 587 条因此为空, 等于放弃这个字段。脚本自己的 docstring 是
+    现成的、由维护者手写的权威摘要, 直接取来用, 不需要第二份人工描述。
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError):
+        return ""
+    doc = ast.get_docstring(tree)
+    if not doc:
+        return ""
+    first = " ".join(doc.strip().splitlines()[0].split())
+    if len(first) > MAX_DESCRIPTION:
+        first = first[:MAX_DESCRIPTION].rstrip() + "…"
+    return first
+
+
+def backfill_descriptions(dry_run: bool = False) -> None:
+    """把既有登记里 `description: ""` 的条目按脚本 docstring 回填。
+
+    只改这一行 (文本级替换), 不动其余字段与键序; 无 docstring 的留空, 不猜。
+    """
+    filled = skipped_missing = skipped_nodoc = 0
+    for entry in sorted(REGISTRY_DIR.rglob("*.yaml")):
+        text = entry.read_text(encoding="utf-8")
+        if 'description: ""' not in text and "description: ''" not in text:
+            continue
+        data = yaml.safe_load(text) or {}
+        rel = data.get("id")
+        if not rel:
+            continue
+        script = REPO_ROOT / str(rel)
+        if not script.is_file():
+            skipped_missing += 1
+            continue
+        desc = derive_description(script)
+        if not desc:
+            skipped_nodoc += 1
+            continue
+        new_text = text.replace(
+            'description: ""', f"description: {json.dumps(desc, ensure_ascii=False)}", 1
+        ).replace(
+            "description: ''", f"description: {json.dumps(desc, ensure_ascii=False)}", 1
+        )
+        if dry_run:
+            print(f"[dry-run] {entry.relative_to(REPO_ROOT)} <- {desc[:60]}")
+        else:
+            entry.write_text(new_text, encoding="utf-8")
+        filled += 1
+    verb = "会回填" if dry_run else "已回填"
+    print(f"{verb} {filled} 条; 跳过: 脚本缺失 {skipped_missing}, 无 docstring {skipped_nodoc}")
+
+
 def register(script_path: str, dry_run: bool = False) -> None:
     p = Path(script_path)
     if not p.is_absolute():
@@ -85,12 +146,13 @@ def register(script_path: str, dry_run: bool = False) -> None:
             out = REGISTRY_DIR / category / f"{stem}-{rel.parent.name}.yaml"
 
 
+    description = json.dumps(derive_description(p), ensure_ascii=False)
     content = f"""schema: script-registry/v1
 id: {rel}
 name: {stem.replace('-', ' ').replace('_', ' ').title()}
 category: {category}
 owner: {owner}
-description: ""
+description: {description}
 inputs: []
 outputs:
   - type: exit_code
@@ -259,6 +321,12 @@ def main() -> None:
 
     sub.add_parser("generate-index", help="Generate markdown index")
 
+    p_back = sub.add_parser(
+        "backfill-descriptions",
+        help="把 description: "" 的既有登记按脚本 docstring 回填 (只改这一行)",
+    )
+    p_back.add_argument("--dry-run", action="store_true")
+
     args = parser.parse_args()
 
     if args.cmd == "register":
@@ -269,6 +337,8 @@ def main() -> None:
         query(args.category, args.owner, args.depends_on)
     elif args.cmd == "generate-index":
         generate_index()
+    elif args.cmd == "backfill-descriptions":
+        backfill_descriptions(args.dry_run)
     else:
         parser.print_help()
         sys.exit(1)

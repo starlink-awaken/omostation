@@ -3,7 +3,7 @@ id: bin/ssot/scene-daemon.py
 name: Scene Daemon
 category: governance
 owner: governance-team
-description: ""
+description: "Archived unwired Scene Daemon prototype."
 inputs: []
 outputs:
   - type: exit_code

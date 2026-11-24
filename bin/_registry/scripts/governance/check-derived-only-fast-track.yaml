@@ -3,7 +3,7 @@ id: bin/gac/check-derived-only-fast-track.py
 name: Check Derived Only Fast Track
 category: governance
 owner: governance-team
-description: ""
+description: "GOV-REBAL 派生文档-only fast-track 判定 (差距治理 S5)."
 inputs: []
 outputs:
   - type: exit_code

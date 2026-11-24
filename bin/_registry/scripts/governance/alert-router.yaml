@@ -3,7 +3,7 @@ id: bin/gac/alert-router.py
 name: Alert Router
 category: governance
 owner: governance-team
-description: ""
+description: "Alert Router — read anomaly-events.jsonl and emit alerts via configured channels."
 inputs: []
 outputs:
   - type: exit_code

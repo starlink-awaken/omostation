@@ -3,7 +3,7 @@ id: bin/scheduler-compile.py
 name: Scheduler Compile
 category: governance
 owner: governance-team
-description: ""
+description: "scheduler-compile.py — 调度编译器 v1: 登记源 → 编译三格式产出 (ADR-A 生成模式)."
 inputs: []
 outputs:
   - type: exit_code

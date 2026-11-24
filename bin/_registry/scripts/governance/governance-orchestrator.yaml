@@ -3,7 +3,7 @@ id: bin/gac/governance-orchestrator.py
 name: Governance Orchestrator
 category: governance
 owner: governance-team
-description: ""
+description: "Governance Orchestrator — 治理编排器."
 inputs: []
 outputs:
   - type: exit_code

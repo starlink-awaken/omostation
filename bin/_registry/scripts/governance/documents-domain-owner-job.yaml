@@ -3,7 +3,7 @@ id: bin/gac/documents-domain-owner-job.py
 name: Documents Domain Owner Job
 category: governance
 owner: governance-team
-description: ""
+description: "Run one Workspace-bound Documents owner job through Runtime isolation."
 inputs: []
 outputs:
   - type: exit_code

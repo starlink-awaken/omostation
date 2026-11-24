@@ -3,7 +3,7 @@ id: bin/delivery/state_sync.py
 name: State Sync
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL.3 — Multi-node state sync (in-process) + latency probe."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/sync-bos-registry.py
 name: Sync Bos Registry
 category: governance
 owner: governance-team
-description: ""
+description: "Sync `.omo/_knowledge/bos-registry.json` from `projects/agora/etc/bos-services.yaml`."
 inputs: []
 outputs:
   - type: exit_code

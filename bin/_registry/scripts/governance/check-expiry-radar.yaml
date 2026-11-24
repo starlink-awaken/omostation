@@ -3,7 +3,7 @@ id: bin/gac/check-expiry-radar.py
 name: Check Expiry Radar
 category: governance
 owner: governance-team
-description: ""
+description: "过期雷达 (expiry radar) — 让 SLA 越界**提前**可见, 而不是在爆炸当天挡住所有人."
 inputs: []
 outputs:
   - type: exit_code

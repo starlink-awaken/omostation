@@ -3,7 +3,7 @@ id: bin/ssot/doc-governance-check.py
 name: Doc Governance Check
 category: governance
 owner: governance-team
-description: ""
+description: "Validate document ownership, lifecycle, freshness, and discoverability."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/evolution-agent.py
 name: Evolution Agent
 category: governance
 owner: governance-team
-description: ""
+description: "Evolution Agent — Meta-3 进化层: 定期扫描 → 提出进化提案 (P3-T2)."
 inputs: []
 outputs:
   - type: exit_code

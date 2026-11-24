@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-candidates.py
 name: Scene Card Candidates
 category: governance
 owner: governance-team
-description: ""
+description: "Discover safe Scene Card candidates without activating runtime capability."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/l4-memory-bridge.py
 name: L4 Memory Bridge
 category: governance
 owner: governance-team
-description: ""
+description: "L4 Kernel ↔ OMO/MOS 记忆层连接桥."
 inputs: []
 outputs:
   - type: exit_code

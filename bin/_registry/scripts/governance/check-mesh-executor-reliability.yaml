@@ -3,7 +3,7 @@ id: bin/gac/check-mesh-executor-reliability.py
 name: Check Mesh Executor Reliability
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X4-MESH-EXECUTOR-RELIABILITY: 检查 mesh executor 脚本可靠性."
 inputs: []
 outputs:
   - type: exit_code

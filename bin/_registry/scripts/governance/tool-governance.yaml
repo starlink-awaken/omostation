@@ -3,7 +3,7 @@ id: bin/gac/tool-governance.py
 name: Tool Governance
 category: governance
 owner: governance-team
-description: ""
+description: "Tool Governance — 工具分级治理."
 inputs: []
 outputs:
   - type: exit_code

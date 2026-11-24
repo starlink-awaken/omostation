@@ -3,7 +3,7 @@ id: bin/ssot/check-submodule-hygiene.py
 name: Check Submodule Hygiene
 category: governance
 owner: governance-team
-description: ""
+description: "check-submodule-hygiene.py — 子模块卫生守门 (Round 5f, ADR-0151)"
 inputs: []
 outputs:
   - type: exit_code

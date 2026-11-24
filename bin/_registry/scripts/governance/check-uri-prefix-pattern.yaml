@@ -3,7 +3,7 @@ id: bin/gac/check-uri-prefix-pattern.py
 name: Check Uri Prefix Pattern
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P77-URI-PREFIX: 检查 URI 末尾 / 前缀模式一致性."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/goal-mode-test.py
 name: Goal Mode Test
 category: governance
 owner: governance-team
-description: ""
+description: "Goal Mode Test — 验证 BET claim → verify → closeout 流程."
 inputs: []
 outputs:
   - type: exit_code

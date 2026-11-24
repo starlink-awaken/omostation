@@ -3,7 +3,7 @@ id: bin/ssot/onto_merge.py
 name: Onto Merge
 category: governance
 owner: governance-team
-description: ""
+description: "onto_merge.py — ontology 缺口审阅并入（生成 M3 正确归类）"
 inputs: []
 outputs:
   - type: exit_code

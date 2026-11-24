@@ -3,7 +3,7 @@ id: bin/ssot/check-layer-call-direction.py
 name: Check Layer Call Direction
 category: governance
 owner: governance-team
-description: ""
+description: "check-layer-call-direction.py — 分层调用方向守门 (P76 Phase 2 / ADR-0156)"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/tool-usage-audit.py
 name: Tool Usage Audit
 category: governance
 owner: governance-team
-description: ""
+description: "Tool Usage Audit — scan bin/ssot/ for dormant/orphaned tools."
 inputs: []
 outputs:
   - type: exit_code

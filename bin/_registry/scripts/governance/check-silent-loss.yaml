@@ -3,7 +3,7 @@ id: bin/gac/check-silent-loss.py
 name: Check Silent Loss
 category: governance
 owner: governance-team
-description: ""
+description: "check-silent-loss: detect silently lost tasks across the system."
 inputs: []
 outputs:
   - type: exit_code

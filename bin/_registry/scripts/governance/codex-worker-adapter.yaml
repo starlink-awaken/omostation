@@ -3,7 +3,7 @@ id: bin/gac/codex-worker-adapter.py
 name: Codex Worker Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "Run Codex exec as a bounded supervised worker."
 inputs: []
 outputs:
   - type: exit_code

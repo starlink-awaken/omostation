@@ -3,7 +3,7 @@ id: bin/gac/check-orphan-files.py
 name: Check Orphan Files
 category: governance
 owner: governance-team
-description: ""
+description: "check-orphan-files.py — 检测孤立文件"
 inputs: []
 outputs:
   - type: exit_code

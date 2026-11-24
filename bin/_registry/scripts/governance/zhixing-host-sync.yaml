@@ -3,7 +3,7 @@ id: bin/gac/zhixing-host-sync.py
 name: Zhixing Host Sync
 category: governance
 owner: governance-team
-description: ""
+description: "织星驾驶舱（:43191）宿主资产的只读漂移检查。"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/governance-trend-report.py
 name: Governance Trend Report
 category: governance
 owner: governance-team
-description: ""
+description: "P88 R3: governance-history 趋势报告工具."
 inputs: []
 outputs:
   - type: exit_code

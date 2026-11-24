@@ -3,7 +3,7 @@ id: bin/ssot/alert-forwarder.py
 name: Alert Forwarder
 category: governance
 owner: governance-team
-description: ""
+description: "alert-forwarder — forward observability events to alert channels."
 inputs: []
 outputs:
   - type: exit_code

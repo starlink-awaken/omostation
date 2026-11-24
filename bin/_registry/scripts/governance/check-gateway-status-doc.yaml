@@ -3,7 +3,7 @@ id: bin/gac/check-gateway-status-doc.py
 name: Check Gateway Status Doc
 category: governance
 owner: governance-team
-description: ""
+description: "check-gateway-status-doc: verify LLM gateway unreachable states are documented."
 inputs: []
 outputs:
   - type: exit_code

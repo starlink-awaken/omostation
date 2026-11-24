@@ -3,7 +3,7 @@ id: bin/gac/mcp-tool-data-complete.py
 name: Mcp Tool Data Complete
 category: governance
 owner: governance-team
-description: ""
+description: "mcp-tool-data-complete.py — 治本 MCPTOOL 节点数据完整性 (Round 4a)"
 inputs: []
 outputs:
   - type: exit_code

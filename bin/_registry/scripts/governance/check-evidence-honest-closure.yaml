@@ -3,7 +3,7 @@ id: bin/gac/check-evidence-honest-closure.py
 name: Check Evidence Honest Closure
 category: governance
 owner: governance-team
-description: ""
+description: "check-evidence-honest-closure: verify closed agent-workflow runs have evidence."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/mof/check-mof-capabilities-drift.py
 name: Check Mof Capabilities Drift
 category: governance
 owner: governance-team
-description: ""
+description: "check-mof-capabilities-drift — 注册表 vs 实现 drift 检测 (一扇门覆盖 MOF + metaos)."
 inputs: []
 outputs:
   - type: exit_code

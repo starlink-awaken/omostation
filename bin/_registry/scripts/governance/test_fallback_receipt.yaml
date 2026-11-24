@@ -3,7 +3,7 @@ id: bin/ssot/tests/test_fallback_receipt.py
 name: Test Fallback Receipt
 category: governance
 owner: governance-team
-description: ""
+description: "Quick verification of _record_fallback_receipt state handling."
 inputs: []
 outputs:
   - type: exit_code

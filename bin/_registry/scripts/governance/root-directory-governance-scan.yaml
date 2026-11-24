@@ -3,7 +3,7 @@ id: bin/ssot/root-directory-governance-scan.py
 name: Root Directory Governance Scan
 category: governance
 owner: governance-team
-description: ""
+description: "Root directory governance surface scan."
 inputs: []
 outputs:
   - type: exit_code

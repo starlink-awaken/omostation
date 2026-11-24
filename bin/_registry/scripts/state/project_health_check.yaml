@@ -3,7 +3,7 @@ id: bin/ssot/project_health_check.py
 name: Project Health Check
 category: state
 owner: governance-team
-description: ""
+description: "project_health_check.py — 任意项目治理健康快照（Wave 3 外部接入）"
 inputs: []
 outputs:
   - type: exit_code

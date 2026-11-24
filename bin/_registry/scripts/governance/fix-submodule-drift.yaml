@@ -3,7 +3,7 @@ id: bin/gac/fix-submodule-drift.py
 name: Fix Submodule Drift
 category: governance
 owner: governance-team
-description: ""
+description: "fix-submodule-drift.py — 检测并报告 submodule 漂移."
 inputs: []
 outputs:
   - type: exit_code

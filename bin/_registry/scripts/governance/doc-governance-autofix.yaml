@@ -3,7 +3,7 @@ id: bin/ssot/doc-governance-autofix.py
 name: Doc Governance Autofix
 category: governance
 owner: governance-team
-description: ""
+description: "Auto-fix document frontmatter based on document-governance.yaml rules."
 inputs: []
 outputs:
   - type: exit_code

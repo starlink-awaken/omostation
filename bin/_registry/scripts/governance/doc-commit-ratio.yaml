@@ -3,7 +3,7 @@ id: bin/ssot/doc-commit-ratio.py
 name: Doc Commit Ratio
 category: governance
 owner: governance-team
-description: ""
+description: "doc-commit-ratio — 观察 doc 类提交占比 (BET-Y1Q3-T6-06 维护模式观察指标)."
 inputs: []
 outputs:
   - type: exit_code

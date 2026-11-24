@@ -3,7 +3,7 @@ id: bin/ssot/constraint-gate.py
 name: Constraint Gate
 category: governance
 owner: governance-team
-description: ""
+description: "Model-Driven Constraint Gate — 模型驱动约束查询 (GOV-03)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/gen-knowledge-index.py
 name: Gen Knowledge Index
 category: governance
 owner: governance-team
-description: ""
+description: "Generate INDEX-KNOWLEDGE.md from .omo/_knowledge/ scan."
 inputs: []
 outputs:
   - type: exit_code

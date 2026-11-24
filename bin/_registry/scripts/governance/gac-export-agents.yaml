@@ -3,7 +3,7 @@ id: bin/gac/gac-export-agents.py
 name: Gac Export Agents
 category: governance
 owner: governance-team
-description: ""
+description: "gac-export-agents.py — 从 governance-checks.yaml 导出 agent-facing GaC 摘要."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/gac-bootstrap.py
 name: Gac Bootstrap
 category: governance
 owner: governance-team
-description: ""
+description: "gac-bootstrap — GaC 自举递归检测 (元治理核心: GaC 治 GaC 自身)."
 inputs: []
 outputs:
   - type: exit_code

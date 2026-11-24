@@ -3,7 +3,7 @@ id: bin/adr/next-adr-id.py
 name: Next Adr Id
 category: knowledge
 owner: governance-team
-description: ""
+description: "Suggest (and atomically claim) the next free ADR number."
 inputs: []
 outputs:
   - type: exit_code

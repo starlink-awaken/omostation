@@ -3,7 +3,7 @@ id: bin/gac/check-heuristic-default.py
 name: Check Heuristic Default
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P76-9A-4-HEURISTIC-DEFAULT: 检查脚本是否有 --no-llm 或启发式 fallback."
 inputs: []
 outputs:
   - type: exit_code

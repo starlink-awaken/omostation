@@ -3,7 +3,7 @@ id: bin/gac/clone-lifecycle.py
 name: Clone Lifecycle
 category: governance
 owner: governance-team
-description: ""
+description: "clone-lifecycle.py — 自动化 agent clone 生命周期管道 (最理想架构核心)."
 inputs: []
 outputs:
   - type: exit_code

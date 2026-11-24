@@ -3,7 +3,7 @@ id: bin/gac/gac-daemon.py
 name: Gac Daemon
 category: governance
 owner: governance-team
-description: ""
+description: "gac-daemon — GaC 物理沙箱 P3 POC (omo daemon 架构验证)."
 inputs: []
 outputs:
   - type: exit_code

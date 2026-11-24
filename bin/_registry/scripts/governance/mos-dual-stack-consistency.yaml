@@ -3,7 +3,7 @@ id: bin/ssot/mos-dual-stack-consistency.py
 name: Mos Dual Stack Consistency
 category: governance
 owner: governance-team
-description: ""
+description: "BET-Y1Q3-T3-01: MOS 双栈一致性观察器."
 inputs: []
 outputs:
   - type: exit_code

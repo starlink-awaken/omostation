@@ -3,7 +3,7 @@ id: bin/gac/fix-frontmatter.py
 name: Fix Frontmatter
 category: governance
 owner: governance-team
-description: ""
+description: "fix-frontmatter: 安全地为 Markdown 文档补齐/更新 Frontmatter."
 inputs: []
 outputs:
   - type: exit_code

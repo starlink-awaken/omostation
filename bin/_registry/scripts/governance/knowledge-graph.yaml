@@ -3,7 +3,7 @@ id: bin/kb/knowledge-graph.py
 name: Knowledge Graph
 category: governance
 owner: governance-team
-description: ""
+description: "knowledge-graph — scan workspace assets and build a knowledge graph."
 inputs: []
 outputs:
   - type: exit_code

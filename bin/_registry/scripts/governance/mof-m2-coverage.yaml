@@ -3,7 +3,7 @@ id: bin/mof/mof-m2-coverage.py
 name: Mof M2 Coverage
 category: governance
 owner: governance-team
-description: ""
+description: "P84 R1: M2 schema coverage tool (修正 mof-schema-validate type coverage 噪音)."
 inputs: []
 outputs:
   - type: exit_code

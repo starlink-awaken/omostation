@@ -3,7 +3,7 @@ id: bin/ssot/personal-signals-adapter.py
 name: Personal Signals Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "personal-signals-adapter — poll personal-signals dir and publish to the bus."
 inputs: []
 outputs:
   - type: exit_code

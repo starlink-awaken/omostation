@@ -3,7 +3,7 @@ id: bin/mof/gen-agent-redlines.py
 name: Gen Agent Redlines
 category: governance
 owner: governance-team
-description: ""
+description: "生成 agent-redlines.md (宪法 Wave 1: severity 分层 digest)."
 inputs: []
 outputs:
   - type: exit_code

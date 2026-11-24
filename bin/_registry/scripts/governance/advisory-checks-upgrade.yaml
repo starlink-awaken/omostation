@@ -3,7 +3,7 @@ id: bin/gac/advisory-checks-upgrade.py
 name: Advisory Checks Upgrade
 category: governance
 owner: governance-team
-description: ""
+description: "advisory-checks-upgrade — 将高价值 advisory 约束升级为可执行检查。"
 inputs: []
 outputs:
   - type: exit_code

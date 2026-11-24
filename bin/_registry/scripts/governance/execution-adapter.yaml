@@ -3,7 +3,7 @@ id: bin/ssot/execution-adapter.py
 name: Execution Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "execution-adapter — wire execution workers (Pi) into the resident daemon (WP-G)."
 inputs: []
 outputs:
   - type: exit_code

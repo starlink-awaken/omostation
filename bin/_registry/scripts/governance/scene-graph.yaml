@@ -3,7 +3,7 @@ id: bin/ssot/scene-graph.py
 name: Scene Graph
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Graph — DAG-based scene orchestration with event-driven choreography."
 inputs: []
 outputs:
   - type: exit_code

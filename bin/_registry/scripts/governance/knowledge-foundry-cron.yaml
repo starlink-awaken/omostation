@@ -3,7 +3,7 @@ id: bin/gac/knowledge-foundry-cron.py
 name: Knowledge Foundry Cron
 category: governance
 owner: governance-team
-description: ""
+description: "knowledge-foundry-cron.py — P76 Phase 6 演化平台真正集成"
 inputs: []
 outputs:
   - type: exit_code

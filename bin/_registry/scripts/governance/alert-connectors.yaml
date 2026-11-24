@@ -3,7 +3,7 @@ id: bin/ssot/alert-connectors.py
 name: Alert Connectors
 category: governance
 owner: governance-team
-description: ""
+description: "告警连接器 (channel kind) — 告警到人 via 外部连接器 (fabric 对齐)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/post-commit-sync-check.py
 name: Post Commit Sync Check
 category: governance
 owner: governance-team
-description: ""
+description: "post-commit 派生同步检查 — agora 等子模块指针变更后自动 sync-all-docs."
 inputs: []
 outputs:
   - type: exit_code

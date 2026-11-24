@@ -3,7 +3,7 @@ id: bin/gac/check-quota-pressure.py
 name: Check Quota Pressure
 category: governance
 owner: governance-team
-description: ""
+description: "check-quota-pressure.py — 治理配额压力检查."
 inputs: []
 outputs:
   - type: exit_code

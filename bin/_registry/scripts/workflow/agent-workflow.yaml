@@ -3,7 +3,7 @@ id: bin/agent-workflow.py
 name: Agent Workflow
 category: workflow
 owner: governance-team
-description: ""
+description: "Executable agent workflow runner for project-level governance."
 inputs: []
 outputs:
   - type: exit_code

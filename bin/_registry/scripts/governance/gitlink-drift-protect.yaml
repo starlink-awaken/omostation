@@ -3,7 +3,7 @@ id: bin/gac/gitlink-drift-protect.py
 name: Gitlink Drift Protect
 category: governance
 owner: governance-team
-description: ""
+description: "gitlink-drift-protect — 子模块指针漂移检测与 remediation 提案。"
 inputs: []
 outputs:
   - type: exit_code

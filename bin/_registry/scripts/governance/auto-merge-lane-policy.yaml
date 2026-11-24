@@ -3,7 +3,7 @@ id: bin/gac/auto-merge-lane-policy.py
 name: Auto Merge Lane Policy
 category: governance
 owner: governance-team
-description: ""
+description: "auto-merge-lane-policy — lane → auto/manual 映射 (F3, auto-PR ISA D1)."
 inputs: []
 outputs:
   - type: exit_code

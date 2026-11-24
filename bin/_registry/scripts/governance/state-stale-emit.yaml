@@ -3,7 +3,7 @@ id: bin/gac/state-stale-emit.py
 name: State Stale Emit
 category: governance
 owner: governance-team
-description: ""
+description: "Emit a state_stale event without refreshing runtime projections directly."
 inputs: []
 outputs:
   - type: exit_code

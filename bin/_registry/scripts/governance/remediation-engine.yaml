@@ -3,7 +3,7 @@ id: bin/gac/remediation-engine.py
 name: Remediation Engine
 category: governance
 owner: governance-team
-description: ""
+description: "Remediation Engine — 自运维修复引擎."
 inputs: []
 outputs:
   - type: exit_code

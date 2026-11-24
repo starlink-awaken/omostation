@@ -3,7 +3,7 @@ id: bin/collab/scenario_lib.py
 name: Scenario Lib
 category: governance
 owner: governance-team
-description: ""
+description: "P84 W1 协作场景库引擎 — 能力轨测协作机制响应质量."
 inputs: []
 outputs:
   - type: exit_code

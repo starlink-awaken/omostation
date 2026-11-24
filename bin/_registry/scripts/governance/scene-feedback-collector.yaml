@@ -3,7 +3,7 @@ id: bin/ssot/scene-feedback-collector.py
 name: Scene Feedback Collector
 category: governance
 owner: governance-team
-description: ""
+description: "Collect outcome-feedback for active scene cards."
 inputs: []
 outputs:
   - type: exit_code

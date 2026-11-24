@@ -3,7 +3,7 @@ id: bin/ssot/dashboard.py
 name: Dashboard
 category: governance
 owner: governance-team
-description: ""
+description: "Digital Organism Dashboard — standalone HTML dashboard (P3-T1)."
 inputs: []
 outputs:
   - type: exit_code

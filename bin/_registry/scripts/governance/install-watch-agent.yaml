@@ -3,7 +3,7 @@ id: bin/gac/install-watch-agent.py
 name: Install Watch Agent
 category: governance
 owner: governance-team
-description: ""
+description: "Installer for launchd WatchPaths governance watch agent."
 inputs: []
 outputs:
   - type: exit_code

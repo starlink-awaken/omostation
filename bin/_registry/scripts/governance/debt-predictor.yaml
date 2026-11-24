@@ -3,7 +3,7 @@ id: bin/gac/debt-predictor.py
 name: Debt Predictor
 category: governance
 owner: governance-team
-description: ""
+description: "Debt Predictor — time-series trend analysis for governance debt."
 inputs: []
 outputs:
   - type: exit_code

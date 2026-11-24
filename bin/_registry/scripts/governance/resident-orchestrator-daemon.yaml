@@ -3,7 +3,7 @@ id: bin/ssot/resident-orchestrator-daemon.py
 name: Resident Orchestrator Daemon
 category: governance
 owner: governance-team
-description: ""
+description: "resident-orchestrator-daemon — subscribe→execute bridge for resident agents."
 inputs: []
 outputs:
   - type: exit_code

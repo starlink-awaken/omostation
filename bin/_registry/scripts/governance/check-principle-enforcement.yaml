@@ -3,7 +3,7 @@ id: bin/gac/check-principle-enforcement.py
 name: Check Principle Enforcement
 category: governance
 owner: governance-team
-description: ""
+description: "CR-PRINCIPLE-ENFORCEMENT: 验证工程原则是否被工具/流程执行."
 inputs: []
 outputs:
   - type: exit_code

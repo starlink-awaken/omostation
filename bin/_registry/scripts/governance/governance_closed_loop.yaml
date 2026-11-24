@@ -3,7 +3,7 @@ id: bin/ssot/governance_closed_loop.py
 name: Governance Closed Loop
 category: governance
 owner: governance-team
-description: ""
+description: "governance_closed_loop.py — 治理闭环端到端验证（真实场景）"
 inputs: []
 outputs:
   - type: exit_code

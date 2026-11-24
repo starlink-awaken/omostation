@@ -3,7 +3,7 @@ id: bin/ssot/weekly-hygiene-patrol.py
 name: Weekly Hygiene Patrol
 category: governance
 owner: governance-team
-description: ""
+description: "Unified Weekly Governance & Hygiene Patrol Engine (ADR-0192)."
 inputs: []
 outputs:
   - type: exit_code

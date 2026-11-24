@@ -3,7 +3,7 @@ id: bin/ssot-watcher.py
 name: Ssot Watcher
 category: governance
 owner: governance-team
-description: ""
+description: "bin/ssot-watcher.py — SSOT 变更追踪和自动化工具"
 inputs: []
 outputs:
   - type: exit_code

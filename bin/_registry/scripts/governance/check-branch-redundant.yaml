@@ -3,7 +3,7 @@ id: bin/ssot/check-branch-redundant.py
 name: Check Branch Redundant
 category: governance
 owner: governance-team
-description: ""
+description: "Check redundant work/* branches against main (git cherry based)."
 inputs: []
 outputs:
   - type: exit_code

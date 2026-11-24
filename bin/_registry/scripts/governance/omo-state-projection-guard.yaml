@@ -3,7 +3,7 @@ id: bin/gac/omo-state-projection-guard.py
 name: Omo State Projection Guard
 category: governance
 owner: governance-team
-description: ""
+description: "Guard for the runtime projection plane (P74 stage 2, P71 类 A 复发拦截)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/anti-corrosion-patrol.py
 name: Anti Corrosion Patrol
 category: governance
 owner: governance-team
-description: ""
+description: "Anti-Corrosion Patrol — 防腐看门狗常态化巡检."
 inputs: []
 outputs:
   - type: exit_code

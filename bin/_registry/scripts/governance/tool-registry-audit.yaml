@@ -3,7 +3,7 @@ id: bin/tool-registry-audit.py
 name: Tool Registry Audit
 category: governance
 owner: governance-team
-description: ""
+description: "Bin 工具盘点与依赖闭环扫描器。"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ops/bionic_memory_consolidation.py
 name: Bionic Memory Consolidation
 category: governance
 owner: governance-team
-description: ""
+description: "bionic-memory-consolidation.py -- 仿生清醒-睡眠双相记忆巩固 (BET-Y1Q4-T6-29)."
 inputs: []
 outputs:
   - type: exit_code

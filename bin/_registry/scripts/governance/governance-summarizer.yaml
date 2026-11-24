@@ -3,7 +3,7 @@ id: bin/gac/governance-summarizer.py
 name: Governance Summarizer
 category: governance
 owner: governance-team
-description: ""
+description: "Governance Summarizer — turn GaC gate reports into readable Markdown summaries."
 inputs: []
 outputs:
   - type: exit_code

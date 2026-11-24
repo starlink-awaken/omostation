@@ -3,7 +3,7 @@ id: bin/gac/doc-link-check.py
 name: Doc Link Check
 category: governance
 owner: governance-team
-description: ""
+description: "doc-link-check.py — Check markdown documentation links for validity."
 inputs: []
 outputs:
   - type: exit_code

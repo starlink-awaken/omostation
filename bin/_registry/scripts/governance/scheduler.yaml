@@ -3,7 +3,7 @@ id: bin/delivery/scheduler.py
 name: Scheduler
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL.1 — Task scheduler over AgentRegistry (multi-node simulation)."
 inputs: []
 outputs:
   - type: exit_code

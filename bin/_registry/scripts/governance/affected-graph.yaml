@@ -3,7 +3,7 @@ id: bin/gac/affected-graph.py
 name: Affected Graph
 category: governance
 owner: governance-team
-description: ""
+description: "Produce a verifiable receipt for topological affected-project calculation."
 inputs: []
 outputs:
   - type: exit_code

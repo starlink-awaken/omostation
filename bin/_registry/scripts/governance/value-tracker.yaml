@@ -3,7 +3,7 @@ id: bin/gac/value-tracker.py
 name: Value Tracker
 category: governance
 owner: governance-team
-description: ""
+description: "Value Tracker — 价值证明闭环."
 inputs: []
 outputs:
   - type: exit_code

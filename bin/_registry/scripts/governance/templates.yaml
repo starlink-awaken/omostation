@@ -3,7 +3,7 @@ id: bin/ops/templates.py
 name: Templates
 category: governance
 owner: governance-team
-description: ""
+description: "Service Template Library for Service Gateway."
 inputs: []
 outputs:
   - type: exit_code

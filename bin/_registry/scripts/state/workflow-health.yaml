@@ -3,7 +3,7 @@ id: bin/ssot/workflow-health.py
 name: Workflow Health
 category: state
 owner: governance-team
-description: ""
+description: "Workflow health monitor (ADR-0386 G19): scan .github/workflows/ for"
 inputs: []
 outputs:
   - type: exit_code

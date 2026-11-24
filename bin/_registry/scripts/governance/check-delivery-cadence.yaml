@@ -3,7 +3,7 @@ id: bin/gac/check-delivery-cadence.py
 name: Check Delivery Cadence
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X3-DELIVERY-CADENCE: 检查 PR 交付节奏."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-dead-path-tool-fallback.py
 name: Check Dead Path Tool Fallback
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK: 检查工具双路 fallback 模式."
 inputs: []
 outputs:
   - type: exit_code

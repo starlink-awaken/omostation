@@ -3,7 +3,7 @@ id: bin/gac/check-resident-status.py
 name: Check Resident Status
 category: governance
 owner: governance-team
-description: ""
+description: "CR-RESIDENT-STATUS-01: resident daemon 水位活性 CI 校验."
 inputs: []
 outputs:
   - type: exit_code

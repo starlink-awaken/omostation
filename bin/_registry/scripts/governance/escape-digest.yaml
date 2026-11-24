@@ -3,7 +3,7 @@ id: bin/gac/escape-digest.py
 name: Escape Digest
 category: governance
 owner: governance-team
-description: ""
+description: "Cluster swarm-escape records. Dry-run: never mutates the allowlist (ADR-0422)."
 inputs: []
 outputs:
   - type: exit_code

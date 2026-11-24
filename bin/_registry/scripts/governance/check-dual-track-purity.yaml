@@ -3,7 +3,7 @@ id: bin/gac/check-dual-track-purity.py
 name: Check Dual Track Purity
 category: governance
 owner: governance-team
-description: ""
+description: "check-dual-track-purity: enforce P84 dual-track isolation."
 inputs: []
 outputs:
   - type: exit_code

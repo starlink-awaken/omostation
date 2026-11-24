@@ -3,7 +3,7 @@ id: bin/ops/catalog_api.py
 name: Catalog Api
 category: governance
 owner: governance-team
-description: ""
+description: "Service Catalog API — REST API for service discovery and management."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-llm-gateway-only.py
 name: Check Llm Gateway Only
 category: governance
 owner: governance-team
-description: ""
+description: "GaC 检查器: LLM 推理必须走统一接入层 (llm-router / AetherForge 网关)。"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-sweep-tool-integrity.py
 name: Check Sweep Tool Integrity
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X4-SWEEP-TOOL-INTEGRITY: 检查 sweep 工具完整性."
 inputs: []
 outputs:
   - type: exit_code

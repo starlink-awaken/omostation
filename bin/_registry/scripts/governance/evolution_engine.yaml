@@ -3,7 +3,7 @@ id: bin/bc-os/evolution_engine.py
 name: Evolution Engine
 category: governance
 owner: governance-team
-description: ""
+description: "evolution_engine.py — BCOS 进化引擎 v1 (完整四阶段)."
 inputs: []
 outputs:
   - type: exit_code

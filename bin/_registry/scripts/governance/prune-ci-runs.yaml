@@ -3,7 +3,7 @@ id: bin/ssot/prune-ci-runs.py
 name: Prune Ci Runs
 category: governance
 owner: governance-team
-description: ""
+description: "CI workflow runs 清理工具 (ADR-0383)."
 inputs: []
 outputs:
   - type: exit_code

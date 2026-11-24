@@ -3,7 +3,7 @@ id: bin/gac/corrosion-pipeline-connector.py
 name: Corrosion Pipeline Connector
 category: governance
 owner: governance-team
-description: ""
+description: "防腐管道接线器 — 闭合 G1/G2 缺口."
 inputs: []
 outputs:
   - type: exit_code

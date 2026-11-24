@@ -3,7 +3,7 @@ id: bin/ssot/internal-scene-trial.py
 name: Internal Scene Trial
 category: governance
 owner: governance-team
-description: ""
+description: "Record admission evidence for internal pipeline scene cards."
 inputs: []
 outputs:
   - type: exit_code

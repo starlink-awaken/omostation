@@ -3,7 +3,7 @@ id: bin/gac/governance-convergence-lint.py
 name: Governance Convergence Lint
 category: governance
 owner: governance-team
-description: ""
+description: "Governance Convergence Linter (ADR-0121 GCSI)."
 inputs: []
 outputs:
   - type: exit_code

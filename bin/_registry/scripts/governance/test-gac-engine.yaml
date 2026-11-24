@@ -3,7 +3,7 @@ id: bin/ssot/test-gac-engine.py
 name: Test Gac Engine
 category: governance
 owner: governance-team
-description: ""
+description: "TDD test script for validation of gac-local-gate.py YAML parsing and engine compliance."
 inputs: []
 outputs:
   - type: exit_code

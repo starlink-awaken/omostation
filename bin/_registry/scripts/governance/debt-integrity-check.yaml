@@ -3,7 +3,7 @@ id: bin/gac/debt-integrity-check.py
 name: Debt Integrity Check
 category: governance
 owner: governance-team
-description: ""
+description: "GaC #37 — Debt Items Integrity Check."
 inputs: []
 outputs:
   - type: exit_code

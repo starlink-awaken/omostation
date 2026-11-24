@@ -3,7 +3,7 @@ id: bin/ssot/journey-engine.py
 name: Journey Engine
 category: governance
 owner: governance-team
-description: ""
+description: "Journey Engine v3 — BOS-driven scene execution with Saga compensation."
 inputs: []
 outputs:
   - type: exit_code

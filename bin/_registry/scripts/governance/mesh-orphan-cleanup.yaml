@@ -3,7 +3,7 @@ id: bin/mesh/mesh-orphan-cleanup.py
 name: Mesh Orphan Cleanup
 category: governance
 owner: governance-team
-description: ""
+description: "Close orphaned Workflow Mesh runs that have WorkflowRequested but no WorkflowClosed."
 inputs: []
 outputs:
   - type: exit_code

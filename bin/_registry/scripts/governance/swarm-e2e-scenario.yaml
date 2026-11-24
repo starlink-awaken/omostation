@@ -3,7 +3,7 @@ id: bin/gac/swarm-e2e-scenario.py
 name: Swarm E2E Scenario
 category: governance
 owner: governance-team
-description: ""
+description: "Swarm E2E Scenario Runner (蜂群自治全链路真实场景演练)."
 inputs: []
 outputs:
   - type: exit_code

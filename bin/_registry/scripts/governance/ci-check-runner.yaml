@@ -3,7 +3,7 @@ id: bin/gac/ci-check-runner.py
 name: Ci Check Runner
 category: governance
 owner: governance-team
-description: ""
+description: "Registry-driven CI check runner (ADR-0379 E-2)."
 inputs: []
 outputs:
   - type: exit_code

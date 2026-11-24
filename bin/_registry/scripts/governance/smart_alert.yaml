@@ -3,7 +3,7 @@ id: bin/ops/smart_alert.py
 name: Smart Alert
 category: governance
 owner: governance-team
-description: ""
+description: "Smart Alerting System for Service Gateway."
 inputs: []
 outputs:
   - type: exit_code

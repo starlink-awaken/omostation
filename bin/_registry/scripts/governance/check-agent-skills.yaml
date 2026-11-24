@@ -3,7 +3,7 @@ id: bin/ssot/check-agent-skills.py
 name: Check Agent Skills
 category: governance
 owner: governance-team
-description: ""
+description: "check-agent-skills.py — Agent Skills frontmatter and contract validator."
 inputs: []
 outputs:
   - type: exit_code

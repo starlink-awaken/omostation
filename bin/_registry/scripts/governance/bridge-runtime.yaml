@@ -3,7 +3,7 @@ id: bin/gac/bridge-runtime.py
 name: Bridge Runtime
 category: governance
 owner: governance-team
-description: ""
+description: "Bridge Runtime — 统一桥接运行时."
 inputs: []
 outputs:
   - type: exit_code

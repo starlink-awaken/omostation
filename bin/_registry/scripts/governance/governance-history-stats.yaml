@@ -3,7 +3,7 @@ id: bin/gac/governance-history-stats.py
 name: Governance History Stats
 category: governance
 owner: governance-team
-description: ""
+description: "P91 R1: governance-history 趋势深化 (30 天 + grade 变迁)."
 inputs: []
 outputs:
   - type: exit_code

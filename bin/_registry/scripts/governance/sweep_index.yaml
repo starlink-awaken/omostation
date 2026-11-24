@@ -3,7 +3,7 @@ id: bin/sweep/sweep_index.py
 name: Sweep Index
 category: governance
 owner: governance-team
-description: ""
+description: "C5 (ADR-0373): auto-maintain `.omo/_knowledge/sweeps/INDEX.md` from sweeps/<date>.json."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/timeout-audit.py
 name: Timeout Audit
 category: governance
 owner: governance-team
-description: ""
+description: "timeout-audit: 审计治理脚本中的无界网络调用 (repo-wide timeout audit)。"
 inputs: []
 outputs:
   - type: exit_code

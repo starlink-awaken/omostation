@@ -3,7 +3,7 @@ id: bin/ops/env_config.py
 name: Env Config
 category: governance
 owner: governance-team
-description: ""
+description: "Environment Configuration Manager for Service Gateway."
 inputs: []
 outputs:
   - type: exit_code

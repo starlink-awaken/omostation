@@ -3,7 +3,7 @@ id: bin/gac/check-silent-workflows.py
 name: Check Silent Workflows
 category: workflow
 owner: governance-team
-description: ""
+description: "check-silent-workflows — gate enforcement for P74 (ADR-0130)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/mof/mof-bootstrap.py
 name: Mof Bootstrap
 category: governance
 owner: governance-team
-description: ""
+description: "mof-bootstrap — M3/M2 自反校验 (M4 Phase 2.4, ADR-0132 P2-S4)"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-task-tree-consistency.py
 name: Check Task Tree Consistency
 category: governance
 owner: governance-team
-description: ""
+description: "任务树一致性 — `planned/` 不得含已在 `closed/` 或 `done/` 的 id."
 inputs: []
 outputs:
   - type: exit_code

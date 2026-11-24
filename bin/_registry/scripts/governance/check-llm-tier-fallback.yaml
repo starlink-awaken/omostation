@@ -3,7 +3,7 @@ id: bin/gac/check-llm-tier-fallback.py
 name: Check Llm Tier Fallback
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P76-7-2-TIER-GRACEFUL-FALLBACK: 检查 LLM provider 3-tier fallback 配置."
 inputs: []
 outputs:
   - type: exit_code

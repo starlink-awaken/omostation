@@ -3,7 +3,7 @@ id: bin/ssot/scene-card-connector.py
 name: Scene Card Connector
 category: governance
 owner: governance-team
-description: ""
+description: "Scene Card Connector — 真实输入接入引擎."
 inputs: []
 outputs:
   - type: exit_code

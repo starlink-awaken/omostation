@@ -3,7 +3,7 @@ id: bin/plan/chain-bind-check.py
 name: Chain Bind Check
 category: governance
 owner: governance-team
-description: ""
+description: "Redline executor for the Plan→BET→workflow→closeout→retro chain."
 inputs: []
 outputs:
   - type: exit_code

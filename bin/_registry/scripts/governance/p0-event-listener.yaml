@@ -3,7 +3,7 @@ id: bin/gac/p0-event-listener.py
 name: P0 Event Listener
 category: governance
 owner: governance-team
-description: ""
+description: "P74 R1: 事件驱动 P0 检测 (omo event listener)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/requirement-iteration-gate.py
 name: Requirement Iteration Gate
 category: governance
 owner: governance-team
-description: ""
+description: "requirement-iteration-gate — 需求迭代闸门 (ADR-0204)。"
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/pi-adapter.py
 name: Pi Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "PI Adapter — PI框架深判引擎适配器 (ADR-0403 P5)."
 inputs: []
 outputs:
   - type: exit_code

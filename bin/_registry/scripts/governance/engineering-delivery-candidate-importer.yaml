@@ -3,7 +3,7 @@ id: bin/ssot/engineering-delivery-candidate-importer.py
 name: Engineering Delivery Candidate Importer
 category: governance
 owner: governance-team
-description: ""
+description: "T7-01 Phase B: engineering-delivery candidate importer."
 inputs: []
 outputs:
   - type: exit_code

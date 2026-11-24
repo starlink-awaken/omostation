@@ -3,7 +3,7 @@ id: bin/gac/check-catalog-health.py
 name: Check Catalog Health
 category: state
 owner: governance-team
-description: ""
+description: "CR-P79-CATALOG-HEALTH: 检查 catalog 健康指标."
 inputs: []
 outputs:
   - type: exit_code

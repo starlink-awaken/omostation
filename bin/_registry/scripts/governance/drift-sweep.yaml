@@ -3,7 +3,7 @@ id: bin/gac/drift-sweep.py
 name: Drift Sweep
 category: governance
 owner: governance-team
-description: ""
+description: "drift-sweep.py — Weekly anti-corruption sweep."
 inputs: []
 outputs:
   - type: exit_code

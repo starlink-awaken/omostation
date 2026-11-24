@@ -3,7 +3,7 @@ id: bin/delivery/latency_stats.py
 name: Latency Stats
 category: governance
 owner: governance-team
-description: ""
+description: "Latency percentile / histogram helpers with min-sample floors (measure honesty)."
 inputs: []
 outputs:
   - type: exit_code

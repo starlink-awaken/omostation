@@ -3,7 +3,7 @@ id: bin/ssot/a2a-adapter.py
 name: A2A Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "A2A Adapter — 异构Agent间通信适配器 (ADR-0403 P4)."
 inputs: []
 outputs:
   - type: exit_code

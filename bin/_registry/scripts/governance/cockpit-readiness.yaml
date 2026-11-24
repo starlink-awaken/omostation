@@ -3,7 +3,7 @@ id: bin/cockpit-readiness.py
 name: Cockpit Readiness
 category: governance
 owner: governance-team
-description: ""
+description: "P65 R1: cockpit readiness wrapper."
 inputs: []
 outputs:
   - type: exit_code

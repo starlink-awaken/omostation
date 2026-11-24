@@ -3,7 +3,7 @@ id: bin/gac/auto-evolution-engine.py
 name: Auto Evolution Engine
 category: governance
 owner: governance-team
-description: ""
+description: "Auto-Evolution Engine — 自动进化引擎."
 inputs: []
 outputs:
   - type: exit_code

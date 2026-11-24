@@ -3,7 +3,7 @@ id: bin/gac/check-test-collection.py
 name: Check Test Collection
 category: governance
 owner: governance-team
-description: ""
+description: "主仓测试集可收集性守卫 — 防\"孤儿测试\"腐烂 (P85 配套)."
 inputs: []
 outputs:
   - type: exit_code

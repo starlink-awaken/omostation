@@ -3,7 +3,7 @@ id: bin/ssot/episode-source-aggregator.py
 name: Episode Source Aggregator
 category: governance
 owner: governance-team
-description: ""
+description: "episode-source-aggregator.py — Three-source episode draft aggregator for cockpit attest."
 inputs: []
 outputs:
   - type: exit_code

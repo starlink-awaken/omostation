@@ -3,7 +3,7 @@ id: bin/gac/governance-dashboard.py
 name: Governance Dashboard
 category: governance
 owner: governance-team
-description: ""
+description: "P86 R4: governance dashboard wrapper."
 inputs: []
 outputs:
   - type: exit_code

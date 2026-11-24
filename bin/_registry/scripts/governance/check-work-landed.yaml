@@ -3,7 +3,7 @@ id: bin/gac/check-work-landed.py
 name: Check Work Landed
 category: governance
 owner: governance-team
-description: ""
+description: "check-work-landed: detect run-closeouts that never reached main."
 inputs: []
 outputs:
   - type: exit_code

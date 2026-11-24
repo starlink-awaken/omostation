@@ -3,7 +3,7 @@ id: bin/ops/bionic-memory-consolidation.py
 name: Bionic Memory Consolidation
 category: governance
 owner: governance-team
-description: ""
+description: "bionic-memory-consolidation.py -- CLI wrapper (BET-Y1Q4-T6-29)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/skill-registry-verify.py
 name: Skill Registry Verify
 category: governance
 owner: governance-team
-description: ""
+description: "skill-registry-verify.py — Verify .agents/skills/ registry health."
 inputs: []
 outputs:
   - type: exit_code

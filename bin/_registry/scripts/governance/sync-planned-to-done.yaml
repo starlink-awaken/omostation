@@ -3,7 +3,7 @@ id: bin/plan/sync-planned-to-done.py
 name: Sync Planned To Done
 category: governance
 owner: governance-team
-description: ""
+description: "sync-planned-to-done — close planned/candidate tasks whose parent BET is done."
 inputs: []
 outputs:
   - type: exit_code

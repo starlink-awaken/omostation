@@ -3,7 +3,7 @@ id: bin/gac/debt-directory-guard.py
 name: Debt Directory Guard
 category: governance
 owner: governance-team
-description: ""
+description: "统一债务目录守卫 — 检查 .omo/debt/ 下是否有 staged 删除."
 inputs: []
 outputs:
   - type: exit_code

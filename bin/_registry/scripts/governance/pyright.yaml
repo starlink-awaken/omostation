@@ -3,7 +3,7 @@ id: bin/sweep/pyright.py
 name: Pyright
 category: governance
 owner: governance-team
-description: ""
+description: "Apply explicit pyright suppressions from a JSON diagnostics report."
 inputs: []
 outputs:
   - type: exit_code

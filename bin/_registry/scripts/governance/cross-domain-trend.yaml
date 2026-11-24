@@ -3,7 +3,7 @@ id: bin/gac/cross-domain-trend.py
 name: Cross Domain Trend
 category: governance
 owner: governance-team
-description: ""
+description: "Cross-Domain Trend Fusion — analyze governance metrics across domains."
 inputs: []
 outputs:
   - type: exit_code

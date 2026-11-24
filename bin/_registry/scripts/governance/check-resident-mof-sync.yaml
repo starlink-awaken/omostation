@@ -3,7 +3,7 @@ id: bin/gac/check-resident-mof-sync.py
 name: Check Resident Mof Sync
 category: governance
 owner: governance-team
-description: ""
+description: "CR-RESIDENT-MOF-SYNC-01: resident 角色双份对齐 CI 校验."
 inputs: []
 outputs:
   - type: exit_code

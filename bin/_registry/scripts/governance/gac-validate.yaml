@@ -3,7 +3,7 @@ id: bin/gac/gac-validate.py
 name: Gac Validate
 category: governance
 owner: governance-team
-description: ""
+description: "GaC 治理即代码 — 规则注册表校验器 (ADR-0106, 阶段 2 核心引擎)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/gac-gc.py
 name: Gac Gc
 category: governance
 owner: governance-team
-description: ""
+description: "GaC 治理即代码 — lifecycle gc (ADR-0106, 机制 6, c2g gc 原语)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/check-adr-iteration-rate.py
 name: Check Adr Iteration Rate
 category: knowledge
 owner: governance-team
-description: ""
+description: "check-adr-iteration-rate.py — ADR 迭代速率限制."
 inputs: []
 outputs:
   - type: exit_code

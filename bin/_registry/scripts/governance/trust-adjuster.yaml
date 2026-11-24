@@ -3,7 +3,7 @@ id: bin/ssot/trust-adjuster.py
 name: Trust Adjuster
 category: governance
 owner: governance-team
-description: ""
+description: "Trust Adjuster — Trust动态调整 + 名单级别自适应 (T5)."
 inputs: []
 outputs:
   - type: exit_code

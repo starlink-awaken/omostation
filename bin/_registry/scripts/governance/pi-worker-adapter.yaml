@@ -3,7 +3,7 @@ id: bin/gac/pi-worker-adapter.py
 name: Pi Worker Adapter
 category: governance
 owner: governance-team
-description: ""
+description: "Run Pi as a bounded, no-tools local reasoning worker via AetherForge."
 inputs: []
 outputs:
   - type: exit_code

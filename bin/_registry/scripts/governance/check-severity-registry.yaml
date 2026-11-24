@@ -3,7 +3,7 @@ id: bin/gac/check-severity-registry.py
 name: Check Severity Registry
 category: governance
 owner: governance-team
-description: ""
+description: "check-severity-registry: decl-exec-gap for SGF gate severity."
 inputs: []
 outputs:
   - type: exit_code

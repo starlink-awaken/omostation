@@ -3,7 +3,7 @@ id: bin/ssot/journey-state-store.py
 name: Journey State Store
 category: governance
 owner: governance-team
-description: ""
+description: "Journey state persistence — append-only state transitions with checkpoint/resume."
 inputs: []
 outputs:
   - type: exit_code

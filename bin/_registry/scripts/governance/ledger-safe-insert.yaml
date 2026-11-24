@@ -3,7 +3,7 @@ id: bin/gac/ledger-safe-insert.py
 name: Ledger Safe Insert
 category: governance
 owner: governance-team
-description: ""
+description: "ledger-safe-insert.py — 3y-bet-ledger.yaml BET 条目安全插入工具 (批次 19-30 复盘固化)."
 inputs: []
 outputs:
   - type: exit_code

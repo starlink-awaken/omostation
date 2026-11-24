@@ -3,7 +3,7 @@ id: bin/ssot/journey-runner.py
 name: Journey Runner
 category: governance
 owner: governance-team
-description: ""
+description: "Journey Runner — 执行脊柱核心引擎 (四面一脊 ③)."
 inputs: []
 outputs:
   - type: exit_code

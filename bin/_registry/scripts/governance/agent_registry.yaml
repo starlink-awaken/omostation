@@ -3,7 +3,7 @@ id: bin/delivery/agent_registry.py
 name: Agent Registry
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL.1 — Agent registry (in-process multi-node simulation)."
 inputs: []
 outputs:
   - type: exit_code

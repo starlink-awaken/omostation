@@ -3,7 +3,7 @@ id: bin/ssot/bus-e2e-harness.py
 name: Bus E2E Harness
 category: governance
 owner: governance-team
-description: ""
+description: "bus-e2e-harness — Round 5 follow-up: real cross-process e2e for bus-foundation."
 inputs: []
 outputs:
   - type: exit_code

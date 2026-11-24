@@ -3,7 +3,7 @@ id: bin/delivery/network_path.py
 name: Network Path
 category: governance
 owner: governance-team
-description: ""
+description: "Network path probe for physical multi-host measures (honest link class)."
 inputs: []
 outputs:
   - type: exit_code

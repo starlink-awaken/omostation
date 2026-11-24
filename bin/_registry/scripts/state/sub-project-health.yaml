@@ -3,7 +3,7 @@ id: bin/meta/sub-project-health.py
 name: Sub Project Health
 category: state
 owner: governance-team
-description: ""
+description: "sub-project-health.py — Aggregate sub-project health status."
 inputs: []
 outputs:
   - type: exit_code

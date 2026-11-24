@@ -3,7 +3,7 @@ id: bin/gac/check-submodule-pointer-drift.py
 name: Check Submodule Pointer Drift
 category: governance
 owner: governance-team
-description: ""
+description: "子模块指针漂移检测 (BET-Y1Q2-T1-05)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/weekly-evolution-report.py
 name: Weekly Evolution Report
 category: governance
 owner: governance-team
-description: ""
+description: "Weekly Evolution Report — 轻量级进化反馈循环."
 inputs: []
 outputs:
   - type: exit_code

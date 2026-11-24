@@ -3,7 +3,7 @@ id: bin/gac/omo-state-write-guard.py
 name: Omo State Write Guard
 category: governance
 owner: governance-team
-description: ""
+description: "GaC #38: OMO state write guard — detect multi-writer conflicts in .omo/ state plane."
 inputs: []
 outputs:
   - type: exit_code

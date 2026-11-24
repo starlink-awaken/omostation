@@ -3,7 +3,7 @@ id: bin/adr/_lib.py
 name:  Lib
 category: governance
 owner: governance-team
-description: ""
+description: "ADR shared helpers — pure functions reused by adr-coverage + compass_radar."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/north-star-weekly.py
 name: North Star Weekly
 category: governance
 owner: governance-team
-description: ""
+description: "North Star Weekly Report — 价值度量周报."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/ts-file-analyze.py
 name: Ts File Analyze
 category: governance
 owner: governance-team
-description: ""
+description: "ts-file-analyze.py — P110-D: TS god-module 真实结构分析器 (TypeScript Compiler API)"
 inputs: []
 outputs:
   - type: exit_code

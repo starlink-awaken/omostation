@@ -3,7 +3,7 @@ id: bin/ssot/doc-ssot-lint.py
 name: Doc Ssot Lint
 category: governance
 owner: governance-team
-description: ""
+description: "doc-ssot-lint — 文档 SSOT 正交契约门禁."
 inputs: []
 outputs:
   - type: exit_code

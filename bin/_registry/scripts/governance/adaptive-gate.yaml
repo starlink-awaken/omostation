@@ -3,7 +3,7 @@ id: bin/gac/adaptive-gate.py
 name: Adaptive Gate
 category: governance
 owner: governance-team
-description: ""
+description: "Adaptive Gate Engine — derive check-specific thresholds and anomalies from metrics history."
 inputs: []
 outputs:
   - type: exit_code

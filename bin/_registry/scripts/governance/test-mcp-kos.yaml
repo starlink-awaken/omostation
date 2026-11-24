@@ -3,7 +3,7 @@ id: bin/ssot/test-mcp-kos.py
 name: Test Mcp Kos
 category: governance
 owner: governance-team
-description: ""
+description: "TDD test script for validation of mcp-server-kos.py protocol compliance."
 inputs: []
 outputs:
   - type: exit_code

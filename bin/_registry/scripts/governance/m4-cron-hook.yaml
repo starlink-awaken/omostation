@@ -3,7 +3,7 @@ id: bin/mof/m4-cron-hook.py
 name: M4 Cron Hook
 category: governance
 owner: governance-team
-description: ""
+description: "m4-cron-hook.py — OMO cron 集成 (Round 4d, ADR-0144)"
 inputs: []
 outputs:
   - type: exit_code

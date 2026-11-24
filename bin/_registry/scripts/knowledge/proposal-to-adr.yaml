@@ -3,7 +3,7 @@ id: bin/ssot/proposal-to-adr.py
 name: Proposal To Adr
 category: knowledge
 owner: governance-team
-description: ""
+description: "Proposal intake — 进化提案→signal 草稿自动转换 (T2 / ADR-0443)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/documents-zed-profile.py
 name: Documents Zed Profile
 category: governance
 owner: governance-team
-description: ""
+description: "Install and verify the governed Documents profile in Zed settings."
 inputs: []
 outputs:
   - type: exit_code

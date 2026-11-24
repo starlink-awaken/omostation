@@ -3,7 +3,7 @@ id: bin/gac/governance-evolution.py
 name: Governance Evolution
 category: governance
 owner: governance-team
-description: ""
+description: "Validate and inspect the systemic governance evolution roadmap."
 inputs: []
 outputs:
   - type: exit_code

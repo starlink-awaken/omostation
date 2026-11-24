@@ -3,7 +3,7 @@ id: bin/gac/test-coverage-check.py
 name: Test Coverage Check
 category: governance
 owner: governance-team
-description: ""
+description: "GaC 测试覆盖门禁 — 检查每个 Python 项目是否有测试目录和测试文件."
 inputs: []
 outputs:
   - type: exit_code

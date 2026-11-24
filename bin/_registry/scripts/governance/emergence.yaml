@@ -3,7 +3,7 @@ id: bin/delivery/emergence.py
 name: Emergence
 category: governance
 owner: governance-team
-description: ""
+description: "G-DEL.5b — Emergence detection + collective decision (scoped) + kill-switch."
 inputs: []
 outputs:
   - type: exit_code

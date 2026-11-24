@@ -3,7 +3,7 @@ id: bin/gac/check-ci-surfaces.py
 name: Check Ci Surfaces
 category: governance
 owner: governance-team
-description: ""
+description: "CI 平面可观测性检测器 (ADR-0379 E-3)."
 inputs: []
 outputs:
   - type: exit_code

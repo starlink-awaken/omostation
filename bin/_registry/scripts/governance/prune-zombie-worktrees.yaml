@@ -3,7 +3,7 @@ id: bin/gac/prune-zombie-worktrees.py
 name: Prune Zombie Worktrees
 category: governance
 owner: governance-team
-description: ""
+description: "prune-zombie-worktrees.py — 僵尸 worktree 清理 (T10-127, 吸收 gac-worktree-cleanup.sh)"
 inputs: []
 outputs:
   - type: exit_code

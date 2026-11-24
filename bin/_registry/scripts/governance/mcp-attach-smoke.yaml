@@ -3,7 +3,7 @@ id: bin/ssot/mcp-attach-smoke.py
 name: Mcp Attach Smoke
 category: governance
 owner: governance-team
-description: ""
+description: "MCP / BOS attach smoke check for external agents (P0.4)."
 inputs: []
 outputs:
   - type: exit_code

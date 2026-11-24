@@ -3,7 +3,7 @@ id: bin/ssot/physical-logical-audit.py
 name: Physical Logical Audit
 category: governance
 owner: governance-team
-description: ""
+description: "physical-logical-audit.py — 3-class physical/logical mapping audit (BET-Y2Q4-SH-3)."
 inputs: []
 outputs:
   - type: exit_code

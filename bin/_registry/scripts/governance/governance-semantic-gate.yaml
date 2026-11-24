@@ -3,7 +3,7 @@ id: bin/gac/governance-semantic-gate.py
 name: Governance Semantic Gate
 category: governance
 owner: governance-team
-description: ""
+description: "Unified semantic gate for governance tool outputs."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/frontmatter-coverage.py
 name: Frontmatter Coverage
 category: governance
 owner: governance-team
-description: ""
+description: "frontmatter-coverage.py — face-wide frontmatter coverage matrix + auto-patch (BET-Y2Q4-SH-2)."
 inputs: []
 outputs:
   - type: exit_code

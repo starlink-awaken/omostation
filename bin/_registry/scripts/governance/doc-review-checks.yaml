@@ -3,7 +3,7 @@ id: bin/ssot/doc-review-checks.py
 name: Doc Review Checks
 category: governance
 owner: governance-team
-description: ""
+description: "公文审查能力腿 — journey-document-review 的 action 实现（纯函数，零副作用）."
 inputs: []
 outputs:
   - type: exit_code

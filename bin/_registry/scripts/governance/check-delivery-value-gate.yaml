@@ -3,7 +3,7 @@ id: bin/gac/check-delivery-value-gate.py
 name: Check Delivery Value Gate
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X3-DELIVERY-VALUE-GATE: 检查 X3 交付价值门禁."
 inputs: []
 outputs:
   - type: exit_code

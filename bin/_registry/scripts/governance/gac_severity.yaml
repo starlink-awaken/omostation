@@ -3,7 +3,7 @@ id: bin/gac/gac_severity.py
 name: Gac Severity
 category: governance
 owner: governance-team
-description: ""
+description: "GaC severity 共享推导 (ADR-0171 Wave 1/2)."
 inputs: []
 outputs:
   - type: exit_code

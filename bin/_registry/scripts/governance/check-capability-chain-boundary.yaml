@@ -3,7 +3,7 @@ id: bin/gac/check-capability-chain-boundary.py
 name: Check Capability Chain Boundary
 category: governance
 owner: governance-team
-description: ""
+description: "check-capability-chain-boundary.py — MCP 工具链端到端覆盖验证."
 inputs: []
 outputs:
   - type: exit_code

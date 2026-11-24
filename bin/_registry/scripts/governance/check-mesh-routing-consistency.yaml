@@ -3,7 +3,7 @@ id: bin/gac/check-mesh-routing-consistency.py
 name: Check Mesh Routing Consistency
 category: governance
 owner: governance-team
-description: ""
+description: "CR-X4-MESH-ROUTING-CONSISTENCY: 检查 mesh 路由一致性."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/mcp-server-kos.py
 name: Mcp Server Kos
 category: governance
 owner: governance-team
-description: ""
+description: "0-Dependency Python stdin/stdout MCP Server for KOS (Knowledge Operating System) SQLite index."
 inputs: []
 outputs:
   - type: exit_code

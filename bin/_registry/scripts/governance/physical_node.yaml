@@ -3,7 +3,7 @@ id: bin/delivery/physical_node.py
 name: Physical Node
 category: governance
 owner: governance-team
-description: ""
+description: "Physical multi-host node agent (ADR-0225)."
 inputs: []
 outputs:
   - type: exit_code

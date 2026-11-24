@@ -3,7 +3,7 @@ id: bin/ssot/test_freshness.py
 name: Test Freshness
 category: governance
 owner: governance-team
-description: ""
+description: "Tests for freshness.py — canonical freshness-based health projection (W0-03)."
 inputs: []
 outputs:
   - type: exit_code

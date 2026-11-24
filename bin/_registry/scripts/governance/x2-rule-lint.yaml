@@ -3,7 +3,7 @@ id: bin/gac/x2-rule-lint.py
 name: X2 Rule Lint
 category: governance
 owner: governance-team
-description: ""
+description: "P85 R1: X2 rule lint tool."
 inputs: []
 outputs:
   - type: exit_code

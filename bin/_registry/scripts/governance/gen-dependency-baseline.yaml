@@ -3,7 +3,7 @@ id: bin/mof/gen-dependency-baseline.py
 name: Gen Dependency Baseline
 category: governance
 owner: governance-team
-description: ""
+description: "gen-dependency-baseline: 扫描 projects/**/pyproject.toml 检测 dependency-baseline drift."
 inputs: []
 outputs:
   - type: exit_code

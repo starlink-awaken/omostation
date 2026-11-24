@@ -3,7 +3,7 @@ id: bin/gac/fix-debt-fields.py
 name: Fix Debt Fields
 category: governance
 owner: governance-team
-description: ""
+description: "fix-debt-fields.py — 修复 debt YAML 字段冲突."
 inputs: []
 outputs:
   - type: exit_code

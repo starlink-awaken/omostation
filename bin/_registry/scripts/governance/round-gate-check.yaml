@@ -3,7 +3,7 @@ id: bin/gac/round-gate-check.py
 name: Round Gate Check
 category: governance
 owner: governance-team
-description: ""
+description: "round-gate-check — Round 三门槛守门检查。"
 inputs: []
 outputs:
   - type: exit_code

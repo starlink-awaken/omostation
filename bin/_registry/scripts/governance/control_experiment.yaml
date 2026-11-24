@@ -3,7 +3,7 @@ id: bin/collab/control_experiment.py
 name: Control Experiment
 category: governance
 owner: governance-team
-description: ""
+description: "P84 K4 对照实验 harness — 协作并行 vs 单 agent 顺序 (能力轨, 场景库)."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/ssot/weekly-review.py
 name: Weekly Review
 category: governance
 owner: governance-team
-description: ""
+description: "weekly-review.py — 主人必读周报卡片."
 inputs: []
 outputs:
   - type: exit_code

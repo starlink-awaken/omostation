@@ -3,7 +3,7 @@ id: bin/delegation-alias-check.py
 name: Delegation Alias Check
 category: governance
 owner: governance-team
-description: ""
+description: "P1a: bidirectional alias cross-check (opencode.json provider.omlxc ↔ omlx gateway litellm-config.yaml)."
 inputs: []
 outputs:
   - type: exit_code

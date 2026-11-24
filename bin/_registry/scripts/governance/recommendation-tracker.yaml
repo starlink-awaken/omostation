@@ -3,7 +3,7 @@ id: bin/gac/recommendation-tracker.py
 name: Recommendation Tracker
 category: governance
 owner: governance-team
-description: ""
+description: "推荐追踪器 — 记录能力推荐→采纳→反馈闭环。"
 inputs: []
 outputs:
   - type: exit_code

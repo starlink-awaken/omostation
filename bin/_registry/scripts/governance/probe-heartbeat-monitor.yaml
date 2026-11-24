@@ -3,7 +3,7 @@ id: bin/gac/probe-heartbeat-monitor.py
 name: Probe Heartbeat Monitor
 category: governance
 owner: governance-team
-description: ""
+description: "探测器心跳矩阵监控."
 inputs: []
 outputs:
   - type: exit_code

@@ -3,7 +3,7 @@ id: bin/gac/bdsk-shadow-sandbox.py
 name: Bdsk Shadow Sandbox
 category: governance
 owner: governance-team
-description: ""
+description: "B.D.S.K. diff static scanner."
 inputs: []
 outputs:
   - type: exit_code

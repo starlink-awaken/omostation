@@ -3,7 +3,7 @@ id: bin/gac/fix-orphan-locks.py
 name: Fix Orphan Locks
 category: governance
 owner: governance-team
-description: ""
+description: "fix-orphan-locks.py — 清理无对应 run 的孤儿锁."
 inputs: []
 outputs:
   - type: exit_code

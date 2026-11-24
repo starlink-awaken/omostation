@@ -3,7 +3,7 @@ id: bin/ssot/mail_sender.py
 name: Mail Sender
 category: governance
 owner: governance-team
-description: ""
+description: "Mail Sender — .eml 草稿生成 (不自动发送, 人工确认)."
 inputs: []
 outputs:
   - type: exit_code

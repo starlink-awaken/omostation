@@ -3,7 +3,7 @@ id: bin/ssot/current-state-coherence.py
 name: Current State Coherence
 category: governance
 owner: governance-team
-description: ""
+description: "Build and validate the read-only current-state-coherence/v1 projection."
 inputs: []
 outputs:
   - type: exit_code

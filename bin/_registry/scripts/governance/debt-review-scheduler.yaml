@@ -3,7 +3,7 @@ id: bin/gac/debt-review-scheduler.py
 name: Debt Review Scheduler
 category: governance
 owner: governance-team
-description: ""
+description: "债务定期复审调度器 (Task: 债务复审机制, 2026-09-20)"
 inputs: []
 outputs:
   - type: exit_code

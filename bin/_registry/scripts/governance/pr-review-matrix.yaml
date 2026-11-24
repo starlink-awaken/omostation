@@ -3,7 +3,7 @@ id: bin/ssot/pr-review-matrix.py
 name: Pr Review Matrix
 category: governance
 owner: governance-team
-description: ""
+description: "PR Review Matrix — 多维度PR审查矩阵 (T3)."
 inputs: []
 outputs:
   - type: exit_code

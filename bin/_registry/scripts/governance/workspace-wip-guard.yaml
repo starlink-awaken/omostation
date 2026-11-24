@@ -3,7 +3,7 @@ id: bin/gac/workspace-wip-guard.py
 name: Workspace Wip Guard
 category: governance
 owner: governance-team
-description: ""
+description: "主工作区 WIP 守卫 — 共享工作区脏态 + 未推送提交的快照、检测与恢复."
 inputs: []
 outputs:
   - type: exit_code

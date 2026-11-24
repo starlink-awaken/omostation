@@ -3,7 +3,7 @@ id: bin/ssot/yaml-validate.py
 name: Yaml Validate
 category: governance
 owner: governance-team
-description: ""
+description: "YAML syntax validator for ci-local-fast."
 inputs: []
 outputs:
   - type: exit_code

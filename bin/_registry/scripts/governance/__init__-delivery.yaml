@@ -3,7 +3,7 @@ id: bin/delivery/__init__.py
 name:   Init  
 category: governance
 owner: governance-team
-description: ""
+description: "eCOS Phase-2 delivery execution-surface modules (G-DEL.1/2b/3/5b)."
 inputs: []
 outputs:
   - type: exit_code

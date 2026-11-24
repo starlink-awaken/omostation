@@ -3,7 +3,7 @@ id: bin/gac/ast-blast-radius.py
 name: Ast Blast Radius
 category: governance
 owner: governance-team
-description: ""
+description: "AST Blast Radius Analyzer & Semantic Gate (AST 爆炸半径分析器与语义防腐闸门)."
 inputs: []
 outputs:
   - type: exit_code

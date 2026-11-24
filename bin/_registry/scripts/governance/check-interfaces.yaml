@@ -3,7 +3,7 @@ id: bin/ssot/check-interfaces.py
 name: Check Interfaces
 category: governance
 owner: governance-team
-description: ""
+description: "check-interfaces.py — 校验 `.omo/standards/interface_contract.md` 的模型表结构"
 inputs: []
 outputs:
   - type: exit_code

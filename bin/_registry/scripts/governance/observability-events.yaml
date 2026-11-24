@@ -3,7 +3,7 @@ id: bin/ssot/observability-events.py
 name: Observability Events
 category: governance
 owner: governance-team
-description: ""
+description: "统一事件面 (Unified Event Surface) — 可观测 × 事件 × 治理联动枢纽."
 inputs: []
 outputs:
   - type: exit_code

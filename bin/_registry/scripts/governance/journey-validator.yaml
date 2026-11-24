@@ -3,7 +3,7 @@ id: bin/ssot/journey-validator.py
 name: Journey Validator
 category: governance
 owner: governance-team
-description: ""
+description: "Validate journey spec files — check states, transitions, reachability, and deadlocks."
 inputs: []
 outputs:
   - type: exit_code

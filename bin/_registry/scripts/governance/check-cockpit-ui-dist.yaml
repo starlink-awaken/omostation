@@ -3,7 +3,7 @@ id: bin/ssot/check-cockpit-ui-dist.py
 name: Check Cockpit Ui Dist
 category: governance
 owner: governance-team
-description: ""
+description: "Governance checker and builder for cockpit-ui static asset alignment."
 inputs: []
 outputs:
   - type: exit_code

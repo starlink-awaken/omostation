@@ -3,7 +3,7 @@ id: bin/adr/adr-drift-check.py
 name: Adr Drift Check
 category: knowledge
 owner: governance-team
-description: ""
+description: "P89 R2: ADR drift check tool."
 inputs: []
 outputs:
   - type: exit_code

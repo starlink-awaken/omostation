@@ -3,7 +3,7 @@ id: bin/notification.py
 name: Notification
 category: governance
 owner: governance-team
-description: ""
+description: "HITL Proposal Notification — multi-channel principal notification stub."
 inputs: []
 outputs:
   - type: exit_code

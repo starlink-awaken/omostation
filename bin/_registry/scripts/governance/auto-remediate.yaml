@@ -3,7 +3,7 @@ id: bin/gac/auto-remediate.py
 name: Auto Remediate
 category: governance
 owner: governance-team
-description: ""
+description: "auto-remediate.py — Auto-remediation engine with safe rules."
 inputs: []
 outputs:
   - type: exit_code

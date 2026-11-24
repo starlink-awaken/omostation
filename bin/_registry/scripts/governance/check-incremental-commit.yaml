@@ -3,7 +3,7 @@ id: bin/gac/check-incremental-commit.py
 name: Check Incremental Commit
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P76-8-4-INCREMENTAL-COMMIT: 检查增量提交防丢失."
 inputs: []
 outputs:
   - type: exit_code

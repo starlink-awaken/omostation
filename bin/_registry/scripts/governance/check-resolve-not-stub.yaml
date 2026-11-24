@@ -3,7 +3,7 @@ id: bin/gac/check-resolve-not-stub.py
 name: Check Resolve Not Stub
 category: governance
 owner: governance-team
-description: ""
+description: "CR-P76-7-5-RESOLVE-NOT-STUB: 检查物理未实现的 placeholder 是否已决议."
 inputs: []
 outputs:
   - type: exit_code
