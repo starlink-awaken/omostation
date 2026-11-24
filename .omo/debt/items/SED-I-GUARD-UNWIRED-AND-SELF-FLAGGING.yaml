@@ -7,18 +7,24 @@ scope: "workspace"
 severity: "medium"
 weight: 0.2
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
 owner: "governance-team"
+closed_at: "2026-11-24"
+close_reason: "no-sed-i-guard 重构支持注释与文档字符串剥离、消除自扫描 6/6 假错，增加 --staged 暂存区扫描并接线至 pre-commit 钩子"
+resolution_evidence: >-
+  2026-11-24 实测: 1) 重构 bin/gac/no-sed-i-guard.py，自动剥离单行/行尾注释及 Python 多行字符串，且排除脚本自身，自扫描由 6/6 违规归零 (rc=0)；
+  2) 增加 --staged 模式，结合 git diff --cached 扫描暂存区增量变更；
+  3) 接线至 .omo/_truth/registry/hook-manifest.yaml 的 pre-commit blocking 清单中，并在 bin/_registry/scripts/governance/no-sed-i-guard.yaml 中更新触发器为 pre-commit、状态转为 active；
+  4) 单元正向实测：有效拦截真实 shell 中的 sed -i 增删调用，放行注释与说明文本。
 affected_roots: []
 evidence_refs:
 - bin/gac/no-sed-i-guard.py
 - bin/_registry/scripts/governance/no-sed-i-guard.yaml
 - AGENTS.md
 - .omo/_truth/registry/hook-manifest.yaml
-mitigation_refs:
-- 本条 history 第一条（扫描口径与实测）
+mitigation_refs: []
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
+last_reviewed_at: "2026-11-24"
 next_review_at: "2026-12-10"
 gate_level: none
 x1_policy_ref: ""
@@ -63,3 +69,8 @@ history:
     这与 `CI-SURFACE-FALSE-WIRING` 是同一类「声明与执行面不符」，只是这次连
     假声明都没有（`triggers: []` 是诚实的），所以表现为纯粹的执行缺口。
   actor: "governance-agent"
+- at: "2026-11-24T02:34:00+00:00"
+  action: close
+  actor: "governance-agent"
+  note: >-
+    落地决策选项①：完成 no-sed-i-guard.py 注释与文档字符串识别与排除逻辑，自扫描 0 报错；增加 --staged 支持并接线至 hook-manifest.yaml 的 pre-commit 守卫清单与 script-registry。

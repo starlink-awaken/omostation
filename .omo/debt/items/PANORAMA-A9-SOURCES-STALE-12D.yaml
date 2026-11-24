@@ -19,6 +19,7 @@ opened_at: '2026-11-10'
 last_reviewed_at: '2026-11-24'
 next_review_at: '2026-11-13'
 gate_level: none
+gate_level_before_close: watchlist
 x1_policy_ref: ''
 x3_tier: Operational
 decision_needed: |-

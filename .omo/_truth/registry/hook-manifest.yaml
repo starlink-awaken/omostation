@@ -49,6 +49,13 @@ pre-commit:
       timeout: 3
       description: "运行时产物黑名单"
 
+    - id: no-sed-i
+      script: "bin/gac/no-sed-i-guard.py --staged"
+      blocking: true
+      timeout: 3
+      description: "禁止使用 sed -i 做条目增删操作 (AGENTS.md)"
+      fix: "改用 Python read→check→modify→write 模式"
+
     - id: debt-guard
       script: "bin/gac/debt-directory-guard.py"
       blocking: true

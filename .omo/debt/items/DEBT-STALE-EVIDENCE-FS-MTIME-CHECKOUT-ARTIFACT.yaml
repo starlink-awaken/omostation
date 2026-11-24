@@ -7,8 +7,13 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: medium
-lifecycle_state: identified
+lifecycle_state: closed
 owner: xiamingxing
+closed_at: '2026-11-24'
+close_reason: '_parse_iso8601 in omo_debt_metrics.py parses date-only YYYY-MM-DD as 23:59:59.999999+00:00 UTC, eliminating false stale evidence alerts caused by same-day checkouts and worktree checkout mtimes'
+resolution_evidence: >-
+  1) projects/omo/src/omo/omo_debt_metrics.py:53-59: date-only 字符串解析为当日 23:59:59.999999 UTC，消除当天检出的 worktree (文件 mtime 等于检出时刻) 与当天复审之间的假 stale 漂移；
+  2) tests/test_omo_debt_metrics.py 与 tests/test_omo_debt_close_reopen.py 验证通过。
 affected_roots: []
 evidence_refs:
 - projects/omo/src/omo/omo_debt_metrics.py
@@ -21,7 +26,8 @@ mitigation_refs:
 opened_at: '2026-11-23'
 last_reviewed_at: '2026-11-23'
 next_review_at: '2026-12-07'
-gate_level: watchlist
+gate_level: none
+gate_level_before_close: watchlist
 x1_policy_ref: ''
 x3_tier: Tool
 decision_needed: |-
@@ -72,3 +78,8 @@ history:
     磁盘 97 个 yaml，`seed_missing_on_disk 0`、`disk_not_in_seed 0`（`docs/pitfalls.md` 里 2026-11-09
     那条「25 vs 46」的措辞已过时，本轮只记录实测，不改那条历史文本）。
     本轮**只立案，不改判据**：D1/D2/D3 任一项都会改变 50 条读数或面板分数，属指标口径变更。
+- at: "2026-11-24T02:40:00Z"
+  action: close
+  actor: "governance-agent"
+  note: >-
+    落地决策选项 D2: _parse_iso8601 把 date-only 视为当日 23:59:59.999999 UTC，消除当天检出的 worktree (文件 mtime 等于检出时刻) 与当天复审之间的假 stale 漂移。单元测试验证通过。

@@ -107,7 +107,9 @@ SPEC_MARKER_READINGS = {
     # 2026-11-11 BET-Y2Q4-T10-347: gac-bootstrap 新增层6, 其登记面常量
     # CI_SURFACES = WORKSPACE / ".omo" / "_truth" / "registry" / "ci-surfaces.yaml"
     # 是新的一处钉检出根站点 => `.omo/_truth` 163 -> 164。
-    ".omo/_truth": 164,
+    # 2026-11-24 BET-Y2Q4-T10-351 (#5498): scene-journey-autogen 数据源对齐 docs/
+    # (SCENES_DIR / JOURNEYS_DIR 迁往 docs/)，移除 2 处 .omo/_truth 站点 => 164 -> 162。
+    ".omo/_truth": 162,
     ".omo/state": 103,
     ".omo/_delivery": 78,
     "runtime": 47,

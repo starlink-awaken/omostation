@@ -7,8 +7,15 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-team
+closed_at: '2026-11-24'
+close_reason: 'omo-debt close/reopen cycle preserves gate_level via gate_level_before_close snapshot and clears closed_at on reopen; added --close-reason and --resolution-evidence CLI options; backfilled PANORAMA-A9-SOURCES-STALE-12D'
+resolution_evidence: >-
+  1) projects/omo/src/omo/omo_debt_cli.py:65-85 cmd_debt_close 保存 gate_level_before_close 快照并支持 --close-reason / --resolution-evidence；
+  2) projects/omo/src/omo/omo_debt_cli.py:455-460 reopen 恢复 gate_level 并清除 closed_at 与快照；
+  3) tests/test_omo_debt_close_reopen.py::test_close_and_reopen_preserves_gate_level 单元测试验证全流程通过；
+  4) PANORAMA-A9-SOURCES-STALE-12D.yaml 回填 gate_level_before_close: watchlist。
 affected_roots:
 - projects/omo/src/omo/omo_debt_cli.py
 - .omo/debt/items/
@@ -21,7 +28,8 @@ mitigation_refs: []
 opened_at: '2026-11-24'
 last_reviewed_at: '2026-11-24'
 next_review_at: '2026-12-01'
-gate_level: watchlist
+gate_level: none
+gate_level_before_close: watchlist
 history:
 - at: '2026-11-24T00:44:41.303455+00:00'
   action: register
@@ -46,6 +54,10 @@ history:
 
     为什么是缺陷而非风格问题：`gate_level` 是债务面「这条是否进门禁」的权威字段，被一个语义为「关闭」的写方静默降级为 `none`，且恢复路径不存在 ⇒ 任何 reopen 都会留下不可见的去闸状态；修复前无人能从条目本身判断原闸级是什么。
     '.
+- at: '2026-11-24T02:40:00Z'
+  action: close
+  actor: governance-agent
+  note: '落地决策选项(1)(a): omo-debt close/reopen cycle preserves gate_level via gate_level_before_close snapshot and clears closed_at on reopen; added --close-reason and --resolution-evidence CLI options; verified with unit tests.'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: Principle
