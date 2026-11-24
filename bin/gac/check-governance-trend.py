@@ -77,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     # ── Counters ──
     total_rules = len(rules)
     active_rules: list[dict] = []
+    declared_rules: list[dict] = []
     no_adr_rules: list[dict] = []
     x2_count = 0
     x4_count = 0
@@ -99,8 +100,12 @@ def main(argv: list[str] | None = None) -> int:
             if not adr or (isinstance(adr, str) and not adr.strip()):
                 no_adr_rules.append(rule)
 
+        # Declared rules (incubator/intent-only; exempt from draft timeout)
+        elif lifecycle == "declared":
+            declared_rules.append(rule)
+
         # Draft stale check
-        if lifecycle == "draft":
+        elif lifecycle == "draft":
             created_at = rule.get("created_at")
             if created_at:
                 dt = _parse_date(created_at)
@@ -173,6 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     summary = {
         "total_rules": total_rules,
         "active_rules": active_count,
+        "declared_rules": len(declared_rules),
         "freeze_max_rules": max_rules,
         "adr_covered_active": active_count - len(no_adr_rules),
         "adr_missing_active": len(no_adr_rules),
@@ -191,6 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"check-governance-trend: {'PASS' if ok else 'FAIL'}")
         print(f"  total rules:        {total_rules}")
         print(f"  active rules:       {active_count}  (freeze max: {max_rules})")
+        print(f"  declared rules:     {len(declared_rules)}")
         print(f"  ADR coverage:       {active_count - len(no_adr_rules)}/{active_count}  ({len(no_adr_rules)} missing)")
         print(f"  X2 count:           {x2_count}")
         print(f"  X4 count:           {x4_count}")
