@@ -23,8 +23,8 @@ mitigation_refs:
 - tests/unit/test_gac_bootstrap_layers.py —— 17 条，含 4 条变异钉（文本正则口径 / 零分母 / indexed-only / 拆掉层3→层6 接线，各自当场转红）
 - docs/pitfalls.md ——「DEFAULT_POLICY 不是执行平面」「判据口径要与契约名同源」「文本字面量冒充执行平面」
 opened_at: "2026-11-11"
-last_reviewed_at: "2026-11-22"
-next_review_at: "2026-11-29"
+last_reviewed_at: "2026-11-24"
+next_review_at: "2026-12-08"
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
@@ -128,3 +128,41 @@ history:
     即：§14.2 的「一次运行落一条结构化记录」对这两道门是**代码在、实例为零**。
     把它们接进平面（或撤登记）不只是消 A 类谎报，也是让 §14.2 首次真正产出记录；反之只补文档不接线 = 继续空承诺。
   actor: "governance-agent"
+- at: '2026-11-24T06:17:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **逐条裁定完毕 (11-24 06:15Z)：「6 个无 `__main__` 工具」里没有一条是「有入口却没人调用」的死工具，其中 1 条是判据假阳性。**
+
+    ① 判据原文：`bin/gac/gac-bootstrap.py:115` = `if "__name__" in source and "__main__" in source:` ⇒ 要求源码**同时**含两个字面；
+    `:118` 记 `dead.append(f"{name} (无 __main__ 入口)")`；`:96` docstring 自陈口径「存活 = 语法可解析 + 有 `__main__` 入口 (可被 python tool.py 调起)」；
+    `:61` 已经为 `__init__.py` 开豁免（注释原文「包标记不是工具，没有 `__main__` 是天经地义」）。
+
+    ② 六个逐个定性（逐文件读源码 + 查引用面 + 关键一条实跑）：
+    - `convergence-pulse-verify.py` = **判死的假阳性**。24 行、全模块顶层执行：`spec_from_file_location` → `exec_module` →
+      `collect_pulse(since=today, until=today)` → `print("convergence-pulse-verify: PASS/FAIL schema=…")` →
+      **模块级 `sys.exit(0 if ok else 1)`**。本会话 06:16Z 在 canonical 实跑
+      `timeout 120 python3 bin/gac/convergence-pulse-verify.py` ⇒ **rc=0**，输出
+      `convergence-pulse-verify: PASS schema=governance.convergence-pulse.v1`。
+      它不需要 guard 就能被 `python tool.py` 调起、失败还会非零退出 ⇒ 满足 `:96` 自己给的存活定义，只是字面判据看不见它；
+      且它有登记面 `bin/_registry/scripts/governance/convergence-pulse-verify.yaml`。
+    - `rule-vitality-tracker.py` = **库**：191 行 / 7 个 def / 文件尾是 `__all__`（导出 `VITALITY_PATH`、`compute_all_summaries`、
+      `gate_to_rules_mapping`、`query_vitality`、`read_vitality`、`record_vitality`）。测试里那些指向它的路径是 spec/常量引用，不是 shell 调起。
+    - `gac_severity.py` = **库**：被生产代码 `bin/mof/gen-agent-redlines.py` 以 `from <它> import derive_severity` 使用，
+      且 `tests/test_gac_drift_indexed_rule.py` 记录「`gac-drift.py` 用 `sys.path.insert` + import shim 用它」⇒ 有真实 importer。
+    - `documents_domain_jobs.py`：被 `tests/test_documents_domain_project_check.py` 以 `from <它> import validate_runtime_jobs` 导入。
+    - `zhixing_host_sync.py`：被 `tests/test_zhixing_host_sync.py` 以 `importlib.util.spec_from_file_location` 加载（测试自身即模块加载路径）。
+    - `test_agent_clone.py`：文件名以 `test_` 开头却住在 `bin/gac/`，被 `tests/test_clone_lifecycle.py` 导入符号使用 ⇒
+      属测试夹具性质，既不该有 `__main__`，也不该按 GaC 工具计入 —— 它额外提示层3 的**文件集合**混进了 `test_*` 前缀文件。
+
+    ⇒ 归类：1 假阳性（顶层可执行脚本）+ 2 库（带 `__all__` / 被生产 import）+ 2 被测试 spec 加载的模块 + 1 测试夹具，
+    **0 条是「有入口没人调用」的死工具**。所以「6 个待裁定」这一问的事实基础变了：
+    要裁的不是「这 6 个留不留」，而是 `:115` 这条入口判据本身 —— 它对「库」没有豁免（与 `:61` 处理 `__init__.py` 的方式不对称），
+    对「顶层执行脚本」没有识别（模块级 `sys.exit` 不产生 `__main__` 字面），并且把 `test_*` 前缀文件算进 GaC 工具集合。
+
+    ③ 未复核项如实声明（不在本条结论内）：「层6 点名 8 条五平面全缺席」与「1 条层3 判死仍声称执行」本轮**未复跑**——
+    需要 fresh worktree 实机 `gac-bootstrap.py --json`，而本条自陈降级副本下五平面判定会整批改口 `device_unavailable`；
+    本轮只在无 `.git` 的抽取目录做逐文件定性（对 ①② 足够，对五平面读数不够）。
+
+    ④ 边界：`lifecycle_state=in_progress` / `gate_level=none` / `severity=high` / `weight` / `evidence_refs` / `description`
+    一律未动；只追加这条 review，并把 `next_review_at` 由 2026-11-29 推进到 2026-12-08（与今晚各批次同口径）。

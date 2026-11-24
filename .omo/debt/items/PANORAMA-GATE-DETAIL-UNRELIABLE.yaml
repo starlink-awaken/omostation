@@ -269,3 +269,24 @@ history:
     ⑤ `tests/unit/test_panorama_output_root.py` 存在 —— OUTPUT_ROOT 有测试面，缺的是部署。
     ⇒ 裁决项仍是「谁来把这两行落到 current 帧 + plist 是否注入 `PANORAMA_OUTPUT_ROOT`（部署面写，需 principal 授权）」，
     本轮零改动。
+- at: '2026-11-24T06:17:00Z'
+  action: review
+  actor: governance-agent
+  note: |-
+    **正日再复测 (11-24 06:15Z)：① 更正里那句「该路径在本机不存在」今天仍然成立 —— 目录活着、`data.json` 缺席。**
+
+    ① `~/.local/state/omostation/prod/runtime/dashboard/` 实测现有：`agent-brief.json` **148k，mtime 11-24 13:46（本地）**、
+    `morning-briefing.json` 4.1k 与 `morning-briefing.md` 1.4k（均 11-24 08:30）⇒ 该目录由 `materialize-agent-brief` 等作业持续写入，
+    **不是死目录**。但目录里**没有 `data.json`** ⇒ orchestrator 读的 base 路径 `state_root()/runtime/dashboard/data.json` 仍
+    `FileNotFoundError`，本条 2026-11-10 的 ① 更正所记「base 链断」在当前**未自愈**。
+
+    ② 与今晚 `HEARTBEAT-READ-ROOT-AND-COLLECTOR-DRIFT` 的分工：那条讲「探针指向安装位 ⇒ 冻结拷贝被当陈旧判红」与
+    「面板帧出自发布目录那份采集器」；本条讲的是「base 的落根本机就没有这个文件」。两者同属三向根错位，
+    但一个是**读错树**、一个是**该树里没有该产物**，修法不互相替代。
+
+    ③ 面板侧另有一处今晚新证的同面实例：`agent-brief.json` 在 04:04Z 帧里 `health.gates_failing = ["A3","RF0"]`，
+    而同一时刻同一函数（`collect_gates()`）实跑 A3=PASS、RF0=PASS，真正红的是 A2/A5（`stale_beats`）
+    ⇒ 聚合面的门禁读数（含 detail 与 failing 名单）不可单独引用，这正是本条原命题的方向。
+
+    ④ 边界：`lifecycle_state` / `gate_level` / `severity` / `weight` / `evidence_refs` / `description` 一律未动；
+    `next_review_at` 保持 2026-12-08（今晚 01:47Z 那条 review 已推进过一次），本条只追加这条 review。
