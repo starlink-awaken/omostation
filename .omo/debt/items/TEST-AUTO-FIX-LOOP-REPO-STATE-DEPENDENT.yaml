@@ -7,8 +7,15 @@ scope: "workspace"
 severity: "medium"
 weight: 0.1
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "closed"
 owner: "governance-team"
+closed_at: "2026-11-24"
+close_reason: "tests/bin/test_auto_fix_loop_b11.py 重构为 hermetic fixture 驱动，解耦真实仓库状态，消除干净检出下的假红"
+resolution_evidence: >-
+  2026-11-24 实测: 1) tests/bin/test_auto_fix_loop_b11.py 抽离 hermetic 测试用例 test_detect_drifts_generates_b11_and_retro_skipped_kinds，通过 stubbing doc-governance-check 输出确定性断言 FRONTMATTER-MISSING-FIELD、INVALID-METADATA 及 -RETRO-SKIPPED 变体；
+  2) 端到端用例转换为输出合法性与 Schema 校验（test_json_output_smoke、test_json_output_with_skip_env_var_smoke），即使全仓 drift 为 0 亦能稳定通过；
+  3) 增加轻量级 _MonkeyPatch 兼容层，使测试既支持 pytest 运行又支持直接 python3 运行；
+  4) 实测 pytest 与 python3 均 5/5 全部通过 (0.31s)。
 affected_roots:
 - tests/bin/test_auto_fix_loop_b11.py
 evidence_refs:
@@ -16,7 +23,7 @@ evidence_refs:
 - bin/gac/auto-fix-loop.py
 mitigation_refs: []
 opened_at: "2026-11-12"
-last_reviewed_at: "2026-11-12"
+last_reviewed_at: "2026-11-24"
 next_review_at: "2026-12-12"
 gate_level: none
 x1_policy_ref: ""
@@ -66,4 +73,8 @@ history:
     两种都不构成证据。**纪律**：不在 CI 白名单里的 `tests/bin/**` 同样是
     「本地跑得到、CI 看不见」的平面（AGENTS.md §7 已记 `tests/unit/**`，
     `tests/bin/**` 是同一族的另一支）。
+- at: "2026-11-24T02:15:00+00:00"
+  action: close
   actor: "governance-agent"
+  note: >-
+    落地决策选项(a)：重构 tests/bin/test_auto_fix_loop_b11.py，将对 B1.1 漂移类型及 closeout 跳过变体的校验改为由模拟输送驱动的单元测试，端到端 CLI 调用改为 schema 烟雾测试，解除测试对真实仓库状态的耦合，在干净树和脏树下均稳定 5/5 PASS。
