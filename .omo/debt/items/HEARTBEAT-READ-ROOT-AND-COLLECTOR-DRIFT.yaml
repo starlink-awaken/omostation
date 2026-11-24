@@ -8,7 +8,7 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - bin/gac/meta-doctor.py
@@ -39,7 +39,17 @@ mitigation_refs: []
 opened_at: '2026-11-24'
 last_reviewed_at: '2026-11-24'
 next_review_at: '2026-12-08'
-gate_level: watchlist
+gate_level: none
+closed_at: '2026-11-24'
+resolution_evidence: >-
+  Segment 1 (`meta-doctor` heartbeat read-root drift) fixed in PR #5532 (`1d187bb69`) and
+  verified `stale_beats: 0, absent_beats: 0, dead_refs: 0` on anchored `~/.local/opt/omostation`.
+  Segment 2 (`panorama-collect.py` frozen copy drift) resolved on 2026-11-24 via authorized
+  `zhixing-host-sync.py publish`, `~/.local/share/zhixing-dashboard/code-main` sync,
+  `~/Library/LaunchAgents/com.omostation.panorama-dashboard-refresh.plist` migration to
+  `current/panorama-collect-main.py` (with tracked plist template and `.omo/cron/registry.yaml`
+  aligned in lockstep), and live published revisions in
+  `~/.local/share/zhixing-dashboard/revisions/*/data.json` reporting `A1–A5, RF0` PASS.
 history:
 - at: '2026-11-24T04:48:52.208824+00:00'
   action: register
@@ -120,6 +130,14 @@ history:
     but the user LaunchAgent plist `~/Library/LaunchAgents/com.omostation.panorama-dashboard-refresh.plist`
     still invokes the Sep 22 top-level copy `~/.local/share/zhixing-dashboard/panorama-collect.py`
     instead of `current/panorama-collect-main.py`, so live LaunchAgent migration remains pending authorization.
+- at: '2026-11-24T14:10:00Z'
+  action: resolve
+  actor: governance-agent
+  note: >-
+    Both segments resolved and verified in live production: meta-doctor reports `stale_beats: 0`
+    on `~/.local/opt/omostation`, live LaunchAgent `com.omostation.panorama-dashboard-refresh`
+    runs `current/panorama-collect-main.py` (exit code 0), tracked plist + cron registry +
+    scheduler tests are aligned, and live dashboard revisions report `A1–A5, RF0` PASS.
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
