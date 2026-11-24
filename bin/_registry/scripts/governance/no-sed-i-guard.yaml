@@ -3,13 +3,14 @@ id: bin/gac/no-sed-i-guard.py
 name: No Sed I Guard
 category: governance
 owner: governance-team
-description: ""
+description: "检测并阻止使用 sed -i 做添加/删除条目操作 (AGENTS.md 硬纪律)"
 inputs: []
 outputs:
   - type: exit_code
   - type: json
 dependencies: []
-triggers: []
+triggers:
+  - pre-commit
 related: []
-maturity: draft
-last_reviewed: "2026-08-24"
+maturity: active
+last_reviewed: "2026-11-24"
