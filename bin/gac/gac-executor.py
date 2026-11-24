@@ -82,16 +82,36 @@ def load_rules() -> list[dict]:
     return docs[-1].get("gac", {}).get("rules", []) if docs else []
 
 
-def check_executor_presence(executor: str) -> tuple[bool, str]:
-    """检查 executor 实际存在性. 返回 (exists, detail)."""
+def _under_unchecked_submodule(candidate: str) -> bool:
+    """候选路径是否整个落在**未检出的子模块**里。
+
+    那是「输入没备齐」而不是「executor 缺失」，两者在读数上必须分开 ——
+    否则任何干净检出都会得到一屏 ❌，读者很快学会忽略整份报告
+    （同 GATE-CLEAN-CHECKOUT-NOISE：门禁把环境噪声当 findings）。
+    """
+    parts = Path(candidate).parts
+    if len(parts) >= 2 and parts[0] == "projects":
+        return not (WORKSPACE / "projects" / parts[1] / ".git").exists()
+    return False
+
+
+def check_executor_presence(executor: str) -> tuple[bool, str, bool]:
+    """检查 executor 实际存在性. 返回 (exists, detail, unchecked).
+
+    unchecked=True 表示候选全部位于未检出的子模块内 —— **读数不可用**，
+    不计入 missing（同 `gac-healthcheck::legacy-drift` 的处理方式）。
+    """
     candidates = EXECUTOR_PRESENCE.get(executor, [])
     if not candidates:
         # 未知 executor (不在映射表) = 无映射, 标记需人工确认
-        return (False, "无存在性映射 (未知 executor, 需确认)")
+        return (False, "无存在性映射 (未知 executor, 需确认)", False)
     for c in candidates:
         if (WORKSPACE / c).exists():
-            return (True, c)
-    return (False, f"候选都不存在: {candidates}")
+            return (True, c, False)
+    unchecked = all(_under_unchecked_submodule(c) for c in candidates)
+    if unchecked:
+        return (False, f"候选在未检出的子模块内 (输入未备齐): {candidates}", True)
+    return (False, f"候选都不存在: {candidates}", False)
 
 
 def run_check(as_json: bool = False) -> int:
@@ -108,14 +128,15 @@ def run_check(as_json: bool = False) -> int:
         for e in execs:
             declared_executors.add(e)
             if e not in executor_status:
-                exists, detail = check_executor_presence(e)
+                exists, detail, unchecked = check_executor_presence(e)
                 executor_status[e] = {
                     "exists": exists,
                     "detail": detail,
+                    "unchecked": unchecked,
                     "rule_count": 0,
                 }
             executor_status[e]["rule_count"] += 1
-            if not executor_status[e]["exists"]:
+            if not executor_status[e]["exists"] and not executor_status[e]["unchecked"]:
                 rule_issues.append({"rule": r.get("id", "?"), "executor": e})
 
     # executor 覆盖统计 (多少规则用每个 executor)
@@ -124,7 +145,10 @@ def run_check(as_json: bool = False) -> int:
         for e in r.get("executor", []):
             coverage[e] += 1
 
-    missing_executors = [e for e, s in executor_status.items() if not s["exists"]]
+    # 只有「真缺失」进 missing；候选在未检出子模块里的属**读数不可用**，单列
+    missing_executors = [
+        e for e, s in executor_status.items() if not s["exists"] and not s["unchecked"]
+    ]
     report = {
         "rules_total": len(rules),
         "declared_executors": sorted(declared_executors),
@@ -132,11 +156,15 @@ def run_check(as_json: bool = False) -> int:
             e: {
                 "exists": s["exists"],
                 "detail": s["detail"],
+                "unchecked": s["unchecked"],
                 "rule_count": s["rule_count"],
             }
             for e, s in sorted(executor_status.items())
         },
         "missing_executors": missing_executors,
+        "executors_not_checked": [
+            e for e, s in sorted(executor_status.items()) if s["unchecked"]
+        ],
         "rules_with_missing_executor": len(rule_issues),
         "ok": len(missing_executors) == 0,
     }
@@ -151,14 +179,23 @@ def run_check(as_json: bool = False) -> int:
     print()
     print("executor 存在性:")
     for e, s in sorted(report["executor_presence"].items()):
-        status = "✅" if s["exists"] else "❌"
-        print(f"  {status} {e} (规则数={s['rule_count']}): {s['detail']}")
+        mark = "✅" if s["exists"] else ("⏭️" if s["unchecked"] else "❌")
+        print(f"  {mark} {e} (规则数={s['rule_count']}): {s['detail']}")
+
+    not_checked = report.get("executors_not_checked") or []
+    if not_checked:
+        print(
+            f"\n⏭️ 未判定 executor ({len(not_checked)}): 候选都在未检出的子模块内 "
+            "(输入未备齐) —— 本项读数不可用, 不计入 missing: {not_checked}"
+        )
 
     if missing_executors:
         print(f"\n❌ missing executor ({len(missing_executors)}): {missing_executors}")
         print(f"   受影响规则: {report['rules_with_missing_executor']}")
-    else:
+    elif not not_checked:
         print("\n✅ 全 executor 实际存在 (声明 vs 实际 0 drift)")
+    else:
+        print("\n✅ 无真缺失 executor（但有未判定项，见上）")
 
     print(f"\n═══ 总体: {'✅ executor drift 闭环' if report['ok'] else '❌ 有 missing executor'} ═══")
     return 0 if report["ok"] else 1
