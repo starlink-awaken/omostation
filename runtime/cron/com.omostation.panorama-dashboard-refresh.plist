@@ -12,7 +12,7 @@
     <array>
       <string>/opt/homebrew/bin/python3</string>
       <string>-B</string>
-      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py</string>
+      <string>/Users/xiamingxing/.local/share/zhixing-dashboard/current/panorama-collect-main.py</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>
