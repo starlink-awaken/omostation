@@ -313,9 +313,12 @@ history:
     接线面 `ci-surfaces.yaml:897-902` 仍是 `gate: true` + `workflow: (none)` + `triggers: []` ⇒ 没有任何 CI workflow 执行它。
     ③ **活体实例（本会话自身，可复算）**：对本批 merge range 跑
     `python3 bin/ssot/write-owner-audit.py --range 8c2472a38..5572f92a6 --json` ⇒ **rc=1**，
-    `files_audited=11 / rules_loaded=6 / staged_files_audited=0`，violations 逐名点名
-    BOS-KEMS-STATUS-DIVERGENT / CRON-INSTALLERS-OUTSIDE-SSOT / DIRECT-IO-GATE-TWO-TREES-TWO-COPIES /
-    INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED / OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT 等：
+    `files_audited=11 / rules_loaded=6`，violations 共 **8** 条，其中 **7** 条逐名点名本会话与前批手写的 items 文件
+    (BOS-KEMS-STATUS-DIVERGENT / CRON-INSTALLERS-OUTSIDE-SSOT / DIRECT-IO-GATE-TWO-TREES-TWO-COPIES /
+    INSTALL-ROOT-DRIFT-REANCHOR-BLOCKED / OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT / PANORAMA-GATE-DETAIL-UNRELIABLE /
+    ZHIXING-PUBLISH-EFFECT-PROVENANCE)，第 8 条 TEST-AUTO-FIX-LOOP-REPO-STATE-DEPENDENT 属同一 range 内的他人交付
+    (range 覆盖 11 个文件 > 本批 9 个路径，故判定范围不等于交付范围，按「--from-diff 在共享主工作区算进他人改动」同族处理)。
+    点名文本均为
     「owned by system 'script:omo-debt', manual modifications are forbidden outside agent workflows」。
     而同一份改动作为 PR #5505 交付时 **12 项 CI 全绿、pre-commit 零拦截**（governance-verify 评的是 head sha）
     ⇒ 违规可判、判据可用，缺的只是「谁在什么身份下被要求执行它」——正是本条剩下的那一问。
