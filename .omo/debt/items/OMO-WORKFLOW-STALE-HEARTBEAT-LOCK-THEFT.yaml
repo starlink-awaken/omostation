@@ -8,7 +8,11 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: closed
+closed_at: '2026-11-24'
+closed_by: governance-team
+close_reason: 'Lock theft prevented via active run verification in acquire_locks and prune_stale_locks, heartbeat window extended to 4h (14400s), and graceful non-strict closeout heartbeat recovery.'
+resolution_evidence: 'projects/omo/src/omo/workflow/lifecycle_locks.py:27,258-270,330-345; projects/omo/src/omo/workflow/lifecycle.py:1028-1095,1687,1853-1865; tests/test_workflow_locks.py PASS (68/68)'
 owner: governance-team
 affected_roots:
 - projects/omo/src/omo/workflow/lifecycle_locks.py
@@ -32,8 +36,18 @@ mitigation_refs: []
 opened_at: '2026-11-24'
 last_reviewed_at: '2026-11-24'
 next_review_at: '2026-12-01'
-gate_level: watchlist
+gate_level: none
+gate_level_before_close: watchlist
 history:
+- at: '2026-11-24T05:38:00+00:00'
+  action: close
+  actor: governance-agent
+  note: |-
+    Closed via BET-Y2Q4-T10-360:
+    1. _HEARTBEAT_STALE_SECONDS extended from 3600 to 14400 (4 hours).
+    2. Added is_holder_run_active(registry, candidate_run_id) to verify holder status before treating zombie_stale_heartbeat locks as abandoned. Active runs are now protected from silent lock takeover in acquire_locks and from pruning in prune_stale_locks.
+    3. Added strict=False option to heartbeat_run, allowing closeout_run to proceed gracefully even if a lock file was removed or mismatched.
+    4. Added 3 comprehensive regression tests in tests/test_workflow_locks.py verifying protection, reclamation, and graceful closeout.
 - at: '2026-11-24T01:53:53.817508+00:00'
   action: register
   note: Registered debt item OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT.
