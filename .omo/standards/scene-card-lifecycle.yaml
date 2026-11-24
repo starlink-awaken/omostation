@@ -25,6 +25,10 @@
 schema: scene-card-lifecycle/v1
 
 lifecycle:
+  proposal_only:
+    description: "内部轨提案锁：内部场景以提案形态存在，不激活（BET-Y2Q4-T10-352 正式化；不参与升级链）"
+    order: -1
+    can_execute: false
   draft:
     description: "设计阶段，未开始验证"
     order: 0
@@ -83,6 +87,7 @@ human_gate:
   proposal_sink: "data/scene-metrics.db scene_lifecycle_log (reason LIKE 'needs_human/%')"
 
 activation:
+  forbidden: "提案锁：禁止激活（与 lifecycle: proposal_only 配对，内部轨专用；BET-Y2Q4-T10-352）"
   preview: "仅预览，不触发"
   controlled: "受控触发，需主人确认"
   active: "自动触发"
