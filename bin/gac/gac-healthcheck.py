@@ -62,6 +62,19 @@ CORE_FILES = {
 }
 
 
+def input_absent(rel: str) -> bool:
+    """该路径的缺席属**输入没备齐**，不是缺陷。
+
+    两种：落在未检出的子模块里（干净检出按构造没有），或指向已归档的旧路径。
+    判据与 gac-executor 的 \`_under_unchecked_submodule\` 同口径 —— 两处都要能
+    把「读不到」和「坏了」分开，否则恒假警报会训练读者忽略整份报告。
+    """
+    parts = Path(rel).parts
+    if len(parts) >= 2 and parts[0] == "projects":
+        return not (WORKSPACE / "projects" / parts[1] / ".git").exists()
+    return rel.startswith("bin/_archive/")
+
+
 def check_files() -> tuple[list[str], list[str]]:
     """核心文件落地检查. 返回 (ok_names, missing_paths)."""
     ok, missing = [], []
@@ -144,9 +157,14 @@ def check_m2_type() -> dict:
     """机制 7: GacRule M2 可解析. 返回 {ok, fields, states, mechanisms}."""
     import yaml
 
-    m2 = WORKSPACE / "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml"
+    m2_rel = "projects/ecos/src/ecos/ssot/mof/m2/gac_rule.yaml"
+    m2 = WORKSPACE / m2_rel
     if not m2.exists():
-        return {"ok": False, "error": "m2/gac_rule.yaml 缺"}
+        return {
+            "ok": False,
+            "error": "m2/gac_rule.yaml 缺",
+            "unavailable": input_absent(m2_rel),
+        }
     docs = [d for d in yaml.safe_load_all(m2.read_text(encoding="utf-8")) if d]
     if not docs:
         return {"ok": False, "error": "m2 空文档"}
@@ -179,6 +197,10 @@ def probe_legacy_drift(script: str = "bin/gac/gac-ingest-legacy.py") -> dict:
     return {
         "ok": code == 0,
         "tool_missing": missing,
+        # 工具已被 #1839 归档而引用没跟：这不是「测出红」，是**这条链已退役、去留待裁**。
+        # 算进 healthy 会让总体恒 ❌（债务条目 GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED 自己写着
+        # 「健康检查的总体结论因此长期带红，而这条红传递的信息是 0」）。
+        "retired": missing,
         "legacy_count": None if missing else data.get("legacy_count", 0),
         "indexed_count": None if missing else data.get("indexed_count", 0),
         "missing": None if missing else len(data.get("missing", [])),
@@ -203,6 +225,8 @@ def probe_m1_instance_drift(script: str = "bin/gac/gac-m1-sync.py") -> dict:
     )
     return {
         "ok": code == 0 and error is None and drift == 0,
+        # 工具没跑起来（缺子模块时它打人类可读报错）⇒ **读数不可用**，不是测出红。
+        "unavailable": code != 0 or error is not None,
         "tool_error": error,
         "registry_rules": data.get("registry_rules", 0) if data else None,
         "m1_instances": data.get("m1_instances", 0) if data else None,
@@ -218,10 +242,14 @@ def healthcheck() -> dict:
 
     # 1. 核心文件
     ok_files, missing = check_files()
+    missing_unavailable = [rel for rel in missing if input_absent(rel)]
     report["files"] = {
         "ok": len(ok_files),
         "total": len(CORE_FILES),
         "missing": missing,
+        # 全部缺席都属「输入没备齐」⇒ 本项读数不可用，不算核心文件缺失。
+        "unavailable": bool(missing) and len(missing_unavailable) == len(missing),
+        "missing_unavailable": missing_unavailable,
     }
 
     # 2. gac-validate (机制 2/5/6)
@@ -401,27 +429,74 @@ def healthcheck() -> dict:
     }
 
     # 总体健康 (含 executor drift + M1 instance drift: 声明的 executor 必须实际存在)
-    report["healthy"] = (
-        not missing
-        and report["validate"]["ok"]
-        and report["drift"]["ok"]
-        and report["m2_type"].get("ok", False)
-        and report["adr_residue_0104"] == 0
-        and report["coverage"]["dimension_complete"]
-        and report["doc_ssot"]["ok"]
-        and report["doc_snapshots"]["ok"]
-        and report["doc_links"]["ok"]
-        and report["submodule_reachability"]["ok"]
-        and report["hygiene"]["ok"]
-        and report["registry_drift"]["ok"]
-        and report["legacy_drift"]["ok"]
-        and report["bootstrap"]["ok"]
-        and report["executor_drift"]["ok"]
-        and report["m1_instance_drift"]["ok"]
-        and report["ci_plane"]["ok"]
-        and report["ssot_usage"]["ok"]
-    )
+    red, not_measured = classify_health(report)
+    report["red_items"] = red
+    report["not_measured"] = not_measured
+    report["healthy"] = not red
     return report
+
+
+def _is_red(report: dict, name: str) -> bool:
+    """可测项里的真红：该件未被标为未判定，且读数确实是坏。
+
+    \`core_files\` 的 \`ok\` 是**数量**（存在的文件数）而不是布尔 —— 用 \`is False\`
+    永远不成立；它的「坏」定义是 missing 非空。
+    """
+    item = report.get(name) or {}
+    if name == "core_files":
+        return bool(item.get("missing"))
+    return item.get("ok") is False
+
+
+def classify_health(report: dict) -> tuple[list[str], list[str]]:
+    """把各探针的读数分成 (red_items, not_measured)。
+
+    **「可测的红」才算红。** 三态分开是这份聚合唯一重要的事：
+
+    - ``red_items``   —— 读数可用且确实是坏（真问题）；
+    - ``not_measured`` —— 读数不可用，原因有二：
+        * ``retired`` 链路已退役待裁（工具被归档而引用没跟）；
+        * ``unavailable`` / ``unchecked_only`` 工具没跑起来（缺子模块时它打人类可读报错）。
+
+    把后两者折进 ``healthy`` 会让「总体健康」在任何干净检出上恒 ❌，而那条红
+    传递的信息量是 0 —— 读者会因此学会忽略整份报告（债务条目
+    GAC-INGEST-LEGACY-REFS-NOT-FOLLOWED 自己就写着这句话）。同口径见
+    gac-local-gate 的 preflight / not_measured、gac-executor 的 executors_not_checked。
+    """
+    # 「可测的红」才算红；「没测成」与「已退役待裁」单列, 不混进总体。
+    # 与 gac-local-gate 的 not_measured / preflight、以及 gac-executor 自身的
+    # executors_not_checked 同口径: 判据不能被输入缺席架空, 但也不能把「读不到」
+    # 写成「坏了」—— 后者会训练读者忽略整份报告。
+    _measured = {
+        "validate": lambda: report["validate"]["ok"],
+        "drift": lambda: report["drift"]["ok"],
+        "adr_residue_0104": lambda: report["adr_residue_0104"] == 0,
+        "coverage": lambda: bool(report["coverage"]["dimension_complete"]),
+        "doc_ssot": lambda: report["doc_ssot"]["ok"],
+        "doc_snapshots": lambda: report["doc_snapshots"]["ok"],
+        "doc_links": lambda: report["doc_links"]["ok"],
+        "submodule_reachability": lambda: report["submodule_reachability"]["ok"],
+        "hygiene": lambda: report["hygiene"]["ok"],
+        "registry_drift": lambda: report["registry_drift"]["ok"],
+        "bootstrap": lambda: report["bootstrap"]["ok"],
+        "ci_plane": lambda: report["ci_plane"]["ok"],
+        "ssot_usage": lambda: report["ssot_usage"]["ok"],
+    }
+    _conditional = {
+        "legacy_drift": lambda: report["legacy_drift"].get("retired"),
+        "m1_instance_drift": lambda: report["m1_instance_drift"].get("unavailable"),
+        "executor_drift": lambda: report["executor_drift"].get("unchecked_only"),
+        "core_files": lambda: report["files"].get("unavailable"),
+        "m2_type": lambda: report["m2_type"].get("unavailable"),
+    }
+
+    red_items = [name for name, probe in _measured.items() if not probe()]
+    for name, flag in _conditional.items():
+        if not flag() and _is_red(report, name):
+            red_items.append(name)
+    return sorted(set(red_items)), sorted(
+        name for name, flag in _conditional.items() if flag()
+    )
 
 
 def print_report(report: dict) -> None:
@@ -549,7 +624,17 @@ def print_report(report: dict) -> None:
     print(f"▶ SSOT使用率 (ADR-0385): {su_status} files={su['files_count']} stale={su['stale_count']}")
 
     print()
-    overall = "✅ 全绿 (GaC 体系闭环生效)" if report["healthy"] else "❌ 有红 (见上)"
+    red = report.get("red_items") or []
+    not_measured = report.get("not_measured") or []
+    if red:
+        overall = f"❌ 有红 ({len(red)} 项: {', '.join(red)})"
+    elif not_measured:
+        overall = (
+            f"⚠️ 无可测的红, 但有 {len(not_measured)} 项未判定 "
+            f"({', '.join(not_measured)}) —— 先备齐输入再读总体"
+        )
+    else:
+        overall = "✅ 全绿 (GaC 体系闭环生效)"
     print(f"═══ 总体: {overall} ═══")
 
 
