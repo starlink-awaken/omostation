@@ -97,11 +97,14 @@ def compile_launchd(jobs: list[dict], *, resolve: bool = True) -> dict:
             continue
         label = f"com.omostation.{j['name']}"
         python = (_pick_interpreter(j.get("command", "")) or "/usr/bin/python3") if resolve else "/usr/bin/python3"
-        agents[label] = {
+        agent = {
             "Label": label,
             "ProgramArguments": [python, j["command"]],
             "RunAtLoad": False,
         }
+        if isinstance(j.get("env"), dict) and j["env"]:
+            agent["EnvironmentVariables"] = {str(k): str(v) for k, v in j["env"].items()}
+        agents[label] = agent
     return agents
 
 
@@ -220,6 +223,8 @@ def check_launchd_plane(registered):
             k: v.strip('"')
             for k, v in re.findall(r'([A-Z][A-Z0-9_]{2,})=("[^"]*"|\S+)', j.get("command", ""))
         }
+        if isinstance(j.get("env"), dict):
+            declared.update({str(k): str(v) for k, v in j["env"].items()})
         installed_env = data.get("EnvironmentVariables") or {}
         extra = sorted(k for k in installed_env if k not in declared)
         wrong = sorted(k for k, v in declared.items() if k in installed_env and installed_env[k] != v)

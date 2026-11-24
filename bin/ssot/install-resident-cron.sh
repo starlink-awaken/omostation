@@ -87,7 +87,35 @@ CLEANED_CRON="$(printf '%s\n' "${CURRENT_CRON}" | awk -v marker="${CRON_MARKER}"
   { blank = 0; print }
 ')"
 
-cat << EOF | crontab -
+REGISTRY="${CRON_REGISTRY_OVERRIDE:-${WORKSPACE}/.omo/cron/registry.yaml}"
+
+check_registry_coverage() {
+  if [ ! -f "$REGISTRY" ]; then
+    echo "⚠️  登记面不存在 ($REGISTRY) —— 跳过覆盖检查" >&2
+    return 0
+  fi
+  if ! grep -q "omo.cli resident" "$REGISTRY"; then
+    echo "❌ resident 作业不在 .omo/cron/registry.yaml 里:" >&2
+    echo "   装它们会让 scheduler-compile --check 报 orphan (门禁红)。" >&2
+    echo "   请先把它们登记进 registry 并置 active, 或用 bin/ops/install-cron-plane.py。" >&2
+    return 1
+  fi
+}
+
+case "${1:-}" in
+  --dry-run)
+    check_registry_coverage || exit 1
+    echo "Would install resident cron block (dry-run)."
+    exit 0
+    ;;
+  --remove)
+    printf '%s\n' "${CLEANED_CRON}" | crontab -
+    echo "Resident cron jobs removed."
+    exit 0
+    ;;
+  --install|"")
+    check_registry_coverage || exit 1
+    cat << EOF | crontab -
 ${CLEANED_CRON}
 ${CRON_MARKER}
 ${_ROLE_CRON}
@@ -99,5 +127,11 @@ ${CRON_PROPOSAL_ADR}
 ${CRON_HEALTH}
 EOF
 
-echo "resident cron installed:"
-crontab -l | grep -A9 "${CRON_MARKER}" | sed 's/^/  /'
+    echo "resident cron installed:"
+    crontab -l | grep -A12 "${CRON_MARKER}" | sed 's/^/  /'
+    ;;
+  *)
+    echo "usage: $0 [--install|--dry-run|--remove]" >&2
+    exit 2
+    ;;
+esac
