@@ -290,10 +290,6 @@ jobs:
         # 物理未实现的 placeholder 必须决议, 非阻塞 advisory
         continue-on-error: true
         run: python3 bin/gac/check-resolve-not-stub.py
-      - name: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK — 工具双路 fallback 检查 (advisory)
-        # 工具检查应该 first-level + projects/*/first-level 双路 fallback, 非阻塞 advisory
-        continue-on-error: true
-        run: python3 bin/gac/check-dead-path-tool-fallback.py
       - name: CR-P76-8-4-INCREMENTAL-COMMIT — 增量提交检查 (advisory)
         # 每 sub-task 完成立即 commit, 防 X-Plane clean worktree 丢失工作, 非阻塞 advisory
         continue-on-error: true

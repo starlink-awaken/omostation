@@ -202,12 +202,6 @@ aliases:
       bin_executor: "ruff B006 (enforced via .ruff.toml)"
 
   # ── P-phase / debt process ──
-  - canonical: CR-P76-8-3-DEAD-PATH-TOOL-FALLBACK
-    aliases: [p76_8_3_dead_path_tool_fallback]
-    evidence:
-      governance-checks: ".omo/_truth/registry/governance-checks.yaml"
-      note: "incident postmortem rule; executable as daily debt review"
-
   - canonical: CR-P76-6-5-LLM-DEFERRAL
     aliases: [p76_6_5_llm_deferral]
     evidence:

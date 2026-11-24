@@ -989,12 +989,68 @@ def scoped_change_lane_command(
     return cmd
 
 
+def _doc_link_globs() -> tuple[str, ...]:
+    """Read canonical LOCAL_DOC_GLOBS from doc-link-check.py so scoped matches default."""
+    import ast
+
+    doc_check_py = WORKSPACE / "bin" / "ssot" / "doc-link-check.py"
+    try:
+        tree = ast.parse(doc_check_py.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == "LOCAL_DOC_GLOBS":
+                        val = ast.literal_eval(node.value)
+                        if isinstance(val, (tuple, list)) and all(isinstance(item, str) for item in val):
+                            return tuple(val)
+    except (OSError, SyntaxError, ValueError):
+        pass
+    return (
+        "AGENTS.md",
+        "CLAUDE.md",
+        "README.md",
+        "ARCHITECTURE.md",
+        "LAYER-INDEX.md",
+        "projects/AGENTS.md",
+        "projects/*/AGENTS.md",
+        "projects/*/CLAUDE.md",
+    )
+
+
+def _matches_doc_link_surface(path: str, globs: tuple[str, ...] | None = None) -> bool:
+    """Segment-exact match against doc-link-check LOCAL_DOC_GLOBS.
+
+    PurePosixPath('docs/README.md').match('README.md') returns True in Python, which
+    would leak docs/** notes such as docs/pitfalls.md into scoped --files checks.
+    """
+    import fnmatch
+    from pathlib import PurePosixPath
+
+    parts = PurePosixPath(path).parts
+    if not parts or any(p in ("", ".", "..") for p in parts):
+        return False
+    patterns = globs if globs is not None else _doc_link_globs()
+    for pat in patterns:
+        pat_parts = PurePosixPath(pat).parts
+        if len(parts) == len(pat_parts) and all(
+            fnmatch.fnmatchcase(part, pat_part) for part, pat_part in zip(parts, pat_parts)
+        ):
+            return True
+    return False
+
+
 def scoped_doc_link_command(scope: str, files: list[str] | None, run_id: str, strict: bool) -> list[str] | None:
     if strict:
         return ["bin/ssot/doc-link-check.py"]
 
-    staged = staged_files_git()
-    md_files = [f for f in staged if f.endswith(".md")]
+    if scope == "files":
+        candidates = list(files or _matched_files_from_env())
+    elif scope == "run":
+        candidates = change_lane_files_for_scope(scope, files, run_id)
+    else:
+        candidates = staged_files_git()
+
+    md_files = [f for f in candidates if _matches_doc_link_surface(f)]
     if not md_files:
         return None
     return ["bin/ssot/doc-link-check.py", "--files"] + md_files
