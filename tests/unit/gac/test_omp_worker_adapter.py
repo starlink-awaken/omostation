@@ -873,17 +873,28 @@ def test_failed_trial_removal_is_cleanup_unconfirmed(tmp_path: Path, monkeypatch
 
 @pytest.mark.parametrize("existing", [False, True])
 def test_unsafe_or_existing_receipt_is_rejected(tmp_path: Path, existing: bool) -> None:
-    receipt = safe_receipt(tmp_path) if existing else Path.cwd() / f"unsafe-omp-receipt-{tmp_path.name}.json"
-    if existing:
-        receipt.write_text("existing", encoding="utf-8")
+    # 「非临时」目录用检出根: 结构上不在任何系统临时根之下 (worktree 约定落在 ~/ws-*)。
+    # 原来用 `Path.cwd()` —— 在 /tmp/<worktree> 里跑时该路径被判成临时、校验放行、
+    # 适配器真的把 receipt 写下去, 于是首跑红而**再跑绿** (上一条留下的文件让 exists
+    # 检查命中) —— 判据自否证, 与 pi / codex 两个同源用例同形 (2026-11-24 实证)。
+    receipt = (
+        safe_receipt(tmp_path)
+        if existing
+        else SCRIPT.parents[2] / f"unsafe-omp-receipt-{tmp_path.name}.json"
+    )
+    try:
+        if existing:
+            receipt.write_text("existing", encoding="utf-8")
 
-    with pytest.raises(adapter.AdapterError, match="unsafe_receipt"):
-        adapter.run_worker(
-            prompt="x",
-            execute=True,
-            receipt_path=receipt,
-            user_home=user_omp_home(tmp_path),
-        )
+        with pytest.raises(adapter.AdapterError, match="unsafe_receipt"):
+            adapter.run_worker(
+                prompt="x",
+                execute=True,
+                receipt_path=receipt,
+                user_home=user_omp_home(tmp_path),
+            )
+    finally:
+        receipt.unlink(missing_ok=True)
 
 
 def test_output_mismatch_never_persists_stderr_secret(tmp_path: Path) -> None:
