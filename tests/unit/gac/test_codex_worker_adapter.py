@@ -22,16 +22,53 @@ SCRIPT = Path(__file__).parents[3] / "bin/gac/codex-worker-adapter.py"
 # 而后者要求 omo 的 workspace 依赖链 (bus-foundation 等) 全部可构建。
 # 缺任一项时该测试必然失败, 但其失败原因与断言正确性无关 —— 属环境性, 故优雅跳过。
 # 注: CI 的 actions/checkout 带 `submodules: recursive`, 环境齐备, 故 CI 侧会真实执行。
+#
+# 2026-11-24 补强: 原先只探三个文件存在, 但**浅 init 的 worktree** 里这三个文件都在,
+# 而依赖链仍缺 (实测 `projects/agora` 未 init ⇒ 空目录无 pyproject ⇒ `uv run` 构建失败),
+# 于是守卫放行、测试以 `WORKER_ACK_REJECTED` 红 —— 与上面这段声明不符。改成直接探
+# 「omo 工程能否经 uv 构建」, 让判据去问被检对象本身。
 _WORKSPACE_ROOT = Path(__file__).parents[3]
 _ECOS_COMPILER = _WORKSPACE_ROOT / "projects/ecos/src/ecos/ssot/tools/work_packet_compiler.py"
 _OMO_CLI = _WORKSPACE_ROOT / "projects/omo/src/omo/cli.py"
 _BUS_FOUNDATION_PYPROJECT = _WORKSPACE_ROOT / "projects/bus-foundation/pyproject.toml"
+_OMO_PROJECT = _WORKSPACE_ROOT / "projects" / "omo"
 
-_INTEGRATION_ENV_READY = _ECOS_COMPILER.is_file() and _OMO_CLI.is_file() and _BUS_FOUNDATION_PYPROJECT.is_file()
 _INTEGRATION_ENV_REASON = (
     "需 ecos(work_packet_compiler) + omo(src/omo/cli.py) + bus-foundation(pyproject) "
     "三者齐备才能经 uv 构建 omo 环境; 缺项属环境性, 非断言失败"
 )
+
+_OMO_BUILDABLE: bool | None = None
+
+
+def _omo_env_buildable() -> bool:
+    """探测一次并缓存: omo 工程能否经 uv 构建 (缺嵌套子模块时按构造失败)。"""
+    global _OMO_BUILDABLE
+    if _OMO_BUILDABLE is None:
+        try:
+            probe = subprocess.run(
+                ["uv", "run", "--project", str(_OMO_PROJECT), "python", "-c", "import omo.cli"],
+                cwd=_WORKSPACE_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=False,
+            )
+            _OMO_BUILDABLE = probe.returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            _OMO_BUILDABLE = False
+    return _OMO_BUILDABLE
+
+
+def integration_env_ready() -> tuple[bool, str]:
+    """(是否具备真实前提, 不具备时的跳过理由)。"""
+    if not all(p.is_file() for p in (_ECOS_COMPILER, _OMO_CLI, _BUS_FOUNDATION_PYPROJECT)):
+        return False, _INTEGRATION_ENV_REASON
+    if not _omo_env_buildable():
+        return False, "omo 环境不可构建 (uv run --project projects/omo 失败) —— 环境性, 非断言失败"
+    return True, ""
+
+
 WORKERS = Path(__file__).parents[3] / ".omo/_truth/registry/workers.yaml"
 SPEC = importlib.util.spec_from_file_location("codex_worker_adapter", SCRIPT)
 assert SPEC and SPEC.loader
@@ -649,7 +686,10 @@ def test_receipt_is_exclusive_temp_only_canonical_and_redacted(tmp_path: Path, m
 
 
 def test_receipt_outside_system_temp_is_rejected(tmp_path: Path):
-    receipt = Path.cwd() / f"unsafe-codex-receipt-{tmp_path.name}.json"
+    # 「仓外」目录用检出根: 结构上不在任何系统临时根之下 (worktree 约定落在 ~/ws-*)。
+    # 原来用 `Path.cwd()` —— 在 /tmp/<worktree> 里跑时 cwd 解析到 /private/tmp 之内,
+    # 会被判成「临时」⇒ 既不抛错也不写文件, 用例当场假红 (2026-11-24 实证)。
+    receipt = SCRIPT.parents[2] / f"unsafe-codex-receipt-{tmp_path.name}.json"
     try:
         with pytest.raises(adapter.AdapterError, match="unsafe_receipt"):
             run_success(tmp_path, receipt_path=receipt)
@@ -1329,11 +1369,13 @@ def test_shared_validator_reconciles_matching_workflow_and_mesh_identity(
 
 
 def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None:
-    # 同文件第二个用例的既有惯例: 缺 ecos/omo 属**环境性** (未 init 子模块 / 干净检出),
-    # 不是断言失败 —— 见文件头 `_INTEGRATION_ENV_REASON`。没有这道守卫时,
-    # 任何新 worktree 跑本文件都会红一条, 而 CI 递归检出子模块所以绿。
-    if not _INTEGRATION_ENV_READY:
-        pytest.skip(_INTEGRATION_ENV_REASON)
+    # 同文件第二个用例的既有惯例: 缺 ecos/omo 或 omo 环境不可构建属**环境性**
+    # (未 init 子模块 / 干净检出 / 浅 init 的 worktree), 不是断言失败 —— 见文件头
+    # `integration_env_ready()`。没有这道守卫时, 任何新 worktree 跑本文件都会红一条,
+    # 而 CI 递归检出子模块所以绿。
+    ready, reason = integration_env_ready()
+    if not ready:
+        pytest.skip(reason)
     workspace = tmp_path / "workspace"
     spec_path = workspace / "docs/superpowers/specs/worker-binding.md"
     instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
@@ -1431,9 +1473,10 @@ def test_adapter_accepts_one_real_persisted_governed_run(tmp_path: Path) -> None
 def test_worker_adapter_reconciles_both_planes_and_appends_real_origin_ack(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # 集成级: 见文件头守卫说明 —— 缺 ecos/omo/bus-foundation 时优雅跳过
-    if not _INTEGRATION_ENV_READY:
-        pytest.skip(_INTEGRATION_ENV_REASON)
+    # 集成级: 见文件头守卫说明 —— 缺 ecos/omo/bus-foundation 或 omo 环境不可构建时优雅跳过
+    ready, reason = integration_env_ready()
+    if not ready:
+        pytest.skip(reason)
     workspace = tmp_path / "workspace"
     spec_path = workspace / "docs/superpowers/specs/worker-mesh-ack.md"
     instruction_path = workspace / "docs/operations/blueprint-agent-instruction-pack-v1.md"
