@@ -48580,6 +48580,55 @@ bets:
   circuit_breaker: >-
     若回填后发现本机 plist 是被错误的安装平面误写 (注入值非本机真实意图), 停止并
     交 owner 裁决以哪侧为准。
+- id: BET-Y2Q4-T10-354
+  title: BET-Y2Q4-T10-354 驾驶舱模板契约缺口收口 —— 7 字段逐项裁定 + 死引用退役/兜底修复
+  goal: >-
+    债 DASHBOARD-TEMPLATE-CONTRACT-GAP (2026-11-10 立案): template.html 声明 9 个
+    D.<field> 顶层字段, 发布 payload 全部缺席, 守卫 _check_template_data_consistency
+    每次发布告警但无人处理。Wave 5 (#5548) 已补 observed_at/refresh (12→7 缺)。
+    2026-11-25 实测: 7 字段 (anomaly_events/current_findings/library/live_sources/
+    pending_publications/reconciliation_candidates/value_loop) 仍 ABSENT; 其中 6 个
+    在 orchestrator.py 零命中 = refresh.py 时代产物; live_sources 数据在 payload
+    source_states (21 键) 现成可喂。本 BET 按裁定表逐项处理: 6 字段退役 (模板侧
+    死引用清除, 行为等价), live_sources 修兜底 (swarm 面板从恒 NO_DATA 变真实
+    21 源数据)。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - bin/panorama/assets/host/template.html
+  - .omo/debt/items/DASHBOARD-TEMPLATE-CONTRACT-GAP.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-25-dashboard-template-contract-bet-t10-354.md
+    spec_version: 1.0.0
+    content_digest: sha256:6b946cc4c54ec0f6f682c3f7d8828e6bb6a961f319c07c8b737bf3ee41d6ddc3
+    decision_ref: decision://accepted/BET-Y2Q4-T10-354
+  non_goals:
+  - 不改发布器 payload (panorama-collect.py 无需变更; 守卫逻辑不变)。
+  - 不动宿主根 stale 副本 ~/.local/share/zhixing-dashboard/template.html
+    (非 SSOT, 422 行旧演化残留; release 管线用 releases/ 目录)。
+  - 不处理 refresh.py 侧对应产出 (其退役属 dashboard 部署仓事务)。
+  done_when:
+  - 模板 D.<7 字段> 引用清零 (rg 计数 = 0)。
+  - 守卫 dry-run (live payload + 改后模板) missing 从 7 → 0。
+  - zhixing-host-sync.py check 维持 in_sync。
+  verify:
+  - cmd: rg -c "D\.(anomaly_events|current_findings|library|live_sources|pending_publications|reconciliation_candidates|value_loop)\b" bin/panorama/assets/host/template.html
+    expect: 零命中 (退出码 1)。
+  - cmd: python3 bin/gac/zhixing-host-sync.py check
+    expect: template.html state=in_sync。
+  circuit_breaker: >-
+    若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
+    保面板还是保契约。
 - id: BET-Y2Q4-T10-350
   title: BET-Y2Q4-T10-350 omo-debt 单个畸形 ref 冻结投影平面 29.8h —— 非 str 条目 ref 判 stale 而非崩平面（代码腿）
   goal: '`.omo/debt/items/*` 的 refs 写散文注解是既有用法（全库 352 个 ref 元素中 142 个带注解），散文里出现 ASCII
@@ -48821,7 +48870,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 601
+  total_bets: 602
   windows:
   - Y1Q1
   - Y1Q2

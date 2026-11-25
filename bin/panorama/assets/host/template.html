@@ -1626,7 +1626,6 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
         <h2 style="font-size:15px;margin:0">🚨 当前阻塞与推进进展</h2>
         <a class="small" href="#gov">门禁准入 ➔</a>
       </div>
-      <ul id="current-findings" class="list"></ul>
       <div id="summary-source" class="source"></div>
     </article>
 
@@ -2257,19 +2256,8 @@ h1,h2,h3,p{margin-top:0}h1{font-family:var(--display);font-size:24px;line-height
   <div style="overflow-x:auto"><table class="table"><thead><tr><th>级别</th><th>类型</th><th>triage</th><th>实体</th><th>问题</th><th>下一步</th></tr></thead><tbody id="strategic-gaps-rows"></tbody></table></div>
 </div>
 
-<div class="card gap">
-  <h2>Reconciliation 候选包</h2>
-  <div id="reconciliation-candidates" class="list"></div>
-  <p class="small muted gap">这里只展示已准备但尚未提交的治理修复候选。提交、push、PR 和合并仍需按对应授权门执行。</p>
-</div>
-
 <!-- 子系统 5: 可审查的实施准备与法定信封 (原生兼容节点保留) -->
 <div class="grid two gap">
-  <article class="card" style="border-color:#f59e0b">
-    <h2>等待精确人工授权</h2>
-    <div id="pending-authorizations" class="list"></div>
-    <p class="small muted gap">这里只展示已通过技术验证、但尚未获得 operation-specific Human authorization 的发布候选。未授权前不得 tag、push、开 PR 或合并。</p>
-  </article>
   <article class="card">
     <h2>近期执行顺序 (Canonical Steps)</h2>
     <ol id="actions" class="steps"></ol>
@@ -2999,7 +2987,6 @@ D.metrics_kpi=D.metrics_kpi||{health_score:0,freshness_score:0,drift_score:null,
 D.refresh=D.refresh||{failed_sources:[]};
 D.recent_events=D.recent_events||{events:[]};
 D.envelope=D.envelope||{path:'',sha256:''};
-D.library=D.library||'';
 D.documents=D.documents||{documents:[]};
 D.agents=D.agents||[];
 D.gates=D.gates||[];
@@ -3156,7 +3143,6 @@ var betRate = betTotal > 0 ? Math.round(betDone / betTotal * 100) + '%' : '—';
 var healthScore = (D.metrics_kpi && typeof D.metrics_kpi.health_score==='number' && isFinite(D.metrics_kpi.health_score)) ? D.metrics_kpi.health_score : null;
 const vectors=[['目标覆盖',(p.coverage?.canonical_complete??'—')+' / '+(p.coverage?.nonterminal??'—'),'canonical BET 绑定完整',(p.coverage?.canonical_complete > 0 ? 'good' : 'bad')],['可执行',(p.nonterminal?.length || 0) + ' 活跃','写面重叠与恢复门待满足',((p.nonterminal?.length || 0) > 0 ? 'warn' : 'good')],['交付',betRate + ' 闭环',betDone+' / '+betTotal+' BET 完成',(betRate !== '—' && parseInt(betRate) > 80 ? 'good' : 'warn')],['运行',(healthScore==null?'—':healthScore) + ' 健康分','系统综合健康度',(healthScore==null?'neutral':healthScore >= 70 ? 'good' : healthScore >= 50 ? 'warn' : 'bad')],['价值',(D.metrics_kpi?.total_events_24h || 0) + ' 事件/24h','系统运行活跃度',((D.metrics_kpi?.total_events_24h || 0) > 50 ? 'good' : 'warn')],['验收',(D.gates?.length || 0) + ' 门禁','治理与准入 live PASS',((D.gates||[]).filter(g=>gateChipClass(g.verdict||g.status)==='good').length > 5 ? 'good' : ((D.gates||[]).some(g=>gateChipClass(g.verdict||g.status)==='bad') ? 'bad' : 'neutral'))]];
 $('vectors').innerHTML=vectors.map(v=>'<div><span class="small muted">'+esc(v[0])+'</span><strong>'+esc(v[1])+'</strong>'+chip(v[2],v[3])+'</div>').join('');
-$('current-findings').innerHTML=(D.current_findings||[]).map(x=>'<li><strong>'+esc(x[0])+'</strong><div class="small muted">'+esc(x[1])+'</div></li>').join('');
 $('summary-source').textContent='Portfolio '+dt(p?.observed_at)+' · Runtime '+dt(R.observed_at)+' · 结论均限定于本轮采样范围';
 function ageLabel(){
  const age=Math.max(0,Math.floor((Date.now()-Date.parse(R.observed_at||D.observed_at))/1000));
@@ -3233,8 +3219,8 @@ $('doc-status').querySelector('option[value="accepted"]').textContent='已接受
 $('doc-search').oninput=documents;$('doc-status').onchange=documents;documents();
 $('actions').innerHTML=(D.next_actions||[]).map((x,i)=>'<li><span class="step-count">'+(i+1)+'</span><div><h3>'+esc(x.title||x.id||'法定行动')+'</h3><p class="small">'+esc(x.detail||x.gate||x.description||'')+'</p><span class="small muted">'+esc(x.owner||x.source||'OMO')+' · '+esc(x.state||'REQUIRED')+'</span></div></li>').join('');
 var terminalPublicationStates={MERGED:1,CLOSED:1,WITHDRAWN:1,REJECTED:1,SUPERSEDED:1};
-var pendingPubs=((D.pending_publications||{}).items||[]).filter(function(p){return p && !terminalPublicationStates[String(p.state||'').toUpperCase()] && p.verification==='READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION';});
-$('pending-authorizations').innerHTML=pendingPubs.map(function(p){return '<article class="loop"><h3>'+esc(p.id)+'</h3><p class="small mono">commit '+esc(p.commit)+'</p><p class="small mono">patch '+esc(p.patch_digest)+'</p><p class="small">dirty='+esc(p.dirty_count)+' · '+esc(p.authorization_scope||'exact-commit authorization required')+'</p></article>';}).join('')||'<p class="small muted">当前没有等待精确授权的发布候选。</p>';
+/* T10-354 (2026-11-25): pending_publications / reconciliation_candidates 为 refresh.py 时代产物,
+   orchestrator 零命中、payload 永不到来 —— 模板侧退役, 连带死面板移除。 */
 var objectiveCoverage=D.objective_coverage||{};
 var coverageItems=objectiveCoverage.items||[];
 function objectiveChip(state){var s=String(state||'UNKNOWN');var cls=s==='PASS'||s==='DELIVERY_ACCEPTED_RUNTIME_VERIFIED'?'good':(s==='NOT_PROVEN'||s==='AWAITING_AUTHORIZATION'||s==='SHADOW_OBSERVING'||s==='PARTIAL'?'warn':'neutral');return chip(s,cls);}
@@ -3245,8 +3231,7 @@ var strategicGaps=(((D.strategic||{}).trace||{}).gaps)||[];
 var gapKinds={};strategicGaps.forEach(function(x){var k=x.kind||'unknown';gapKinds[k]=(gapKinds[k]||0)+1;});
 $('strategic-gaps-summary').innerHTML='state='+esc((D.strategic||{}).state||'UNKNOWN')+' · total='+strategicGaps.length+' · '+Object.keys(gapKinds).map(function(k){return esc(k)+' '+gapKinds[k];}).join(' · ');
 $('strategic-gaps-rows').innerHTML=strategicGaps.map(function(x){var cls=x.severity==='high'?'f':(x.severity==='medium'?'w':'neutral');return '<tr><td>'+chip(x.severity||'unknown',cls)+'</td><td class="mono">'+esc(x.kind||'unknown')+'</td><td class="mono">'+esc(x.triage||'—')+'</td><td class="mono">'+esc(x.entity_id||'—')+'</td><td>'+esc(x.title||'')+'</td><td>'+esc(x.next_action||'')+'</td></tr>';}).join('')||'<tr><td colspan="6" class="empty">战略图谱当前无登记缺口</td></tr>';
-var reconciliationCandidates=((D.reconciliation_candidates||{}).items||[]);
-$('reconciliation-candidates').innerHTML=reconciliationCandidates.map(function(x){return '<article class="loop"><h3>'+esc(x.id)+' · '+esc(x.state)+'</h3><p class="small mono">base '+esc(x.base_commit)+'</p><p class="small mono">patch '+esc(x.patch_sha256)+'</p><p class="small">'+esc(x.objective||'')+'</p></article>';}).join('')||'<p class="small muted">当前没有已准备的 reconciliation 候选包。</p>';
+/* T10-354: reconciliation_candidates 渲染行随容器一并退役 (orchestrator 零命中, payload 永不到来)。 */
 var claimsActivationRequest=D.claims_activation_request||{};
 var claimsActivationReadiness=D.claims_activation_readiness||{};
 var claimsObjective=coverageItems.find(function(x){return x.id==='CLAIMS_AUTHORITY_ACTIVATION';})||{};
@@ -3266,7 +3251,7 @@ var observationCheckpoints=(claimsObservation.checkpoints||[]).map(function(c){
 }).join('')||'<tr><td colspan="4" class="empty">NO_CHECKPOINTS</td></tr>';
 $('claims-observation-progress').innerHTML='<article class="loop"><h3>观察窗进度 · '+esc(claimsObservation.state||'UNAVAILABLE')+'</h3><div class="small mono">samples '+esc(claimsObservation.sample_count||0)+' / '+esc(claimsObservation.minimum_samples||1440)+' · elapsed '+esc(observationDuration(claimsObservation.elapsed_seconds))+' / '+esc(observationDuration(claimsObservation.duration_seconds||86400))+'</div><div class="small mono">max gap '+esc(claimsObservation.observed_max_gap_seconds??'—')+'s / '+esc(claimsObservation.maximum_gap_seconds||120)+'s · errors '+esc(claimsObservation.errors??'—')+' · receipts '+esc(claimsObservation.receipts_match===true?'MATCH':'UNVERIFIED')+'</div><div style="overflow-x:auto;margin-top:10px"><table class="table"><thead><tr><th>checkpoint</th><th>state</th><th>duration</th><th>scope</th></tr></thead><tbody>'+observationCheckpoints+'</tbody></table></div><p class="small muted">前三个 checkpoint 只用于提前发现问题；毕业必须连续满足 24h / 1440 samples，不可补样或拼接窗口。</p></article>';
 $('claims-authorization').innerHTML='<article class="loop"><h3>'+esc(claimsActivationRequest.authority_id||'omo-claims-authority-r0')+' · '+esc(claimsActivationRequest.operation||'activate-shadow')+'</h3><p class="small mono">request '+esc(claimsActivationRequest.request_id||'—')+'</p><p class="small mono">request digest '+esc(claimsActivationRequest.request_digest||'—')+'</p><p class="small mono">descriptor '+esc(claimsActivationRequest.descriptor_digest||'—')+'</p><p class="small">state '+esc(claimsActivationRequest.status||'—')+' · authorization '+esc(claimsActivationRequest.human_authorization_status||'UNPROVEN')+' · activation '+esc(claimsActivationRequest.activation||'NOT_AUTHORIZED')+'</p></article>';
-$('proposal-link').href=fileLink((D.library||'')+'/30-实施与协同/Workspace组合闭环绑定实施准备-v1.md');
+$('proposal-link').href=fileLink('/30-实施与协同/Workspace组合闭环绑定实施准备-v1.md');
 $('envelope-link').href=fileLink(D.envelope&&D.envelope.path||'');if(D.envelope&&D.envelope.sha256)$('envelope-hash').textContent='SHA-256 '+D.envelope.sha256;else $('envelope-hash').textContent='';
 
 $('reload-page').onclick=()=>window.ZhixingViewState?window.ZhixingViewState.reload():location.reload();
@@ -3917,7 +3902,7 @@ function renderSwarmGalaxy(){
   const cmp = D.compute || {};
   const agents = D.live_agents || D.agents || [];
   const cat = (D.catalog && D.catalog.counts) || {};
-  const ls = D.live_sources || {};
+  const ls = D.source_states || {};
   const gatePass = (D.gates || []).filter(g => gateChipClass(g.verdict || g.status) === 'good').length;
   const gateTotal = (D.gates || []).length;
   const nodes = [
@@ -4190,7 +4175,7 @@ function renderOrientLoopsPulse(){
   const S = D.strategic || {};
   const mesh = S.cross_plane_mesh || {};
   const loops = mesh.live_loops || {};
-  const liveSources = D.live_sources || S.source_states || D.source_states || {};
+  const liveSources = S.source_states || D.source_states || {};
   const okSources = Object.values(liveSources).filter(s => s && ['OK','PASS','HEALTHY','healthy','ok'].includes(String(s.status || s.verdict || ''))).length;
   const sourceTotal = Object.keys(liveSources).length;
   const gatePass = (D.gates || []).filter(g => gateChipClass(g.verdict || g.status) === 'good').length;
@@ -4842,10 +4827,10 @@ function eventTypeIcon(t){return t==='agent_tick'?'🔄':t==='WorkflowRequested'
 
 function populateLoops(){
   try{
-    var vl=D.value_loop||{};
+    var vl={};
     var lv=D.loop_vitality||{};
     var al=D.autoloop_traces||{};
-    var an=D.anomaly_events||{};
+    var an={};
     // Fallback: derive visible loop cards from strategic.cross_plane_mesh.live_loops when dedicated fields are empty
     var meshLoops=((((D.strategic||{}).cross_plane_mesh)||{}).live_loops)||{};
     if(!(vl.stages&&vl.stages.length) && meshLoops && Object.keys(meshLoops).length){
