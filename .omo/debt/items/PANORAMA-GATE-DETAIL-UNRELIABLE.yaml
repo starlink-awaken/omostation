@@ -7,20 +7,25 @@ scope: "workspace"
 severity: "medium"
 weight: 0.1
 entropy_class: "low"
-lifecycle_state: "in_progress"
+lifecycle_state: "resolved"
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
-- ~/.local/share/zhixing-dashboard/current.json
-- ~/.local/share/zhixing-dashboard/revisions/
-- bin/panorama/panorama-collect.py
+- "bin/panorama/panorama-collect.py"
+- "bin/panorama/assets/host/panorama-collect-main.py.asset"
+- "bin/gac/check-gate-detail-contract.py"
+- "tests/unit/test_panorama_output_root.py"
+- "~/.local/share/zhixing-dashboard/current.json"
+- "~/.local/share/zhixing-dashboard/revisions/"
 mitigation_refs:
-- docs/reports/2026-11-10-panorama-a9-deploy-addendum.md
-- bin/panorama/assets/host/panorama-collect-main.py.asset —— 发布链冻结副本的版本化恢复件（恢复到 ~/.local/share/zhixing-dashboard/ 属部署面写操作，待 principal 授权）
-- bin/gac/check-gate-detail-contract.py —— ③ 交付的 A 系门禁 detail 一致性门禁（两平面 shape/coherence/reason_missing/order 四类阻断 + 跨平面 skew 只 advisory）
+- "docs/reports/2026-11-10-panorama-a9-deploy-addendum.md"
+- "bin/panorama/assets/host/panorama-collect-main.py.asset"
+- "bin/gac/check-gate-detail-contract.py"
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-24"
+last_reviewed_at: "2026-11-25"
+closed_at: "2026-11-25"
 next_review_at: "2026-12-08"
+resolution_evidence: "PR #5556 (b80a09e90409b5dfa64d0296871846bf382778df) 修复 panorama-collect.py 与 panorama-collect-main.py.asset（新增 _publish_base_snapshot 原子物化 state_root/runtime/dashboard/data.json 并通过 zhixing-host-sync publish 27/27 部署）；实机双阶段刷新后 current.json source_states.panorama_base 恢复 status=OK (available=true)，check-gate-detail-contract.py --now 2026-12-02 --strict --json 实测 verdict=OK、blocking_violations=0、order_violations=0、skew_count=0。"
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Tool"
@@ -290,3 +295,11 @@ history:
 
     ④ 边界：`lifecycle_state` / `gate_level` / `severity` / `weight` / `evidence_refs` / `description` 一律未动；
     `next_review_at` 保持 2026-12-08（今晚 01:47Z 那条 review 已推进过一次），本条只追加这条 review。
+- at: "2026-11-25T07:20:00Z"
+  action: resolve
+  actor: "governance-agent"
+  note: |
+    Wave 6 Convergence (PR #5556 b80a09e90409b5dfa64d0296871846bf382778df + live rollout):
+    ① 根因补链：panorama-collect.py main() 在 publish_projection_revision 之后调用 _publish_base_snapshot(payload)，将 DATA_JSON 原子物化到 ~/.local/state/omostation/prod/runtime/dashboard/data.json（18M），彻底补齐此前缺失的 base 快照写入；同步落盘至 bin/panorama/assets/host/panorama-collect-main.py.asset 并通过 zhixing-host-sync publish（27/27 in_sync）。
+    ② 双阶段实机刷新实证（2026-11-25 15:18-15:19+08）：com.omostation.panorama-dashboard-refresh（last_exit=0）→ DATA_JSON 落盘 → com.omostation.zhixing-dashboard-refresh（last_exit=0），current.json source_states.panorama_base 从 FileNotFoundError/2026-10-28 恢复为 status=OK / available=true / age=19.5s。
+    ③ 2026-12-01 断崖清零实证：python3 bin/gac/check-gate-detail-contract.py --now 2026-12-02 --strict --json 输出 verdict="OK"、blocking_violations=0、order_violations=0、skew_count=0（published 与 revision 两平面各 9/9 门禁 0 违规、0 偏斜）。
