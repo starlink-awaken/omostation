@@ -7,19 +7,29 @@ scope: "host"
 severity: "high"
 weight: 0.25
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "in_progress"
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
+- "lib/resident-event-ingest.sh"
 - "~/Library/LaunchAgents/com.l4.resident.decision.plist (EnvironmentVariables.OMOSTATION_STATE_ROOT => ~/.local/state/omostation/prod)"
-- "~/.local/state/omostation/prod/runtime/omo/event-ledger.sqlite3 (event_log 0 行 / event_outbox 0 行)"
-- "~/Workspace/runtime/omo/event-ledger.sqlite3 (event_log 452 行 / event_outbox 452 行)"
-- "已装 crontab 的 5 条 `omo.cli resident daemon --once --role <role> --ledger ~/Workspace/runtime/omo/event-ledger.sqlite3`"
-- ".omo/_truth/registry/services.yaml (resident 服务声明 OMOSTATION_STATE_ROOT)"
+- "~/.local/state/omostation/prod/runtime/omo/event-ledger.sqlite3 (2026-11-25 merged + live event-ingest: PRAGMA integrity_check=ok, event_log=1164+)"
+- "~/.local/state/omostation/prod/.omo/_knowledge/workflow-mesh/events.jsonl (2026-11-25 merged 4211+ lines + active launchd writers)"
+- "lib/resident-event-ingest.sh (PR #5549, 46be7f45c): 传递 --ledger 写入 state_root/runtime/omo/event-ledger.sqlite3"
+- "com.omostation.resident-daemon.plist 已停用 (disabled-wave5); 9/9 com.l4.resident.* + com.omostation.scene-signal-poller 已加载运行于 state_root"
+- "blocker: mbp crontab(1) 写返回 EINTR (docs/pitfalls.md:302); 已生成 ~/.local/state/omostation/prod/runtime/backups/wave5-resident-pre-merge-20261125-105053/crontab.cleaned 待人工终端一行应用"
 mitigation_refs: []
 opened_at: "2026-11-07"
-last_reviewed_at: '2026-11-23'
-next_review_at: '2026-12-07'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+blockers:
+- id: MBP-CRONTAB-EINTR
+  since: "2026-11-25"
+  detail: >-
+    Launchd 单平面（9/9 com.l4.resident.* + com.omostation.scene-signal-poller + PR #5549 ingest --ledger）
+    与 state_root 合并及实跑增行已就绪，resident-daemon 已停用；仅余 mbp crontab 中 9 条历史 resident 行因
+    macOS crontab(1) 系统级 EINTR（docs/pitfalls.md:302）无法由自动会话直接写入移除。
+  needed: "人工在交互终端执行 `crontab ~/.local/state/omostation/prod/runtime/backups/wave5-resident-pre-merge-20261125-105053/crontab.cleaned` 后转 resolved。"
 gate_level: none
 x1_policy_ref: ""
 x3_tier: "Principle"
@@ -174,3 +184,12 @@ history:
     **本轮不代裁**（"哪个平面权威"是治理裁决，不是纯缺陷），也不单侧改动（原条目警告的"更大分裂"仍适用）。
     ⑥ 字段一致性推进：`last_reviewed_at` `2026-11-07`→`2026-11-23`，已过期 `next_review_at` `2026-11-14`→`2026-12-07`；
     `lifecycle_state`/`gate_level` 保持 `identified`/`none`。
+- at: "2026-11-25T02:55:00Z"
+  action: review
+  actor: "governance-agent"
+  note: |
+    Wave 5 Convergence (PR #5548 ae78e4cafb, PR #5549 46be7f45cf, mbp live rollout 2026-11-25):
+    ① Launchd 执行面已收敛到 install_root (~/.local/opt/omostation) + state_root (~/.local/state/omostation/prod)：9/9 com.l4.resident.* 与 com.omostation.scene-signal-poller 通过 plutil -lint 并 bootstrap 进 gui/501。
+    ② PR #5549 修复 lib/resident-event-ingest.sh 传递 --ledger；legacy com.omostation.resident-daemon 已禁用 (*.disabled-wave5)。
+    ③ Workspace 历史 SQLite (1146 条) + events.jsonl (4211 行) + 6 watermarks + signal-poller 已备份并合入 state_root，实证 event_log 实时增长（1146 -> 1164, integrity=ok）且 9/9 resident job last_exit=0。
+    ④ 唯一剩余阻塞为 MBP-CRONTAB-EINTR（host crontab(1) OS 级 Interrupted system call）：已生成并通过 diff 校验清理稿 ~/.local/state/omostation/prod/runtime/backups/wave5-resident-pre-merge-20261125-105053/crontab.cleaned，待人工执行 `crontab <crontab.cleaned>` 后即可结案。

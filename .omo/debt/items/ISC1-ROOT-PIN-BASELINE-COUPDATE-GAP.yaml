@@ -8,30 +8,33 @@ scope: workspace
 severity: medium
 weight: 0.1
 entropy_class: low
-lifecycle_state: identified
+lifecycle_state: resolved
 owner: governance-team
 affected_roots:
 - .github/workflows/governance-check.yml
 - tests/unit/test_writeplane_root_pin.py
 - bin/ssot/scene-journey-autogen.py
 evidence_refs:
-- tests/unit/test_writeplane_root_pin.py:98-116 (SPEC_MARKER_READINGS 五桶) / :349 (scan_checkout_pinned_sites)
-  / :751-755 (逐桶相等断言)
-- tests/unit/test_writeplane_root_pin.py:102-109 (四条带日期手工批注 161→162→163→164 = 惯例证据)
-- .github/workflows/governance-check.yml:3 push 块与 :23 pull_request 块的 paths 均无 tests/** (PR 面 17 条, 只有
-  projects/omo/tests/**)
+- .github/workflows/governance-check.yml
+- tests/unit/test_writeplane_root_pin.py
+- tests/unit/test_resident_write_plane_split.py
+- 'tests/unit/test_writeplane_root_pin.py:98-116 (SPEC_MARKER_READINGS 五桶) / :349 (scan_checkout_pinned_sites) / :751-755 (逐桶相等断言)'
+- 'tests/unit/test_writeplane_root_pin.py:102-109 (四条带日期手工批注 161→162→163→164 = 惯例证据)'
+- '.github/workflows/governance-check.yml:3 push 块与 :23 pull_request 块的 paths 已显式纳入 tests/unit/test_writeplane_root_pin.py 与 tests/unit/test_resident_write_plane_split.py (PR #5549, 46be7f45c)'
 - '实测 2026-11-24: PR #5510 (只改 tests/unit/test_writeplane_root_pin.py) → gh pr checks 报 no checks reported,
   statusCheckRollup=[], gh run list --branch=[]'
-- 9abcccfd6 (#5498 / BET-Y2Q4-T10-351) 删 bin/ssot/scene-journey-autogen.py:25-:26 两条链未 bump 基线 ⇒ run 45313762566
-  (created 02:37:34Z) interface-check=failure
+- '9abcccfd6 (#5498 / BET-Y2Q4-T10-351) 删 bin/ssot/scene-journey-autogen.py:25-:26 两条链未 bump 基线 ⇒ run 45313762566
+  (created 02:37:34Z) interface-check=failure'
 - '164→162 的补账落在 0afea449d (#5507, 债务主题) —— git log -S''".omo/_truth": 162'' -- tests/unit/test_writeplane_root_pin.py
   仅此一次 ⇒ run 45316372493 (03:00:03Z/updated 03:06:49Z) 转 success'
 - '差异集定位法: git archive 8c2472a38 bin | tar -x 到临时目录, 与当前树各跑一次同一 scan 函数按文件分组求差 ⇒ 唯一分叉 bin/ssot/scene-journey-autogen.py
   2 -> 0'
 mitigation_refs: []
 opened_at: '2026-11-24'
-last_reviewed_at: '2026-11-24'
+last_reviewed_at: '2026-11-25'
+closed_at: '2026-11-25'
 next_review_at: '2026-12-08'
+resolution_evidence: 'PR #5549 (46be7f45cf653ff3c43824844d48196a058207d0) 将 tests/unit/test_writeplane_root_pin.py 与 tests/unit/test_resident_write_plane_split.py 纳入 .github/workflows/governance-check.yml 的 push 与 pull_request paths，并验证 26/26 CI checks 通过。'
 gate_level: watchlist
 history:
 - at: '2026-11-24T03:35:53.849437+00:00'
@@ -83,6 +86,10 @@ history:
   note: 立案即复核：两个缺口都在本会话现场跑到（#5510 零 check 触发是本次亲测，不是引用；红窗口两个 run 的 created/updated 时间与 job 级结论都取到）。检索既有条目：rg
     'SPEC_MARKER_READINGS|writeplane_root_pin' .omo/debt/items/ 只命中 DEBT-20260927-RUN-REGISTRY-RACE ——
     它是 :105-106 那记 162→163 的**站点来源**（auto-pruner 新增 _run_update_lock），主题是覆写竞态而非联动缺失，主题不同不并案；ISC-1 相关的既有债务是判定接线（OMO-WRITEOWNER-AUDIT-VACUOUS-FOUR-PATHS），主题不同。
+- at: '2026-11-25T02:55:00Z'
+  action: resolve
+  actor: governance-agent
+  note: 'PR #5549 (46be7f45c) 在 .github/workflows/governance-check.yml 的 push/pull_request paths 显式纳入 tests/unit/test_writeplane_root_pin.py 与 tests/unit/test_resident_write_plane_split.py，闭环触发面缺口。'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

@@ -17,7 +17,7 @@ mitigation_refs:
 - bin/ops/hot-tier-resilience.sh
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-11-24'
+last_reviewed_at: '2026-11-25'
 next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
@@ -74,3 +74,10 @@ history:
     `omostation-ops` 标记 **0** 条 ⇒ 没有任何在册且在跑的模型资产备份作业。本条「零备份」前提在当前状态下**更强**：
     不仅没有排程，源卷与目标卷还同时不在位。
     ⑤ 裁决项不变且更紧：坞接回后先复测体积，再定分批/增量方案；本轮不新建任何备份作业（部署面写，需 principal 授权）。
+- at: "2026-11-25T02:55:00Z"
+  action: review
+  actor: "governance-agent"
+  note: |
+    Wave 5 Calibrate (对齐 fleet-ops/generated/VOLUMES.md SSOT 与 mini 用户态运行态备份落地):
+    ① control-01 (mini) 已部署用户态每日状态备份脚本 ~/.local/bin/omostation-mini-state-backup.sh（15 3 * * * 定时任务），将 mini 运行态落盘到已挂载的 control-01-models (/Volumes/Model/Backups/omostation-mini-state/，含 sqlite3 .backup 与 SHA256SUMS 演练校验)。
+    ② 模型资产源卷 studio-01-models (7B762734-0E1B-4E2B-92EA-D32641384578, /Volumes/SHAREDMODEL) 与待迁移卷 control-01-weights (69B4517B-C234-404A-B774-2D693E87EB33, /Volumes/Data) 在 VOLUMES.md 中仍为 not-mounted，SHAREDMODEL 模型资产备份仍待物理挂载后决策。
