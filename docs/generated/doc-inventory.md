@@ -3002,7 +3002,6 @@ source: bin/ssot/generate-docs-index.py
 | .omo/_knowledge/retros/B1-3-health-predict.md | closed | - |
 | .omo/_knowledge/retros/B1-claim-suggester.md | closed | - |
 | .omo/_knowledge/retros/B2-cross-repo.md | closed | - |
-| .omo/_knowledge/retros/BET-TEST-001.md | closed | - |
 | .omo/_knowledge/retros/BET-Y1Q3-T10-100.md | archived | - |
 | .omo/_knowledge/retros/BET-Y1Q3-T10-101.md | archived | - |
 | .omo/_knowledge/retros/BET-Y1Q3-T10-102.md | archived | - |
@@ -3779,7 +3778,6 @@ source: bin/ssot/generate-docs-index.py
 - [UNTYPED] .omo/_knowledge/retros/BET-Y2Q4-T1-02.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y3H1-T7-06.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T9-03.md: 未声明 type (建议添加 frontmatter)
-- [UNTYPED] .omo/_knowledge/retros/BET-BAD-002.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T6-31.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T10-164.md: 未声明 type (建议添加 frontmatter)
 - [UNTYPED] .omo/_knowledge/retros/BET-Y1Q4-T10-140.md: 未声明 type (建议添加 frontmatter)

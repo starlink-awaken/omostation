@@ -168,6 +168,25 @@ def utc_now() -> str:
 # ── Verification helpers ─────────────────────────────────────────────
 
 
+def _ref_is_existing_file(ref: object, root: Path) -> bool:
+    """单个 evidence_ref 是否指向真实文件 —— 读不出就当**未命中**, 不让异常上抛.
+
+    `scan()` 逐条目调用本逻辑, 一次抛出即中断整扫: 2026-11-25 CI 实证 `evidence_refs`
+    写散文注解时 Linux 侧 `stat()` 抛 `OSError: [Errno 36] File name too long`,
+    肇事条目之后所有终态项根本没被校验, 而非终态项也拿不到读数 (本地 macOS 同名 stat
+    返回 ENOENT, 故这条只在 CI 暴露)。非 str 条目 (`Path(12345)`) 同理抛 TypeError。
+    """
+    if not isinstance(ref, str) or not ref.strip():
+        return False
+    try:
+        p = Path(ref)
+        if not p.is_absolute():
+            p = root / ref
+        return p.exists()
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def check_evidence(data: dict, root: Path) -> tuple[int, bool]:
     """Check whether evidence_refs point to existing files.
 
@@ -183,10 +202,7 @@ def check_evidence(data: dict, root: Path) -> tuple[int, bool]:
     refs = data.get("evidence_refs") or []
     found = False
     for ref in refs:
-        p = Path(ref)
-        if not p.is_absolute():
-            p = root / ref
-        if p.exists():
+        if _ref_is_existing_file(ref, root):
             found = True
             break
     if not found:
