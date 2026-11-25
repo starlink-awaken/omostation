@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+from collections import Counter
 import os
 import subprocess
 import sys
@@ -1650,14 +1651,29 @@ def gate_coverage_report() -> dict[str, object]:
     partial 树比齐备树少 28 条。方向都是反的 —— 见债条目 GATE-POLICY-SOURCE-COVERAGE-SKEW。
     """
     source = "sgf_policy" if POLICY is not DEFAULT_POLICY else "default_policy"
-    effective = {g["id"] for g in GATES_LIST}
-    default_ids = {g["id"] for g in DEFAULT_POLICY["gates"]}
+    effective_entries = [g["id"] for g in GATES_LIST]
+    default_entries = [g["id"] for g in DEFAULT_POLICY["gates"]]
+    effective = set(effective_entries)
+    default_ids = set(default_entries)
+
+    def _duplicates(ids: list[str]) -> list[str]:
+        return sorted(i for i, n in Counter(ids).items() if n > 1)
+
     return {
         "source": source,
         "effective": len(effective),
         "default_total": len(default_ids),
         "only_in_default": sorted(default_ids - effective),
         "only_in_effective": sorted(effective - default_ids),
+        # 同一策略内的 id 重复：集合口径会把它们折叠成一条, 于是「条目数」与「id 数」不等。
+        # 2026-11-26 全靠「报告 74 / 手数 75」差 1 才偶然发现 DEFAULT_POLICY 里
+        # state-freshness-check 重复 (债条目 GATE-DEFAULT-DUPLICATE-STATE-FRESHNESS) ——
+        # 这种重复不会改变任何判定, 只会让覆盖读数少 1, 必须自己显形。
+        "entries": {"effective": len(effective_entries), "default": len(default_entries)},
+        "duplicate_ids": {
+            "effective": _duplicates(effective_entries),
+            "default": _duplicates(default_entries),
+        },
     }
 
 
@@ -1791,14 +1807,24 @@ def _print_gate_coverage(report: dict[str, object]) -> None:
     if not isinstance(cov, dict):
         return
     missing = cov.get("only_in_default") or []
-    if not missing:
+    duplicates = cov.get("duplicate_ids") or {}
+    dup_default = duplicates.get("default") or []
+    dup_effective = duplicates.get("effective") or []
+    if not (missing or dup_default or dup_effective):
         return
     print(
         f"ℹ️  门禁策略来源 `{cov.get('source')}`: 生效 {cov.get('effective')} 条"
-        f"（DEFAULT_POLICY {cov.get('default_total')} 条）—— "
-        f"有 {len(missing)} 条**在本树不执行**: {', '.join(str(m) for m in missing)}",
+        f"（DEFAULT_POLICY {cov.get('default_total')} 条）",
         file=sys.stderr,
     )
+    if missing:
+        print(f"   有 {len(missing)} 条**在本树不执行**: {', '.join(str(m) for m in missing)}", file=sys.stderr)
+    if dup_default or dup_effective:
+        print(
+            "   ⚠️ 策略内 id 重复（集合口径会折叠成一条，覆盖读数因此少算）: "
+            f"DEFAULT={dup_default or '无'} / 生效={dup_effective or '无'}",
+            file=sys.stderr,
+        )
 
 
 def _print_not_measured(report: dict[str, object]) -> None:
