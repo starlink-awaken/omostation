@@ -10,8 +10,11 @@
 #
 # 覆盖 (直接测抽出的两个函数 + 接线契约; 无需绕过 resolve_root_remote 的 canonical 守卫):
 #   C   接线: merge 非致命调 sync_local_main_best_effort / post_merge_release,
-#             fail-closed 前置校验与 canonical-repo 契约字面量都还在.
-#   A   收尾成功路径: worktree / 本地分支 / branch-claim 三者全清.
+#             fail-closed 前置校验与 canonical-repo 契约字面量都还在,
+#             且分支清理在 merge/release 两处共用 prune_local_branch.
+#   A   收尾成功路径 (分支已并入 origin/main): worktree / 本地分支 / branch-claim 三者全清.
+#   E   分支上有 main 外 commit: worktree 与 claim 照清, 但分支**保留** —— 无脑 -D 会抹掉
+#             「已提交未推送」的交付腿 (OMO-DEBT-WORKTREE-MERGE-RELEASE-FORCE-DELETE-UNPUSHED-BRANCH).
 #   A2  收尾失败路径 (worktree 移除失败): 必须**保留** claim (不谎报成功).
 #   B   镜像同步成功路径: rc=0 且静默.
 #   B2  镜像同步失败路径: rc≠0 + 诊断, 且**本地 main 逐字节不变** (禁止 reset/merge).
@@ -43,6 +46,9 @@ echo "  ✅ 镜像同步: 非致命调用"
 grep -qF 'post_merge_release "$session" "$branch" "$wt" || WT_RC=1' "$SCRIPT" \
   || fail "merge 未以非致命方式调用 post_merge_release"
 echo "  ✅ 收尾: 非致命调用"
+[ "$(grep -cF 'prune_local_branch "$branch" || true' "$SCRIPT")" = "2" ] \
+  || fail "分支清理未在 merge/release 两处共用 prune_local_branch (同口径两处实现必漂移)"
+echo "  ✅ 分支清理单点: merge/release 共用同一守卫"
 grep -qF 'verify_clean_for_force_removal "$wt" || exit 1' "$SCRIPT" || fail "fail-closed 前置校验丢失"
 grep -qF 'remove_verified_pasw "$wt" || exit 1' "$SCRIPT" || fail "PASW fail-closed 校验丢失"
 echo "  ✅ fail-closed 前置校验保留"
@@ -104,9 +110,11 @@ STUB
 }
 
 # ── A: 收尾成功路径 ─────────────────────────────────────────────────────
+# 夹具用 synced: 分支内容与 origin/main 一致 ⇒ 守卫必须放行删除 (防「守卫过严」侧)。
+# 有未推送 commit 的保留侧在 E 段。
 echo ""
 echo "── A: post_merge_release 成功路径 ⇒ worktree/分支/claim 全清 ──"
-WS_A="$(setup diverged regress)"
+WS_A="$(setup synced regress)"
 out="$(call_fn "$WS_A" 'post_merge_release regress agent/governance-agent/regress "$FIXTMP/ws-regress"; printf "rc=%d\n" $?')"
 printf '%s' "$out" | grep -q "rc=0" || { printf '%s\n' "$out" | tail -8; fail "post_merge_release 未返回 0"; }
 echo "  ✅ rc=0"
@@ -128,6 +136,30 @@ out2="$(call_fn "$WS_A" 'post_merge_release regress2 agent/governance-agent/regr
 printf '%s' "$out2" | grep -q "rc=1" || { printf '%s\n' "$out2" | tail -6; fail "移除失败时应返回 1"; }
 [ -f "$WS_A/.omo/_delivery/branch-claims/regress2.json" ] || fail "移除失败却删了 claim (应保留)"
 echo "  ✅ rc=1 且 claim 保留"
+
+# ── E: 分支上有 main 外 commit ⇒ 保留分支, 不得 -D ─────────────────────────
+# 2026-11-25 session t10351 实录: merge 成功路径上 post_merge_release 无条件 `git branch -D`,
+# 而释放前置只判「未提交项」⇒「已提交但未推送」的交付腿随分支一起消失, 只剩对象库里的孤儿
+# commit。那一轮该分支只因脚本 cwd 已失效 (-D 没跑成 + `|| true` 吞掉) 才侥幸留存。
+echo ""
+echo "── E: 分支有 main 外 commit ⇒ 保留 (未推送交付不得被 -D 抹掉) ──"
+WS_E="$(setup diverged unpushed)"
+E_COMMIT="$(git -C "$WS_E" rev-parse agent/governance-agent/unpushed)"
+outE="$(call_fn "$WS_E" 'post_merge_release unpushed agent/governance-agent/unpushed "$FIXTMP/ws-unpushed"; printf "rc=%d\n" $?')"
+printf '%s' "$outE" | grep -q "rc=0" || { printf '%s\n' "$outE" | tail -8; fail "E: post_merge_release 未返回 0"; }
+[ ! -d "$TMP/ws-unpushed" ] || fail "E: worktree 未移除 (保留分支不得阻断收尾)"
+echo "  ✅ rc=0 且 worktree 已移除"
+printf '%s' "$outE" | grep -q "不在任何远端的 commit, 保留" \
+  || { printf '%s\n' "$outE" | tail -8; fail "E: 未打出保留原因"; }
+echo "  ✅ 打出保留原因"
+git -C "$WS_E" rev-parse --verify -q "refs/heads/agent/governance-agent/unpushed" >/dev/null \
+  || fail "E: 分支被删 —— 正是未推送提交丢失形态"
+[ "$(git -C "$WS_E" rev-parse agent/governance-agent/unpushed)" = "$E_COMMIT" ] \
+  || fail "E: 分支 tip 与收尾前不一致"
+git -C "$WS_E" cat-file -t "$E_COMMIT" >/dev/null || fail "E: 提交对象不可达"
+echo "  ✅ 分支与其未推送提交留存"
+[ ! -f "$WS_E/.omo/_delivery/branch-claims/unpushed.json" ] || fail "E: branch-claim 未清"
+echo "  ✅ claim 仍被清理 (保留分支不等于收尾失败)"
 
 # ── B: 镜像同步成功路径 ─────────────────────────────────────────────────
 echo ""
