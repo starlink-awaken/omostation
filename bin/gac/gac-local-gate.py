@@ -187,7 +187,7 @@ DEFAULT_POLICY = {
         },
         {
             "id": "dependency-baseline-drift",
-            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 REQUIRED_COMMAND_FLAGS 归一化块）。
             "command": ["bin/mof/gen-dependency-baseline.py", "--check"],
             "ci_only": True,
         },
@@ -258,7 +258,7 @@ DEFAULT_POLICY = {
         # adding/removing rows there is the safe edit surface.
         {
             "id": "check-severity-registry",
-            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 REQUIRED_COMMAND_FLAGS 归一化块）。
             "command": ["bin/gac/check-severity-registry.py"],
         },
         # CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3): cron 解释器可执行性。
@@ -294,7 +294,7 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-work-landed",
-            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 REQUIRED_COMMAND_FLAGS 归一化块）。
             "command": ["bin/gac/check-work-landed.py"],
             # 全量 run 扫描 (closed 170+, 每 ref 一次 git 查询) 实测 ~100s;
             # 45s 会超时被杀误报 FAIL (2026-10-14 实证: 直接跑 PASS 97s, gate 内 FAIL)
@@ -307,7 +307,7 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-governance-ratio",
-            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 REQUIRED_COMMAND_FLAGS 归一化块）。
             "command": ["bin/gac/check-governance-ratio.py"],
         },
         {
@@ -347,7 +347,7 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-evidence-freshness",
-            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之前的归一化块）——
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 REQUIRED_COMMAND_FLAGS 归一化块）——
             # 在这里加会被 submodule 策略绕过。
             "command": ["bin/gac/check-evidence-freshness.py"],
         },
