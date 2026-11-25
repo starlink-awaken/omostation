@@ -356,13 +356,13 @@ def test_verify_local_proof_blocks_tampered_byte_after_broker_receipt(tmp_path, 
 
 
 def test_verify_local_proof_allows_valid_workflow_claim(tmp_path, monkeypatch, capsys):
-    from datetime import datetime, timezone
+    from datetime import UTC, datetime
 
     mod, repo, _, base, head = _seed_debt_commit(tmp_path)
     _patch_repo(mod, monkeypatch, repo)
     runs_dir = tmp_path / "runs"
     runs_dir.mkdir()
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(UTC).isoformat()
     (runs_dir / "run-123.yaml").write_text(
         f"run_id: run-123\nstatus: active\nupdated_at: '{now_iso}'\nclaims:\n- paths:\n  - .omo/debt/items/X.yaml\n",
         encoding="utf-8",
@@ -393,13 +393,13 @@ def test_verify_local_proof_allows_valid_workflow_claim(tmp_path, monkeypatch, c
 
 
 def test_verify_local_proof_rejects_unclaimed_or_forged_run_id_env(tmp_path, monkeypatch, capsys):
-    from datetime import datetime, timezone
+    from datetime import UTC, datetime
 
     mod, repo, _, base, head = _seed_debt_commit(tmp_path)
     _patch_repo(mod, monkeypatch, repo)
     runs_dir = tmp_path / "runs"
     runs_dir.mkdir()
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(UTC).isoformat()
     (runs_dir / "run-real.yaml").write_text(
         f"run_id: run-real\nstatus: active\nupdated_at: '{now_iso}'\nclaims:\n- paths:\n  - .omo/debt/items/OTHER.yaml\n",
         encoding="utf-8",
