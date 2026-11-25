@@ -47,8 +47,10 @@ def test_scoped_doc_link_command_filters_staged_md_to_declared_surface(
         lambda: ["docs/pitfalls.md", "docs/README.md", "AGENTS.md", "projects/omo/AGENTS.md"],
     )
 
+    # --json: 断链目标全属输入没备齐时本 check 自报 measured:false（见 #5579）
     assert mod.scoped_doc_link_command("staged", None, "", False) == [
         "bin/ssot/doc-link-check.py",
+        "--json",
         "--files",
         "AGENTS.md",
         "projects/omo/AGENTS.md",
@@ -76,7 +78,11 @@ def test_scoped_doc_link_command_respects_files_scope_and_strict_mode(
     assert mod.scoped_doc_link_command("files", ["docs/pitfalls.md"], "", False) is None
     assert mod.scoped_doc_link_command("files", ["docs/pitfalls.md", "CLAUDE.md"], "", False) == [
         "bin/ssot/doc-link-check.py",
+        "--json",
         "--files",
         "CLAUDE.md",
     ]
-    assert mod.scoped_doc_link_command("staged", None, "", True) == ["bin/ssot/doc-link-check.py"]
+    assert mod.scoped_doc_link_command("staged", None, "", True) == [
+        "bin/ssot/doc-link-check.py",
+        "--json",
+    ]

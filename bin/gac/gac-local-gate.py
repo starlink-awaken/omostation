@@ -172,7 +172,12 @@ DEFAULT_POLICY = {
             "command": ["bin/gac/state-freshness-check.py"],
             "ci_only": True,
         },
-        {"id": "doc-link-check", "command": ["bin/ssot/doc-link-check.py"]},
+        {
+            # --json: 断链目标全在未检出子模块 / gitignore 生成态时自报 measured:false,
+            # 而不是把「输入没备齐」计成文档有错。
+            "id": "doc-link-check",
+            "command": ["bin/ssot/doc-link-check.py", "--json"],
+        },
         {
             "id": "change-lane-check",
             "command": ["bin/change-lane-check.py", "--staged"],
@@ -1050,8 +1055,10 @@ def _matches_doc_link_surface(path: str, globs: tuple[str, ...] | None = None) -
 
 
 def scoped_doc_link_command(scope: str, files: list[str] | None, run_id: str, strict: bool) -> list[str] | None:
+    # --json: doc-link-check 在「全部断链目标都属输入没备齐」时自报 measured:false,
+    # 只有 JSON 才能让 gac-local-gate 的 _declared_not_measured 归到 not_measured。
     if strict:
-        return ["bin/ssot/doc-link-check.py"]
+        return ["bin/ssot/doc-link-check.py", "--json"]
 
     if scope == "files":
         candidates = list(files or _matched_files_from_env())
@@ -1063,7 +1070,7 @@ def scoped_doc_link_command(scope: str, files: list[str] | None, run_id: str, st
     md_files = [f for f in candidates if _matches_doc_link_surface(f)]
     if not md_files:
         return None
-    return ["bin/ssot/doc-link-check.py", "--files"] + md_files
+    return ["bin/ssot/doc-link-check.py", "--json", "--files"] + md_files
 
 
 def scoped_layer_call_command(scope: str, files: list[str] | None, base_command: list[str], strict: bool) -> list[str]:
