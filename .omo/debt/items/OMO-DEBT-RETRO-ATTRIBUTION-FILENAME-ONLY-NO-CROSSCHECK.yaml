@@ -1,0 +1,81 @@
+id: OMO-DEBT-RETRO-ATTRIBUTION-FILENAME-ONLY-NO-CROSSCHECK
+title: retro 与 BET 的归属只有文件名一个信号：267/608 无 bet_id 键，误标到别条 BET 无人能判
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- bin/plan/chain_bind.py
+- bin/plan/bet-ledger.py
+- .omo/_knowledge/retros/BET-Y2Q4-T10-351.md
+- .omo/_knowledge/retros/BET-Y2Q4-T10-350.md
+evidence_refs:
+- '事故实例: 交付提交 9abcccfd6 (PR #5498) 主题写 (BET-Y2Q4-T10-350)，实际范围为 T10-351 (scene-journey-autogen
+  数据源分裂)，并在同一提交创建 T10-351 台账条目写 status: pending —— 「已交付」与「台账 pending」同时为真，链上无判据对齐交付提交与被完成
+  BET'
+- 该提交创建的 retro 文件名 BET-Y2Q4-T10-351.md 而 H1 与正文归属写成 T10-350; 2026-11-25 靠 done_when
+  三条实测 (scan Missing=0 / pytest 5 passed / 5 journey dry-run 无 FileNotFoundError)
+  才定案
+- 'population 实测 2026-11-25 (ws-t10351 tracked): BET-*.md retro 共 608; frontmatter
+  无 bet_id 键 267; 无可解析 frontmatter 起始分隔符 1 (BET-Y2Q4-T10-350.md); bet_id != 文件名 0
+  —— 即当前样本内部一致，但没有任何判据保证它保持为 0'
+- 'chain 侧唯一核对项是 retros/<BET-ID>.md 是否存在 (bin/plan/chain_bind.py:110-111 `if retro_required
+  and not retro_present: reasons.append(''missing_retro'')`)，retro 内容与 BET 归属从不被读取，无检查项'
+mitigation_refs: []
+opened_at: '2026-11-25T01:36:20.448654+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T01:36:20.448654+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-RETRO-ATTRIBUTION-FILENAME-ONLY-NO-CROSSCHECK.
+- at: '2026-11-25T01:38:27.764500+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【机制缺陷】done 链条对 retro 的唯一核对项是文件存在：bin/plan/chain_bind.py:110-111
+    `if retro_required and not retro_present: reasons.append(''missing_retro'')`，retro
+    正文与 frontmatter 从不被读取。于是「这份 retro 属于哪条 BET」只有文件名一个信号，没有任何判据把「交付提交」与「被完成的 BET」对齐。
+
+
+    【事故实例】交付提交 9abcccfd6（PR #5498）的 commit subject 写成 `(BET-Y2Q4-T10-350)`，实际交付范围是
+    T10-351（scene-journey-autogen 数据源分裂修复）；同一次提交还创建了 T10-351 的台账条目并写 `status: pending`。它创建的
+    retro 文件名是 BET-Y2Q4-T10-351.md，而 H1 与正文归属写成 T10-350。结果「范围已交付」与「台账仍 pending」同时为真且不被任何门禁发现——2026-11-25
+    是靠 done_when 三条实测（scan Missing journey specs=0 / pytest 5 passed / 5 个 journey
+    dry-run 无 FileNotFoundError）才定案，不是靠读提交主题。
+
+
+    【总体量实测】2026-11-25 在 ws-t10351 tracked 面上统计：BET-*.md 形态 retro 共 608 个；其中 frontmatter
+    无 bet_id 键 267 个，无可解析 frontmatter 起始分隔符 1 个（.omo/_knowledge/retros/BET-Y2Q4-T10-350.md），bet_id
+    与文件名不一致 0 个。注意最后这个 0 的含义：现有样本内部是一致的，但**没有任何判据保证它保持为 0**——267 个缺 bet_id 的文件让「交叉核对」在四成三的样本上根本没有第二个信号可用。（此前一次计数把「H1/正文里的
+    BET 字符串」也算进不一致，得 299，属装置口径错误，已按精确口径重测。）
+
+
+    【修复方向】chain/lint 增加 retro↔bet 归属核对：frontmatter 必须有 bet_id 且等于文件名（缺失或不等于即报）；complete
+    校验比对绑定 spec 的 bet_id 与本次交付提交范围。本条只登记机制，不改判据口径，escalation 由 principal 决定。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【机制缺陷】done 链条对 retro 的唯一核对项是文件存在：bin/plan/chain_bind.py:110-111 `if
+  retro_required and not retro_present: reasons.append(''missing_retro'')`，retro 正文与
+  frontmatter 从不被读取。于是「这份 retro 属于哪条 BET」只有文件名一个信号，没有任何判据把「交付提交」与「被完成的 BET」对齐。
+
+
+  【事故实例】交付提交 9abcccfd6（PR #5498）的 commit subject 写成 `(BET-Y2Q4-T10-350)`，实际交付范围是 T10-351（scene-journey-autogen
+  数据源分裂修复）；同一次提交还创建了 T10-351 的台账条目并写 `status: pending`。它创建的 retro 文件名是 BET-Y2Q4-T10-351.md，而
+  H1 与正文归属写成 T10-350。结果「范围已交付」与「台账仍 pending」同时为真且不被任何门禁发现——2026-11-25 是靠 done_when
+  三条实测（scan Missing journey specs=0 / pytest 5 passed / 5 个 journey dry-run 无 FileNotFoundError）才定案，不是靠读提交主题。
+
+
+  【总体量实测】2026-11-25 在 ws-t10351 tracked 面上统计：BET-*.md 形态 retro 共 608 个；其中 frontmatter
+  无 bet_id 键 267 个，无可解析 frontmatter 起始分隔符 1 个（.omo/_knowledge/retros/BET-Y2Q4-T10-350.md），bet_id
+  与文件名不一致 0 个。注意最后这个 0 的含义：现有样本内部是一致的，但**没有任何判据保证它保持为 0**——267 个缺 bet_id 的文件让「交叉核对」在四成三的样本上根本没有第二个信号可用。（此前一次计数把「H1/正文里的
+  BET 字符串」也算进不一致，得 299，属装置口径错误，已按精确口径重测。）
+
+
+  【修复方向】chain/lint 增加 retro↔bet 归属核对：frontmatter 必须有 bet_id 且等于文件名（缺失或不等于即报）；complete
+  校验比对绑定 spec 的 bet_id 与本次交付提交范围。本条只登记机制，不改判据口径，escalation 由 principal 决定。'

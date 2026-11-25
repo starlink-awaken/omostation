@@ -1,0 +1,80 @@
+id: OMO-DEBT-BET-CLOSEOUT-AUTO-PROPOSES-AS-APPLIES
+title: bet-closeout-auto 把「改台账」写成效应实为只打印建议，Step 4 lint 因参数不匹配从未跑成还继续放行
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- bin/plan/bet-closeout-auto.py
+- bin/plan/bet-ledger.py
+- .omo/_knowledge/retros/BET-Y2Q4-T10-351.md
+- docs/plans/3y-bet-ledger.yaml
+evidence_refs:
+- '实测 2026-11-25 (BET-Y2Q4-T10-351 done-transition): 跑 bet-closeout-auto 后 git diff
+  --stat -- docs/plans/3y-bet-ledger.yaml 为 0 行 —— docstring/输出把 Step 3 说成写台账，实际 proposal-only，status
+  不变'
+- 'Step 4 调 `bet-ledger.py lint <path>`; lint 子命令无位置参数 -> argparse ''error: unrecognized
+  arguments''，rc!=0 仅以 ⚠️ 打印后继续放行，自检步骤空转. 正确形式 `bet-ledger.py lint` (无路径) -> OK --
+  599 bets, 17 tracks, no errors'
+- Step 5 提示 `git rebase origin/main`，与 AGENTS.md §6 明确禁止用 rebase/merge/pull 吸收上游 (gac-worktree.sh:966
+  WP1 Wave B2 注释) 直接冲突
+- 台账 done 迁移实际由 bin/plan/bet-ledger.py complete BET-Y2Q4-T10-351 完成 (rc=0)，非该脚本
+mitigation_refs: []
+opened_at: '2026-11-25T01:36:20.407517+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T01:36:20.407517+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-BET-CLOSEOUT-AUTO-PROPOSES-AS-APPLIES.
+- at: '2026-11-25T01:38:27.724074+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【机制缺陷】bin/plan/bet-closeout-auto.py 的
+    docstring 与输出把 Step 3 说成「写台账」，实现是 proposal-only——跑完不产生任何台账改动；Step 4 调 `bet-ledger.py
+    lint <path>`，而 lint 子命令不接受位置参数，argparse 直接 `error: unrecognized arguments` 非零退出，脚本只把失败打成
+    ⚠️ 便继续放行，等于自检步骤全程空转；Step 5 的建议文本让用户 `git rebase origin/main`，与本仓明确禁止用 rebase/merge/pull
+    吸收上游的约定冲突（AGENTS.md §6；gac-worktree.sh:966 的 WP1 Wave B2 注释把 submit 定为 proposal-only）。
+
+
+    【实测】2026-11-25 BET-Y2Q4-T10-351 done-transition 过程中：跑 bet-closeout-auto 后 `git
+    diff --stat -- docs/plans/3y-bet-ledger.yaml` 为 0 行，status 仍 pending；手工执行正确形式
+    `bet-ledger.py lint`（不带路径）→ `OK -- 599 bets, 17 tracks, no errors`；台账 done 迁移实际由
+    `bet-ledger.py complete BET-Y2Q4-T10-351` 完成（rc=0，写 status: done + done_at）。
+
+
+    【为什么这是错的】「声称效应 ≠ 实际效应」的工具最容易造成漏收尾：操作者看到脚本报「已处理/建议已给出」便以为状态迁移完成。本仓已经吃过同形状的亏（submit
+    的 exit 2 被读成拦截而不是终态）。lint 步骤空转还让该脚本对自身产出完全没有验证能力——它唯一能发现「台账写坏了」的机会被一个参数错误永久关闭。
+
+
+    【修复方向】Step 3 要么真调 complete（带 completion_evidence 前置校验与幂等），要么把输出措辞改为「仅建议，未落盘」；Step
+    4 改为 `bet-ledger.py lint`（无位置参数）并把 rc!=0 视为失败；Step 5 删除 rebase 提示，改为按 §6 的 push
+    + gh pr create 路径。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【机制缺陷】bin/plan/bet-closeout-auto.py 的 docstring 与输出把 Step 3 说成「写台账」，实现是
+  proposal-only——跑完不产生任何台账改动；Step 4 调 `bet-ledger.py lint <path>`，而 lint 子命令不接受位置参数，argparse
+  直接 `error: unrecognized arguments` 非零退出，脚本只把失败打成 ⚠️ 便继续放行，等于自检步骤全程空转；Step 5 的建议文本让用户
+  `git rebase origin/main`，与本仓明确禁止用 rebase/merge/pull 吸收上游的约定冲突（AGENTS.md §6；gac-worktree.sh:966
+  的 WP1 Wave B2 注释把 submit 定为 proposal-only）。
+
+
+  【实测】2026-11-25 BET-Y2Q4-T10-351 done-transition 过程中：跑 bet-closeout-auto 后 `git diff
+  --stat -- docs/plans/3y-bet-ledger.yaml` 为 0 行，status 仍 pending；手工执行正确形式 `bet-ledger.py
+  lint`（不带路径）→ `OK -- 599 bets, 17 tracks, no errors`；台账 done 迁移实际由 `bet-ledger.py
+  complete BET-Y2Q4-T10-351` 完成（rc=0，写 status: done + done_at）。
+
+
+  【为什么这是错的】「声称效应 ≠ 实际效应」的工具最容易造成漏收尾：操作者看到脚本报「已处理/建议已给出」便以为状态迁移完成。本仓已经吃过同形状的亏（submit
+  的 exit 2 被读成拦截而不是终态）。lint 步骤空转还让该脚本对自身产出完全没有验证能力——它唯一能发现「台账写坏了」的机会被一个参数错误永久关闭。
+
+
+  【修复方向】Step 3 要么真调 complete（带 completion_evidence 前置校验与幂等），要么把输出措辞改为「仅建议，未落盘」；Step
+  4 改为 `bet-ledger.py lint`（无位置参数）并把 rc!=0 视为失败；Step 5 删除 rebase 提示，改为按 §6 的 push
+  + gh pr create 路径。'

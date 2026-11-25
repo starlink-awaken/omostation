@@ -1,0 +1,96 @@
+id: OMO-DEBT-CONFLICT-MARKER-LONE-BASE-MARKER-INVISIBLE
+title: 冲突标记检测器对孤立 diff3 base 标记构造性失明：_scan 无 head/tail 时丢弃全部命中，main 上有实例长期不被报
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- bin/gac/check-conflict-markers.py
+- .githooks/pre-commit
+- .omo/_truth/registry/governance-checks.yaml
+- .omo/notepads/delegation-guardrails/decisions.md
+evidence_refs:
+- bin/gac/check-conflict-markers.py:88-103 _scan() 末段 has_headtail=any(k in ('head','tail')
+  ...); 为假时 return []，把本文件已收集的 base/separator 命中全量丢弃 => 孤立 diff3 base 标记在构造上不可能被报出，与
+  --staged/--all 无关
+- '变异探针 2026-11-25 (ws-t10351，探针文件已删，工作树回干净): lone_base(''||||||| abc123'') staged
+  rc=0 且打印「无冲突标记」; lone_sep(''======='') rc=0; head_tail rc=1; base_with_head rc=1'
+- 'main 现存实例: .omo/notepads/delegation-guardrails/decisions.md:46 ''||||||| 7f541d0f9''
+  由 241c2c3b2 (PR #4291) 入库至今; 另一例为本 BET 修正前的 .omo/_knowledge/retros/BET-Y2Q4-T10-351.md
+  第 4 节末 ''||||||| 0f3e68143'' —— 两者对 --all 全量 tracked 扫描均报「无冲突标记」'
+- 盘点该两处时 rg 默认跳过隐藏目录 (.omo/**)，需 --no-ignore --hidden 才见; git check-ignore --no-index
+  rc=1 证明非 gitignore 所致
+mitigation_refs: []
+opened_at: '2026-11-25T01:36:20.365707+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T01:36:20.365707+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-CONFLICT-MARKER-LONE-BASE-MARKER-INVISIBLE.
+- at: '2026-11-25T01:38:27.683041+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【机制缺陷】bin/gac/check-conflict-markers.py
+    的 _scan()（:88-103）先收集 head/tail/base/separator 四类命中，随后 has_headtail = any(k in
+    (''head'',''tail'') for _,k in hits)；为假时 `return []`，把该文件已经收集到的 base/separator
+    命中全量丢弃。结论：只含孤立 `||||||| `（diff3 base 段标记）的文件在构造上不可能被报出，且与扫描模式无关——--staged（读 index
+    blob）和 --all（读 tracked 磁盘内容）走的是同一个 _scan。
+
+
+    【为什么这是错的】`||||||| ` 后跟 7 位以上对象名的形态几乎不会出现在正常代码或 Markdown，而它恰恰是「一次没做完的冲突解决」最常见残留（人工删掉
+    <<<<<<< 与 >>>>>>> 两段、漏删 base 段）。gate 自称「检测 git 合并冲突标记防入库」，实际判定面比名字窄；pre-commit
+    / gac-local-gate / CI 三层都调同一个函数，因此没有任何一层能兜住 base 段残留。
+
+
+    【变异探针实测】2026-11-25 在 ws-t10351 以临时文件四类各测一次（探针文件随后删除，git status --short 回干净）：lone_base（仅
+    `||||||| abc123`）staged rc=0 且打印「无冲突标记」；lone_sep（仅 `=======`）rc=0；head_tail rc=1；base_with_head
+    rc=1。即前两类静默放行，后两类正常拦截。
+
+
+    【main 上的真实实例】全量 tracked 扫描命中 2 个文件，gate 仍报「无冲突标记」：① .omo/notepads/delegation-guardrails/decisions.md:46
+    的 `||||||| 7f541d0f9`，由 241c2c3b2（PR #4291）提交入库，至今在 main；② 本批次修正前的 .omo/_knowledge/retros/BET-Y2Q4-T10-351.md
+    第 4 节末尾 `||||||| 0f3e68143`（已在 PR #5547 删除）。
+
+
+    【盘点这一层时踩到的仪器坑】用 rg 找这两处时默认跳过隐藏目录，`.omo/**` 整体不可见，首跑 0 命中；加 --no-ignore --hidden
+    才见两处，再用 `git check-ignore --no-index` rc=1 证明不是 gitignore 导致。仪器阴性先证其能跑。
+
+
+    【修复方向（不在本条债的执行范围）】_scan 应把 base 命中当作独立可报信号（或至少在 has_headtail 为假时保留 base 命中），并补「孤立
+    base 也能检出」的单测钉住；separator 维持现状（md/hr 误报确实高）。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【机制缺陷】bin/gac/check-conflict-markers.py 的 _scan()（:88-103）先收集 head/tail/base/separator
+  四类命中，随后 has_headtail = any(k in (''head'',''tail'') for _,k in hits)；为假时 `return
+  []`，把该文件已经收集到的 base/separator 命中全量丢弃。结论：只含孤立 `||||||| `（diff3 base 段标记）的文件在构造上不可能被报出，且与扫描模式无关——--staged（读
+  index blob）和 --all（读 tracked 磁盘内容）走的是同一个 _scan。
+
+
+  【为什么这是错的】`||||||| ` 后跟 7 位以上对象名的形态几乎不会出现在正常代码或 Markdown，而它恰恰是「一次没做完的冲突解决」最常见残留（人工删掉
+  <<<<<<< 与 >>>>>>> 两段、漏删 base 段）。gate 自称「检测 git 合并冲突标记防入库」，实际判定面比名字窄；pre-commit /
+  gac-local-gate / CI 三层都调同一个函数，因此没有任何一层能兜住 base 段残留。
+
+
+  【变异探针实测】2026-11-25 在 ws-t10351 以临时文件四类各测一次（探针文件随后删除，git status --short 回干净）：lone_base（仅
+  `||||||| abc123`）staged rc=0 且打印「无冲突标记」；lone_sep（仅 `=======`）rc=0；head_tail rc=1；base_with_head
+  rc=1。即前两类静默放行，后两类正常拦截。
+
+
+  【main 上的真实实例】全量 tracked 扫描命中 2 个文件，gate 仍报「无冲突标记」：① .omo/notepads/delegation-guardrails/decisions.md:46
+  的 `||||||| 7f541d0f9`，由 241c2c3b2（PR #4291）提交入库，至今在 main；② 本批次修正前的 .omo/_knowledge/retros/BET-Y2Q4-T10-351.md
+  第 4 节末尾 `||||||| 0f3e68143`（已在 PR #5547 删除）。
+
+
+  【盘点这一层时踩到的仪器坑】用 rg 找这两处时默认跳过隐藏目录，`.omo/**` 整体不可见，首跑 0 命中；加 --no-ignore --hidden
+  才见两处，再用 `git check-ignore --no-index` rc=1 证明不是 gitignore 导致。仪器阴性先证其能跑。
+
+
+  【修复方向（不在本条债的执行范围）】_scan 应把 base 命中当作独立可报信号（或至少在 has_headtail 为假时保留 base 命中），并补「孤立
+  base 也能检出」的单测钉住；separator 维持现状（md/hr 误报确实高）。'
