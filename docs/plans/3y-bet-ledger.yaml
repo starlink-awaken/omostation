@@ -48459,6 +48459,53 @@ bets:
   circuit_breaker: >-
     若 proposal_lock_exemption 被用于批量洗白违规卡 (非显式个案理由), 停止并
     交 owner 裁决。
+- id: BET-Y2Q4-T10-353
+  title: BET-Y2Q4-T10-353 services.yaml 8 服务环境/日志声明镜像回填正式化 —— PATH + resident outputs
+  goal: >-
+    T10-349 修好 gen-service-configs.py --check 假红 (plistlib 语义等价判定) 后真漂移
+    现形: 本机安装平面 2026-11-25 上午重写 8 个 launchd plist, 注入
+    EnvironmentVariables.PATH 与 (resident 6 服务) StandardOutPath/StandardErrorPath,
+    services.yaml 声明侧未跟上, service-config-drift gate 项 FAIL。T349 时 agent-brief
+    已做未提交镜像副本先例; 本 BET 将 8 服务镜像回填正式化: agent-brief-materialize、
+    resident.{decision,execute,event-ingest,signals,inbox,promote}、
+    zhixing-projection-republisher 的 environment 块回填 PATH (8 服务同值), resident
+    6 服务补 outputs (stdout=stderr= ~/.local/log/omostation/<label>.log)。安装器注入
+    源头与声明生成器不同源 (重装可能再漂) 留债另案, 不在本 BET 收编。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: true
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - .omo/_truth/registry/services.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-25-service-decl-mirror-bet-t10-353.md
+    spec_version: 1.0.0
+    content_digest: sha256:d545f1a6a20ac036f2cb2397a754d869937fd3705cc5c9192fdf19be8b41f612
+    decision_ref: decision://accepted/BET-Y2Q4-T10-353
+  non_goals:
+  - 不收编安装器 PATH 注入源头 (注入方与声明生成器不同源, 重装可能再漂) ——
+    留债由安装平面 owner 决定同源策略。
+  - 不改 gen-service-configs.py 渲染逻辑 (T349 已收口)。
+  - 不动 orchestrator/sediment/monitor/heartbeat 等无漂移服务。
+  done_when:
+  - services.yaml 8 服务 environment 块含 PATH, resident 6 服务含 outputs。
+  - gen-service-configs.py --check 报 0 drift (78 launchd services)。
+  verify:
+  - cmd: uv run --with pyyaml python bin/mof/gen-service-configs.py --check
+    expect: 0 drift (78 launchd services)。
+  - cmd: make gac-local-gate
+    expect: service-config-drift 项 PASS。
+  circuit_breaker: >-
+    若回填后发现本机 plist 是被错误的安装平面误写 (注入值非本机真实意图), 停止并
+    交 owner 裁决以哪侧为准。
 - id: BET-Y2Q4-T10-350
   title: BET-Y2Q4-T10-350 omo-debt 单个畸形 ref 冻结投影平面 29.8h —— 非 str 条目 ref 判 stale 而非崩平面（代码腿）
   goal: '`.omo/debt/items/*` 的 refs 写散文注解是既有用法（全库 352 个 ref 元素中 142 个带注解），散文里出现 ASCII
@@ -48700,7 +48747,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 600
+  total_bets: 601
   windows:
   - Y1Q1
   - Y1Q2
