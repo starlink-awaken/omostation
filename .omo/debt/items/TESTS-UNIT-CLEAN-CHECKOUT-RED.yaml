@@ -1,5 +1,5 @@
 id: "TESTS-UNIT-CLEAN-CHECKOUT-RED"
-title: "测试面在「未 init 子模块」的检出上大面积红：tests/unit 36 条（已修完 → 0）、tests/integration 干净、顶层 tests/test_*.py **223 failed + 21 errors**（未修）—— 同一病根的三种面值"
+title: "测试面在「未 init 子模块」的检出上红：tests/unit 已修完（0）、tests/integration 干净、顶层 tests/test_*.py 2026-11-25 实测 **9 failed**（全为输入未备齐，旧记的 223 已陈旧）—— 同一病根的三种面值"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -221,4 +221,26 @@ history:
     并清空 bin/gac/evidence-smoke.py 的 KNOWN_GAP_PREFIXES（KNOWN_GAP_EXPIRES=None）。
     tests/test_bos_deprecated_count.py 恢复 8/8 通过。本条顶层 decision_needed（clean checkout
     tests/unit 策略 (a)/(b)/(c)）保持不变。
+  actor: "governance-agent"
+- at: "2026-11-25T22:15:00+00:00"
+  action: evidence-reinforce
+  note: >-
+    **顶层测试面的读数已大幅变化，条目正文的「223 failed + 21 errors（未修）」已陈旧**。
+    2026-11-25 在 `origin/main` `8e885ee76` 的 fresh worktree（不 init 子模块、不物化生成态）
+    重测：**收集 3009 条无收集错误**；分 6 片并行跑（`tests/*.py` 269 个文件均分 6 份，各起一个
+    pytest 进程，总墙钟约 8 分钟——串行要近一小时）合计 **2554 passed / 9 failed / 279 skipped**。
+    **9 条全部可点名，且逐条都是「输入没备齐」形态**：
+
+    | 文件 | 条数 | 首因 |
+    |---|---|---|
+    | `test_agent_workflow_projection.py` | 4 | 需 `projects/omo/src` 内核包与 projection 工件（FileNotFoundError / rc=2「缺 omo 内核包」） |
+    | `test_governance_evolution.py` | 3 | 需 `projects/cockpit/src/cockpit/commands/governance.py`（deliverable path not present yet） |
+    | `test_cross_repo_consistency.py` | 1 | 需 `projects/ecos/port-registry.yaml`（exists() False） |
+    | `test_bet_claim_broadcast.py` | 1 | 同缺 omo 内核包（SystemExit: 2） |
+
+    ⇒ 病根判断（正文原有结论）不变，但**量级从三位数降到个位数**：skip 守卫的补齐（#5382/#5383
+    及后续各批）已覆盖绝大多数文件。**纪律**：这种「已修完」的条目，正文的旧数字要随证据更新，
+    否则下一轮 agent 会按 223 去规划工作量（与「行号指针漂移」同族）。
+    **边界**：本测量为 6 进程并行，个别用例若对共享 state 面敏感可能与串行读数有出入；
+    失败集与首因逐条来自各自进程日志（`/tmp/chunks/log_*`），未做串行复算。
   actor: "governance-agent"
