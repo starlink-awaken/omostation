@@ -26,8 +26,22 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if not RUNS_DIR.exists():
+        # `.omo/_delivery/**` 是 gitignore 面 —— CI 的干净检出里没有 runs 目录。
+        # 旧实现这里返回 `ok: true`「no runs directory」，等于对「关闭的 run 是否
+        # 留了 evidence」这个检查无条件放行（空绿）。改为自报没测成，由
+        # gac-local-gate 归到 not_measured；退出码仍 0（缺输入不是仓库缺陷）。
         if args.json:
-            print(json.dumps({"ok": True, "summary": "no runs directory", "findings": []}))
+            print(
+                json.dumps(
+                    {
+                        "ok": True,
+                        "measured": False,
+                        "reason": "no_runs_dir",
+                        "summary": "no runs directory",
+                        "findings": [],
+                    }
+                )
+            )
         else:
             print("check-evidence-honest-closure: PASS (no runs directory)")
         return 0
@@ -73,7 +87,12 @@ def main(argv: list[str] | None = None) -> int:
     ok = len(violations) == 0
 
     if args.json:
-        print(json.dumps({"ok": ok, "summary": summary, "findings": violations}, indent=2))
+        print(
+            json.dumps(
+                {"ok": ok, "measured": True, "summary": summary, "findings": violations},
+                indent=2,
+            )
+        )
     else:
         print(
             f"check-evidence-honest-closure: {'PASS' if ok else 'FAIL'} ({checked} runs, {len(violations)} violations, {total_evidence} evidence entries)"
