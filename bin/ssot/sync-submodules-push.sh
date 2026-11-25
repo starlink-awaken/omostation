@@ -35,6 +35,16 @@ while IFS= read -r sm; do
     continue
   fi
 
+  # 2026-11-25: `.git` 存在不等于检出可读 —— worktree 守卫的在途 init 会留下
+  # gitdir 指针指向 `refs/heads/.invalid` 的瞬态 (无 refs、pin 对象可能不在本地)。
+  # 此时既读不出分支也读不出 HEAD, 它不是「有未推 commit」, 按未初始化同论跳过;
+  # reachability 由 submodule-reachability-gate 兜底 (与下面 detached 同一口径)。
+  if ! git -C "$sm" rev-parse --verify HEAD >/dev/null 2>&1; then
+    missing=$(( missing + 1 )) || true
+    echo "⏭ $sm: 检出不可读 (.invalid 在途 init / 无有效 HEAD), 跳过 — reachability 由 submodule-reachability-gate 兜底"
+    continue
+  fi
+
   branch=$(git -C "$sm" rev-parse --abbrev-ref HEAD 2>/dev/null) || {
     failed=$(( failed + 1 )) || true
     echo "❌ $sm: 无法读取当前分支"

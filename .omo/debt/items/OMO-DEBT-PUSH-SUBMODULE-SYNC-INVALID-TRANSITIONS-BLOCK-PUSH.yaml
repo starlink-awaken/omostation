@@ -69,6 +69,22 @@ history:
     <pin>` 后 `checkout FETCH_HEAD`（不改根 gitlink、不联网），钩子随即走正常分支放行；2026-11-25 在 ws-ssotfix/gbrain
     与 ws-debt22/omo 两处分别复现并绕过。修法待定，方向是 :31 的判据换成「HEAD 不可读 / 零 refs / pin 缺失 ⇒ 与未初始化同类，计入
     missing 并跳过」，同时保留 reachability gate 兜底，避免把真实的未推 commit 也一并放过。''.'
+- at: '2026-11-25T19:20:00+00:00'
+  action: mitigate
+  note: >-
+    **已修**（`bin/ssot/sync-submodules-push.sh`）：在分支读取之前加一道 HEAD 可读性判定
+    —— `git -C "$sm" rev-parse --verify HEAD` 失败即归入 ``missing`` 并跳过，文案写明
+    「检出不可读 (.invalid 在途 init / 无有效 HEAD) … reachability 由 submodule-reachability-gate 兜底」。
+    判据取「有没有有效 HEAD」，不再用「`.git` 是否存在」当代理指标（原 :31 的错位）。
+    **两态实测**（临时夹具，非本机工作树）：
+    ① `.invalid` 瞬态夹具（`.git` 在位、HEAD 指向不存在的 `refs/heads/.invalid`、零 refs）
+       → `待push=0 失败=0 缺失=1`, rc=0（改前同夹具 `失败=1`, rc=1，即 push 被拦）；
+    ② 反例夹具（真实 clone + 一个未推 commit，另有 `.invalid` 子模块在册）
+       → `待push=1 失败=0 缺失=1`, rc=1 —— 未推检测未被放宽。
+    **判据钉法**：`tests/unit/gac/test_sync_submodules_push_invalid_transient.py` 三条两两不共享失效模式
+    （正例跳过 / 反例仍阻断 / 变异：把守卫条件改成 `if false` 后正例当场转红）。
+    **边界**：只把「读不出 HEAD」归为缺席；HEAD 可读而分支名读不出仍计 failed（那才是真异常）。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
