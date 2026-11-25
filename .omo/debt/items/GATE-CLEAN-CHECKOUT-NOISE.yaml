@@ -222,3 +222,10 @@ history:
     (b) 齐备树比 fallback 少跑 5 条 gate（跨仓策略差异, 见
     GATE-POLICY-SOURCE-COVERAGE-SKEW 的 (a)/(b)/(c)）。
   actor: 'governance-agent'
+- at: '2026-11-26T04:00:00+00:00'
+  action: mitigate
+  note: >-
+    **收口判据落地**：部分检出树上 **hard fail 17 条全部带原因标注（无标注 = 0）**;
+    原因登记成显式词汇表 `KNOWN_NOT_MEASURED_REASONS`（七项各有出处）,
+    未登记即告警（#5596）。这条不变式此前只存在于分散的用例里, 现在门禁自己会叫。
+  actor: 'governance-agent'
