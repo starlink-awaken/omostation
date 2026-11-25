@@ -212,3 +212,13 @@ history:
     **纪律**: 「6 条」那个读数本身也只是在**当时**的并发状态下成立 —— 平面里有并发敏感用例时,
     任何一次读数都要标注采集时刻, 不能当成稳态常量引用。
   actor: "governance-agent"
+- at: "2026-11-25T08:15:00+00:00"
+  action: evaluate
+  note: >-
+    Principal 1A 裁决正式下线 wps-office-mcp 与 wps-skills：已在 projects/agora、projects/ecos、
+    projects/knowledge/kairon 与根仓声明/镜像（services.yaml、bos-registry.json、
+    project-registry.yaml、capability-registry.yaml、port-registry.yaml）彻底移除两项失效声明，
+    并清空 bin/gac/evidence-smoke.py 的 KNOWN_GAP_PREFIXES（KNOWN_GAP_EXPIRES=None）。
+    tests/test_bos_deprecated_count.py 恢复 8/8 通过。本条顶层 decision_needed（clean checkout
+    tests/unit 策略 (a)/(b)/(c)）保持不变。
+  actor: "governance-agent"

@@ -754,32 +754,6 @@
     "registered_by": "bin/ssot/sync-bos-registry.py"
   },
   {
-    "uri": "bos://capability/wps-office-mcp/invoke",
-    "domain": "capability",
-    "package": "toolbox/wps-office-mcp",
-    "action": "invoke",
-    "endpoint": "node /Users/xiamingxing/ToolBox/mcp/wps-office-mcp/dist/index.js",
-    "protocol": "stdio",
-    "transport": "stdio",
-    "status": "active",
-    "description": "WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写",
-    "registered_at": "2026-09-30T02:43:10.987240+00:00",
-    "registered_by": "bin/ssot/sync-bos-registry.py"
-  },
-  {
-    "uri": "bos://capability/wps-skills/load",
-    "domain": "capability",
-    "package": "toolbox/wps-skills",
-    "action": "load",
-    "endpoint": "node /Users/xiamingxing/ToolBox/skills/wps-skills/wps-office-mcp/dist/index.js",
-    "protocol": "stdio",
-    "transport": "stdio",
-    "status": "active",
-    "description": "WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发",
-    "registered_at": "2026-09-30T02:43:10.987240+00:00",
-    "registered_by": "bin/ssot/sync-bos-registry.py"
-  },
-  {
     "uri": "bos://governance/agent-workflow/bootstrap",
     "domain": "governance",
     "package": "agent-workflow",
