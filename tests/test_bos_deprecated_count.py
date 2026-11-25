@@ -131,12 +131,23 @@ class TestEvidenceSmokeCli:
 
     def test_gate_mode_emits_known_gap_expiry(self):
         """evidence-smoke 报告应含 KNOWN_GAP_EXPIRES 用于 D 调研到期跟踪."""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("evidence_smoke_mod", EVIDENCE_SMOKE)
+        assert spec and spec.loader
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        assert mod.KNOWN_GAP_PREFIXES == {}, f"KNOWN_GAP_PREFIXES 应清空: {mod.KNOWN_GAP_PREFIXES}"
+
         report = _run_evidence_smoke()
-        expires = report["bos"].get("deprecated_expires")
-        assert expires is not None, "deprecated_expires 缺失"
-        # 到期日不应在过去 (任务 2026-07-25 到期)
-        exp_date = datetime.fromisoformat(expires).replace(tzinfo=UTC)
-        assert exp_date >= datetime.now(UTC), f"KNOWN_GAP_EXPIRES 已过 ({expires}), 应清理 KNOWN_GAP_PREFIXES"
+        assert "deprecated_expires" in report["bos"], "deprecated_expires 缺失"
+        expires = report["bos"]["deprecated_expires"]
+        if expires is None:
+            assert report["bos"]["deprecated_count"] == 0
+        else:
+            # 到期日不应在过去 (任务 2026-07-25 到期)
+            exp_date = datetime.fromisoformat(expires).replace(tzinfo=UTC)
+            assert exp_date >= datetime.now(UTC), f"KNOWN_GAP_EXPIRES 已过 ({expires}), 应清理 KNOWN_GAP_PREFIXES"
 
 
 class TestBosYamlHasNoDeprecatedMarkers:
