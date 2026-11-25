@@ -57,6 +57,21 @@ history:
 
     【修复方向】chain/lint 增加 retro↔bet 归属核对：frontmatter 必须有 bet_id 且等于文件名（缺失或不等于即报）；complete
     校验比对绑定 spec 的 bet_id 与本次交付提交范围。本条只登记机制，不改判据口径，escalation 由 principal 决定。''.'
+- at: '2026-11-25T20:45:00+00:00'
+  action: mitigate
+  note: >-
+    **修复方向的前半已落地（只报「有键且不一致」）**：`chain_bind.py` 新增
+    `retro_attribution_mismatch(workspace, bet_id)` —— 读 `retros/<BET-ID>.md` 的 frontmatter，
+    `bet_id` 存在且与文件名不同才返回原因；在 `evaluate_closeout` / `evaluate_complete`
+    里作为额外 reason 并入 verdict。**实测无回填成本**：origin/main 上 609 条 `BET-*.md`
+    retro 逐条跑新判据 → **0 处不一致**（其中 341 条带 `bet_id`、1 条无可解析 frontmatter）。
+    **判据**：`tests/test_chain_bind.py` 新增六条 —— 点名不一致 / 缺键不报 / 一致放行 /
+    文件缺席与无 frontmatter 跳过 / `evaluate_complete` 传播进 reasons / 一致时 verdict 仍为 ok。
+    **未做（有意）**：① 「frontmatter 必须有 bet_id」这一半不做 —— 267 条缺键会一次性转红，
+    属口径变更（escalation 归 principal）；② 「complete 比对绑定 spec 的 bet_id 与本次交付提交范围」
+    未做 —— 那是事故实例（PR #5498 主题写 T10-350、范围是 T10-351）的正解，需要提交范围语义。
+    **边界**：本条只钉住「现有样本内部一致」这个不变量为 0 的能力，没有增加第二个信号。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
