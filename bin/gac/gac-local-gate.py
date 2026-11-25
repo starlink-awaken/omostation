@@ -1344,6 +1344,39 @@ def run_checks(checks: Any) -> list[dict[str, object]]:
     return results
 
 
+# 「没测成」的原因词汇表 —— **显式集合**。任何新的原因必须在这里登记,
+# 否则门禁会当场告警（防新原因无声漂移, 与 REQUIRED_SUBMODULES /
+# REQUIRED_COMMAND_FLAGS 同一纪律）。截至 2026-11-26 的实际原因:
+#   missing_input          —— check 自报输入缺失 (current-state-coherence)
+#   entrypoint_missing     —— check 的入口脚本不在本树 (#5371)
+#   dependencies_unchecked —— check 声明所需的子模块未检出 (#5588)
+#   targets_absent         —— 断链目标全属输入没备齐 (doc-link-check #5579)
+#   paths_absent           —— error 级目标全属输入没备齐 (capability/auto-fix #5582)
+#   scan_incomplete        —— 推导基准的扫描面不完整 (dependency-baseline #5585)
+#   generation_failed      —— 上游报告生成失败 (check-evidence-freshness #5557)
+KNOWN_NOT_MEASURED_REASONS = frozenset(
+    {
+        "missing_input",
+        "entrypoint_missing",
+        "dependencies_unchecked",
+        "targets_absent",
+        "paths_absent",
+        "scan_incomplete",
+        "generation_failed",
+    }
+)
+
+
+def warn_if_unknown_reason(name: str, reason: str) -> None:
+    """未登记的原因立刻告警 —— 让「新增原因」成为一次显式动作。"""
+    if reason not in KNOWN_NOT_MEASURED_REASONS:
+        print(
+            f"⚠️  `{name}` 自报了未登记的原因 `{reason}` —— "
+            "请把它加进 KNOWN_NOT_MEASURED_REASONS",
+            file=sys.stderr,
+        )
+
+
 def _declared_not_measured(item: dict[str, object]) -> str | None:
     """check **自己**声明「我没测成」时返回原因, 否则 None。
 
@@ -1664,6 +1697,7 @@ def run_gate(
                 detail = {"entrypoint": entrypoint}
         if reason is None:
             continue
+        warn_if_unknown_reason(name, reason)
         not_measured.append(
             {"name": name, "reason": reason, "command": result.get("command"), **detail}
         )
