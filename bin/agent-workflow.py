@@ -276,8 +276,31 @@ from typing import Any
 
 # Resolve workspace and add omo src to PYTHONPATH dynamically
 WORKSPACE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(WORKSPACE / "projects/omo/src"))
-sys.path.insert(0, str(WORKSPACE / "projects/ecos/src"))
+
+
+def _submodule_src(rel: str, package: str, missing: str) -> Path:
+    """挂上子模块 src；未检出（或只检出到空目录）时给可读诊断而非裸 traceback。
+
+    旧行为：缺 `projects/omo` / `projects/ecos`（干净检出、claim 快速路径，或
+    只对齐了 gitlink 的空目录）时, 下面那几行模块级 `from omo.workflow import ...`
+    直接抛 ModuleNotFoundError —— 门禁里 8 个 `agent-workflow-*` check 于是输出
+    **空 stdout + traceback**, 既不可读也不可归类（`tests/test_agent_workflow.py`
+    两处守卫的 docstring 记的就是这个现象：「与真回归同形」）。
+    判据取**包目录**而不是 `src/` 本身：半初始化的子模块（有目录、无内容）同样
+    要报，否则等于漏掉最常见的形态。
+    """
+    path = WORKSPACE / rel
+    if not (path / package).is_dir():
+        sys.stderr.write(
+            f"bin/agent-workflow.py: {rel} 未检出（{missing}）—— "
+            f"先 `git submodule update --init {rel.rsplit('/src', 1)[0]}`\n"
+        )
+        raise SystemExit(2)
+    return path
+
+
+sys.path.insert(0, str(_submodule_src("projects/omo/src", "omo", "缺 omo 内核包")))
+sys.path.insert(0, str(_submodule_src("projects/ecos/src", "ecos", "缺 ecos 包")))
 
 from omo.workflow import (
     WORKSPACE,
