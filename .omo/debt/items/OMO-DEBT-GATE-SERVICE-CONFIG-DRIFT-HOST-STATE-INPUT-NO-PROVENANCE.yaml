@@ -1,0 +1,150 @@
+id: OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE
+title: service-config-drift 阻断门禁读机器侧 plist 且读数无出处：同一检出 PASS→FAIL 非确定，drift 只报 label
+  不报字段
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- bin/mof/gen-service-configs.py
+- bin/gac/gac-local-gate.py
+- .omo/_truth/registry/services.yaml
+- docs/reports/2026-11-23-service-config-check-drift-closeout.md
+evidence_refs:
+- '输入不在被审检出内: bin/mof/gen-service-configs.py:230-231 `_launchd_dir() -> Path.home()/Library/LaunchAgents`，:1093
+  `target = launchd_dir / f"{svc[''label'']}.plist"`，:1113 `existing = target.read_text()`
+  —— 比较对象是本机已装文件（ProgramArguments 实际指向 /Users/xiamingxing/.local/opt/omostation/...），git
+  与 registry 都不覆盖它'
+- '缺席即绿: :1052 `launchd_observer_available = launchd_dir.is_dir()`，:1085 与 :1122-1133
+  在该目录不存在时整块跳过字节比对并 `ok=True / skipped=True`（:1025 注释自陈「CI 无本机 plist」）⇒ 同一份代码在无 LaunchAgents
+  的机器上恒绿，判定不可跨机迁移'
+- '它是阻断项: bin/gac/gac-local-gate.py:223-224 接线 `"id": "service-config-drift", "command":
+  ["bin/mof/gen-service-configs.py", "--check"]`，:735 注释把 service-config-drift 列入
+  `blocking=True (常规模式即阻断)`'
+- '非确定读数（2026-11-25 实录）: 同一 worktree @f9e23a431、同一 `make gac-local-gate`，02:26Z 打
+  `[PASS] service-config-drift`、02:35Z 起打 `[FAIL]`，两次之间本方零改动；`~/Library/LaunchAgents/com.omostation.{zhixing-projection-republisher,agent-brief-materialize}.plist`
+  mtime = 25 Nov 10:28 本地 (=02:28Z)，正落在两次读数之间（并发活动写入）。失败原文: `❌ 2 drift: - com.omostation.zhixing-projection-republisher:
+  plist 与 services.yaml 不一致 (drift) / - com.omostation.agent-brief-materialize: ...`
+  → `GaC local gate: FAIL | 1 SOFT WARN`'
+- '读数不可行动: :1117 `drifts.append(f"{svc[''label'']}: plist 与 services.yaml 不一致 (drift)")`
+  与 :1135 的 `--json` payload 都只有 label 字符串，无差异字段、无被比文件的 mtime/digest ⇒ 排障要另造装置'
+- '自造装置定位结果: plistlib 语义对比 `--only <label>` 生成物 vs 已装 plist，两个 label 唯一差异字段都是 `EnvironmentVariables`
+  —— 已装多 `"PATH": "/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"`，注册表侧这两个
+  label 均未声明（`git show origin/main:.omo/_truth/registry/services.yaml` 与 HEAD 一致；全仓只有
+  `omostation.resident-agent` 在 services.yaml:6301-6303 声明该 PATH）'
+- '漂移在 plist 侧不在 registry 侧: 仓库副本 @f9e23a431 与安装副本 /Users/xiamingxing/.local/opt/omostation
+  @ae78e4caf（24 Nov 07:45）跑 `--only` 生成的 EnvironmentVariables 均不含 PATH ⇒ 有写入方绕开注册表改了本机
+  plist，门禁能察觉却指不出写入者与理由'
+- '修面属 principal 保留: 消除 drift 只有两条路 —— 改 services.yaml 承认 PATH（动权威面）或 `gen-service-configs.py
+  --write` + launchd 重载（动部署面）。同形先例已写明: docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md:111
+  「修复要 `gen-service-configs.py --write` + LaunchAgent 重载 = 机器级需授权」；docs/reports/2026-10-09-bet-238-canary.json:160
+  把同类读数记为「机器面预存债」'
+- '『已治好』声明 2 日内证伪: docs/reports/2026-11-23-service-config-check-drift-closeout.md:49
+  「故本机 `service-config-drift` 面自此不再假红」，同文件给出当时读数 `✅ 0 drift (78 launchd services)`；对应条目
+  .omo/debt/items/LAUNCHD-PLIST-INSTALLED-DIVERGED.yaml（owner governance-team）`lifecycle_state:
+  closed`。11-23 改的是比较方法（:288-296 `_plist_equivalent` 逐文本→plistlib 语义），未动输入权威与读数出处，故同类噪声照旧；本轮只测量，不重开他人条目'
+- '后果: 交付判定被宿主噪声劫持 —— 批次23 run 20261125T023431Z-governance-state-mutation-0e51fdb9
+  的 verify 读数 `[PASS] ssot-guardian / [FAIL] gac-local-gate` 即由此来，诚实收尾只能记 `blocked`（未用
+  SWARM_ESCAPE_ID、未改 known-debt）'
+mitigation_refs: []
+opened_at: '2026-11-25T02:55:55.936314+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T02:55:55.936314+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE.
+- at: '2026-11-25T02:57:51.998682+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【机制缺陷】gac-local-gate 的阻断项 service-config-drift（bin/gac/gac-local-gate.py:223-224
+    接线、:735 列在 blocking=True）把「本机 ~/Library/LaunchAgents 的已装 plist」当作被审对象（bin/mof/gen-service-configs.py:230-231
+    定根、:1093 拼 target、:1113 读盘）。这份输入不在任何检出、索引或 registry 的写面里：git status 看不到它，diff
+    审不到它，而它决定门禁红绿。于是同一份代码、同一个提交，读数会随宿主状态漂移——今日实录：worktree @f9e23a431 在 2026-11-25T02:26Z
+    跑 make gac-local-gate 打 [PASS] service-config-drift，02:35Z 起打 [FAIL] + 「❌ 2 drift:
+    com.omostation.zhixing-projection-republisher / com.omostation.agent-brief-materialize」→「GaC
+    local gate: FAIL | 1 SOFT WARN」，两次之间本方对该面零改动；两个 plist 的 mtime 是 25 Nov 10:28 本地（=02:28Z），恰好夹在两次读数中间，由并发活动写入。批次23
+    的 workflow verify 就是被它判成 [FAIL] gac-local-gate（[PASS] ssot-guardian），只能以 --status
+    blocked 收尾。
+
+
+    【读数不含出处】:1117 追加的是 `f"{svc[''label'']}: plist 与 services.yaml 不一致 (drift)"`，:1135
+    的 --json payload 里 drifts 也是同类字符串——只有 label，没有差异字段、没有被比文件的 mtime 或摘要。这意味着门禁只说「不一致」，把定位成本整份转嫁给读的人。本轮自造装置（plistlib
+    解析 `--only <label>` 的生成物 vs 已装 plist 做深比较）才拿到答案：两个 label 唯一差异字段都是 EnvironmentVariables——已装
+    plist 多出 "PATH": "/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"，而注册表侧这两个
+    label 都没有声明 environment.PATH（origin/main 与 HEAD 同读；全仓唯一声明该 PATH 的是 services.yaml:6301-6303
+    的 omostation.resident-agent）。仓库副本与安装副本（/Users/xiamingxing/.local/opt/omostation
+    @ae78e4caf）生成的 plist 都不含 PATH，且已装 plist 的 ProgramArguments 指向 install_root——所以漂移发生在
+    plist 侧：有写入方绕开注册表给本机 plist 加了 PATH，门禁能察觉冲突，却指不出写入者、写入时间与动机。
+
+
+    【缺席即绿的另一半】:1052 `launchd_observer_available = launchd_dir.is_dir()`，:1085 与 :1122-1133
+    在该目录缺席时跳过全部比对并返回 ok=True（:1025 注释自陈这是为 CI 无本机 plist 设计）。合起来是：没有宿主状态的机器永远绿，有宿主状态的机器按宿主内容红——既不可复现也不可比机器间迁移，而它仍是阻断项。
+
+
+    【为什么不是重开别人已闭的条目】同事项 .omo/debt/items/LAUNCHD-PLIST-INSTALLED-DIVERGED.yaml（owner
+    governance-team）现为 lifecycle_state: closed，其 11-23 复核读数 ok=True / drift_count=0（78
+    launchd services），docs/reports/2026-11-23-service-config-check-drift-closeout.md:49
+    更写「本机 service-config-drift 面自此不再假红」。11-23 治的是比较方法（:288-296 `_plist_equivalent`
+    由逐文本转 plistlib 语义，消注释/排版噪声），没有治输入权威与读数出处，故两天内同类噪声再现。本条登记的是判据自身的可靠性缺陷，与他人的机器面修复条目互补，不代为重开、不改他人条目字段。
+
+
+    【修法属 principal 保留，本条不执行】消除 drift 只有两条路，都越权：① 改 .omo/_truth/registry/services.yaml
+    承认 PATH（动服务权威面，且需说明该 PATH 是否为部署面承诺）；② `bin/mof/gen-service-configs.py --write`
+    重写本机 plist + launchd 重载（动部署面/机器级）。同形先例早已写明：docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md:111「修复要
+    --write + LaunchAgent 重载 = 机器级需授权」；docs/reports/2026-10-09-bet-238-canary.json:160
+    把同类读数记为「机器面预存债」。本条建议（待裁，不代为实施）：drift 输出补字段级 diff 与 plist 的 mtime/digest；把「比较 registry→临时目录生成物」作为仓库侧可复现判据（CI
+    可跑），把「本机已装 plist 一致性」降为 advisory 或在读数里标明宿主出处；任何写入 plist 或改 services.yaml 的动作单独走授权门。
+
+
+    【取证装置坑，顺带登记】本机 `rm` 是带交互确认的别名，首次删除返回 rc=0 而文件仍在（同形问题 AGENTS §7 已记）；`cmd | tail;
+    echo rc=$?` 取到的是 tail 的退出码。本轮两处都改用 subprocess/显式 test -e 复核，未据别名返回值下结论。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【机制缺陷】gac-local-gate 的阻断项 service-config-drift（bin/gac/gac-local-gate.py:223-224
+  接线、:735 列在 blocking=True）把「本机 ~/Library/LaunchAgents 的已装 plist」当作被审对象（bin/mof/gen-service-configs.py:230-231
+  定根、:1093 拼 target、:1113 读盘）。这份输入不在任何检出、索引或 registry 的写面里：git status 看不到它，diff 审不到它，而它决定门禁红绿。于是同一份代码、同一个提交，读数会随宿主状态漂移——今日实录：worktree
+  @f9e23a431 在 2026-11-25T02:26Z 跑 make gac-local-gate 打 [PASS] service-config-drift，02:35Z
+  起打 [FAIL] + 「❌ 2 drift: com.omostation.zhixing-projection-republisher / com.omostation.agent-brief-materialize」→「GaC
+  local gate: FAIL | 1 SOFT WARN」，两次之间本方对该面零改动；两个 plist 的 mtime 是 25 Nov 10:28 本地（=02:28Z），恰好夹在两次读数中间，由并发活动写入。批次23
+  的 workflow verify 就是被它判成 [FAIL] gac-local-gate（[PASS] ssot-guardian），只能以 --status
+  blocked 收尾。
+
+
+  【读数不含出处】:1117 追加的是 `f"{svc[''label'']}: plist 与 services.yaml 不一致 (drift)"`，:1135
+  的 --json payload 里 drifts 也是同类字符串——只有 label，没有差异字段、没有被比文件的 mtime 或摘要。这意味着门禁只说「不一致」，把定位成本整份转嫁给读的人。本轮自造装置（plistlib
+  解析 `--only <label>` 的生成物 vs 已装 plist 做深比较）才拿到答案：两个 label 唯一差异字段都是 EnvironmentVariables——已装
+  plist 多出 "PATH": "/Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"，而注册表侧这两个
+  label 都没有声明 environment.PATH（origin/main 与 HEAD 同读；全仓唯一声明该 PATH 的是 services.yaml:6301-6303
+  的 omostation.resident-agent）。仓库副本与安装副本（/Users/xiamingxing/.local/opt/omostation
+  @ae78e4caf）生成的 plist 都不含 PATH，且已装 plist 的 ProgramArguments 指向 install_root——所以漂移发生在
+  plist 侧：有写入方绕开注册表给本机 plist 加了 PATH，门禁能察觉冲突，却指不出写入者、写入时间与动机。
+
+
+  【缺席即绿的另一半】:1052 `launchd_observer_available = launchd_dir.is_dir()`，:1085 与 :1122-1133
+  在该目录缺席时跳过全部比对并返回 ok=True（:1025 注释自陈这是为 CI 无本机 plist 设计）。合起来是：没有宿主状态的机器永远绿，有宿主状态的机器按宿主内容红——既不可复现也不可比机器间迁移，而它仍是阻断项。
+
+
+  【为什么不是重开别人已闭的条目】同事项 .omo/debt/items/LAUNCHD-PLIST-INSTALLED-DIVERGED.yaml（owner
+  governance-team）现为 lifecycle_state: closed，其 11-23 复核读数 ok=True / drift_count=0（78
+  launchd services），docs/reports/2026-11-23-service-config-check-drift-closeout.md:49
+  更写「本机 service-config-drift 面自此不再假红」。11-23 治的是比较方法（:288-296 `_plist_equivalent` 由逐文本转
+  plistlib 语义，消注释/排版噪声），没有治输入权威与读数出处，故两天内同类噪声再现。本条登记的是判据自身的可靠性缺陷，与他人的机器面修复条目互补，不代为重开、不改他人条目字段。
+
+
+  【修法属 principal 保留，本条不执行】消除 drift 只有两条路，都越权：① 改 .omo/_truth/registry/services.yaml
+  承认 PATH（动服务权威面，且需说明该 PATH 是否为部署面承诺）；② `bin/mof/gen-service-configs.py --write` 重写本机
+  plist + launchd 重载（动部署面/机器级）。同形先例早已写明：docs/reports/2026-10-12-tests-unit-host-anchor-convergence-closeout.md:111「修复要
+  --write + LaunchAgent 重载 = 机器级需授权」；docs/reports/2026-10-09-bet-238-canary.json:160
+  把同类读数记为「机器面预存债」。本条建议（待裁，不代为实施）：drift 输出补字段级 diff 与 plist 的 mtime/digest；把「比较 registry→临时目录生成物」作为仓库侧可复现判据（CI
+  可跑），把「本机已装 plist 一致性」降为 advisory 或在读数里标明宿主出处；任何写入 plist 或改 services.yaml 的动作单独走授权门。
+
+
+  【取证装置坑，顺带登记】本机 `rm` 是带交互确认的别名，首次删除返回 rc=0 而文件仍在（同形问题 AGENTS §7 已记）；`cmd | tail;
+  echo rc=$?` 取到的是 tail 的退出码。本轮两处都改用 subprocess/显式 test -e 复核，未据别名返回值下结论。'
