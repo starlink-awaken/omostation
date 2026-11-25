@@ -231,6 +231,31 @@ def generate(dry_run: bool = False) -> tuple[int, int]:
     return generated, len(missing)
 
 
+def _load_journey_runner():
+    """Load journey-runner.py lazily for template expansion during validation."""
+    import importlib.util
+
+    ssot_dir = str(ROOT / "bin" / "ssot")
+    if ssot_dir not in sys.path:
+        sys.path.insert(0, ssot_dir)
+    spec = importlib.util.spec_from_file_location(
+        "journey_runner", str(ROOT / "bin" / "ssot" / "journey-runner.py"))
+    jr = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(jr)
+    return jr
+
+
+def _render_if_template(
+    journey_spec: dict[str, Any],
+    runner: Any | None = None,
+) -> dict[str, Any]:
+    """Expand template-backed journey specs before structural validation."""
+    if not isinstance(journey_spec, dict) or not journey_spec.get("template"):
+        return journey_spec
+    jr = runner if runner is not None else _load_journey_runner()
+    return jr._render_template(journey_spec)
+
+
 def validate_all() -> tuple[int, int]:
     """Validate all journey specs."""
     import importlib.util
@@ -238,6 +263,7 @@ def validate_all() -> tuple[int, int]:
         "journey_engine", str(ROOT / "bin" / "ssot" / "journey-engine.py"))
     je = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(je)
+    jr = None
 
     valid = invalid = 0
     if JOURNEYS_DIR.is_dir():
@@ -245,6 +271,10 @@ def validate_all() -> tuple[int, int]:
             journey_id = f.stem
             try:
                 journey_spec = je._load_yaml(f)
+                if isinstance(journey_spec, dict) and journey_spec.get("template"):
+                    if jr is None:
+                        jr = _load_journey_runner()
+                    journey_spec = _render_if_template(journey_spec, runner=jr)
                 backedges = je._detect_backedges(journey_spec)
                 states = len(journey_spec.get("states", []))
                 transitions = len(journey_spec.get("transitions", []))
