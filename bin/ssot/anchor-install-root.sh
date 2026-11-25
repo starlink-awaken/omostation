@@ -121,12 +121,19 @@ checkout_sha="$(git -C "$CHECKOUT" rev-parse HEAD 2>/dev/null || echo '-')"
 
 check_code_main_alignment() {
   has_code_main || return 0
-  local cm_head cm_ref
+  local cm_head cm_ref cm_tracked_dirty
   cm_head="$(git -C "$CODE_MAIN" rev-parse HEAD 2>/dev/null || echo '-')"
   cm_ref="$(git -C "$CODE_MAIN" rev-parse refs/remotes/origin/main 2>/dev/null || echo '-')"
   if [[ "$cm_head" != "$target" || "$cm_ref" != "$target" ]]; then
     echo "code-main 与目标 origin/main 不一致 ($CODE_MAIN): head=$cm_head origin/main=$cm_ref 目标=$target"
     echo "  → 驾驶舱采集可能抛 projection_code_root_not_current_main; 重锚: bin/ssot/anchor-install-root.sh"
+    exit 1
+  fi
+  cm_tracked_dirty="$(git -C "$CODE_MAIN" status --porcelain --untracked-files=no 2>/dev/null || true)"
+  if [[ -n "$cm_tracked_dirty" ]]; then
+    echo "code-main 存在未提交改动或脏子模块 ($CODE_MAIN):"
+    echo "$cm_tracked_dirty" | head -20
+    echo "  → personal_value_truth 会报 managed_code_root_dirty; 重锚修复: bin/ssot/anchor-install-root.sh"
     exit 1
   fi
 }
@@ -218,12 +225,27 @@ if has_code_main; then
   fi
   git -C "$CODE_MAIN" checkout --detach "$target" >/dev/null
   if [[ -f "$CODE_MAIN/.gitmodules" ]]; then
-    for _sm in projects/omo projects/ecos; do
-      if grep -q "path = ${_sm}$" "$CODE_MAIN/.gitmodules" 2>/dev/null; then
-        git -C "$CODE_MAIN" submodule update --init --no-fetch "$_sm" >/dev/null 2>&1 || \
-          git -C "$CODE_MAIN" submodule update --init "$_sm" >/dev/null 2>&1 || true
+    echo "-- 同步 code-main 全部子模块"
+    git -C "$CODE_MAIN" submodule sync --recursive >/dev/null 2>&1 || true
+    git -C "$CODE_MAIN" submodule update --init --recursive --force --no-fetch >/dev/null 2>&1 || \
+      git -C "$CODE_MAIN" submodule update --init --recursive --force >/dev/null 2>&1 || true
+    while IFS= read -r _sm_line; do
+      [[ -z "$_sm_line" ]] && continue
+      _sm_path="${_sm_line#???}"
+      _sm_path="${_sm_path%\"}"
+      _sm_path="${_sm_path#\"}"
+      [[ -n "$_sm_path" ]] || continue
+      if [[ -e "$CODE_MAIN/$_sm_path/.git" ]]; then
+        git -C "$CODE_MAIN/$_sm_path" reset --hard HEAD >/dev/null 2>&1 || true
+        git -C "$CODE_MAIN" submodule update --init --force --no-fetch "$_sm_path" >/dev/null 2>&1 || \
+          git -C "$CODE_MAIN" submodule update --init --force "$_sm_path" >/dev/null 2>&1 || true
       fi
-    done
+    done < <(git -C "$CODE_MAIN" status --porcelain --untracked-files=no 2>/dev/null || true)
+    _cm_remaining_dirty="$(git -C "$CODE_MAIN" status --porcelain --untracked-files=no 2>/dev/null || true)"
+    if [[ -n "$_cm_remaining_dirty" ]]; then
+      echo "   ⚠️ code-main 子模块同步后仍存在未提交改动或脏子模块:" >&2
+      echo "$_cm_remaining_dirty" | head -20 >&2
+    fi
   fi
   code_main_sha="$(git -C "$CODE_MAIN" rev-parse HEAD 2>/dev/null || true)"
 fi
