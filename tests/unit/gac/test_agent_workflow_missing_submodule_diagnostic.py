@@ -62,15 +62,18 @@ def test_half_initialized_empty_src_dir_is_also_reported(tmp_path):
     assert "Traceback" not in result.stderr
 
 
-def test_package_present_proceeds(tmp_path):
-    """包就位时不得触发该诊断（反向判据：不是恒退出）。"""
+def test_omo_present_without_ecos_still_proceeds(tmp_path):
+    """反向判据：`projects/ecos` 是**可选**依赖。
+
+    CI 的 interface-check 树正是「有 omo、无 ecos」—— 一视同仁会让 `status`
+    这类命令无故 exit 2（实测把 test_agent_workflow.py 的
+    test_worktree_status_and_closeout_read_through_canonical_anchor 弄红）。
+    """
     root = _bare_workspace(tmp_path)
     pkg = root / "projects" / "omo" / "src" / "omo"
     pkg.mkdir(parents=True)
     (pkg / "__init__.py").write_text("", encoding="utf-8")
-    ecos = root / "projects" / "ecos" / "src" / "ecos"
-    ecos.mkdir(parents=True)
-    (ecos / "__init__.py").write_text("", encoding="utf-8")
 
     result = _run(root)
-    assert "未检出" not in result.stderr
+    assert "未检出" not in result.stderr, "可选依赖缺席不该触发该诊断"
+    assert result.returncode != 2

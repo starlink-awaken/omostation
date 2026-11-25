@@ -278,8 +278,8 @@ from typing import Any
 WORKSPACE = Path(__file__).resolve().parents[1]
 
 
-def _submodule_src(rel: str, package: str, missing: str) -> Path:
-    """挂上子模块 src；未检出（或只检出到空目录）时给可读诊断而非裸 traceback。
+def _require_pkg_src(rel: str, package: str, missing: str) -> Path:
+    """挂上**必需**的子模块 src；未检出（或只检出到空目录）时给可读诊断而非裸 traceback。
 
     旧行为：缺 `projects/omo` / `projects/ecos`（干净检出、claim 快速路径，或
     只对齐了 gitlink 的空目录）时, 下面那几行模块级 `from omo.workflow import ...`
@@ -299,8 +299,22 @@ def _submodule_src(rel: str, package: str, missing: str) -> Path:
     return path
 
 
-sys.path.insert(0, str(_submodule_src("projects/omo/src", "omo", "缺 omo 内核包")))
-sys.path.insert(0, str(_submodule_src("projects/ecos/src", "ecos", "缺 ecos 包")))
+def _optional_pkg_src(rel: str, package: str) -> Path | None:
+    """**可选**子模块 src：缺席就不挂路径, 保持旧行为（不在这里报）。
+
+    `projects/ecos` 不是模块级 import 的前提 —— CI 的 interface-check 树正是
+    「有 omo、无 ecos」，一视同仁会让 `status` 这类命令无故 exit 2（实测把
+    tests/test_agent_workflow.py::test_worktree_status_and_closeout_read_through_canonical_anchor
+    弄红）。
+    """
+    path = WORKSPACE / rel
+    return path if (path / package).is_dir() else None
+
+
+sys.path.insert(0, str(_require_pkg_src("projects/omo/src", "omo", "缺 omo 内核包")))
+_ecos_src = _optional_pkg_src("projects/ecos/src", "ecos")
+if _ecos_src is not None:
+    sys.path.insert(0, str(_ecos_src))
 
 from omo.workflow import (
     WORKSPACE,
