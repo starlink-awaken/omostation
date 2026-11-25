@@ -170,3 +170,23 @@ history:
     **纪律**: 分片并行的读数必须逐条单跑复现才采信（本轮 5 条秒级复现, 1 条留 shard 级证据
     并在报告中显式标注其性质）。
   actor: "governance-agent"
+- at: "2026-11-25T06:05:00+00:00"
+  action: evaluate
+  note: >-
+    **深挖残余真信号 #1（`KNOWN_GAP_EXPIRES` 到期未清）—— 豁免前提已失效, 不是「续期」能解决的。**
+    该豁免只剩两条: `bos://capability/wps-office-mcp/` 与 `bos://capability/wps-skills/`,
+    理由写的是「ToolBox 仓未 build dist/index.js, 治本 = maintainer 跑 build」。
+    2026-11-25 实测: 声明里的 endpoint `~/ToolBox/mcp/wps-office-mcp/dist/index.js` 与
+    `~/ToolBox/skills/wps-skills/wps-office-mcp/dist/index.js` **连目录都不存在** ——
+    `~/ToolBox/` 顶层只剩 awesome-design-md / copilot-worktrees / omostation / researchstudio,
+    `mcp/` 与 `skills/` 整棵树已不在。即「未 build」的前提被推翻: 不是构建缺失,
+    是**实现体消失**。
+    另测: 这两条 URI 在仓内**无任何在役消费者**（除两份 registry 与归档设计文档;
+    归档的 2026-08-02 审计早已把 wps-skills 记为 F-06「command 悬空」并附 remediation plan）。
+    **处置选项（本条不代决）**:
+      (a) 从 `.omo/_truth/registry/services.yaml`(两处) 与 `.omo/_knowledge/bos-registry.json`(两处)
+          移除这两条声明（三面一致性需一并核）—— 若能力确实不再提供;
+      (b) 恢复 ToolBox 侧实现后保留声明;
+      (c) 继续续期 —— 但按现有措辞会一再过期, 且掩盖「声明指向不存在的实现」。
+    **本轮不动**: 删改能力目录属对外声明面变更, 超出测试判据类改动的授权; 先把证据摆出来。
+  actor: "governance-agent"
