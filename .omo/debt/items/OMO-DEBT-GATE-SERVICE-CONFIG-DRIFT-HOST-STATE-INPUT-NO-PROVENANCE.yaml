@@ -104,6 +104,24 @@ history:
 
     【取证装置坑，顺带登记】本机 `rm` 是带交互确认的别名，首次删除返回 rc=0 而文件仍在（同形问题 AGENTS §7 已记）；`cmd | tail;
     echo rc=$?` 取到的是 tail 的退出码。本轮两处都改用 subprocess/显式 test -e 复核，未据别名返回值下结论。''.'
+- at: '2026-11-25T20:20:00+00:00'
+  action: mitigate
+  note: >-
+    **建议项「drift 输出补字段级 diff 与 plist 出处」已落地**（纯观测面，不动 registry / 部署面）：
+    `gen-service-configs.py` 新增 `_plist_field_diffs()`（plistlib 解析后比顶层键，任一侧解析失败给
+    `<unparseable>`）与 `_iso_mtime()`；`--check` 在 `drifts` 之外并列 `drift_details[]`
+    （label / fields / plist_path / plist_mtime），人读输出同步多打两行「字段差异」「被比文件 (mtime=…)」。
+    `drifts` 保持 list[str] 不变 —— `--reality-check` 的 `:549` 仍按原形状读它。
+    **两态实测**：① 真实台账 `--check --json` → `ok=true, drift_count=0, drift_details=[]`
+    （新字段不改变既有判定）；② 合成夹具（已装 plist 的 Minute 5→9）→ rc=1、
+    `fields=['Minute']`、`plist_path`/`plist_mtime` 齐备，人读输出两行可定位。
+    **判据**：`tests/test_gen_service_configs.py` 新增四条（只报变化键 / 相同为空 / 解析失败不给假字段名 /
+    `--check` 端到端带出处），24 passed。
+    **边界（未做，仍属 principal）**：消除 drift 的两条路（改 services.yaml 承认 PATH、或 `--write` +
+    launchd 重载）一条未动；「比较 registry→临时目录生成物」的仓库侧可复现判据、把本机一致性降为
+    advisory、以及「缺席即绿」（无 LaunchAgents 时整块跳过且 ok=True）都保持原状 ——
+    本条只让读数可行动，没有让它变诚实。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
