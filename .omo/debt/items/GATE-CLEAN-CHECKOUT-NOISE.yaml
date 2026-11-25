@@ -205,3 +205,20 @@ history:
     ② 扫描口径已写进 docs/pitfalls.md「缺输入 ⇒ PASS」条, 可复跑 (全 bin/ + scripts/,
     本次 8 个候选 4 个为真)。
   actor: 'governance-agent'
+- at: '2026-11-26T01:20:00+00:00'
+  action: mitigate
+  note: >-
+    **本轮收口（同日五片）**：`gac-local-gate --strict` 在部分检出树上的 hard fail
+    从 **24 → 18**, 且这 18 条**全部带原因标注**（自报 / entrypoint_missing /
+    dependencies_unchecked / scan_incomplete）。同时拿到两态反向证据：把各 check
+    **声明的子模块** init 起来后 hard fail **18 → 3**、not_measured 27 → 1,
+    9 条受影响 check 全部恢复执行 —— 说明这些降级**只在输入真的缺席时触发**, 不是恒折。
+    **新增机制**：① check 声明所需子模块（REQUIRED_SUBMODULES, #5588, 覆盖 15 条）;
+    ② 门禁命令旗标统一归一化（#5590, 修「只在 fallback 加旗标被 submodule 策略绕过」——
+    同一根因第三次换面）; ③ 「本树未执行的 gate」显形（#5591, 见
+    GATE-POLICY-SOURCE-COVERAGE-SKEW）。判据实现收敛到 bin/lib/input_absence.py
+    （#5589, 五处副本合一）。
+    **仍未做（留给 owner）**：(a) 已标注项是否移出 `hard_fails`（会改 `ok`/退出码语义）;
+    (b) 齐备树比 fallback 少跑 5 条 gate（跨仓策略差异, 见
+    GATE-POLICY-SOURCE-COVERAGE-SKEW 的 (a)/(b)/(c)）。
+  actor: 'governance-agent'
