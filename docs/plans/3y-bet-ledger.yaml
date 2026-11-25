@@ -48425,7 +48425,7 @@ bets:
   write_surfaces:
   - .omo/standards/scene-card-lifecycle.yaml
   - bin/ssot/internal-scene-preflight.py
-  - tests/test_internal_scene_preflight.py
+  - tests/test_scene_preflight_lock_semantics.py
   - docs/scene-cards/admin-inbox.yaml
   - docs/scene-cards/admin-submit.yaml
   - docs/scene-cards/agora-bos-gateway.yaml
@@ -48437,7 +48437,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-24-scene-card-readiness-dual-unlock-bet-t10-352.md
     spec_version: 1.0.0
-    content_digest: sha256:0493e0f3a08e308cd50633a97e882f92dbb43b730ab1c18d4d3269cfb657bae9
+    content_digest: sha256:acfac569cd16a17afd91f8854b875ecee5e63dfa66dbc8a3b190ffd6405eec4d
     decision_ref: decision://accepted/BET-Y2Q4-T10-352
   non_goals:
   - 不为 8 张 preflight 卡补 missing_fields (activation_evidence_refs 等卡面数据

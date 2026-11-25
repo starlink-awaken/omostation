@@ -46,12 +46,12 @@ scene-card 总检 ready=7/70。两个主卡点：
 3. 8 张卡：6 张补 `approval_state: confirmed`（原无字段）；agora-bos-gateway
    `approved → confirmed`；knowledge-curation `pending_business_confirmation →
    confirmed`。
-4. `tests/test_internal_scene_preflight.py`（新）：豁免路径放行 / 无豁免仍报锁 /
+4. `tests/test_scene_preflight_lock_semantics.py`（新）：豁免路径放行 / 无豁免仍报锁 /
    standards 枚举含两新值。
 
 ## 验收标准
 
-- `pytest tests/test_internal_scene_preflight.py` 全过。
+- `pytest tests/test_scene_preflight_lock_semantics.py` 全过。
 - `make scene-card-check`：ready ≥ 13（7 + 8）。
 - standards YAML 可解析且含 proposal_only / forbidden。
 
