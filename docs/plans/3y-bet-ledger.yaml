@@ -48305,7 +48305,8 @@ bets:
     engineering-delivery, knowledge-capture-pipeline 全程引用
     knowledge-curation); 3 张欠账 (research-deep-synthesis/family-asset-
     governance/health-gov-doc-cycle) 用修复后的 generate 程序化生成。
-  status: pending
+  status: done
+  done_at: 2026-11-25
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48353,6 +48354,47 @@ bets:
   circuit_breaker: >-
     若 .omo/_truth/{scenarios,journeys}/v3 存在活跃消费方 (导致 autogen 切换
     数据源破坏其读数), 停止并交 owner 裁决。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@9abcccfd6189283e04c38c6485b1499d534a60ed
+          tests:
+            ref: receipt://docs/reports/2026-11-25-scene-journey-autogen-t10-351-closeout.md#done_when-逐条实测
+            sha256: sha256:3f4c54f52b70388ef047a6d60000e5fa024f8f3884811cfe199693c11fc6d19e
+          diff:
+            ref: receipt://docs/reports/2026-11-25-scene-journey-autogen-t10-351-closeout.md#retro-订正本次落盘
+            sha256: sha256:3f4c54f52b70388ef047a6d60000e5fa024f8f3884811cfe199693c11fc6d19e
+          rollback:
+            ref: receipt://docs/reports/2026-11-25-scene-journey-autogen-t10-351-closeout.md#回滚
+            sha256: sha256:3f4c54f52b70388ef047a6d60000e5fa024f8f3884811cfe199693c11fc6d19e
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-25-scene-journey-autogen-t10-351-closeout.md#done_when-逐条实测
+            sha256: sha256:3f4c54f52b70388ef047a6d60000e5fa024f8f3884811cfe199693c11fc6d19e
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-25-scene-journey-autogen-t10-351-closeout.md
+            sha256: sha256:3f4c54f52b70388ef047a6d60000e5fa024f8f3884811cfe199693c11fc6d19e
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-351.md
+            sha256: sha256:b2c3e036fe704a6f794c175375ac732aa03cf9ca924abc8b911094bf6cd3b119
+          cleanup:
+            ref: receipt://docs/reports/2026-11-25-scene-journey-autogen-t10-351-closeout.md#挂接字段读数卡面侧
+            sha256: sha256:3f4c54f52b70388ef047a6d60000e5fa024f8f3884811cfe199693c11fc6d19e
+      value:
+        status: NOT_PROVEN
+        evidence:
+          note: >-
+            未做价值指标计量（value_indicator_policy=false）。已证的是工具不再对真实数据源失明
+            （scan 与 runner 读数一致，0 missing / 5 卡 dry-run 全加载），
+            5 张 404 卡从「运行时 FileNotFoundError」变为「可 dry-run 的已存在 spec」。
+    overall_state: delivery_accepted
+
 - id: BET-Y2Q4-T10-352
   title: BET-Y2Q4-T10-352 场景卡就绪度双解锁 —— proposal-lock 二选一语义 + 8 张卡 owner 审批落地
   goal: >-

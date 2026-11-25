@@ -678,7 +678,7 @@ jobs:
     command: >-
       PANORAMA_CODE_ROOT=/Users/xiamingxing/.local/share/zhixing-dashboard/code-main
       PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 -B
-      /Users/xiamingxing/.local/share/zhixing-dashboard/panorama-collect.py
+      /Users/xiamingxing/.local/share/zhixing-dashboard/current/panorama-collect-main.py
     planes: [launchd]
     reality: installed
     status: active
@@ -705,6 +705,8 @@ jobs:
       (registry 仍声明 installed/active, 属 4 天声明漂移)；2026-09-27 已
       launchctl enable + bootstrap + kickstart 复用, 核验 runs>=1、
       last exit code=0、run interval=240s, 扁平三件套 mtime/generated_at 随之刷新。
+      2026-11-24 Wave 4 迁移已获授权执行: LaunchAgent plist、本仓库模板与 registry command
+      统一切至 zhixing-host-sync.py publish 托管的 current/panorama-collect-main.py。
   - name: panorama-refresh-guard
     schedule: "*/2 * * * *"
     command: >-

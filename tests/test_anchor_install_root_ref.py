@@ -193,5 +193,32 @@ def test_reanchor_generates_and_inspects_release_manifest(planes, tmp_path):
     assert data_out["source_commit"] == sha
 
 
+def test_reanchor_is_idempotent_on_consecutive_runs(planes, tmp_path):
+    """连续重锚不因自身产出的 untracked runtime/release-manifest.json 自阻 (exit 6), 且同 SHA 重锚幂等."""
+    sha1 = _advance_origin_main(planes, tmp_path, 1)
+    r1 = _run(planes)
+    assert r1.returncode == 0, f"第一次重锚应成功: {r1.stdout} {r1.stderr}"
+    assert _git(Path(planes["install"]), "rev-parse", "HEAD").stdout.strip() == sha1
+    assert (Path(planes["install"]) / "runtime" / "release-manifest.json").is_file()
+
+    # 同 SHA 第二次重锚（验证非降级且不被自身 release-manifest.json 阻断）
+    r_same = _run(planes)
+    assert r_same.returncode == 0, f"同 SHA 连续重锚应幂等成功: {r_same.stdout} {r_same.stderr}"
+    assert _git(Path(planes["install"]), "rev-parse", "HEAD").stdout.strip() == sha1
+
+    # 前进新提交后再次重锚 (使用不同文件名, 避免复用 _advance_origin_main 的 adv0.txt 导致空提交)
+    step2 = tmp_path / "step2"
+    step2.mkdir()
+    scratch2 = step2 / "scratch"
+    _git(step2, "clone", "-q", planes["origin"], str(scratch2))
+    _git(scratch2, "checkout", "-q", "main")
+    sha2 = _commit(scratch2, "adv_step2.txt")
+    _git(scratch2, "push", "-q", "origin", "main")
+    assert sha2 != sha1
+    r2 = _run(planes)
+    assert r2.returncode == 0, f"前进后重锚不应因自身 manifest 自阻: {r2.stdout} {r2.stderr}"
+    assert _git(Path(planes["install"]), "rev-parse", "HEAD").stdout.strip() == sha2
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

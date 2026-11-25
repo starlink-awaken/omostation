@@ -20,7 +20,7 @@ REGISTRY = ROOT / ".omo/cron/registry.yaml"
 SERVE_PLIST = ROOT / "runtime/cron/com.omostation.panorama-dashboard.plist"
 REFRESH_PLIST = ROOT / "runtime/cron/com.omostation.panorama-dashboard-refresh.plist"
 
-DEPLOYED_SCRIPTS = {"panorama-serve.py", "panorama-collect.py"}
+DEPLOYED_SCRIPTS = {"panorama-serve.py", "panorama-collect.py", "panorama-collect-main.py"}
 
 
 def _jobs() -> list[dict]:
@@ -49,8 +49,11 @@ def _deployed_script(payload: dict) -> str:
 
 
 def _deployed_root(payload: dict) -> str:
-    """D：部署数据域，由脚本路径自身推出。"""
-    return str(Path(_deployed_script(payload)).parent)
+    """D：部署数据域，由脚本路径自身推出（允许经由 current/ 发布目录）。"""
+    parent = Path(_deployed_script(payload)).parent
+    if parent.name == "current":
+        parent = parent.parent
+    return str(parent)
 
 
 def check_panorama_payload(payload: dict, job: dict) -> None:
@@ -185,6 +188,21 @@ def test_collector_can_use_deployed_receipt_verifier_fallback(tmp_path, monkeypa
     report = module._verify_agent_cell_receipts(tmp_path / "missing.json")
     assert report["verdict"] == "EMPTY"
     assert report["ok"] is True
+
+
+def test_deployed_root_unwraps_current_release_directory(tmp_path: Path) -> None:
+    flat_payload = {
+        "ProgramArguments": ["/opt/homebrew/bin/python3", "-B", str(tmp_path / "panorama-serve.py")]
+    }
+    release_payload = {
+        "ProgramArguments": [
+            "/opt/homebrew/bin/python3",
+            "-B",
+            str(tmp_path / "current" / "panorama-collect-main.py"),
+        ]
+    }
+    assert _deployed_root(flat_payload) == str(tmp_path)
+    assert _deployed_root(release_payload) == str(tmp_path)
 
 
 def test_panorama_scheduler_test_source_lock_has_no_host_literal() -> None:
