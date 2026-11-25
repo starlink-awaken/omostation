@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -117,13 +118,54 @@ def check_file(path: Path) -> list[dict[str, object]]:
     return findings
 
 
+def _input_absent(rel: str) -> bool:
+    """断链目标落在「输入没备齐」的位置 —— 与 `bin/gac/gac-healthcheck.py::input_absent` 同口径。
+
+    三种：未检出的子模块（干净检出 / claim 快速路径）、gitignore 覆盖的生成态、已归档旧路径。
+    相对路径一律锚在 WORKSPACE；仓外绝对路径直接判 False。
+    """
+    p = Path(rel)
+    if p.is_absolute():
+        try:
+            rel = str(p.relative_to(WORKSPACE))
+        except ValueError:
+            return False
+    parts = Path(rel).parts
+    if len(parts) >= 2 and parts[0] == "projects":
+        return not (WORKSPACE / "projects" / parts[1] / ".git").exists()
+    if rel.startswith("bin/_archive/"):
+        return True
+    try:
+        return subprocess.run(
+            ["git", "check-ignore", "-q", "--no-index", rel],
+            cwd=WORKSPACE,
+            capture_output=True,
+            timeout=15,
+            check=False,
+        ).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def _measured(findings: list[dict[str, object]]) -> tuple[bool, list[str]]:
+    """(是否测过, 全部断链目标)。没有断链 ⇒ 真的扫过且没问题, 算测过。"""
+    targets = [str(f["resolved"]) for f in findings]
+    return (not targets) or any(not _input_absent(t) for t in targets), targets
+
+
 def run() -> dict[str, object]:
     docs = iter_docs()
     findings: list[dict[str, object]] = []
     for doc in docs:
         findings.extend(check_file(doc))
+    measured, targets = _measured(findings)
     return {
         "ok": not findings,
+        # 全部断链目标都属「输入没备齐」⇒ 本次**读数不可用**（不是「文档没问题」，也不是
+        # 「文档有错」）。由 gac-local-gate 归到 not_measured; 退出码仍 0。
+        "measured": measured,
+        "reason": None if measured else "targets_absent",
+        "absent_targets": targets,
         "files_scanned": len(docs),
         "broken_links": len(findings),
         "findings": findings,
@@ -150,8 +192,12 @@ def run_files(paths: list[str]) -> dict[str, object]:
     findings: list[dict[str, object]] = []
     for doc in docs:
         findings.extend(check_file(doc))
+    measured, targets = _measured(findings)
     return {
         "ok": not findings,
+        "measured": measured,
+        "reason": None if measured else "targets_absent",
+        "absent_targets": targets,
         "files_scanned": len(docs),
         "broken_links": len(findings),
         "findings": findings,
@@ -171,15 +217,24 @@ def main() -> int:
     args = parser.parse_args()
 
     result = run_files(args.files) if args.files else run()
+    ok = bool(result["ok"])
+    measured = bool(result.get("measured", True))
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
-    elif result["ok"]:
+    elif ok:
         print(f"doc-link-check: PASS ({result['files_scanned']} files)")
     else:
         for finding in result["findings"]:
             print(f"{finding['file']}:{finding['line']}: broken link {finding['target']} -> {finding['resolved']}")
-        print(f"doc-link-check: FAIL ({result['broken_links']} broken links)")
-    return 0 if result["ok"] else 1
+        if not measured:
+            print(
+                f"doc-link-check: SKIP ({result['broken_links']} broken links 的目标"
+                "全属输入没备齐 —— 未判定, 不是「文档有错」)"
+            )
+        else:
+            print(f"doc-link-check: FAIL ({result['broken_links']} broken links)")
+    # 读数不可用时不阻断：缺输入不是仓库缺陷（与其它自报契约同口径）。
+    return 0 if ok or not measured else 1
 
 
 if __name__ == "__main__":
