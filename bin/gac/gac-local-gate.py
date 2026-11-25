@@ -1609,6 +1609,25 @@ def _dependencies_unchecked(name: str, unchecked: set[str]) -> tuple[str | None,
     return "dependencies_unchecked", {"required_submodules": list(required), "unchecked": missing}
 
 
+def gate_coverage_report() -> dict[str, object]:
+    """本树**实际生效**的 gate 集合与 DEFAULT_POLICY 的差异（只读, 不改判定）。
+
+    策略来源是整体二选一（`POLICY = load_sgf_policy() or DEFAULT_POLICY`）, 所以
+    「只在另一边存在的条目」会无声消失: 齐备树比 fallback 少 5 条（CI 从不执行它们),
+    partial 树比齐备树少 28 条。方向都是反的 —— 见债条目 GATE-POLICY-SOURCE-COVERAGE-SKEW。
+    """
+    source = "sgf_policy" if POLICY is not DEFAULT_POLICY else "default_policy"
+    effective = {g["id"] for g in GATES_LIST}
+    default_ids = {g["id"] for g in DEFAULT_POLICY["gates"]}
+    return {
+        "source": source,
+        "effective": len(effective),
+        "default_total": len(default_ids),
+        "only_in_default": sorted(default_ids - effective),
+        "only_in_effective": sorted(effective - default_ids),
+    }
+
+
 def run_gate(
     scope: str = "staged",
     files: list[str] | None = None,
@@ -1664,6 +1683,7 @@ def run_gate(
     report = {
         "ok": ok,
         "preflight": preflight,
+        "gate_coverage": gate_coverage_report(),
         "interpreter_roots": interpreter_roots_report(),
         "hard_fails": hard_fails,
         "soft_warns": soft_warns,
@@ -1731,6 +1751,22 @@ def _print_interpreter_roots(report: dict[str, object]) -> None:
     )
 
 
+def _print_gate_coverage(report: dict[str, object]) -> None:
+    """打印本树**未执行**的 gate —— 策略来源差异是隐形的, 必须显形。"""
+    cov = report.get("gate_coverage")
+    if not isinstance(cov, dict):
+        return
+    missing = cov.get("only_in_default") or []
+    if not missing:
+        return
+    print(
+        f"ℹ️  门禁策略来源 `{cov.get('source')}`: 生效 {cov.get('effective')} 条"
+        f"（DEFAULT_POLICY {cov.get('default_total')} 条）—— "
+        f"有 {len(missing)} 条**在本树不执行**: {', '.join(str(m) for m in missing)}",
+        file=sys.stderr,
+    )
+
+
 def _print_not_measured(report: dict[str, object]) -> None:
     """列出「自报没测成」的 check —— 它们不是发现, 别混进 findings。"""
     items = report.get("not_measured")
@@ -1760,6 +1796,7 @@ def print_human(
     soft_list: list[dict] = report.get("soft_warns") or []  # type: ignore[assignment]
     _print_preflight(report)
     _print_interpreter_roots(report)
+    _print_gate_coverage(report)
     _print_not_measured(report)
 
     if is_ok and terminal_mode == "slim" and not verbose:
