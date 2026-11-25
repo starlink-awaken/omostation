@@ -254,3 +254,181 @@ def test_resolve_range_auto_without_base_raises(tmp_path, monkeypatch):
         assert "无法定基" in str(e)
     else:
         raise AssertionError("解不出基线时必须抛错, 不能返回空面")
+
+
+def _seed_debt_commit(tmp_path: Path, rel_path: str = ".omo/debt/items/X.yaml", content: str = "id: X\n"):
+    mod = _load()
+    repo = _repo(tmp_path)
+    _owners(repo, ".omo/debt/**", "script:omo-debt")
+    target = repo / rel_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("id: X\nseed: 0\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "seed")
+    base = _git(repo, "rev-parse", "HEAD")
+
+    target.write_text(content, encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "update debt item")
+    head = _git(repo, "rev-parse", "HEAD")
+    return mod, repo, target, base, head
+
+
+def test_verify_local_proof_blocks_handwritten_without_receipt_or_claim(tmp_path, monkeypatch, capsys):
+    mod, repo, _, base, head = _seed_debt_commit(tmp_path)
+    _patch_repo(mod, monkeypatch, repo)
+    monkeypatch.setenv("OMO_DEBT_RECEIPT_LOG", str(tmp_path / "missing-receipts.jsonl"))
+    monkeypatch.setenv("OMO_WORKFLOW_RUNS_DIR", str(tmp_path / "empty-runs"))
+    monkeypatch.delenv("AGENT_WORKFLOW_RUN_ID", raising=False)
+    monkeypatch.delenv("SWARM_ESCAPE_ID", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["write-owner-audit.py", "--range", f"{base}..{head}", "--verify-local-proof", "--json"],
+    )
+    assert mod.main() == 1
+    report = json.loads(capsys.readouterr().out)
+    assert report["ok"] is False
+    assert len(report["violations"]) == 1
+    assert report["verified_exemptions"] == []
+
+
+def test_verify_local_proof_allows_matching_broker_sha256_receipt(tmp_path, monkeypatch, capsys):
+    import hashlib
+
+    mod, repo, target, base, head = _seed_debt_commit(tmp_path, content="id: X\nlifecycle_state: closed\n")
+    _patch_repo(mod, monkeypatch, repo)
+    receipt_log = tmp_path / "receipts.jsonl"
+    receipt_log.write_text(
+        json.dumps({
+            "path": ".omo/debt/items/X.yaml",
+            "sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+            "command": "close",
+        })
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OMO_DEBT_RECEIPT_LOG", str(receipt_log))
+    monkeypatch.setenv("OMO_WORKFLOW_RUNS_DIR", str(tmp_path / "empty-runs"))
+    monkeypatch.delenv("AGENT_WORKFLOW_RUN_ID", raising=False)
+    monkeypatch.delenv("SWARM_ESCAPE_ID", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["write-owner-audit.py", "--range", f"{base}..{head}", "--verify-local-proof", "--json"],
+    )
+    assert mod.main() == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["ok"] is True
+    assert report["violations"] == []
+    assert report["verified_exemptions"][0]["kind"] == "broker_receipt"
+
+
+def test_verify_local_proof_blocks_tampered_byte_after_broker_receipt(tmp_path, monkeypatch, capsys):
+    import hashlib
+
+    mod, repo, target, base, _ = _seed_debt_commit(tmp_path, content="id: X\nseed: 1\n")
+    broker_sha = hashlib.sha256(target.read_bytes()).hexdigest()
+    target.write_text("id: X\nseed: 2\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "manual 1-byte edit after broker")
+    head = _git(repo, "rev-parse", "HEAD")
+
+    _patch_repo(mod, monkeypatch, repo)
+    receipt_log = tmp_path / "receipts.jsonl"
+    receipt_log.write_text(
+        json.dumps({"path": ".omo/debt/items/X.yaml", "sha256": broker_sha, "command": "desc"}) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OMO_DEBT_RECEIPT_LOG", str(receipt_log))
+    monkeypatch.setenv("OMO_WORKFLOW_RUNS_DIR", str(tmp_path / "empty-runs"))
+    monkeypatch.delenv("AGENT_WORKFLOW_RUN_ID", raising=False)
+    monkeypatch.delenv("SWARM_ESCAPE_ID", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["write-owner-audit.py", "--range", f"{base}..{head}", "--verify-local-proof", "--json"],
+    )
+    assert mod.main() == 1
+    report = json.loads(capsys.readouterr().out)
+    assert len(report["violations"]) == 1
+    assert report["verified_exemptions"] == []
+
+
+def test_verify_local_proof_allows_valid_workflow_claim(tmp_path, monkeypatch, capsys):
+    from datetime import datetime, timezone
+
+    mod, repo, _, base, head = _seed_debt_commit(tmp_path)
+    _patch_repo(mod, monkeypatch, repo)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    (runs_dir / "run-123.yaml").write_text(
+        f"run_id: run-123\nstatus: active\nupdated_at: '{now_iso}'\nclaims:\n- paths:\n  - .omo/debt/items/X.yaml\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OMO_DEBT_RECEIPT_LOG", str(tmp_path / "none.jsonl"))
+    monkeypatch.setenv("OMO_WORKFLOW_RUNS_DIR", str(runs_dir))
+    monkeypatch.delenv("AGENT_WORKFLOW_RUN_ID", raising=False)
+    monkeypatch.delenv("SWARM_ESCAPE_ID", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["write-owner-audit.py", "--range", f"{base}..{head}", "--verify-local-proof", "--json"],
+    )
+    assert mod.main() == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["ok"] is True
+    assert report["verified_exemptions"][0]["kind"] == "workflow_claim"
+    assert report["verified_exemptions"][0]["run_id"] == "run-123"
+
+    (runs_dir / "run-123.yaml").write_text(
+        f"run_id: run-123\nstatus: ok\nupdated_at: '{now_iso}'\nclaims:\n- paths:\n  - ./.omo/debt/items/X.yaml\n",
+        encoding="utf-8",
+    )
+    assert mod.main() == 0
+    report_ok = json.loads(capsys.readouterr().out)
+    assert report_ok["ok"] is True
+    assert report_ok["verified_exemptions"][0]["kind"] == "workflow_claim"
+
+
+def test_verify_local_proof_rejects_unclaimed_or_forged_run_id_env(tmp_path, monkeypatch, capsys):
+    from datetime import datetime, timezone
+
+    mod, repo, _, base, head = _seed_debt_commit(tmp_path)
+    _patch_repo(mod, monkeypatch, repo)
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    (runs_dir / "run-real.yaml").write_text(
+        f"run_id: run-real\nstatus: active\nupdated_at: '{now_iso}'\nclaims:\n- paths:\n  - .omo/debt/items/OTHER.yaml\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OMO_DEBT_RECEIPT_LOG", str(tmp_path / "none.jsonl"))
+    monkeypatch.setenv("OMO_WORKFLOW_RUNS_DIR", str(runs_dir))
+    monkeypatch.setenv("AGENT_WORKFLOW_RUN_ID", "forged-run-id")
+    monkeypatch.delenv("SWARM_ESCAPE_ID", raising=False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["write-owner-audit.py", "--range", f"{base}..{head}", "--verify-local-proof", "--json"],
+    )
+    assert mod.main() == 1
+
+    monkeypatch.setenv("AGENT_WORKFLOW_RUN_ID", "run-real")
+    assert mod.main() == 1
+
+
+def test_pre_push_runner_and_manifest_wire_write_owner_audit_blocking():
+    import yaml
+
+    runner = (ROOT / "bin" / "gac" / "hook-runner.sh").read_text(encoding="utf-8")
+    assert "write-owner-audit.py --range auto --verify-local-proof" in runner
+    assert 'run_check "write-owner-audit"' in runner
+
+    manifest = yaml.safe_load((ROOT / ".omo" / "_truth" / "registry" / "hook-manifest.yaml").read_text(encoding="utf-8"))
+    pre_push_checks = {entry["id"]: entry for entry in manifest["pre-push"]["checks"]}
+    assert "write-owner-audit" in pre_push_checks
+    entry = pre_push_checks["write-owner-audit"]
+    assert entry["blocking"] is True
+    assert "--verify-local-proof" in entry["script"]
