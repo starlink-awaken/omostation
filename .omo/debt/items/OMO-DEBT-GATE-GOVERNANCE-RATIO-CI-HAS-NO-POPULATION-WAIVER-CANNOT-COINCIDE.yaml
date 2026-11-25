@@ -95,6 +95,24 @@ history:
     本批不自行修的理由：修法要么改判据输入面（把台账入库或让 CI 从 runs/*.yaml 重建 population），要么改 waiver 生效面（让本机也读
     PR 号或让 CI 强制先物化），两者都动 ADR-0249 的执行平面与治理占比的判定口径，属 principal 决策范围，且会改变既有 blocked
     读数的可比性。本批只把机制事实钉成条目。''.'
+- at: '2026-11-25T09:10:00+00:00'
+  action: mitigate
+  note: >-
+    **#5559 消掉了「假 PASS」, 但没有消掉本条的后果, 条目不闭合。**
+    改动: `check-governance-ratio.py` 在 `not LEDGER.is_file()` 时不再返回
+    `ok:true / ratio:0.0`, 而是自报 `measured:false, reason:"no_ledger"`;
+    门禁命令补 `--json` 让它进 `not_measured`。判据语义与退出码未动 (缺输入不阻断)。
+    **为什么不算闭合**: 40% 上限在 CI 依旧**不受约束** —— 那里仍然没有台账,
+    只是从「假装测过且通过」变成「承认没测」。本条描述的接缝问题 (能 FAIL 的平面
+    读不到 waiver, 能读 waiver 的平面没有输入) 一字未变。要真生效仍需 owner 裁:
+    ① 把台账入库或让 CI 从 `runs/*.yaml` 重建 population; ② 让 waiver 在本机也可读
+    (或 CI 先物化台账)。两条都动 ADR-0249 的执行平面, 与本条原判断一致。
+    **同族另有两处, 已一并修成「自报」** (#5561 `check-evidence-honest-closure`、
+    #5569 `check-work-landed`; 三处都读 `.omo/_delivery/**` 这个 gitignore 面)。
+    扫描口径 (可复跑): 全 `bin/` + `scripts/` 里 `if not <gitignore 面路径>` 后 9 行内出现
+    `"ok": True` / `PASS` 且 return 的分支 —— 2026-11-25 全量筛得 8 个候选, 逐处看下来
+    仅这三处为真缺陷, 其余早退的输入都在被跟踪的仓内路径上 (缺席属真异常)。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
