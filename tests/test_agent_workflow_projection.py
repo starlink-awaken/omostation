@@ -13,6 +13,17 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "agent-workflow.py"
 
+# 下面四条直接跑 bin/agent-workflow.py, 而该脚本在 import 期就要求 omo 内核包
+# (projects/omo/src) 在位; 干净检出（子模块未 init）上这是「输入没备齐」, 跳过。
+_OMO_KERNEL_SRC = ROOT / "projects" / "omo" / "src" / "omo" / "__init__.py"
+_REQUIRES_OMO_KERNEL = pytest.mark.skipif(
+    not _OMO_KERNEL_SRC.exists(),
+    reason=(
+        f"omo 内核源码缺席: {_OMO_KERNEL_SRC} —— "
+        "先 `git submodule update --init projects/omo`（检出形态, 不是回归）"
+    ),
+)
+
 
 def _canonical_registry(tmp_path: Path) -> Path:
     registry = tmp_path / "agent-workflows"
@@ -57,6 +68,7 @@ def _load_script(name: str, relative: str):
     return module
 
 
+@_REQUIRES_OMO_KERNEL
 def test_projection_sync_is_deterministic_and_carries_read_only_provenance(tmp_path: Path) -> None:
     registry = _canonical_registry(tmp_path)
     projection = tmp_path / "agent-workflows.yaml"
@@ -97,6 +109,7 @@ def test_projection_sync_is_deterministic_and_carries_read_only_provenance(tmp_p
     assert [workflow["id"] for workflow in payload["workflows"]] == ["alpha", "beta"]
 
 
+@_REQUIRES_OMO_KERNEL
 def test_projection_check_fails_closed_on_content_or_provenance_drift(tmp_path: Path) -> None:
     registry = _canonical_registry(tmp_path)
     projection = tmp_path / "agent-workflows.yaml"
@@ -139,6 +152,7 @@ def test_projection_check_fails_closed_on_content_or_provenance_drift(tmp_path: 
     assert projection.read_bytes() != before
 
 
+@_REQUIRES_OMO_KERNEL
 def test_projection_check_detects_canonical_change_without_writing(tmp_path: Path) -> None:
     registry = _canonical_registry(tmp_path)
     projection = tmp_path / "agent-workflows.yaml"
@@ -169,6 +183,7 @@ def test_projection_check_detects_canonical_change_without_writing(tmp_path: Pat
     assert projection.read_bytes() == before
 
 
+@_REQUIRES_OMO_KERNEL
 def test_projection_sync_refuses_to_overwrite_canonical_sources(tmp_path: Path) -> None:
     registry = _canonical_registry(tmp_path)
     canonical_root = registry / "_root.yaml"
