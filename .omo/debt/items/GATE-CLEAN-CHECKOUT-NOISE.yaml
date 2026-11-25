@@ -154,3 +154,40 @@ history:
     「检出未备齐」而不是「仓库缺陷」; 但**它不改变退出码**（本轮刻意如此）——
     所以「本地 strict gate 在干净检出上仍 exit 1」是**设计选择**, 不是遗漏。
   actor: "governance-agent"
+- at: "2026-11-25T06:55:00+00:00"
+  action: evaluate
+  note: >-
+    **复测（基线 2026-11-15 之后 main 已前进多个 PR）**：在一棵 `git submodule deinit -f --all`
+    的 worktree（子模块目录空、非缺省）上跑 `gac-local-gate.py --strict --json`：
+    **24 hard fail / 3 not_measured**（preflight.complete=false, sgf_policy_loaded=false,
+    15 个子模块 uninitialized）。比 11-15 的 16 条多, 原因是配置更彻底 + 期间新增了 check。
+    **逐条定性：21 条环境性、2 条已声明、1 条真信号。**
+    - **真信号（1 条）**: `service-config-drift` 报 8 条 plist↔services.yaml 漂移
+      （com.l4.resident.{decision,execute,event-ingest,signals,inbox,promote} +
+      com.omostation.zhixing-projection-republisher + com.omostation.agent-brief-materialize）。
+      **核实过**：这 8 个 plist 在本机 `~/Library/LaunchAgents` **确实存在**, 不是「未安装被误判」——
+      是真实的机器↔注册表漂移。修法是跑生成器重写 plist + `bootout/bootstrap`, 属**机器级变更**,
+      T10-241 有事故记录, **未经授权不动**。
+    - **已声明 not_measured（2 条, 但仍留在 hard_fails 里）**: `mof-schema-validate` /
+      `mof-state-bridge`（`entrypoint_missing`）。另 `current-state-coherence`（`missing_input`）
+      已不在 hard_fails 里 —— 说明「自报即可移出」的机制其实已经对这一个生效, 另两个没有,
+      差异原因待查（疑似 `_missing_entrypoint` 只在部分聚合路径上生效）。
+    - **环境性其余 19 条**, 按修法归三类:
+      ① **一次 import 崩溃压住 8 条**: `agent-workflow-{lint,integrations,adapters,bootstrap,
+         verify-plan,compliance,doctor,observe}` 全部因 `bin/agent-workflow.py` 顶层
+         `from omo.workflow import ...` 抛 `ModuleNotFoundError: No module named 'omo'`
+         （`projects/omo/src` 未检出, `:282`）—— 入口在、依赖包不在, 所以 #5371 的
+         `_missing_entrypoint` 结构判据看不见它们, 输出是**裸 traceback + 空 stdout**,
+         既不可读也不可归类。**这 8 条是同因单修**。
+      ② **跑起来了但目标在子模块里**（11 条）: `capability-ownership` / `auto-fix-loop` /
+         `doc-ssot-lint` / `doc-link-check` / `dependency-baseline-drift`(74 drift) /
+         `test-gac-engine` / `check-severity-registry` / `governance-semantic-gate` /
+         `governance-evolution` / `mof-capabilities-drift-check` / `m4-bootstrap-reflex`。
+         按 #5370 的结论只能逐个让 check 自报, 无捷径。
+      ③ **自报了但门禁没接 `--json`**（1 条）: `check-evidence-freshness` —— 脚本已有
+         `--json` 且已算出 `measured=False`, 但门禁的命令是不带 flag 的
+         `["bin/gac/check-evidence-freshness.py"]`, 于是自报只以人读文本出现。
+         **这是本批里最便宜的一条**, 两处小改即可。
+    **纪律**: 先量再定 —— 本次量完才发现 ① 类占 1/3, 是单修收益最高的一类;
+    「16 条」那个旧数字如果直接拿来排期会把 8 条同因的当成 8 件独立工作。
+  actor: "governance-agent"
