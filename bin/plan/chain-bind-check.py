@@ -323,6 +323,7 @@ def main(argv: list[str] | None = None) -> int:
         "start": cmd_start,
         "closeout": cmd_closeout,
         "complete": cmd_complete,
+        "portfolio": cmd_portfolio,
         "self-check": cmd_self_check,
         "perception": cmd_perception,
     }[args.cmd](args)

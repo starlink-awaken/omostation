@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -481,3 +482,20 @@ def test_convergence_pulse_closeout_is_governance_exempt(tmp_path, monkeypatch):
     run = {"workflow_id": "convergence-pulse-weekly", "bet_id": ""}
     verdict = BIND.evaluate_closeout(run, tmp_path, status="ok")
     assert verdict.ok, f"convergence pulse must be governance-exempt, got {verdict.reasons}"
+
+
+def test_every_registered_subcommand_reaches_its_handler() -> None:
+    """`portfolio` 注册齐全却不在 main() 的硬编码派发字典里，走 CLI 必然 KeyError: 'portfolio'
+    (OMO-DEBT-CHAIN-BIND-PORTFOLIO-SUBCMD-NOT-DISPATCHED)。名单取自 CLI 自己的 --help，
+    不在用例里另抄一份 —— 抄了就跟被管面脱钩，新增子命令时用例一起瞎。"""
+    help_run = _run(["python3", str(CHECK_CLI), "--help"])
+    assert help_run.returncode == 0, help_run.stdout + help_run.stderr
+    groups = re.findall(r"\{([a-z][a-z0-9]*(?:[,-][a-z][a-z0-9]*)*)\}", help_run.stdout)
+    names = sorted({n for group in groups for n in group.split(",")})
+    assert "portfolio" in names, f"portfolio missing from enumerated subcommands: {help_run.stdout}"
+
+    for name in names:
+        probe = _run(["python3", str(CHECK_CLI), name])
+        combined = probe.stdout + probe.stderr
+        assert "Traceback" not in combined, f"{name} died inside dispatch:\n{combined}"
+        assert "KeyError" not in combined, f"{name} is registered but not dispatched:\n{combined}"
