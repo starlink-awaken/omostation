@@ -1,6 +1,7 @@
 import hashlib
 import importlib.util
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -481,6 +482,9 @@ def test_value_evidence_validation_uses_runtime_paths_and_fail_closed(tmp_path, 
 # ---------------------------------------------------------------------------
 
 
+FIXED_PUBLISH_NOW = datetime(2026, 11, 26, 12, 0, 0, tzinfo=UTC)
+
+
 def _publishable_payload(module):
     """补齐 `_validate_payload_claims_binding` 要求的 claims 投影字段。
 
@@ -535,7 +539,14 @@ def _publish(module, monkeypatch, tmp_path, payload):
     monkeypatch.setenv("ZHIXING_DASHBOARD_CODE_ROOT", str(tmp_path / "no-dashboard"))
     _stub_external_collectors(module, monkeypatch, payload)
     state_root = tmp_path / "projection-state"
-    result = module.publish_projection_revision(payload, state_root=state_root)
+    # 注入**固定时钟**: payload 里会写秒级 `generated_at`（panorama-collect.py
+    # `generated = (now or datetime.now(UTC))...`）—— 不冻结时两次发布跨整秒就得到
+    # 不同 revision_id, `test_republish_same_payload_is_idempotent_not_collision`
+    # 会随机变红（2026-11-26 实测, PR #5592 的 governance-verify）。见债务条目
+    # PANORAMA-BRIEF-REPUBLISH-SECOND-BOUNDARY-FLAKE。
+    result = module.publish_projection_revision(
+        payload, state_root=state_root, now=FIXED_PUBLISH_NOW
+    )
     return result, state_root / module.PROJECTION_REVISIONS_NAME / result["revision_id"]
 
 
