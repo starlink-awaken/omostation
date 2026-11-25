@@ -83,6 +83,13 @@ def test_agora_bos_services_yaml_exists():
     assert p.exists(), f"SSOT missing: {p}"
 
 
+@pytest.mark.skipif(
+    not (WORKSPACE / "projects" / "ecos" / "port-registry.yaml").exists(),
+    reason=(
+        "ecos port-registry 缺席: projects/ecos/port-registry.yaml —— "
+        "先 `git submodule update --init projects/ecos`（检出形态, 不是回归）"
+    ),
+)
 def test_ecos_port_registry_exists():
     """ecos port-registry 真存在."""
     p = WORKSPACE / "projects" / "ecos" / "port-registry.yaml"

@@ -14,6 +14,8 @@ import sys
 import types
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 _spec = importlib.util.spec_from_file_location("bet_ledger_t139", ROOT / "bin/plan/bet-ledger.py")
@@ -153,6 +155,14 @@ def test_shared_anchor_resolves_main_checkout() -> None:
     assert root == bl.WS.resolve() or (root / ".git").is_dir()
 
 
+@pytest.mark.skipif(
+    not (ROOT / "projects" / "omo" / "src" / "omo" / "__init__.py").exists(),
+    reason=(
+        "omo 内核源码缺席: projects/omo/src —— "
+        "bin/agent-workflow.py 在 import 期即要求它在位; "
+        "先 `git submodule update --init projects/omo`（检出形态, 不是回归）"
+    ),
+)
 def test_start_guard_scenarios(tmp_path: Path, monkeypatch) -> None:
     """start 拦截四场景 (agent-workflow 层, 不启动真 run)."""
     # stub omo.workflow before spec.exec_module so the module imports without
