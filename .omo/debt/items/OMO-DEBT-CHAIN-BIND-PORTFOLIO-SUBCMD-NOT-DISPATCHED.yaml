@@ -1,0 +1,123 @@
+id: OMO-DEBT-CHAIN-BIND-PORTFOLIO-SUBCMD-NOT-DISPATCHED
+title: chain-bind-check portfolio 子命令有实现却不在 main 派发字典：CLI rc=1 KeyError，W0 派生谓词仓内不可达
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- bin/plan/chain-bind-check.py
+- bin/plan/chain_bind.py
+- tests/test_chain_bind.py
+- docs/plans/3y-bet-ledger.yaml
+evidence_refs:
+- bin/plan/chain-bind-check.py:305-315 注册 portfolio 子命令（8 个旗标 + :315 `set_defaults(func=cmd_portfolio)`），但
+  :318-324 的 `main()` 不走 args.func，而是硬编派发字典 {start, closeout, complete, self-check,
+  perception} ⇒ 缺 portfolio
+- '真实 CLI: `python3 bin/plan/chain-bind-check.py portfolio --milestone-id MS-W0-CONTRACT`
+  rc=1，stderr 末行 `KeyError: ''portfolio''`（traceback 出自 :322 的 `{...}[args.cmd]`，被
+  :332 `raise SystemExit(main())` 原样抛出）；同一 CLI 的 `self-check` rc=0 打 `13 fixture cases`
+  ⇒ 仪器能跑，只缺这条接线'
+- '实现可用: importlib 直接调 cmd_portfolio(milestone_id=''MS-W0-CONTRACT'') → rc=0 `{"code":
+  "MILESTONE_MET", "ok": true, "reasons": []}`；MIGRATION/PRODUCT/CANARY 同判 MILESTONE_MET
+  ⇒ 缺陷是接线缺席而非死代码（与 gac-worktree.sh guard-submodules 被 release-diagnose 顶掉同形状）'
+- '消费者为零: tests/test_chain_bind.py:137/144/156/174/191/208 用真实 CLI 跑其它子命令，从不跑 portfolio；rg
+  ''cmd_portfolio'' 覆盖 tests/.github/bin/gac = 0 命中；.omo/_truth/registry/{governance-checks,ci-surfaces}.yaml
+  无 chain-bind-check 接线（命中的是另一个脚本 bin/plan/chain-bind-audit.py）；全库无文档写 `chain-bind-check.py
+  portfolio`'
+- '影响面: docs/plans/3y-bet-ledger.yaml 有 5 项 `status: derived`（4 个 MS-W0-* 在 :48509-48513
+  一侧，CMP-W0-PORTFOLIO-TRUST 与另 2 个 milestone 在 :48661-48688 一侧），其判定唯一实现就是这个跑不通的子命令
+  ⇒ W0 门禁结论在 CI/运维视角恒为不可得，只能靠临时 import 得（本轮即如此）'
+- '派生面的第二个缺口: cmd_portfolio 只读 ledger[''milestones'']（:101-102），campaign id 永远查不到
+  —— `CMP-W0-PORTFOLIO-TRUST` → rc=1 `chain-bind-check: unknown milestone CMP-W0-PORTFOLIO-TRUST`；仓内不存在
+  campaign 谓词'
+- 'vision 侧诚实边界: `--vision` 在 --objectives-json/--window-json 均缺省时返回 rc=1 `VISION_WINDOW_INCOMPLETE:
+  weeks=0 need>=12` + `missing human final verdict`；weeks=0 是「谓词不自取数据」的输入产物，不能被读作工作区实况，human
+  final verdict 属 principal 保留'
+- '取证装置坑: `python3 ... portfolio ... 2>&1 | tail -3; echo cli_rc=$?` 打出 rc=0，是 zsh
+  管道取到 tail 的退出码（PIPESTATUS 陷阱，AGENTS §7 已登记过同形）；本轮改用 subprocess 取到真实 rc=1'
+mitigation_refs: []
+opened_at: '2026-11-25T02:33:13.364774+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T02:33:13.364774+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-CHAIN-BIND-PORTFOLIO-SUBCMD-NOT-DISPATCHED.
+- at: '2026-11-25T02:34:20.479070+00:00'
+  action: update_description
+  note: "Updated description from '' to '【机制缺陷】bin/plan/chain-bind-check.py 把 T1-06\
+    \ 的 Milestone/Vision 派生谓词做成了 `portfolio` 子命令：:305-315 完整注册（--workspace/--ledger-json/--evidence-json/--milestone-id/--milestone-json/--vision/--objectives-json/--window-json/--json，并\
+    \ :315 `portfolio_p.set_defaults(func=cmd_portfolio)`），函数体 :92-133 也照 args.func\
+    \ 的约定写好。但 :318-324 的 `main()` 不用 args.func，而是硬编码一张派发字典：\n\n    return {\"start\"\
+    : cmd_start, \"closeout\": cmd_closeout, \"complete\": cmd_complete,\n       \
+    \     \"self-check\": cmd_self_check, \"perception\": cmd_perception}[args.cmd](args)\n\
+    \nportfolio 不在表里 ⇒ 走 CLI 必然 `KeyError: 'portfolio'`（:322 抛，:332 `raise SystemExit(main())`\
+    \ 原样冒到终端），实测 rc=1。而 `set_defaults(func=...)` 这一行的存在说明作者本意就是 args.func 派发 —— 少的一行让「声明」和「可调用」分裂。同一\
+    \ CLI 的 `self-check` 正常（rc=0，`13 fixture cases`），证明仪器本身能跑，缺的是这条接线。\n\n【实现是可用的，不是死代码】用\
+    \ importlib 直接加载该文件并调 `cmd_portfolio(milestone_id='MS-W0-CONTRACT')` → rc=0，输出\
+    \ `{\"code\": \"MILESTONE_MET\", \"ok\": true, \"reasons\": []}`；MS-W0-MIGRATION\
+    \ / MS-W0-PRODUCT / MS-W0-CANARY 同样 MILESTONE_MET。也就是说：台账里 5 处 `status: derived`（4\
+    \ 个 MS-W0-* 见 docs/plans/3y-bet-ledger.yaml :48509-48513 一侧，CMP-W0-PORTFOLIO-TRUST\
+    \ 等见 :48661-48688 一侧）的判定唯一实现存在且给出绿灯，但**仓内没有任何路径能跑到它** —— CI、门禁、运维手册都拿不到这个结论，只能像本轮这样临时\
+    \ import。这与 gac-worktree.sh 的 `guard-submodules` 被新增分支顶掉后钩子空转 7 周是同一形状：函数体在、内部调用在，只有\
+    \ CLI 入口没了。\n\n【消费者盘点：零】tests/test_chain_bind.py 确实用真实 CLI 跑其它子命令（:137 `_run([\"\
+    python3\", str(CHECK_CLI), \"self-check\"])`，另在 :144/:156/:174/:191/:208 复用），但从不跑\
+    \ portfolio；rg 'cmd_portfolio' 在 tests / .github / bin/gac 全域 0 命中；.omo/_truth/registry/governance-checks.yaml\
+    \ 与 ci-surfaces.yaml 里没有 chain-bind-check 接线（命中的 `chain-bind-audit` 是另一个脚本 bin/plan/chain-bind-audit.py）；全库没有任何文档写\
+    \ `chain-bind-check.py portfolio`。⇒ 属于「判据不被任何 CI 路径跑 = 不存在」与「测试绕过接线就钉不住接线」两条已固化纪律的同时命中。\n\
+    \n【派生面的第二个缺口（顺带实测）】cmd_portfolio 只在 `ledger[\"milestones\"]` 里找 id（:101-102），campaign\
+    \ 类 id 永远查不到：`--milestone-id CMP-W0-PORTFOLIO-TRUST` → rc=1 `chain-bind-check:\
+    \ unknown milestone CMP-W0-PORTFOLIO-TRUST`。仓内不存在 campaign 谓词 ⇒ 该条 `status: derived`\
+    \ 没有任何可评估实现，不只是接线问题。\n\n【vision 侧的诚实边界】`--vision` 在 --objectives-json/--window-json\
+    \ 都缺省时返回 rc=1：`VISION_WINDOW_INCOMPLETE: weeks=0 need>=12`、`VISION_WINDOW_INCOMPLETE:\
+    \ missing human final verdict`。注意 weeks=0 是「谓词不自取数据、输入为空」的产物，**不能读作工作区实况**；human\
+    \ final verdict 那半属 principal 保留权限。docstring 承诺「Read-only … Never mutates Ledger/OMO」，本轮调用后端台账零改动（`git\
+    \ status --short` 干净）。\n\n【修复方向（本条只登记，不动工具、不开新 PR）】① :318-324 补 `\"portfolio\"\
+    : cmd_portfolio`，或改成 `return args.func(args)`（后者让这类遗漏结构上不可能发生，且与 :315 的 set_defaults\
+    \ 一致）；② 用例走真实 CLI 入口钉住：在 tests/test_chain_bind.py 已有的 CHECK_CLI 模式上加一条 `portfolio\
+    \ --milestone-id <fixture>` 断言 MILESTONE_MET；③ campaign 侧要么补谓词、要么把 `status: derived`\
+    \ 改成有实现支撑的取值；④ 若要接进 CI，先按纪律走 advisory 观察，是否升级 blocking 由 principal 决定。取证装置坑同记：`...\
+    \ 2>&1 | tail -3; echo rc=$?` 取到的是 tail 的 rc（zsh PIPESTATUS 陷阱，AGENTS §7 已登记同形），本轮改用\
+    \ subprocess 才拿到真实 rc=1。'."
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: "【机制缺陷】bin/plan/chain-bind-check.py 把 T1-06 的 Milestone/Vision 派生谓词做成了\
+  \ `portfolio` 子命令：:305-315 完整注册（--workspace/--ledger-json/--evidence-json/--milestone-id/--milestone-json/--vision/--objectives-json/--window-json/--json，并\
+  \ :315 `portfolio_p.set_defaults(func=cmd_portfolio)`），函数体 :92-133 也照 args.func\
+  \ 的约定写好。但 :318-324 的 `main()` 不用 args.func，而是硬编码一张派发字典：\n\n    return {\"start\"\
+  : cmd_start, \"closeout\": cmd_closeout, \"complete\": cmd_complete,\n         \
+  \   \"self-check\": cmd_self_check, \"perception\": cmd_perception}[args.cmd](args)\n\
+  \nportfolio 不在表里 ⇒ 走 CLI 必然 `KeyError: 'portfolio'`（:322 抛，:332 `raise SystemExit(main())`\
+  \ 原样冒到终端），实测 rc=1。而 `set_defaults(func=...)` 这一行的存在说明作者本意就是 args.func 派发 —— 少的一行让「声明」和「可调用」分裂。同一\
+  \ CLI 的 `self-check` 正常（rc=0，`13 fixture cases`），证明仪器本身能跑，缺的是这条接线。\n\n【实现是可用的，不是死代码】用\
+  \ importlib 直接加载该文件并调 `cmd_portfolio(milestone_id='MS-W0-CONTRACT')` → rc=0，输出 `{\"\
+  code\": \"MILESTONE_MET\", \"ok\": true, \"reasons\": []}`；MS-W0-MIGRATION / MS-W0-PRODUCT\
+  \ / MS-W0-CANARY 同样 MILESTONE_MET。也就是说：台账里 5 处 `status: derived`（4 个 MS-W0-* 见 docs/plans/3y-bet-ledger.yaml\
+  \ :48509-48513 一侧，CMP-W0-PORTFOLIO-TRUST 等见 :48661-48688 一侧）的判定唯一实现存在且给出绿灯，但**仓内没有任何路径能跑到它**\
+  \ —— CI、门禁、运维手册都拿不到这个结论，只能像本轮这样临时 import。这与 gac-worktree.sh 的 `guard-submodules`\
+  \ 被新增分支顶掉后钩子空转 7 周是同一形状：函数体在、内部调用在，只有 CLI 入口没了。\n\n【消费者盘点：零】tests/test_chain_bind.py\
+  \ 确实用真实 CLI 跑其它子命令（:137 `_run([\"python3\", str(CHECK_CLI), \"self-check\"])`，另在\
+  \ :144/:156/:174/:191/:208 复用），但从不跑 portfolio；rg 'cmd_portfolio' 在 tests / .github\
+  \ / bin/gac 全域 0 命中；.omo/_truth/registry/governance-checks.yaml 与 ci-surfaces.yaml\
+  \ 里没有 chain-bind-check 接线（命中的 `chain-bind-audit` 是另一个脚本 bin/plan/chain-bind-audit.py）；全库没有任何文档写\
+  \ `chain-bind-check.py portfolio`。⇒ 属于「判据不被任何 CI 路径跑 = 不存在」与「测试绕过接线就钉不住接线」两条已固化纪律的同时命中。\n\
+  \n【派生面的第二个缺口（顺带实测）】cmd_portfolio 只在 `ledger[\"milestones\"]` 里找 id（:101-102），campaign\
+  \ 类 id 永远查不到：`--milestone-id CMP-W0-PORTFOLIO-TRUST` → rc=1 `chain-bind-check: unknown\
+  \ milestone CMP-W0-PORTFOLIO-TRUST`。仓内不存在 campaign 谓词 ⇒ 该条 `status: derived` 没有任何可评估实现，不只是接线问题。\n\
+  \n【vision 侧的诚实边界】`--vision` 在 --objectives-json/--window-json 都缺省时返回 rc=1：`VISION_WINDOW_INCOMPLETE:\
+  \ weeks=0 need>=12`、`VISION_WINDOW_INCOMPLETE: missing human final verdict`。注意 weeks=0\
+  \ 是「谓词不自取数据、输入为空」的产物，**不能读作工作区实况**；human final verdict 那半属 principal 保留权限。docstring\
+  \ 承诺「Read-only … Never mutates Ledger/OMO」，本轮调用后端台账零改动（`git status --short` 干净）。\n\
+  \n【修复方向（本条只登记，不动工具、不开新 PR）】① :318-324 补 `\"portfolio\": cmd_portfolio`，或改成 `return\
+  \ args.func(args)`（后者让这类遗漏结构上不可能发生，且与 :315 的 set_defaults 一致）；② 用例走真实 CLI 入口钉住：在\
+  \ tests/test_chain_bind.py 已有的 CHECK_CLI 模式上加一条 `portfolio --milestone-id <fixture>`\
+  \ 断言 MILESTONE_MET；③ campaign 侧要么补谓词、要么把 `status: derived` 改成有实现支撑的取值；④ 若要接进 CI，先按纪律走\
+  \ advisory 观察，是否升级 blocking 由 principal 决定。取证装置坑同记：`... 2>&1 | tail -3; echo rc=$?`\
+  \ 取到的是 tail 的 rc（zsh PIPESTATUS 陷阱，AGENTS §7 已登记同形），本轮改用 subprocess 才拿到真实 rc=1。"

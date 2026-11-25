@@ -1,0 +1,130 @@
+id: OMO-DEBT-GATE-GOVERNANCE-RATIO-CI-HAS-NO-POPULATION-WAIVER-CANNOT-COINCIDE
+title: 治理占比 40% 上限在 CI 无判据输入 (ledger 未入库 => no-ledger 恒 PASS), waiver 仅 CI 生效, 两面永不同时成立
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- bin/gac/check-governance-ratio.py
+- bin/gac/gac-local-gate.py
+- .github/workflows/gac-gate.yml
+- .omo/_truth/governance-evidence/waiver-2026-11-25-debt-batch21-24-ratio.md
+evidence_refs:
+- '判据输入路径: bin/gac/check-governance-ratio.py:51 LEDGER = WORKSPACE / ".omo/_delivery/agent-workflows/events.jsonl";
+  :161-175 `if not LEDGER.is_file():` 直接构造 ok=True, ratio=0.0, message="no ledger"
+  并 return 0 —— 台账缺席即 PASS.'
+- '台账不入库 (实测 @51cc1efc5, worktree /Users/xiamingxing/ws-debt21): `git ls-files --error-unmatch
+  .omo/_delivery/agent-workflows/events.jsonl` → NOT-TRACKED; `git show HEAD:.omo/_delivery/agent-workflows/events.jsonl`
+  → no committed blob. 故 CI checkout 得到的树里该文件必然不存在.'
+- 'canonical 侧形态: 在 /Users/xiamingxing/Workspace 跑 `git check-ignore -v <同路径>` → `fatal:
+  pathspec ... is beyond a symbolic link` (该处 .omo/_delivery 为符号链接, linked worktree
+  与 canonical 共享 inode); 本机该文件实存且 agent_workflow_start 计数 496 —— 本机有输入, CI 无输入.'
+- 'CI 无补料路径 (全库检索): `rg -n "events\.jsonl|_delivery/agent-workflows" .github/workflows/*.yml`
+  只命中 governance-check.yml:850/887 的 `${{ runner.temp }}/omo-events.jsonl` (失败日志 artifact,
+  不是台账); `rg -n "agent-workflow\.py (start|claim)" .github/workflows/` 零命中; `git check-attr
+  filter -- <台账路径>` → `filter: unspecified` (无 LFS 拉取). 没有任何步骤在 CI 里造出该文件.'
+- 'CI 确实执行了这个 check (排除「没接线」解释): 导入 bin/gac/gac-local-gate.py 后在 env CI=true 下调 `gate_checks(strict=True)`
+  返回 88 个 id 且 `check-governance-ratio` 在内; 该 id 逐项实测不在 OPS_ONLY_CHECKS / AGENT_WORKFLOW_GATE_CHECKS
+  / CI_ONLY_CHECKS / CI_SKIP_CHECKS / BROKEN_CHECKS 任一集合 (全 False), 且在 CHECKS 中无 ci_only/broken
+  标记.'
+- 'CI 读数: PR #5553 gac-gate run 45558466383 的 "gac-local-gate (strict)" step, env
+  段打印 `GITHUB_PR_NUMBER: 5553`, 末行 `GaC local gate: PASS (88 checks executed, 2 SOFT
+  WARN)`; 同 step 在 `gh run view --log` 里逐条 `[PASS] <id> :: <cmd>` 只剩 2/88 条 (日志压缩),
+  所以「ratio 那行没出现」不能当「未执行」的证据 —— 该 PASS 的成因只能落到第 1 条的 no-ledger 短路.'
+- '同 commit 本机读数 (对照实验): `make gac-local-gate` rc=2, 打 `[FAIL] check-governance-ratio
+  :: bin/gac/check-governance-ratio.py` + `check-governance-ratio: FAIL (blocking)`
+  + `window=30d total=142 governance=59 collab=0 flex=83 ratio=41.5% ratio 41.5% >
+  ceiling 40%`. 同一份代码同一个判据, CI PASS / 本机 FAIL, 全部差异来自台账文件在不在.'
+- '豁免在本机不可能触发: `check-governance-ratio.py:281-282` `pr_number = os.environ.get("GITHUB_PR_NUMBER",
+  "").strip()`; `if not pr_number: return []`. 本机不设该 env, 所以即使台账在场且超线, waiver 也无法生效
+  —— 批次 22/23/24/26 的 `--status blocked` 读数不会因为 waiver 被转换 (这与创建豁免时向 principal 声明的限制一致,
+  本条是机制级复证).'
+- '两面合不上 (结论): 判据能 FAIL 的平面 (本机, 有台账) 是豁免唯一读不到的平面; 豁免唯一能读到的平面 (CI, GITHUB_PR_NUMBER
+  存在) 是判据因无输入而恒 PASS 的平面. 于是 ADR-0249 的 40% 上限当前不存在任何一个「超额」与「豁免裁定」同时成立的执行平面, principal
+  选择的 waiver 在本批及既往批次都只完成了记账, 没有完成放行.'
+- '豁免实例本体: .omo/_truth/governance-evidence/waiver-2026-11-25-debt-batch21-24-ratio.md,
+  `schema_version: governance-waiver/v1`, `status: active`, `pr_numbers: [5553]`,
+  commit aa58486cb.'
+mitigation_refs: []
+opened_at: '2026-11-25T06:21:30.604122+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T06:21:30.604122+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-GATE-GOVERNANCE-RATIO-CI-HAS-NO-POPULATION-WAIVER-CANNOT-COINCIDE.
+  actor: governance-agent
+- at: '2026-11-25T06:24:36.416180+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''现象：ADR-0249 规定治理自省占比 ≤ 40%（另两档 40/20），执行判据是
+    bin/gac/check-governance-ratio.py，由 bin/gac/gac-local-gate.py 的 CHECKS 注册为 check-governance-ratio，既非
+    ci_only 也非 broken，因此在 CI 的 --strict 全量档里被选中（实测 gate_checks(strict=True) 在 env
+    CI=true 下返回 88 个 id 且包含它）。但它唯一的输入 .omo/_delivery/agent-workflows/events.jsonl
+    是宿主运行态、不在版本控制里（git ls-files --error-unmatch 报 NOT-TRACKED，git show HEAD: 该路径无
+    blob），CI checkout 得到的树里它必然缺席，于是 :161-175 的 `if not LEDGER.is_file()` 短路成 ok=True
+    / ratio=0.0 / message=''no ledger'' 并 return 0。同一份代码同一棵提交，在本机 FAIL（rc=2，window=30d
+    total=142 governance=59 ratio=41.5% > ceiling 40%），在 CI PASS（gac-gate run 45558466383
+    该 step 末行 ''GaC local gate: PASS (88 checks executed, 2 SOFT WARN)''）。差异不来自阈值、分类或时间窗口，只来自台账在不在。
+
+
+    与豁免机制的合不上：check-governance-ratio._active_waivers() 只在环境变量 GITHUB_PR_NUMBER 存在时才去读
+    .omo/_truth/governance-evidence/waiver-*.md 的 pr_numbers（:281-282 空值即 return []），而该
+    env 只有 .github/workflows/gac-gate.yml:214 在 strict step 上注入。结果两面永不同时成立——判据能 FAIL
+    的平面（本机，有台账）恰好是豁免唯一读不到的平面；豁免唯一能生效的平面（CI，有 env）恰好是判据因无输入而恒 PASS 的平面。ADR-0249 的 40%
+    上限因此没有任何一个「超额」与「豁免裁定」可以同时被表达的接缝，principal 裁定的 waiver（waiver-2026-11-25-debt-batch21-24-ratio.md，pr_numbers
+    [5553]，commit aa58486cb）对本机批次 22/23/24/26 的 blocked 读数不产生转换作用，对 CI 也不产生放行作用，只完成了记账。
+
+
+    取证边界如实记录：CI 日志里该 step 的逐条 [PASS] <id> :: <cmd> 只剩 2/88 条（gh run view --log 对长
+    step 的压缩，实测 selector 88 条 vs 日志命中 2 条），所以「ratio 那行没打印」不能作为「该 check 未执行」的证据，本条结论落在
+    no-ledger 短路这一 git 层可判定的事实上。另排除三种替代解释：CI 无任何步骤物化该台账（rg 全库只命中 governance-check.yml:850/887
+    的 runner.temp/omo-events.jsonl 失败日志；CI 不调 agent-workflow start/claim；该路径无 LFS
+    filter）。
+
+
+    后果：40% 预算封顶实际只在开发机生效且只由 agent 自己的 gate 读数触发，合并面不受其约束；同时任何「靠 waiver 放行合并」的设计意图在
+    CI 里都得不到验证，后续若有人据此认为豁免已被演练过会产生错误安全感。
+
+
+    本批不自行修的理由：修法要么改判据输入面（把台账入库或让 CI 从 runs/*.yaml 重建 population），要么改 waiver 生效面（让本机也读
+    PR 号或让 CI 强制先物化），两者都动 ADR-0249 的执行平面与治理占比的判定口径，属 principal 决策范围，且会改变既有 blocked
+    读数的可比性。本批只把机制事实钉成条目。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '现象：ADR-0249 规定治理自省占比 ≤ 40%（另两档 40/20），执行判据是 bin/gac/check-governance-ratio.py，由
+  bin/gac/gac-local-gate.py 的 CHECKS 注册为 check-governance-ratio，既非 ci_only 也非 broken，因此在
+  CI 的 --strict 全量档里被选中（实测 gate_checks(strict=True) 在 env CI=true 下返回 88 个 id 且包含它）。但它唯一的输入
+  .omo/_delivery/agent-workflows/events.jsonl 是宿主运行态、不在版本控制里（git ls-files --error-unmatch
+  报 NOT-TRACKED，git show HEAD: 该路径无 blob），CI checkout 得到的树里它必然缺席，于是 :161-175 的 `if
+  not LEDGER.is_file()` 短路成 ok=True / ratio=0.0 / message=''no ledger'' 并 return 0。同一份代码同一棵提交，在本机
+  FAIL（rc=2，window=30d total=142 governance=59 ratio=41.5% > ceiling 40%），在 CI PASS（gac-gate
+  run 45558466383 该 step 末行 ''GaC local gate: PASS (88 checks executed, 2 SOFT WARN)''）。差异不来自阈值、分类或时间窗口，只来自台账在不在。
+
+
+  与豁免机制的合不上：check-governance-ratio._active_waivers() 只在环境变量 GITHUB_PR_NUMBER 存在时才去读
+  .omo/_truth/governance-evidence/waiver-*.md 的 pr_numbers（:281-282 空值即 return []），而该
+  env 只有 .github/workflows/gac-gate.yml:214 在 strict step 上注入。结果两面永不同时成立——判据能 FAIL
+  的平面（本机，有台账）恰好是豁免唯一读不到的平面；豁免唯一能生效的平面（CI，有 env）恰好是判据因无输入而恒 PASS 的平面。ADR-0249 的 40%
+  上限因此没有任何一个「超额」与「豁免裁定」可以同时被表达的接缝，principal 裁定的 waiver（waiver-2026-11-25-debt-batch21-24-ratio.md，pr_numbers
+  [5553]，commit aa58486cb）对本机批次 22/23/24/26 的 blocked 读数不产生转换作用，对 CI 也不产生放行作用，只完成了记账。
+
+
+  取证边界如实记录：CI 日志里该 step 的逐条 [PASS] <id> :: <cmd> 只剩 2/88 条（gh run view --log 对长 step
+  的压缩，实测 selector 88 条 vs 日志命中 2 条），所以「ratio 那行没打印」不能作为「该 check 未执行」的证据，本条结论落在 no-ledger
+  短路这一 git 层可判定的事实上。另排除三种替代解释：CI 无任何步骤物化该台账（rg 全库只命中 governance-check.yml:850/887
+  的 runner.temp/omo-events.jsonl 失败日志；CI 不调 agent-workflow start/claim；该路径无 LFS filter）。
+
+
+  后果：40% 预算封顶实际只在开发机生效且只由 agent 自己的 gate 读数触发，合并面不受其约束；同时任何「靠 waiver 放行合并」的设计意图在 CI
+  里都得不到验证，后续若有人据此认为豁免已被演练过会产生错误安全感。
+
+
+  本批不自行修的理由：修法要么改判据输入面（把台账入库或让 CI 从 runs/*.yaml 重建 population），要么改 waiver 生效面（让本机也读
+  PR 号或让 CI 强制先物化），两者都动 ADR-0249 的执行平面与治理占比的判定口径，属 principal 决策范围，且会改变既有 blocked 读数的可比性。本批只把机制事实钉成条目。'
