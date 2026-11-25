@@ -16,7 +16,7 @@ evidence_refs:
 - docs/superpowers/specs/2026-10-11-model-volume-convergence-v1.md
 mitigation_refs: []
 opened_at: "2026-09-23"
-last_reviewed_at: '2026-11-09'
+last_reviewed_at: '2026-11-25'
 next_review_at: '2026-12-06'
 gate_level: none
 x1_policy_ref: ""
@@ -85,3 +85,10 @@ history:
     (3) **删除对象的量级第一次有数**：`Model/LMStudio` = **497G**（decision_needed 只写「删除 LMStudio/ 源」，没写量级）。Model 卷 top-level 实测：LMStudio 497G / models 293G / pinokio 264G / hf-cache 127G / ollama 50G / omlx 19G / Backup 8.8G / DockerDesktop 8.3G（`du -sh /Volumes/Model/*`，6.5s 完成）。⇒ 两个删除对象合计 **516G**，约等于该卷已用 1.2Ti 的 42%；`Model/omlx` 只占其中 19G，回收收益主要来自 LMStudio。
     (4) **上一轮 11-07 观察到的目录枚举挂死不成立为常设症状，登记为瞬态**：当时 `ls` 20s 无输出、`os.listdir('/Volumes/Model/omlx')` errno=4(EINTR) ~5s；本轮同路径复测全部正常 —— `os.listdir` 11 条 0.0s、`du -sh` 正常完成、LMStudio/MODEL-STORE 即时可列。⇒ 不据此新开磁盘债。同机同日另有 `docs/pitfalls.md:296`「本机 `crontab(1)` 写入持续 EINTR（系统级）、读正常（2026-11-07 实测）」的独立记录，两者同窗口共现，但**是否同一根因未证**，本轮不归因。附仪器纪律（对任何枚举类判据）：`os.walk`/`os.listdir` 若不显式捕获并上报 OSError，会把 EINTR 失败读成 `files=0` 的空目录假象；计数命令必须同时打 rc 与 stderr，`2>/dev/null` 只能用在已知非关键的通道上。
   actor: "governance-agent"
+- at: "2026-11-25T02:55:00Z"
+  action: review
+  actor: "governance-agent"
+  note: |
+    Wave 5 Calibrate (对齐 fleet-ops/generated/VOLUMES.md SSOT):
+    ① VOLUMES.md 明确区分两机磁盘身份：control-01-models (/Volumes/Model on mini, 1.0 TB USB mounted) 与 infer-01-models (/Volumes/Model on 285h-03/infer-01, 2.0 TB PCIe mounted)，另含 not-mounted 卷 control-01-weights (/Volumes/Data)、studio-01-models (/Volumes/SHAREDMODEL) 与 infer-01-store (/Volumes/MODEL-STORE)。
+    ② /Volumes/Model/* 上的历史模型与缓存清理/收敛需严格核对双机挂载与物理盘归属后再授权执行，本轮仅做 SSOT 校准，未删除任何 /Volumes/Model 数据。

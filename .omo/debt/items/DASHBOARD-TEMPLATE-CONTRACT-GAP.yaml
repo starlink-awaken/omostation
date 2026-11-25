@@ -18,7 +18,7 @@ mitigation_refs:
 - bin/panorama/panorama-collect.py::_check_template_data_consistency —— 发布器自带的契约守卫，
   每次发布都打同一句告警但不阻断（"It does NOT block publication — it only warns"）
 opened_at: "2026-11-10"
-last_reviewed_at: "2026-11-10"
+last_reviewed_at: "2026-11-25"
 next_review_at: "2026-12-10"
 gate_level: none
 x1_policy_ref: ""
@@ -87,3 +87,10 @@ history:
     current_findings / value_loop / anomaly_events / library / refresh 与顶层 observed_at）——
     它们要么是 refresh.py 时代产物、要么需要跨仓（模板属部署仓）协同，不在本条自行处理。
   actor: "governance-agent"
+- at: "2026-11-25T02:55:00Z"
+  action: review
+  actor: "governance-agent"
+  note: |
+    Wave 5 Calibrate (PR #5548 ae78e4cafb, zhixing-host-sync 27/27 in_sync):
+    ① PR #5548 与同步纳管完成 panorama-collect-main.py 与 panel-collect.py 单平面收敛，并停用碰撞的 180s com.omostation.zhixing-projection-fullrefresh。
+    ② 实时 /data.json 实证 observed_at 与默认 refresh 结构已补齐，模板缺失字段由 12 降至 7；其余跨仓契约字段仍保留本债跟踪。

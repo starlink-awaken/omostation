@@ -23,7 +23,7 @@ mitigation_refs:
 - bin/ops/hot-tier-resilience.sh
 - docs/superpowers/specs/2026-10-11-4tb-disk-resilience-v1.md
 opened_at: "2026-10-11"
-last_reviewed_at: '2026-11-24'
+last_reviewed_at: '2026-11-25'
 next_review_at: '2026-12-08'
 gate_level: none
 x1_policy_ref: ""
@@ -126,3 +126,11 @@ history:
     ⑤ 方法学留档：本机日志首行 `[2026-11-22 19:57:18] NOTE: v3 起改用 diskutil 判定挂载状态; 此前日志里的 未挂载/REMOUNT/NEEDS_ATTENTION 大量是误报`
     ⇒ 11-22 之前的 NEEDS_ATTENTION 计数不可当掉线证据；mini 日志起点 11-21 09:32:55（滚动窗口），
     故 5285 这个连续计数跨过了日志可见范围，只能证明「v3 判定下持续未挂载」，不能证明掉线时刻。
+- at: "2026-11-25T02:55:00Z"
+  action: review
+  actor: "governance-agent"
+  note: |
+    Wave 5 Calibrate (对齐 fleet-ops/generated/INVENTORY.md 与 VOLUMES.md SSOT):
+    ① control-01 (mini) 当前已挂载 control-01-models (9AD4869E-03A0-4B0D-AE0E-FCFB81F5D739, /Volumes/Model, USB, 1.0 TB, mounted)。
+    ② 计划迁往 studio-01 的 control-01-weights (69B4517B-C234-404A-B774-2D693E87EB33, /Volumes/Data, 2.0 TB) 当前仍处于 not-mounted 状态。
+    ③ 物理接盘前 3~7 天直连观察窗尚未开启，保持本债跟踪直至物理接回并完成观测。
