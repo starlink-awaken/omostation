@@ -679,12 +679,17 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    # 2026-11-25 回填本机实际 PATH (镜像副本; 安装器注入了 PATH 而声明未跟上, 语义对比治好假红后真漂移现形)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
     args:
     - decision
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/omostation/com.l4.resident.decision.log
+    stderr: /Users/xiamingxing/.local/log/omostation/com.l4.resident.decision.log
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -705,12 +710,17 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    # 2026-11-25 回填本机实际 PATH (镜像副本; 安装器注入了 PATH 而声明未跟上, 语义对比治好假红后真漂移现形)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
     args:
     - execute
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/omostation/com.l4.resident.execute.log
+    stderr: /Users/xiamingxing/.local/log/omostation/com.l4.resident.execute.log
   resilience:
     keepalive: crashed
     throttle_interval: 120
@@ -775,11 +785,16 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    # 2026-11-25 回填本机实际 PATH (镜像副本; 安装器注入了 PATH 而声明未跟上, 语义对比治好假红后真漂移现形)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-event-ingest.sh
     args: []
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/omostation/com.l4.resident.event-ingest.log
+    stderr: /Users/xiamingxing/.local/log/omostation/com.l4.resident.event-ingest.log
   resilience:
     keepalive: crashed
     throttle_interval: 300
@@ -800,12 +815,17 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    # 2026-11-25 回填本机实际 PATH (镜像副本; 安装器注入了 PATH 而声明未跟上, 语义对比治好假红后真漂移现形)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
     args:
     - signals
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/omostation/com.l4.resident.signals.log
+    stderr: /Users/xiamingxing/.local/log/omostation/com.l4.resident.signals.log
   resilience:
     keepalive: crashed
     throttle_interval: 300
@@ -825,12 +845,17 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    # 2026-11-25 回填本机实际 PATH (镜像副本; 安装器注入了 PATH 而声明未跟上, 语义对比治好假红后真漂移现形)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
     args:
     - inbox
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/omostation/com.l4.resident.inbox.log
+    stderr: /Users/xiamingxing/.local/log/omostation/com.l4.resident.inbox.log
   resilience:
     keepalive: crashed
     throttle_interval: 300
@@ -850,12 +875,17 @@ services:
   environment:
     # ADR-0456 B4b 第一批: 代码根切安装位, 状态根显式指回检出根 ——
     # 保持状态连续(ledger/.omo/state 路径逐字节不变), 状态整体外迁留作下一批
+    # 2026-11-25 回填本机实际 PATH (镜像副本; 安装器注入了 PATH 而声明未跟上, 语义对比治好假红后真漂移现形)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
     interpreter: /bin/bash
     entrypoint: lib/resident-role-tick.sh
     args:
     - promote
+  outputs:
+    stdout: /Users/xiamingxing/.local/log/omostation/com.l4.resident.promote.log
+    stderr: /Users/xiamingxing/.local/log/omostation/com.l4.resident.promote.log
   resilience:
     keepalive: crashed
     throttle_interval: 600
@@ -6115,6 +6145,8 @@ services:
   interval_sec: 300  # 2026-10-10 热修调参: 480→300 (5min 高频续期)
   label: com.omostation.zhixing-projection-republisher
   environment:
+    # 2026-11-25 回填本机实际 PATH (镜像副本; 安装器注入了 PATH 而声明未跟上)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     ZHIXING_DASHBOARD_STATE_ROOT: /Users/xiamingxing/.local/share/zhixing-dashboard
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
   program:
@@ -6518,6 +6550,8 @@ services:
     stdout: ~/.local/log/agent-brief-materialize.log
     stderr: ~/.local/log/agent-brief-materialize.log
   environment:
+    # 2026-11-25 回填本机实际 PATH (镜像副本, 正式化搭下个治理 BET; 语义对比治好假红后的真漂移现形)
+    PATH: /Users/xiamingxing/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
     OMOSTATION_STATE_ROOT: /Users/xiamingxing/.local/state/omostation/prod
 
 - id: user.omlx-smart-gateway
