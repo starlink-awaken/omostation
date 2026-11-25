@@ -58,10 +58,24 @@ decision_needed: >-
       无法自报「没测成」；
   (c) 拆成两个 id（例如 `state-freshness-check` + `state-freshness-check-json`）——
       保留两种行为，代价是门禁条目 +1、投影/覆盖报告口径要同步。
-  **本条不代为选定**；只登记与取证。可选的后续（未做）：给 `gate_coverage_report()`
-  加一条「policy 内 id 重复」的自检，让这类重复在报告里显形而不是靠集合差偶然暴露。
+  **本条不代为选定**；只登记与取证。
+
+  **已做的后续（机制）**：`gate_coverage_report()` 现在并列返回 `entries`（条目数）与
+  `duplicate_ids`（策略内重复 id），人读输出同步多打一行 `⚠️ 策略内 id 重复`
+  —— 这类重复不再需要靠「报告数字 vs 手数条目」对不上才偶然暴露。
+  实测读数：`effective=96 / default_total=74 / entries.effective=96 / entries.default=75`。
 history:
 - at: "2026-11-26T02:00:00+00:00"
   action: register
   note: Registered debt item GATE-DEFAULT-DUPLICATE-STATE-FRESHNESS.
+  actor: "governance-agent"
+- at: "2026-11-26T02:40:00+00:00"
+  action: mitigate
+  note: >-
+    **机制已补**（本条 description 里「可选的后续」那一条）：`gate_coverage_report()` 新增
+    `entries` / `duplicate_ids` 两个字段，`_print_gate_coverage()` 多打一行重复告警；
+    实测 `entries.default=75 vs default_total=74`、`duplicate_ids.default=['state-freshness-check']`。
+    合成违规自证：往 DEFAULT 再塞一条重复 ⇒ 报告点名且 gap +1（用例
+    `tests/unit/gac/test_gate_coverage_report.py`）。**注意这仍只是显形**：
+    fallback 下两条照跑的问题本身待 owner 选 (a)/(b)/(c)。
   actor: "governance-agent"
