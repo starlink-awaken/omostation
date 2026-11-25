@@ -1,0 +1,189 @@
+id: OMO-DEBT-WORKTREE-MERGE-RELEASE-FORCE-DELETE-UNPUSHED-BRANCH
+title: merge 成功路径释放 worktree 后用 git branch -D 强删分支：主仓侧未推送提交无任何 gate，本轮仅因 cwd 已失效才侥幸幸存
+dimension: governance
+subdimension: coordination
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- bin/gac/gac-worktree.sh
+- tests/test_gac_worktree_merge_cleanup.sh
+- AGENTS.md
+- .omo/debt/items
+evidence_refs:
+- bin/gac/gac-worktree.sh:670 `git worktree remove --force "$wt"` 成功后 :676 立即 `git
+  branch -D "$branch" 2>&1 | tail -1 || true` —— 用 -D 强删；同族 PASW 子模块侧清理在 :292 用的是安全的
+  `branch -d`
+- '释放/合并前置只判未提交项: :185 `dirty="${dirty}root has changes; "`（主仓侧唯一条件），未推送提交的 gate 仅覆盖子模块
+  :208-214 `--check-submodules` → `submodule commits on no remote branch`; merge 的
+  dirty 拦截 :1221-1226 同样只看未提交项（:1223 `git diff --quiet || git diff --cached --quiet`），而
+  :1221 注释本身写着「worktree 必须已 submit (push + 开 PR)」，:1222 又先 `cd "$wt"` 把脚本 cwd 落在即将被移除的
+  worktree 内 ⇒ 「已提交但未推送」的主仓交付在 merge 成功路径上无拦住条件'
+- '实测 2026-11-25 (BET-Y2Q4-T10-351 交付腿, session t10351): 分支 agent/governance-agent/t10351
+  上 f948f5b83 已随 PR #5547 squash 为 main 的 e97f47955，a7d1b593b (批次21 债登记) 未推送; `gac-worktree.sh
+  merge t10351` 合并成功后连打 `✅ worktree 释放: /Users/xiamingxing/ws-t10351` 紧跟 `fatal: Unable
+  to read current working directory: No such file or directory`（位置正是 :676 的 git branch
+  -D：脚本 cwd 随 worktree 一起消失），随后仍打 `✅ claim 已清: t10351`'
+- '幸存读数: ls /Users/xiamingxing/ws-t10351 → No such file or directory；`git branch --list
+  ''*t10351*''` 仍列出该分支；`git cat-file -t a7d1b593b` = commit ⇒ 未推送提交只因 -D 没跑成而侥幸留存，且该失败被
+  `|| true` 吞掉。反向语义不实测（-D 按 git 定义无视未合并状态直接删，从主工作区调用即静默丢工，不销毁在制工作去验证）'
+- tests/test_gac_worktree_merge_cleanup.sh 只在 :23 引用 SCRIPT 路径，对分支删除语义零断言（rg 'branch
+  -[dD]|unpushed|Deleted branch' 在该文件 0 命中）
+mitigation_refs: []
+opened_at: '2026-11-25T01:52:17.901527+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T01:52:17.901527+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-WORKTREE-MERGE-RELEASE-FORCE-DELETE-UNPUSHED-BRANCH.
+- at: '2026-11-25T02:25:15.478742+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【机制缺陷】bin/gac/gac-worktree.sh 的 post_merge_release()（:666-687）在
+    `git worktree remove --force` 成功后，紧接着用 `git branch -D "$branch"`（:676，且整行 `||
+    true`）强制删除本地分支。同一族清理在子模块 PASW 侧用的是安全形式（:292 `git -C "$wt/$sub" branch -d`），只有主仓分支用
+    -D。
+
+
+    前置守卫也拦不住它：释放守卫对主仓侧的唯一判据是「有未提交改动」（:185 `root has changes`），针对「提交不在任何远端分支」的 gate
+    只覆盖子模块（:208-214 `--check-submodules` → `submodule commits on no remote branch`，还要
+    GAC_ALLOW_UNPUSHED_SUBMODULES=1 才能跳过）；merge 的脏项拦截（:1220-1226）同样只看 git status。于是「已提交但未推送」的主仓交付在
+    merge 成功路径上没有任何拦住条件——一旦 PR 合掉，本地未推送的工作随分支一起被 -D 抹掉，只剩对象库里的孤儿 commit。
+
+
+    【本轮实测】session t10351（BET-Y2Q4-T10-351 交付腿）：分支 agent/governance-agent/t10351 上两个提交——f948f5b83（内容已随
+    PR #5547 squash 进 main 为 e97f47955）与 a7d1b593b（批次 21 的三条债登记，按 principal 的保留决定未推送）。`gac-worktree.sh
+    merge t10351` 在合并成功后依次打出 `✅ worktree 释放: /Users/xiamingxing/ws-t10351`、`fatal:
+    Unable to read current working directory: No such file or directory`、`✅ claim
+    已清: t10351`。那行 fatal 的位置正是 :676：脚本的 cwd 就是刚被移除的 worktree，git 根本没能执行分支删除。事后读数：`ls
+    ws-t10351` 不存在，但 `git branch --list ''*t10351*''` 仍列出分支，`git cat-file -t a7d1b593b`
+    = commit。**未推送的工作只因这次 cwd 恰好失效而侥幸幸存，且该失败被 `|| true` 完全吞掉**（不打断流程、不改变 rc、不进提示）。
+
+
+    【反向语义（不实测）】如果同一次 merge 从主工作区调用（cwd 有效，`git -C` 或 cd 到 canonical），:676 的 -D 会按
+    git 定义无视未合并状态直接删分支——未推送提交当场变孤儿。本条不销毁在制工作去验证这一点，只登记机制；判据来自 -D 的 git 语义与同族 :292
+    刻意使用 -d 的对照。
+
+
+    【测试面】tests/test_gac_worktree_merge_cleanup.sh 存在且引用 SCRIPT 路径（:23），但对分支删除语义零断言（该文件内
+    rg ''branch -[dD]|unpushed|Deleted branch'' 无命中）——属「用例不钉住真实危险行为」的形状。
+
+
+    【修复方向】:676 改为 `branch -d`（或删前先测 `git rev-list --count origin/main..$branch` /
+    `@{u}` 的未推送量，非 0 则保留分支并打出恢复命令）；给主仓侧补一条与 :208-214 对称的 unpushed gate；用例走真实 CLI 入口（`bash
+    bin/gac/gac-worktree.sh merge <session>`）钉住「分支含未推送提交 ⇒ 不得删」。本条只登记，不改 gac-worktree.sh
+    与门禁口径（改动面归工具 owner 决定）。''.'
+- at: '2026-11-25T02:26:02.564124+00:00'
+  action: update_description
+  note: 'Updated description from ''【机制缺陷】bin/gac/gac-worktree.sh 的 post_merge_release()（:666-687）在
+    `git worktree remove --force` 成功后，紧接着用 `git branch -D "$branch"`（:676，且整行 `||
+    true`）强制删除本地分支。同一族清理在子模块 PASW 侧用的是安全形式（:292 `git -C "$wt/$sub" branch -d`），只有主仓分支用
+    -D。
+
+
+    前置守卫也拦不住它：释放守卫对主仓侧的唯一判据是「有未提交改动」（:185 `root has changes`），针对「提交不在任何远端分支」的 gate
+    只覆盖子模块（:208-214 `--check-submodules` → `submodule commits on no remote branch`，还要
+    GAC_ALLOW_UNPUSHED_SUBMODULES=1 才能跳过）；merge 的脏项拦截（:1220-1226）同样只看 git status。于是「已提交但未推送」的主仓交付在
+    merge 成功路径上没有任何拦住条件——一旦 PR 合掉，本地未推送的工作随分支一起被 -D 抹掉，只剩对象库里的孤儿 commit。
+
+
+    【本轮实测】session t10351（BET-Y2Q4-T10-351 交付腿）：分支 agent/governance-agent/t10351 上两个提交——f948f5b83（内容已随
+    PR #5547 squash 进 main 为 e97f47955）与 a7d1b593b（批次 21 的三条债登记，按 principal 的保留决定未推送）。`gac-worktree.sh
+    merge t10351` 在合并成功后依次打出 `✅ worktree 释放: /Users/xiamingxing/ws-t10351`、`fatal:
+    Unable to read current working directory: No such file or directory`、`✅ claim
+    已清: t10351`。那行 fatal 的位置正是 :676：脚本的 cwd 就是刚被移除的 worktree，git 根本没能执行分支删除。事后读数：`ls
+    ws-t10351` 不存在，但 `git branch --list ''*t10351*''` 仍列出分支，`git cat-file -t a7d1b593b`
+    = commit。**未推送的工作只因这次 cwd 恰好失效而侥幸幸存，且该失败被 `|| true` 完全吞掉**（不打断流程、不改变 rc、不进提示）。
+
+
+    【反向语义（不实测）】如果同一次 merge 从主工作区调用（cwd 有效，`git -C` 或 cd 到 canonical），:676 的 -D 会按
+    git 定义无视未合并状态直接删分支——未推送提交当场变孤儿。本条不销毁在制工作去验证这一点，只登记机制；判据来自 -D 的 git 语义与同族 :292
+    刻意使用 -d 的对照。
+
+
+    【测试面】tests/test_gac_worktree_merge_cleanup.sh 存在且引用 SCRIPT 路径（:23），但对分支删除语义零断言（该文件内
+    rg ''branch -[dD]|unpushed|Deleted branch'' 无命中）——属「用例不钉住真实危险行为」的形状。
+
+
+    【修复方向】:676 改为 `branch -d`（或删前先测 `git rev-list --count origin/main..$branch` /
+    `@{u}` 的未推送量，非 0 则保留分支并打出恢复命令）；给主仓侧补一条与 :208-214 对称的 unpushed gate；用例走真实 CLI 入口（`bash
+    bin/gac/gac-worktree.sh merge <session>`）钉住「分支含未推送提交 ⇒ 不得删」。本条只登记，不改 gac-worktree.sh
+    与门禁口径（改动面归工具 owner 决定）。'' to ''【机制缺陷】bin/gac/gac-worktree.sh 的 post_merge_release()（:666-687）在
+    `git worktree remove --force` 成功后，紧接着用 `git branch -D "$branch"`（:676，且整行 `||
+    true`）强制删除本地分支。同一族清理在子模块 PASW 侧用的是安全形式（:292 `git -C "$wt/$sub" branch -d`），只有主仓分支用
+    -D。
+
+
+    前置守卫也拦不住它：释放守卫对主仓侧的唯一判据是「有未提交改动」（:185 `root has changes`），针对「提交不在任何远端分支」的 gate
+    只覆盖子模块（:208-214 `--check-submodules` → `submodule commits on no remote branch`，还要
+    GAC_ALLOW_UNPUSHED_SUBMODULES=1 才能跳过）；merge 的脏项拦截（:1221-1226）先看 :1221 的注释「worktree
+    必须已 submit (push + 开 PR)」，实际却只在 :1223 判 `git diff --quiet || git diff --cached
+    --quiet`；更巧的是 :1222 先 `cd "$wt"`，把脚本 cwd 落在即将被移除的 worktree 里。于是「已提交但未推送」的主仓交付在
+    merge 成功路径上没有任何拦住条件——一旦 PR 合掉，本地未推送的工作随分支一起被 -D 抹掉，只剩对象库里的孤儿 commit。
+
+
+    【本轮实测】session t10351（BET-Y2Q4-T10-351 交付腿）：分支 agent/governance-agent/t10351 上两个提交——f948f5b83（内容已随
+    PR #5547 squash 进 main 为 e97f47955）与 a7d1b593b（批次 21 的三条债登记，按 principal 的保留决定未推送）。`gac-worktree.sh
+    merge t10351` 在合并成功后依次打出 `✅ worktree 释放: /Users/xiamingxing/ws-t10351`、`fatal:
+    Unable to read current working directory: No such file or directory`、`✅ claim
+    已清: t10351`。那行 fatal 的位置正是 :676：脚本的 cwd 就是刚被移除的 worktree，git 根本没能执行分支删除。事后读数：`ls
+    ws-t10351` 不存在，但 `git branch --list ''*t10351*''` 仍列出分支，`git cat-file -t a7d1b593b`
+    = commit。**未推送的工作只因这次 cwd 恰好失效而侥幸幸存，且该失败被 `|| true` 完全吞掉**（不打断流程、不改变 rc、不进提示）。
+
+
+    【反向语义（不实测）】如果同一次 merge 从主工作区调用（cwd 有效，`git -C` 或 cd 到 canonical），:676 的 -D 会按
+    git 定义无视未合并状态直接删分支——未推送提交当场变孤儿。本条不销毁在制工作去验证这一点，只登记机制；判据来自 -D 的 git 语义与同族 :292
+    刻意使用 -d 的对照。
+
+
+    【测试面】tests/test_gac_worktree_merge_cleanup.sh 存在且引用 SCRIPT 路径（:23），但对分支删除语义零断言（该文件内
+    rg ''branch -[dD]|unpushed|Deleted branch'' 无命中）——属「用例不钉住真实危险行为」的形状。
+
+
+    【修复方向】:676 改为 `branch -d`（或删前先测 `git rev-list --count origin/main..$branch` /
+    `@{u}` 的未推送量，非 0 则保留分支并打出恢复命令）；给主仓侧补一条与 :208-214 对称的 unpushed gate；用例走真实 CLI 入口（`bash
+    bin/gac/gac-worktree.sh merge <session>`）钉住「分支含未推送提交 ⇒ 不得删」。本条只登记，不改 gac-worktree.sh
+    与门禁口径（改动面归工具 owner 决定）。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【机制缺陷】bin/gac/gac-worktree.sh 的 post_merge_release()（:666-687）在 `git
+  worktree remove --force` 成功后，紧接着用 `git branch -D "$branch"`（:676，且整行 `|| true`）强制删除本地分支。同一族清理在子模块
+  PASW 侧用的是安全形式（:292 `git -C "$wt/$sub" branch -d`），只有主仓分支用 -D。
+
+
+  前置守卫也拦不住它：释放守卫对主仓侧的唯一判据是「有未提交改动」（:185 `root has changes`），针对「提交不在任何远端分支」的 gate 只覆盖子模块（:208-214
+  `--check-submodules` → `submodule commits on no remote branch`，还要 GAC_ALLOW_UNPUSHED_SUBMODULES=1
+  才能跳过）；merge 的脏项拦截（:1221-1226）先看 :1221 的注释「worktree 必须已 submit (push + 开 PR)」，实际却只在
+  :1223 判 `git diff --quiet || git diff --cached --quiet`；更巧的是 :1222 先 `cd "$wt"`，把脚本
+  cwd 落在即将被移除的 worktree 里。于是「已提交但未推送」的主仓交付在 merge 成功路径上没有任何拦住条件——一旦 PR 合掉，本地未推送的工作随分支一起被
+  -D 抹掉，只剩对象库里的孤儿 commit。
+
+
+  【本轮实测】session t10351（BET-Y2Q4-T10-351 交付腿）：分支 agent/governance-agent/t10351 上两个提交——f948f5b83（内容已随
+  PR #5547 squash 进 main 为 e97f47955）与 a7d1b593b（批次 21 的三条债登记，按 principal 的保留决定未推送）。`gac-worktree.sh
+  merge t10351` 在合并成功后依次打出 `✅ worktree 释放: /Users/xiamingxing/ws-t10351`、`fatal: Unable
+  to read current working directory: No such file or directory`、`✅ claim 已清: t10351`。那行
+  fatal 的位置正是 :676：脚本的 cwd 就是刚被移除的 worktree，git 根本没能执行分支删除。事后读数：`ls ws-t10351` 不存在，但
+  `git branch --list ''*t10351*''` 仍列出分支，`git cat-file -t a7d1b593b` = commit。**未推送的工作只因这次
+  cwd 恰好失效而侥幸幸存，且该失败被 `|| true` 完全吞掉**（不打断流程、不改变 rc、不进提示）。
+
+
+  【反向语义（不实测）】如果同一次 merge 从主工作区调用（cwd 有效，`git -C` 或 cd 到 canonical），:676 的 -D 会按 git
+  定义无视未合并状态直接删分支——未推送提交当场变孤儿。本条不销毁在制工作去验证这一点，只登记机制；判据来自 -D 的 git 语义与同族 :292 刻意使用 -d
+  的对照。
+
+
+  【测试面】tests/test_gac_worktree_merge_cleanup.sh 存在且引用 SCRIPT 路径（:23），但对分支删除语义零断言（该文件内
+  rg ''branch -[dD]|unpushed|Deleted branch'' 无命中）——属「用例不钉住真实危险行为」的形状。
+
+
+  【修复方向】:676 改为 `branch -d`（或删前先测 `git rev-list --count origin/main..$branch` / `@{u}`
+  的未推送量，非 0 则保留分支并打出恢复命令）；给主仓侧补一条与 :208-214 对称的 unpushed gate；用例走真实 CLI 入口（`bash bin/gac/gac-worktree.sh
+  merge <session>`）钉住「分支含未推送提交 ⇒ 不得删」。本条只登记，不改 gac-worktree.sh 与门禁口径（改动面归工具 owner
+  决定）。'
