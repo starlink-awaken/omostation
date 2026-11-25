@@ -3301,6 +3301,18 @@ def _debt_state(data: dict) -> str:
     return str(data.get("status") or "unknown").strip().lower()
 
 
+_DEBT_OPEN_STATES = frozenset({
+    "open",
+    "proposed",
+    "registered",
+    "identified",
+    "in_progress",
+    "scheduled",
+    "blocked",
+    "mitigated",
+})
+
+
 def collect_debt() -> dict:
     """债务与决策。"""
     import yaml
@@ -3319,8 +3331,7 @@ def collect_debt() -> dict:
                 })
         except Exception:  # noqa: BLE001
             pass
-    open_states = {"open", "proposed", "registered"}
-    open_d = [d for d in debts if d["status"] in open_states]
+    open_d = [d for d in debts if d["status"] in _DEBT_OPEN_STATES]
     retro_dir = ROOT / ".omo" / "_knowledge" / "retros"
     closeout = [
         path.stem
@@ -3365,7 +3376,7 @@ def collect_alerts(ci: dict | None = None) -> dict:
         debt_dir = CODE_ROOT / ".omo" / "debt" / "items"
         for f in sorted(debt_dir.glob("*.yaml")) if debt_dir.is_dir() else []:
             d = yaml.safe_load(Path(f).read_text()) or {}
-            if isinstance(d, dict) and _debt_state(d) in {"open", "registered"}:
+            if isinstance(d, dict) and _debt_state(d) in _DEBT_OPEN_STATES:
                 alerts.append({"severity": d.get("severity", "medium"), "source": "debt",
                                "msg": f"开放债务: {d.get('title', d.get('id',''))[:50]}"})
     except Exception:  # noqa: BLE001
@@ -5781,6 +5792,24 @@ def check_side_effects() -> int:
     return 0
 
 
+def _publish_base_snapshot(
+    payload: dict,
+    *,
+    target: Path | None = None,
+    published_at: str | None = None,
+) -> Path:
+    """Atomically materialize DATA_JSON at OUT_DIR so orchestrator._read_panorama_base
+    reads the exact same fresh base cohort as the published projection revision.
+    """
+    dest = Path(target) if target is not None else DATA_JSON
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    snapshot = dict(payload)
+    snapshot["generated_at"] = published_at or datetime.now(UTC).isoformat()
+    body = json.dumps(snapshot, ensure_ascii=False, indent=1).encode("utf-8")
+    _atomic_replace_bytes(dest, body)
+    return dest
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--json", action="store_true", help="只输出 data.json 到 stdout 摘要")
@@ -5811,6 +5840,7 @@ def main() -> int:
     # and warn about fields the payload doesn't provide.
     _check_template_data_consistency(payload)
     projection = publish_projection_revision(payload)
+    _publish_base_snapshot(payload)
 
     if args.gates:
         print(json.dumps(payload["gates"], ensure_ascii=False, indent=1))

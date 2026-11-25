@@ -142,3 +142,38 @@ def test_both_sides_are_real_files() -> None:
     assert COLLECTOR.is_file()
     assert ORCHESTRATOR.is_file()
     assert os.access(ORCHESTRATOR, os.R_OK)
+
+
+def test_publish_base_snapshot_writes_atomic_data_json_for_orchestrator(
+    monkeypatch, tmp_path
+) -> None:
+    """_publish_base_snapshot 必须在 PANORAMA_OUTPUT_ROOT 落盘包含四组 base 键的 data.json。"""
+    import json
+    from datetime import datetime
+
+    code = tmp_path / "code"
+    out = tmp_path / "out"
+    code.mkdir()
+    out.mkdir()
+    module = _load_collector(
+        monkeypatch, PANORAMA_ROOT=str(code), PANORAMA_OUTPUT_ROOT=str(out)
+    )
+    sample = {
+        "observed_at": "2026-11-25T07:00:00+00:00",
+        "bets": {"total": 600, "counts": {"done": 598, "in_progress": 1, "pending": 1}},
+        "gates": [{"id": "A1", "verdict": "PASS", "detail": "ok warnings=2"}],
+        "runtime": {"service_keeper": {"ok": True}},
+        "code_root_health": {"verdict": "PASS"},
+    }
+
+    written = module._publish_base_snapshot(sample)
+    expected = out.resolve() / "runtime" / "dashboard" / "data.json"
+    assert written == expected
+    assert expected.is_file()
+
+    loaded = json.loads(expected.read_text(encoding="utf-8"))
+    for key in ("bets", "gates", "runtime", "code_root_health"):
+        assert loaded[key] == sample[key]
+    assert loaded["observed_at"] == sample["observed_at"]
+    parsed_clock = datetime.fromisoformat(loaded["generated_at"])
+    assert parsed_clock.tzinfo is not None
