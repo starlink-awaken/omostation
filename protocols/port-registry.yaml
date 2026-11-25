@@ -395,16 +395,6 @@ ports:
     note: runtime physical node delivery script default port
     status: reserved
     transport: http
-  18801:
-    name: wps-office-mcp-stdio
-    note: tool X-ext · 预留 HTTP 升级 (stdio 当前)
-    status: reserved
-    transport: stdio
-  18802:
-    name: wps-skills-stdio
-    note: tool X-ext · 预留 HTTP 升级 (stdio 当前)
-    status: reserved
-    transport: stdio
   18803:
     name: bos-skill-cli-stdio
     note: tool X-ext · 预留 HTTP 升级 (stdio 当前)

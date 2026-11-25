@@ -4215,36 +4215,6 @@ services:
     signal: .omo/_delivery/bos.system.backends.list/
     max_stale_hours: 168
   disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
-- id: bos.capability.wps_office_mcp.invoke
-  enabled: false
-  scheduler: manual
-  trigger: on_demand
-  transport: stdio
-  uri: bos://capability/wps-office-mcp/invoke
-  program:
-    interpreter: uv
-    entrypoint: projects/agora
-  depends_on:
-  - mcp.agora
-  liveness:
-    signal: .omo/_delivery/bos.capability.wps_office_mcp.invoke/
-    max_stale_hours: 168
-  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
-- id: bos.capability.wps_skills.load
-  enabled: false
-  scheduler: manual
-  trigger: on_demand
-  transport: stdio
-  uri: bos://capability/wps-skills/load
-  program:
-    interpreter: uv
-    entrypoint: projects/agora
-  depends_on:
-  - mcp.agora
-  liveness:
-    signal: .omo/_delivery/bos.capability.wps_skills.load/
-    max_stale_hours: 168
-  disabled_reason: "manual 能力注册项, 非守护进程 (BET-Y1Q4-T14)"
 - id: bos.capability.bos_skill_cli.exec
   enabled: false
   scheduler: manual

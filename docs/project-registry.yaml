@@ -311,21 +311,12 @@ projects:
      stack: "Multi (TypeScript MCP / JS Skills / Python CLI / Pipeline)"
      build_backend: "external-capability-runtime"
      # 仓外能力平面，不是 git 子模块；check-sfop-slots 不要求 COMP-WS-toolbox.yaml
-     role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×5 / Skill×5 / CLI×1 / Pipeline×2)"
+     role: "本地服务入口 — L1 寻址 / L2 分区 / L3 实例 (MCP×4 / Skill×4 / CLI×1 / Pipeline×2)"
      storage: "/Users/xiamingxing/ToolBox/"
      version: "v5 (2026-07-21)"
      # 收敛到 bos://capability/ 域 (eCOS 5 域锁定), 不创建新域
      bos_uri_root: "bos://capability"
      bos_services:
-       - id: wps-office-mcp
-         bos_uri: "bos://capability/wps-office-mcp/invoke"
-         git: "/Users/xiamingxing/ToolBox/mcp/wps-office-mcp/.git"
-         tools_count: 243
-         status: active
-       - id: wps-skills
-         bos_uri: "bos://capability/wps-skills/load"
-         git: "/Users/xiamingxing/ToolBox/skills/wps-skills/.git"
-         status: active
        - id: bos-skill-cli
          bos_uri: "bos://capability/bos-skill-cli/exec"
          git: "/Users/xiamingxing/ToolBox/cli/bos-skill-cli/.git"

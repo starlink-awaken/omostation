@@ -12,7 +12,7 @@ generator: bin/ssot/gen-capability-registry.py
 totals:
   mcp_servers: 27
   mcp_tools: 643
-  bos_services: 325
+  bos_services: 323
   bos_domains: 23
   cli_commands: 200
   skills: 43
@@ -886,7 +886,7 @@ bos_services:
     agora: 6
     analysis: 28
     bcos: 3
-    capability: 45
+    capability: 43
     cockpit: 9
     compute: 16
     documents: 4
@@ -1234,14 +1234,6 @@ bos_services:
     - uri: bos://capability/agent-runtime/agent-list
       description: 列出所有可用 Agent 实例
       transport: mcp_stdio
-      status: active
-    - uri: bos://capability/wps-office-mcp/invoke
-      description: WPS Office MCP Server (Excel/Word/PPT 243 tools) — 跨 L4-A Documents 业务文件读写
-      transport: stdio
-      status: active
-    - uri: bos://capability/wps-skills/load
-      description: WPS Skills 包 (wps-claude-addon + wps-claude-assistant) — Claude 内置触发
-      transport: stdio
       status: active
     - uri: bos://capability/bos-skill-cli/exec
       description: BOS Skill 管理 CLI/TUI — 搜索/暂存/promote/回退 skill 包
