@@ -1,5 +1,5 @@
 id: "TESTS-UNIT-CLEAN-CHECKOUT-RED"
-title: "测试面在「未 init 子模块」的检出上红：tests/unit 已修完（0）、tests/integration 干净、顶层 tests/test_*.py 的 9 条残留已于 2026-11-25 补守卫清掉（#5607；历史读数 223→9→0）—— 同一病根的三种面值"
+title: "测试面在「未 init 子模块」的检出上红：三个面（tests/unit、tests/integration、顶层 tests/test_*.py）2026-11-26 复验均为 0 红（unit 曾回退成 4，#5610 补齐）—— 同一病根的三种面值"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -257,4 +257,24 @@ history:
     ⇒ 顶层平面读数 **223 → 9 → 0**。**边界**：仅覆盖这 9 条；其余顶层用例本次未逐条复算，
     但它们在上一次 6 片并行测量里已通过或已 skip。条目顶层 decision_needed（tests/unit 策略
     (a)/(b)/(c)）仍待 owner，本条不代决。
+  actor: "governance-agent"
+- at: "2026-11-26T00:20:00+00:00"
+  action: correct
+  note: >-
+    **订正：`tests/unit` 的「0 红」声称已回退过，现在才真正成立。**
+    2026-11-25 在 fresh worktree 复验 `pytest tests/unit -q` 得 **4 failed / 3087 passed /
+    125 skipped** —— 条目正文写的「36 红 → 0」是 2026-11-16 的读数，之后新增的用例里
+    有 4 条没跟上守卫。逐条归因（全为输入没备齐）：
+
+    | 文件 | 条数 | 首因 |
+    |---|---|---|
+    | `tests/unit/gac/test_check_sfop_slots.py` | 2 | 直接读 `projects/omo/src/omo/cli.py` 做「已修正树」对照 → FileNotFoundError |
+    | `tests/unit/test_doc_l0_mapping_denominator.py` | 2 | 分母来自 `projects/ecos` 的 L0 约束源；缺席时检查器先报「L0 约束源缺失」，与用例要钉的「零分母判红」不是一回事 |
+
+    **已修**（#5610）：sfop 那 2 条加 `skipif`（`projects/omo/src/omo/cli.py` 缺席即跳过）；
+    doc-l0 分母整模块在 L0 约束源缺席时 `pytest.skip(allow_module_level=True)`。
+    **两态实测**：干净检出这 2 个文件 **21 passed / 3 skipped / 0 failed**（改前 4 failed）；
+    齐备树 **25 passed / 0 skipped**（守卫不误伤）。
+    **纪律**：一条「已修完（0 红）」的结论是有保质期的 —— 新增用例不会自动继承旧守卫。
+    这次是主动复验才发现的；下次同类条目应写明「读数取自哪个 commit、验收到什么范围」。
   actor: "governance-agent"
