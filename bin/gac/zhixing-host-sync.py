@@ -75,6 +75,7 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("runtime_paths.py", "runtime_paths.py.asset"),
     ("observatory_query.py", "observatory_query.py.asset"),
     ("panorama-collect-main.py", "panorama-collect-main.py.asset"),
+    ("panel-collect.py", "panel-collect.py.asset"),
     # 2026-09-26: 驾驶舱推理引擎(副驾对话 / RAG 向量+重排)纳管 —— 此前不在任何仓库,
     # 直连 oMLX :8000 且无鉴权; 已改经 aetherforge 门面。
     ("copilot_service.py", "copilot_service.py.asset"),
