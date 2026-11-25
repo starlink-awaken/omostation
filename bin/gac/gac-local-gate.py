@@ -187,9 +187,8 @@ DEFAULT_POLICY = {
         },
         {
             "id": "dependency-baseline-drift",
-            # --json: 有未检出子模块时自报 measured:false（pyproject 不在本检出里,
-            # 无法判定 STALE/MISSING）。
-            "command": ["bin/mof/gen-dependency-baseline.py", "--check", "--json"],
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            "command": ["bin/mof/gen-dependency-baseline.py", "--check"],
             "ci_only": True,
         },
         {
@@ -259,9 +258,8 @@ DEFAULT_POLICY = {
         # adding/removing rows there is the safe edit surface.
         {
             "id": "check-severity-registry",
-            # --json: 参考面在 `projects/ecos/**`（未检出子模块），缺席时本 check
-            # 自报 `measured: false`, 而不是把空基准当成「全部未声明」而全红。
-            "command": ["bin/gac/check-severity-registry.py", "--json"],
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            "command": ["bin/gac/check-severity-registry.py"],
         },
         # CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3): cron 解释器可执行性。
         # 不进 SOFT_CHECKS —— 阻断与否由脚本自己的限期 (ENFORCE_AFTER) 决定,
@@ -296,9 +294,8 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-work-landed",
-            # --json: runs 目录在 `.omo/_delivery/**`（gitignore 面），CI 干净检出里
-            # 不存在；带 flag 才能让本 check 自报 `measured: false` 而不是空绿。
-            "command": ["bin/gac/check-work-landed.py", "--json"],
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            "command": ["bin/gac/check-work-landed.py"],
             # 全量 run 扫描 (closed 170+, 每 ref 一次 git 查询) 实测 ~100s;
             # 45s 会超时被杀误报 FAIL (2026-10-14 实证: 直接跑 PASS 97s, gate 内 FAIL)
             "timeout": 240,
@@ -310,9 +307,8 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-governance-ratio",
-            # --json: 账本缺席时(`.omo/_delivery/**` 是 gitignore 面, CI 干净检出即如此)
-            # 让本 check 自报 `measured: false`, 而不是以 `ok: true, ratio: 0.0` 空绿。
-            "command": ["bin/gac/check-governance-ratio.py", "--json"],
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之后的归一化块）。
+            "command": ["bin/gac/check-governance-ratio.py"],
         },
         {
             "id": "check-redline-coverage",
@@ -351,9 +347,9 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-evidence-freshness",
-            # --json: 让本 check 能在报告生成失败时自报 `measured: false`
-            # (GATE-CLEAN-CHECKOUT-NOISE), 而不是把 `score=0.0` 混进「测出红」。
-            "command": ["bin/gac/check-evidence-freshness.py", "--json"],
+            # `--json` 由 REQUIRED_COMMAND_FLAGS 统一补齐（见 POLICY 之前的归一化块）——
+            # 在这里加会被 submodule 策略绕过。
+            "command": ["bin/gac/check-evidence-freshness.py"],
         },
         {
             "id": "check-governance-trend",
@@ -403,7 +399,38 @@ DEFAULT_POLICY = {
 }
 
 # 动态读取并组装策略
-POLICY = load_sgf_policy() or DEFAULT_POLICY
+# 门禁命令的**旗标归一化**：唯一消费点，两种来源（submodule 策略 / DEFAULT_POLICY）都生效。
+REQUIRED_COMMAND_FLAGS: dict[str, tuple[str, ...]] = {
+    # 这些 check 靠 `--json` 输出 `measured:false` 才能被 `_declared_not_measured` 归类
+    "check-evidence-freshness": ("--json",),
+    "check-governance-ratio": ("--json",),
+    "dependency-baseline-drift": ("--json",),
+    "check-severity-registry": ("--json",),
+    "check-work-landed": ("--json",),
+}
+
+
+def normalize_gate_commands(policy: dict) -> dict:
+    """给 `REQUIRED_COMMAND_FLAGS` 声明的 check 补齐旗标（就地修改并返回）。
+
+    命令的权威面有两个：`projects/ecos` 的 sgf-policy.yaml（子模块在时就它说了算）与
+    本文件的 DEFAULT_POLICY（fallback）。2026-11-25 实测发现：只在 DEFAULT_POLICY 里
+    加旗标时, 子模块策略会**整体绕过** ⇒ 「自报没测成」契约在 CI 与齐备检出上从未生效
+    （partial 树反而生效, 恰好反了）。故统一在此补齐, 不再依赖任一来源自带旗标。
+    """
+    for gate in policy.get("gates", []):
+        flags = REQUIRED_COMMAND_FLAGS.get(gate.get("id"))
+        if not flags:
+            continue
+        cmd = list(gate.get("command") or [])
+        for flag in flags:
+            if flag not in cmd:
+                cmd.append(flag)
+        gate["command"] = cmd
+    return policy
+
+
+POLICY = normalize_gate_commands(load_sgf_policy() or DEFAULT_POLICY)
 GATES_LIST = list(POLICY.get("gates", DEFAULT_POLICY["gates"]))
 
 # 根侧覆盖 write-owner-audit 的采集面 (与下面 root-owned guards 同一理由: 子模块更新不得
