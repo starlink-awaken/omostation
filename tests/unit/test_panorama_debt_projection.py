@@ -51,3 +51,35 @@ def test_debt_projection_uses_code_root_and_lifecycle_state(tmp_path, monkeypatc
     assert alerts["total"] == 1
     assert alerts["high"] == 0
     assert alerts["alerts"][0]["msg"] == "开放债务: Real open"
+
+
+def test_debt_projection_counts_v3_lifecycle_states_as_open(tmp_path, monkeypatch) -> None:
+    module = _roots(tmp_path, monkeypatch)
+    _write(
+        tmp_path / "code/.omo/debt/items/id-high.yaml",
+        "id: ID-HIGH\ntitle: Identified high debt\nlifecycle_state: identified\nseverity: high\n",
+    )
+    _write(
+        tmp_path / "code/.omo/debt/items/prog-med.yaml",
+        "id: PROG-MED\ntitle: In progress medium debt\nlifecycle_state: in_progress\nseverity: medium\n",
+    )
+    _write(
+        tmp_path / "code/.omo/debt/items/res-high.yaml",
+        "id: RES-HIGH\ntitle: Resolved high debt\nlifecycle_state: resolved\nseverity: high\n",
+    )
+    _write(
+        tmp_path / "code/.omo/debt/items/cls-high.yaml",
+        "id: CLS-HIGH\ntitle: Closed high debt\nlifecycle_state: closed\nseverity: high\n",
+    )
+
+    report = module.collect_debt()
+    alerts = module.collect_alerts()
+
+    assert report["total"] == 4
+    assert report["open"] == 2
+    assert alerts["total"] == 2
+    assert alerts["high"] == 1
+    assert [a["msg"] for a in alerts["alerts"]] == [
+        "开放债务: Identified high debt",
+        "开放债务: In progress medium debt",
+    ]
