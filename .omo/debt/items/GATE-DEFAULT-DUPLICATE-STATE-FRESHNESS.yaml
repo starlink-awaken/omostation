@@ -44,6 +44,11 @@ description: >-
   **发现经过**：校准 `GATE-SURFACE-POLICY-VS-DEFAULT-DIVERGENCE` 的旧读数（87 vs 84）时，
   用 `gate_coverage_report()` 量到 `effective=96 / default_total=74`，与「数条目得 75」对不上，
   差 1 追出这条重复。
+
+  **同族扫描（2026-11-26）**：为确认这不是系统性问题，扫了 `.omo/_truth/registry/**/*.yaml`
+  共 **109 份**（含多文档 YAML，按 `id` 列表统计重复）：**0 处重复**。
+  ⇒ 本条是孤例；也说明「集合口径」在注册表侧另有防线，只在 `gac-local-gate.py` 的
+  `DEFAULT_POLICY`（纯 Python 字面量，无 schema 校验）这里失效。
 decision_needed: >-
   两条留哪条（或改成不同 id）由 owner 定：
   (a) 保留带 `--json` 的那条 —— 与其余 check 的机器可读口径一致，但要确认 `ci_only`
