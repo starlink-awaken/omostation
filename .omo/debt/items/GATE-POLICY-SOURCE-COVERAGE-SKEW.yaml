@@ -1,0 +1,76 @@
+id: "GATE-POLICY-SOURCE-COVERAGE-SKEW"
+title: "门禁策略有两个权威面（sgf-policy.yaml / DEFAULT_POLICY），两者 gate 集合并不相同 —— 5 条只在 fallback 里，齐备树/CI 上**从不执行**"
+dimension: "governance"
+subdimension: "gate"
+domain: "workspace"
+scope: "governance_kernel"
+severity: "medium"
+weight: 0.1
+entropy_class: "classification"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/gac/gac-local-gate.py
+- projects/ecos/src/ecos/ssot/mof/m1/governance/sgf-policy.yaml
+evidence_refs:
+- bin/gac/gac-local-gate.py
+- tests/unit/gac/test_gac_local_gate_parallel.py
+- .omo/debt/items/GATE-CLEAN-CHECKOUT-NOISE.yaml
+mitigation_refs: []
+opened_at: "2026-11-26"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-26"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: ""
+description: >-
+  `gac-local-gate.py:406` 的 `POLICY = load_sgf_policy() or DEFAULT_POLICY` 是**整体二选一**,
+  而两份策略的 gate 集合不同（2026-11-26 在 origin/main `bf4ee1bfe` 上量）:
+
+  - DEFAULT_POLICY: **74** 条;
+  - 生效的 submodule sgf-policy: **96** 条。
+
+  差集不是「谁更新」的问题, 而是**两类丢失**:
+
+  1. **只在 DEFAULT 的 6 条** —— 齐备树/CI 上用 submodule 策略, 这 6 条**不会被加载**
+     （`GATES_LIST = list(POLICY["gates"])` 整体替换, 不回填）:
+     `bdsk-shadow-sandbox` / `debt-integrity-check` / `error-knowledge-check` /
+     `submodule-ancestry-gate` / `sweep-index-check` / `test-coverage-check`。
+     其中 `submodule-ancestry-gate` 与 submodule 侧的 `check-submodule-rewind`
+     是**同命令不同 id**（`check-submodule-rewind.py --range origin/main HEAD`）,
+     算改名; 另外 **5 条在 submodule 策略里没有任何等价命令**（逐个查过命令路径,
+     `sweep_index.py` / `bdsk-shadow-sandbox.py` / `test-coverage-check.py` /
+     `debt-integrity-check.py` / `error-knowledge.py` 均零命中）——
+     即 CI 从未执行这 5 条。
+  2. **只在 submodule 的 28 条** —— partial 树（无 sgf-policy）走 DEFAULT, 这 28 条不执行
+     （含 `script-registry-validate` / `pitfalls-index` / `test-host-hygiene` /
+     `resident-status-check` / `zones-check` / `sfop-slots` 等）。
+
+  **后果**：同一棵仓的「门禁覆盖了什么」取决于**子模块在不在**, 与本轮反复出现的
+  「两套权威面」是同一病根的另一面（前几轮修的是**命令旗标**被绕过, 本条是**整个 check
+  条目**被绕过）。partial 树上看似跑得多、齐备树上反而少 5 条, 方向同样反了。
+
+  已知的部分解释（`tests/unit/gac/test_gac_local_gate_parallel.py:100` 的注释）说这 6 条
+  「只存在于 DEFAULT_POLICY fallback, 子模块缺席时才会被加载, 故必须一并登记并行分类」——
+  即「fallback 专属」是**知道**的, 但没有记录「因此它们在 CI 永不执行」这一后果,
+  也没有人裁定这是否有意。
+
+  处置选项（本条不代决）:
+  - (a) 让 DEFAULT 成为**并集底座**：`GATES_LIST` 以 submodule 策略为主, 缺的 id 从
+    DEFAULT 回填（新增而非替换）—— 齐备树不会静默少 5 条; 需要同时确认这 5 条在 CI
+    能过（它们此前从未在 CI 跑过, 可能立刻变红）;
+  - (b) 维持现状但在门禁报告里显式打印「本树未执行的 gate」清单（含来源差异）,
+    让「覆盖少了 5 条」可见而不是隐形的;
+  - (c) 若这 5 条是有意退役, 在 DEFAULT_POLICY 里加显式退役标记而不是留着条目
+    （现在留着就等于在 partial 树上继续跑、在齐备树上永远不跑）。
+history:
+- at: "2026-11-26T00:30:00+00:00"
+  action: register
+  note: >-
+    **发现经过**：修完「门禁命令旗标只在 fallback 加、被 submodule 策略绕过」（#5590）之后,
+    顺手比了两份策略的 **gate id 集合**, 才发现绕过的不是几个旗标而是**整批条目**。
+    **判据** —— 比较策略来源时, 不能只比「同 id 的字段」, 要比**全集**: 二选一的整体替换
+    会让「只在另一边存在的条目」无声消失, 而两边的差集都需要解释。
+    **纪律**: 修一类缺陷后, 立刻问「同一机制还有没有别的面」—— 本轮 #5585/#5588/#5590
+    是同一根因（两套权威面）连续三次换面。
+  actor: "governance-agent"
