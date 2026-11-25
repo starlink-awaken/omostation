@@ -449,3 +449,11 @@ compute_nodes:
     vram: "8GB"
     hardware: "NVIDIA RTX 4070"
     models: ["vision-lite", "ocr", "mid"]
+  # BET-Y2Q4-T10-279 CR-4: CPU 批执行节点, 不进推理路由 (models 留空);
+  # 不登记单位网 LAN 地址 (CR-4 约束: 可路由地址不入 public 仓)
+  compute-i9-01:
+    ip: "100.99.19.109"
+    role: "batch, code, test"
+    vram: "none"
+    hardware: "Intel i9-14900HX 32vCPU/31GiB"
+    models: []

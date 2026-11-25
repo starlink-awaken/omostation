@@ -115,3 +115,26 @@ created: 2026-11-06
    都不覆盖 `reports/**` 或 `tasks/**`）。本轮按台账声明原样落盘以保 D0 可过，命名偏差留此记录。
 3. `lb-worker` 与 `respire` 都是「机器在跑、仓内不存在」的面，与 ADR-0456 F1 那一族
    「生产者/消费者/契约三方错位」同形；把它们纳入登记是 CR-1 与 CR-4 的前置，不是本轮产物。
+
+## 5. 人类部署授权记录（2026-11-25）
+
+> 闸 1 的解锁记录。形式：principal 于 2026-11-25 会话对 CR-1…CR-5 的**逐条选择**
+> （四条 CR 各自独立选项问答，非总括授权，满足规格「独立明确授权」原文）。
+
+| CR | 决定 | 生效前提 |
+|----|------|----------|
+| CR-1 `lb-worker` 去留 | **(a) 纳管** —— 取回 `app.py` 入仓登记为服务面，Phase 2 按 TaskEnvelope/Claim/Lease 契约改造；现有 `/health` 消费者不断（D-4 调用方未定位） | 节点恢复可达（只读取回） |
+| CR-2 8080 暴露面 | **(a) 绑 tailscale0** —— unit 加 `Environment=LB_WORKER_HOST=100.99.19.109`，`daemon-reload` + 重启；unit 先备份到 `/root/` 与本仓；回滚 = 恢复原 unit 一行改动 | 节点恢复可达 |
+| CR-3 rootless 迁移 | **授权执行** —— 前置依次：D-6 定性（`/opt/respire` 空目录与 compose 关系）→ postgres 卷快照 → 剥 `ops` sudo → `dockerd-rootless` + compose 迁出 `/root/`；respire 属主即 principal 本人（本项授权即属主确认可中断） | 节点恢复可达 |
+| CR-4 节点入登记面 | **按本件 §2 CR-4 原约定由 Agent 自主执行**（纯仓内登记、可整份 revert）；方向已定，随本授权记录一并落盘 | 无（仓内）——已执行 |
+| CR-5 受限作业面 | **授权执行** —— 前置：先查清 D-5（`39.105.203.11:8443` 出站归属）再落出站白名单；建专用非 root 账号 + `/srv/workers/<id>`，作业面并发 ≤2、同仓写 ≤1 | 节点恢复可达 |
+
+- **授权落盘时运行态**：2026-11-25 实测节点双通道不可达（tailscale `100.99.19.109`
+  offline last-seen 14d，`unit-node-04`；单位网段本机无路由）——与 2026-10-29 discovery
+  时两通道 REACHABLE 的状态已变。CR-1/CR-2/CR-3/CR-5 均为**远端动作**，以节点恢复可达
+  为执行前提；本授权不因等待失效。
+- CR-2/CR-3/CR-5 授权中的部署动作在节点可达后由 Agent 执行时逐项留独立回执（含失败
+  恢复路径），进 Phase 3 八项验证面。
+- **闸 2（Golden Slice 人工验收）未因此次授权打开**：`BET-Y2Q4-T10-279` 保持
+  `in_progress`，Phase 3 收口仍需 principal 人工验收。
+
