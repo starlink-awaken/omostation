@@ -788,6 +788,24 @@ history:
   action: review
   note: '§7.1 登记说明与仪器自纠：订正 `:57` 后用同一手段复测 `:72`，发现第二个不可调用形态 (`bet-ledger.py status <bet-id> --done` rc=2 `unrecognized arguments: BET-Y2Q4-T10-999 --done`)，已随本批把 `:72` 改回 `complete <bet-id>` 并补 `status`/`complete` 分工两行。自纠：第一次测这组命令用的是 `for c in "status BET… --done"; do python3 … $c; done` 形态，本机 Bash 工具跑的是 zsh、无引号变量不做 word-splitting，整串被当成一个 argv 传给 `cmd` 位置参数，于是一条 rc=2 的 `invalid choice: ''complete --help''` 是我的调用装置错误、不是 SOP 缺陷；改用显式 argv 列表重跑后才拿到真实读数（`status <id> --done` rc=2 / `status` rc=0 总览 / `complete --help` rc=0 usage）。另外「SOP 全文不提 complete」是订正前的实测（订正后出现 2 次，即我新增的两行）。'
   actor: agent:governance-agent
+- at: '2026-11-25T19:40:00+00:00'
+  action: mitigate
+  note: >-
+    **已修（§7 选项 1）**：`ledger-safe-insert.py::validate_entry` 现在接收 `ledger_data`，
+    按 `cmd_lint` 同口径校验 —— `status ∈ meta.status_enum`（无条件）；非 `candidate` 时
+    必填字段齐全且 `track ∈ tracks` / `window ∈ meta.windows`。**单一来源**：必填清单抽成
+    `bet-ledger.py::BET_REQUIRED_FIELDS`，lint 与插入器同引用（抄一份就是下一次口径漂移）。
+    **候选态豁免与 lint 一致**：`candidate` 是起草态，不强制必填字段与 track/window。
+    **未做（§7 的 2/3/4）**：priority 无枚举口径（现网 3 条 `high` 既成漂移）、
+    CI 把 lint 当信息性、未知 track/window 只在非 candidate 时查 —— 均属 owner 裁定。
+    **验证**：真实台账 `python3 bin/plan/bet-ledger.py lint` → `OK -- 602 bets, 17 tracks,
+    no errors`（无历史回填成本，与 §5 预期一致）；新增
+    `tests/unit/gac/test_ledger_safe_insert_enum_fields.py` 七条（正例 / candidate 起草态 /
+    非法 status / 未知 window / 未知 track / 缺必填三件 / 必填清单单一来源），
+    原 `test_ledger_safe_insert.py` 夹具补齐 `status` 与 `meta.status_enum`/`windows`。
+    **边界**：插入器只校验新条目，不回填既有 602 条；`depends_on` 存在性与
+    `done_when` 元素类型未纳入（本条未登记该缺陷）。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

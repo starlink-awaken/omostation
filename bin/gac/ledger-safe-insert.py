@@ -70,7 +70,14 @@ def compose_bounds(ledger: Path) -> tuple[int, int, str]:
     raise SystemExit("no bets key found at top level")
 
 
-def validate_entry(entry: dict, root: Path, bet_id: str) -> list[str]:
+def validate_entry(entry: dict, root: Path, bet_id: str, ledger_data: dict) -> list[str]:
+    """校验单条待插入条目。
+
+    结构类判据（binding / 三轴 / digest）在前；**枚举与必填字段**在后，口径与
+    `bet-ledger.py::cmd_lint` 同源（`BET_REQUIRED_FIELDS` + 台账自身的
+    `meta.status_enum` / `tracks` / `meta.windows`）。插入器此前只查结构，
+    于是一条越界枚举的 BET 能「插入 rc=0 → CI 全绿」（lint 结论在 CI 不阻断）。
+    """
     errors: list[str] = []
     if not isinstance(bet_id, str) or not bet_id.startswith("BET-"):
         errors.append("id must be a BET-* string")
@@ -103,6 +110,23 @@ def validate_entry(entry: dict, root: Path, bet_id: str) -> list[str]:
         errors.append(f"completion_evidence axes must be exactly {sorted(COMPLETION_AXES)}")
     if not ce.get("overall_state"):
         errors.append("completion_evidence.overall_state is required")
+
+    meta = ledger_data.get("meta") or {}
+    status_enum = meta.get("status_enum") or []
+    windows = meta.get("windows") or []
+    tracks = ledger_data.get("tracks") or {}
+    status = entry.get("status")
+    # 与 cmd_lint 同口径：candidate 是起草态，必填字段与 track/window 暂不强制。
+    if status != "candidate":
+        for field in _ledger_contract().BET_REQUIRED_FIELDS:
+            if not entry.get(field):
+                errors.append(f"{bet_id}: 缺字段 {field}")
+        if entry.get("track") not in tracks:
+            errors.append(f"{bet_id}: 未知 track {entry.get('track')}")
+        if entry.get("window") not in windows:
+            errors.append(f"{bet_id}: 未知 window {entry.get('window')}")
+    if status not in status_enum:
+        errors.append(f"{bet_id}: 非法 status {status}")
     return errors
 
 
@@ -178,7 +202,7 @@ def main() -> int:
     lines = ledger.read_text(encoding="utf-8").splitlines(keepends=True)
     insert_at, current_total, _ = compose_bounds(ledger)
 
-    errors = validate_entry(entry, root, bet_id)
+    errors = validate_entry(entry, root, bet_id, ledger_data)
     existing_ids = {
         item.get("id")
         for item in ledger_data["bets"]
