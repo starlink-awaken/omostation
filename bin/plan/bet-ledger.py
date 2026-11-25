@@ -3009,6 +3009,21 @@ def cmd_claim_gc(data: dict, args) -> int:
     return 0
 
 
+# 单条 BET 的必填字段 —— lint 与 ledger-safe-insert 共用（口径漂移的份数 = 抄的份数）。
+BET_REQUIRED_FIELDS = (
+    "track",
+    "window",
+    "title",
+    "appetite",
+    "status",
+    "goal",
+    "done_when",
+    "verify",
+    "workflow",
+    "write_surfaces",
+)
+
+
 def cmd_lint(data: dict, args) -> int:
     """台账自检：ID 唯一、依赖存在、轨道/窗口/状态合法、必填字段。"""
     errs: list[str] = []
@@ -3031,18 +3046,7 @@ def cmd_lint(data: dict, args) -> int:
             errs.append(f"重复 ID: {i}")
     tracks = set(data["tracks"])
     windows = set(data["meta"]["windows"])
-    required = [
-        "track",
-        "window",
-        "title",
-        "appetite",
-        "status",
-        "goal",
-        "done_when",
-        "verify",
-        "workflow",
-        "write_surfaces",
-    ]
+    required = BET_REQUIRED_FIELDS
     for b in data["bets"]:
         if b.get("status") != "candidate":
             for f in required:
