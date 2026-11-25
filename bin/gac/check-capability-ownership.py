@@ -37,6 +37,25 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
+sys.path.insert(0, str(ROOT / "bin" / "lib"))
+from input_absence import input_absent as _absence  # noqa: E402
+
+
+def _input_absent(rel: str) -> bool:
+    """薄适配到 `bin/lib/input_absence.py`（实现单一来源）。"""
+    return _absence(rel, ROOT)
+
+
+def measured_flag(error_findings: list["Finding"]) -> tuple[bool, list[str]]:
+    """error 级目标全属「输入没备齐」⇒ (False, 全部目标)。
+
+    实现收敛到 `bin/lib/input_absence.py`（2026-11-25）。
+    """
+    paths = [f.path for f in error_findings if f.path]
+    return (not paths) or any(not _absence(p, ROOT) for p in paths), paths
+
+
+
 # 能力注册表 SSOT (owner 声明在这里)
 MOF_CAPABILITIES = ROOT / ".omo" / "_truth" / "registry" / "mof-capabilities.yaml"
 # 能力规模投影 (只读)
@@ -78,43 +97,6 @@ class Finding:
             "capability": self.capability,
             "path": self.path,
         }
-
-
-def _input_absent(rel: str) -> bool:
-    """error 目标落在「输入没备齐」的位置 —— 与 `gac-healthcheck.input_absent` / `doc-link-check` 同口径。
-
-    未检出的子模块（干净检出 / claim 快速路径）、gitignore 覆盖的生成态、已归档旧路径。
-    相对路径锚在 ROOT；仓外绝对路径直接判 False。
-    """
-    p = Path(rel)
-    if p.is_absolute():
-        try:
-            rel = str(p.relative_to(ROOT))
-        except ValueError:
-            return False
-    parts = Path(rel).parts
-    if len(parts) >= 2 and parts[0] == "projects":
-        return not (ROOT / "projects" / parts[1] / ".git").exists()
-    if rel.startswith("bin/_archive/"):
-        return True
-    try:
-        import subprocess as _sp
-
-        return _sp.run(
-            ["git", "check-ignore", "-q", "--no-index", rel],
-            cwd=ROOT,
-            capture_output=True,
-            timeout=15,
-            check=False,
-        ).returncode == 0
-    except (OSError, _sp.SubprocessError):
-        return False
-
-
-def measured_flag(error_findings: list["Finding"]) -> tuple[bool, list[str]]:
-    """error 级目标全属「输入没备齐」⇒ (False, 全部目标)。抽成函数以便单测直接驱动。"""
-    paths = [f.path for f in error_findings if f.path]
-    return (not paths) or any(not _input_absent(p) for p in paths), paths
 
 
 def _load_yaml(path: Path) -> dict | None:

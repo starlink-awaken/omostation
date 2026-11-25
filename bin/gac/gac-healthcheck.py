@@ -29,6 +29,9 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from input_absence import input_absent as _input_absence  # noqa: E402
+
 # Core GaC files (relative to WORKSPACE)
 CORE_FILES = {
     "north_star": ".omo/_knowledge/gac/NORTH-STAR.md",
@@ -63,50 +66,6 @@ CORE_FILES = {
 }
 
 
-def repo_relative(raw: str) -> str | None:
-    """仓内路径 → 相对 WORKSPACE 的形式；仓外 → None。
-
-    相对输入锚在 WORKSPACE（**不取调用方 cwd**）—— 各检查器给的 `resolved` 是
-    仓内相对或仓外绝对，混用会让判据随调用目录漂移。
-    """
-    p = Path(raw)
-    if not p.is_absolute():
-        p = WORKSPACE / p
-    try:
-        return str(p.relative_to(WORKSPACE))
-    except ValueError:
-        return None
-
-
-def input_absent(rel: str) -> bool:
-    """该路径的缺席属**输入没备齐**，不是缺陷。
-
-    两种：落在未检出的子模块里（干净检出按构造没有），或指向已归档的旧路径。
-    判据与 gac-executor 的 \`_under_unchecked_submodule\` 同口径 —— 两处都要能
-    把「读不到」和「坏了」分开，否则恒假警报会训练读者忽略整份报告。
-
-    相对输入锚在 WORKSPACE（不取调用方 cwd）；仓外路径直接判 False ——
-    那不是「本检出的输入没备齐」。
-    """
-    rel = repo_relative(rel)
-    if rel is None:
-        return False
-    parts = Path(rel).parts
-    if len(parts) >= 2 and parts[0] == "projects":
-        return not (WORKSPACE / "projects" / parts[1] / ".git").exists()
-    if rel.startswith("bin/_archive/"):
-        return True
-    # gitignore 覆盖 ⇒ 按构造不是仓库的对象（生成态/运行态），缺席不算缺陷。
-    # 注意用途：这里只是把该读数归类为**不可用**，不去改任何检查器自身的判定。
-    try:
-        return subprocess.run(
-            ["git", "check-ignore", "-q", "--no-index", rel],
-            cwd=WORKSPACE, capture_output=True, timeout=15, check=False,
-        ).returncode == 0
-    except (OSError, subprocess.SubprocessError):
-        return False
-
-
 def doc_ssot_absent_targets(ds_json: dict) -> list[str]:
     """doc-ssot-lint 冲突原因里的仓内绝对路径（「L0 约束源缺失: <abs> / <abs>」）。"""
     ws = str(WORKSPACE)
@@ -117,7 +76,6 @@ def doc_ssot_absent_targets(ds_json: dict) -> list[str]:
         if match.startswith(ws)
     ]
 
-
 def doc_link_absent_targets(link_json: dict) -> list[str]:
     """doc-link-check 断链条目的目标（仓内相对、仓外绝对，按检查器原样）。"""
     return [
@@ -125,6 +83,15 @@ def doc_link_absent_targets(link_json: dict) -> list[str]:
         for finding in link_json.get("findings") or []
         if (finding or {}).get("resolved")
     ]
+
+def input_absent(rel: str) -> bool:
+    """该路径的缺席属**输入没备齐**，不是缺陷。
+
+    实现已收敛到 `bin/lib/input_absence.py`（2026-11-25）—— 这里是薄适配,
+    让本文件的调用点与既有测试保持不变。三种：未检出的子模块 / gitignore 覆盖的
+    生成态 / 已归档旧路径。相对输入锚在 WORKSPACE, 仓外路径判 False。
+    """
+    return _input_absence(rel, WORKSPACE)
 
 
 def unavailable_if_all_absent(rel_paths: list[str]) -> bool:

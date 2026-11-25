@@ -181,13 +181,18 @@ def test_input_absent_accepts_absolute_and_relative_paths() -> None:
 
 
 def test_repo_relative_anchors_at_workspace_not_cwd() -> None:
-    """`repo_relative` 是那条缝：仓内 → 相对形式；仓外 → None。"""
-    module = _load()
-    ws = str(module.WORKSPACE)
-    assert module.repo_relative(".omo/state/system.yaml") == ".omo/state/system.yaml"
-    assert module.repo_relative(ws + "/.omo/state/system.yaml") == ".omo/state/system.yaml"
-    assert module.repo_relative("/etc/hosts") is None
-
+    """`repo_relative` 的实现已收敛到 bin/lib/input_absence.py。"""
+    spec = importlib.util.spec_from_file_location(
+        "input_absence", Path(__file__).resolve().parents[3] / "bin" / "lib" / "input_absence.py"
+    )
+    assert spec and spec.loader
+    lib = importlib.util.module_from_spec(spec)
+    sys.modules["input_absence"] = lib
+    spec.loader.exec_module(lib)
+    ws = str(Path(__file__).resolve().parents[3])
+    assert lib.repo_relative(".omo/state/system.yaml", __import__("pathlib").Path(ws)) == ".omo/state/system.yaml"
+    assert lib.repo_relative(ws + "/.omo/state/system.yaml", __import__("pathlib").Path(ws)) == ".omo/state/system.yaml"
+    assert lib.repo_relative("/etc/hosts", __import__("pathlib").Path(ws)) is None
 
 def test_input_absent_treats_submodule_path_same_in_both_forms() -> None:
     """反证四：子模块规则必须对两种写法一致 —— 否则分类随调用目录/写法漂移。
