@@ -69,6 +69,64 @@ history:
 
     【处置】本条只登记口径污染与杠杆上限，不改 check-governance-ratio.py、不改 GOVERNANCE_* 集合、不自签 waiver。落地入口选择纪律（谁在什么落点必须用哪个
     workflow）需要一处强制点，属新面，等 principal 裁定后再做。''.'
+- at: '2026-11-25T13:47:25.375716+00:00'
+  action: update_description
+  note: 'Updated description from ''【单位口径】population = 30d 窗口内 `agent_workflow_start`
+    事件数；gov 命中规则用 `check-governance-ratio._classify` 逐条复算；落点分类取同一窗口 `agent_workflow_claim.paths`
+    的前缀（bin/tests/projects = 代码面，.omo/debt|_truth|standards|state = 治理写面，docs/AGENTS.md
+    = 文档面）；全部读数在 canonical 主工作区 `.omo/_delivery/agent-workflows/events.jsonl` 上实测。
+
+
+    【现象】ADR-0249 的 40% 治理占比门禁本机连续报红（44.7%），并且会随每次交付继续恶化：任何 bin/** 工具修复只要用 `governance-state-mutation`
+    入口起 run，就被计成「治理开销」，而它的实际交付物是代码。
+
+
+    【根因】分类顺序把「谁跑的」放在「交付了什么」之前。30d 窗口 67 条 governance **全部**由 `check-governance-ratio.py:133`
+    的 profile 规则命中（workflow_id 全是 governance-state-mutation），其中 16 条（24%）claim 落点在
+    bin/tests/projects 代码面、47 条在 .omo 治理写面、15 条含 docs。`FLEX_OVERRIDE_WORKFLOWS`(:99)
+    只按 workflow_id 白名单放行，没有「按落点反查」的通路，profile 规则又先于 locks 规则(:137) 短路。这与判定面自己的注释相抵：:68-70
+    写明「bin/gac/ bin/ssot/ 是 tool-fix PR 落点, 不算 governance」，:88-95 写明本指标度量的是 governance
+    effort 而非 actor title。入口之所以被选成 governance-state-mutation：`project-code-change`
+    要求 `--bet`，而无 BET 的小修走它会被 `missing_bet_id` 拒，于是治理 run 类型成了顺手入口。
+
+
+    【判据】先修入口，不动判定面：禁止放宽 40% 阈值（:60-63 明文禁止），分类器口径改动属 metric/gate verdict 面，须 principal
+    裁。可执行杠杆是把代码面/文档面交付按类型归位到 project-code-change / project-doc-change（配 BET），实测该 16
+    条归位后 gov 67→51，ratio 44.7%→34.0%，同时低于 40% ceiling 与 35% WARN_THRESHOLD，无需 waiver。
+
+
+    【处置】本条只登记口径污染与杠杆上限，不改 check-governance-ratio.py、不改 GOVERNANCE_* 集合、不自签 waiver。落地入口选择纪律（谁在什么落点必须用哪个
+    workflow）需要一处强制点，属新面，等 principal 裁定后再做。'' to ''【单位口径】population = 30d 窗口内 `agent_workflow_start`
+    事件数；gov 命中规则用 `check-governance-ratio._classify` 逐条复算；落点分类取同一窗口 `agent_workflow_claim.paths`
+    的前缀（bin/tests/projects = 代码面，.omo/debt|_truth|standards|state = 治理写面，docs/AGENTS.md
+    = 文档面）；全部读数在 canonical 主工作区 `.omo/_delivery/agent-workflows/events.jsonl` 上实测。
+
+
+    【现象】ADR-0249 的 40% 治理占比门禁本机连续报红（44.7%），并且会随每次交付继续恶化：任何 bin/** 工具修复只要用 `governance-state-mutation`
+    入口起 run，就被计成「治理开销」，而它的实际交付物是代码。
+
+
+    【根因】分类顺序把「谁跑的」放在「交付了什么」之前。30d 窗口 67 条 governance **全部**由 `check-governance-ratio.py:133`
+    的 profile 规则命中（workflow_id 全是 governance-state-mutation），其中 16 条（24%）claim 落点在
+    bin/tests/projects 代码面、47 条在 .omo 治理写面、15 条含 docs。`FLEX_OVERRIDE_WORKFLOWS`(:99)
+    只按 workflow_id 白名单放行，没有「按落点反查」的通路，profile 规则又先于 locks 规则(:137) 短路。这与判定面自己的注释相抵：:68-70
+    写明「bin/gac/ bin/ssot/ 是 tool-fix PR 落点, 不算 governance」，:88-95 写明本指标度量的是 governance
+    effort 而非 actor title。入口之所以被选成 governance-state-mutation：强制点在 `bin/plan/chain_bind.py:start_requires_bet`
+    —— `EXEMPT_WORKFLOWS`={{observer-audit}}、`GOVERNANCE_EVOLVE_WORKFLOWS`(:22)={{governance-audit,
+    governance-state-mutation, governance-phase-closeout}}；无 `--bet` 时仅后者在台账带治理 BET
+    时走 `governance_evolve_exempt` 放行，实测 `project-code-change`/`project-doc-change`/`bet-execution`
+    三条无 BET 一律 `missing_bet_id` 拒（gate env `AGCP_REQUIREMENT_ITERATION_GATE`），于是「治理
+    run 类型」成了唯一顺手入口；该豁免是本仓自己扩出来的（函数 docstring 记 2026-09-24 实测：「70 of the 136 waiver
+    records on file」即这类一次性放行），于是 BET 门与占比门互锁：前者把无 BET 小修赶进后者唯一被计成治理的入口。
+
+
+    【判据】先修入口，不动判定面：禁止放宽 40% 阈值（:60-63 明文禁止），分类器口径改动属 metric/gate verdict 面，须 principal
+    裁。可执行杠杆是把代码面/文档面交付按类型归位到 project-code-change / project-doc-change（配 BET），实测该 16
+    条归位后 gov 67→51，ratio 44.7%→34.0%，同时低于 40% ceiling 与 35% WARN_THRESHOLD，无需 waiver。
+
+
+    【处置】本条只登记口径污染与杠杆上限，不改 check-governance-ratio.py、不改 GOVERNANCE_* 集合、不自签 waiver。落地入口选择纪律（谁在什么落点必须用哪个
+    workflow）需要一处强制点，属新面，等 principal 裁定后再做。''.'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
@@ -86,8 +144,13 @@ description: '【单位口径】population = 30d 窗口内 `agent_workflow_start
   的 profile 规则命中（workflow_id 全是 governance-state-mutation），其中 16 条（24%）claim 落点在 bin/tests/projects
   代码面、47 条在 .omo 治理写面、15 条含 docs。`FLEX_OVERRIDE_WORKFLOWS`(:99) 只按 workflow_id 白名单放行，没有「按落点反查」的通路，profile
   规则又先于 locks 规则(:137) 短路。这与判定面自己的注释相抵：:68-70 写明「bin/gac/ bin/ssot/ 是 tool-fix PR
-  落点, 不算 governance」，:88-95 写明本指标度量的是 governance effort 而非 actor title。入口之所以被选成 governance-state-mutation：`project-code-change`
-  要求 `--bet`，而无 BET 的小修走它会被 `missing_bet_id` 拒，于是治理 run 类型成了顺手入口。
+  落点, 不算 governance」，:88-95 写明本指标度量的是 governance effort 而非 actor title。入口之所以被选成 governance-state-mutation：强制点在
+  `bin/plan/chain_bind.py:start_requires_bet` —— `EXEMPT_WORKFLOWS`={{observer-audit}}、`GOVERNANCE_EVOLVE_WORKFLOWS`(:22)={{governance-audit,
+  governance-state-mutation, governance-phase-closeout}}；无 `--bet` 时仅后者在台账带治理 BET
+  时走 `governance_evolve_exempt` 放行，实测 `project-code-change`/`project-doc-change`/`bet-execution`
+  三条无 BET 一律 `missing_bet_id` 拒（gate env `AGCP_REQUIREMENT_ITERATION_GATE`），于是「治理
+  run 类型」成了唯一顺手入口；该豁免是本仓自己扩出来的（函数 docstring 记 2026-09-24 实测：「70 of the 136 waiver
+  records on file」即这类一次性放行），于是 BET 门与占比门互锁：前者把无 BET 小修赶进后者唯一被计成治理的入口。
 
 
   【判据】先修入口，不动判定面：禁止放宽 40% 阈值（:60-63 明文禁止），分类器口径改动属 metric/gate verdict 面，须 principal
