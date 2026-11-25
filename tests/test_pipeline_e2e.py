@@ -129,12 +129,34 @@ def _hf_model_cached(repo_id: str) -> bool:
     return (hub / f"models--{repo_id.replace('/', '--')}").is_dir()
 
 
+def _omlxc_mlx_importable() -> bool:
+    """真实前提：omlxc 的 uv 环境能 import mlx.core。
+
+    `_hf_model_cached` 只证明**模型权重在本地缓存**；缺 mlx 时引擎降级、
+    流水线以 `RuntimeError: rerank model unavailable` 红（2026-11-25 实测）。
+    与 test_embedding_mps 的守卫同口径 —— 判据问被检对象本身。
+    """
+    try:
+        probe = subprocess.run(
+            ["uv", "run", "--directory", str(ROOT / "projects" / "omlxc"),
+             "python", "-c", "import mlx.core"],
+            capture_output=True, text=True, timeout=180, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return probe.returncode == 0
+
+
 @pytest.mark.skipif(
     not _hf_model_cached("BAAI/bge-small-zh-v1.5"),
     reason=(
         "omlxc fast tier BAAI/bge-small-zh-v1.5 不在 HF 本地缓存 "
         "(离线加载必败, 属环境缺失非代码回归; 与 test_embedding_mps 同族)"
     ),
+)
+@pytest.mark.skipif(
+    not _omlxc_mlx_importable(),
+    reason="omlxc 的 uv 环境无 mlx/mlx_lm (引擎降级, station 无法产出报告) —— 环境缺失, 非回归",
 )
 def test_pipeline_embedding_station():
     """Station 4: hybrid retrieval scores OCR-relevant policy above noise."""
