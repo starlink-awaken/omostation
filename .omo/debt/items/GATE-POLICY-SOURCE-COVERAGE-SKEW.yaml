@@ -93,3 +93,17 @@ history:
     （本条不代决）。同时记一条装置口径：`DEFAULT_POLICY` 用正则数字 `"id":` 得 **75** 条，
     条目正文写 74 —— 差 1 来自正则把嵌套/其它 `"id"` 也算入，**以 `GATES_LIST` 实际长度为准**。
   actor: "governance-agent"
+- at: "2026-11-25T23:40:00+00:00"
+  action: correct
+  note: >-
+    **选项 (b) 已闭环，不需要再做**：`gac-local-gate.py::gate_coverage_report()`（#5591）
+    早已把「本树未执行的 gate」算成显式字段，`_print_gate_coverage()` 还会打到 stderr —— 正是
+    (b) 要求的形态。实测读数（齐备树 `--strict --json`）：`source=sgf_policy, effective=96,
+    default_total=74, only_in_default=[bdsk-shadow-sandbox, debt-integrity-check,
+    error-knowledge-check, submodule-ancestry-gate, sweep-index-check, test-coverage-check],
+    only_in_effect=28 条`。
+    **订正条目正文**：其「处置选项 (b) 维持现状但在门禁报告里显形」并非待办，而是**已存在**；
+    真正剩的只有 (a)（把 5 条回填进生效策略）与 (c)（明确退役并加标记），两者都改变判定面，
+    属 principal。**纪律**：给条目写「建议补 X」之前，先跑一次现行报告看 X 是否已在输出里 ——
+    本条差一点把已落地的能力再实现一遍（与「幽灵判定双检」同族）。
+  actor: "governance-agent"
