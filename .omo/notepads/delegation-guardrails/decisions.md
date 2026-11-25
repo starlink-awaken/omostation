@@ -2,7 +2,7 @@
 status: active
 lifecycle: entry
 owner: auto-fix-loop
-last-reviewed: 2026-09-24
+last-reviewed: 2026-11-25
 ---
 ## [2026-08-07] P2: 调度器模型池治理决策 — 保留默认（P1b 范围修正）
 - **决策**: 不修改 projects/agora 相关 dynamic-router.py 的 MODEL_POOL (L101-105)
