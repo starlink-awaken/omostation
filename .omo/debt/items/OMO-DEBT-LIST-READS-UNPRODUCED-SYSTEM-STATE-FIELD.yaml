@@ -1,0 +1,129 @@
+id: OMO-DEBT-LIST-READS-UNPRODUCED-SYSTEM-STATE-FIELD
+title: omo-debt list 读 system.yaml::debt_weight_items，该字段无生产方且同步面被拒写 ⇒ 恒报 0 total，与
+  113 条 items 现实相反
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- projects/omo/src/omo/omo_debt_cli.py
+- projects/omo/tests/test_omo_cli_modules.py
+- projects/knowledge/kairon/tests/scripts/test_sync_system_state.py
+- projects/runtime/src/runtime/state_schema.py
+evidence_refs:
+- '读路径单一: projects/omo/src/omo/omo_debt_cli.py:25-49 `cmd_debt_list(omo_dir)` 只读 `omo_dir/state/system.yaml`，:38
+  `items = system.get("debt_weight_items", {})`，:45-49 用 `len(items)` 打 "N total:
+  A open / B resolved" —— 缺键即空字典，不告警不降级'
+- '现场读数: canonical @6e7a7e2ad `python3 -m omo.omo_debt list --omo-dir .omo` → 「0 total:
+  0 open / 0 resolved」，同一时刻 `.omo/debt/items/*.yaml` = 113 个文件；worktree @aa58486cb
+  同读 0'
+- '不是工件缺失: state_root `/Users/xiamingxing/.local/state/omostation/prod/.omo/state/system.yaml`（638
+  字节，mtime 2026-10-28） 里 `debt_weight_items` 长度同样是 0；code_root 那份 1.9k 亦然 ⇒ 字段真为空，非未物化'
+- '无生产方: 全仓 `rg -n -F debt_weight_items` 只命中 4 处 —— 读者 omo_debt_cli.py:38/41、字段声明
+  projects/runtime/src/runtime/state_schema.py:19、两处测试；没有任何脚本/作业写它'
+- '写入面按设计封死: projects/knowledge/kairon/tests/scripts/test_sync_system_state.py:184-195
+  `test_debt_weight_items_cannot_be_modified` 断言对该字段的 FieldDiff 必抛 PermissionError（docstring
+  「debt_weight_items 字段必须被拒绝」）⇒ 唯一可能填它的同步路径主动拒绝，字段恒空'
+- '测试按构造就绿: projects/omo/tests/test_omo_cli_modules.py:753-762 `test_cmd_debt_list`
+  在 tmp_path 自建 state/system.yaml 并塞入 debt_weight_items 字典再断言输出 —— 用例自己造数据，生产端从不产，绿不证明
+  CLI 可用（AGENTS §7「接线 ≠ 非空转」「测试逐字断言生产端」同族）'
+- '假阴性后果: 以 `omo-debt list` 回读「当前有多少债」会得到 0；真实是非终态 31 —— 本轮实测顺序为 CLI 0 → 数文件 113 →
+  按 lifecycle_state 分布 closed 40 / resolved 42 / identified 27 / in_progress 4 ⇒ 非终态
+  31'
+- '权威读数面已存在且自洽: `.omo/debt/review-queue/current.yaml`（generated_at 2026-11-25T05:35:04Z）
+  `summary.open_count=31` / `by_severity {high:7, medium:21, low:3}` / `by_owner {governance-team:26,
+  xiamingxing:5}` 与逐文件统计完全一致 ⇒ 缺陷不是缺数据，而是 CLI 的 list verb 接在死字段上（正确口径另有权威面）'
+- '消费面边界（不夸大）: `rg --no-ignore -nF "omo-debt list"` 全仓 0 命中 ⇒ 无门禁/看板接它，影响限于人与 agent
+  手工回读，故 severity=medium；修法是让 cmd_debt_list 改读 review-queue/dashboard 或直接扫 `.omo/debt/items/*.yaml`
+  的 lifecycle_state，属 projects/omo 内核改动需另开 PR，本条不代为实施'
+mitigation_refs: []
+opened_at: '2026-11-25T06:05:53.285042+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T06:05:53.285042+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-LIST-READS-UNPRODUCED-SYSTEM-STATE-FIELD.
+- at: '2026-11-25T06:06:47.724474+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【机制缺陷】`omo-debt list` 的读数是死的。`projects/omo/src/omo/omo_debt_cli.py:25-49`
+    的 `cmd_debt_list(omo_dir)` 只认一个来源：`omo_dir/state/system.yaml` 里的 `debt_weight_items`（:38
+    `items = system.get("debt_weight_items", {})`），:45-49 直接把 `len(items)` 当总数打出来。这个字段在本仓**没有任何生产方**：全仓
+    `rg -n -F debt_weight_items` 只有 4 处命中——读者自己、字段声明 `projects/runtime/src/runtime/state_schema.py:19`、以及两处测试。更硬的一层是，唯一可能把它填上的同步路径是**主动拒绝**写它的：`projects/knowledge/kairon/tests/scripts/test_sync_system_state.py:184-195`
+    的 `test_debt_weight_items_cannot_be_modified` 断言针对该字段的 FieldDiff 必抛 PermissionError，docstring
+    写明「debt_weight_items 字段必须被拒绝」。所以这不是"还没接上"，是设计上已封死写入、却保留了一个把它当唯一数据源的对外读数命令。
+
+
+    【现场读数】今天实测三处，全为 0，而现实是 113 条：canonical @`6e7a7e2ad` 跑 `python3 -m omo.omo_debt
+    list --omo-dir .omo` 得「0 total: 0 open / 0 resolved」，同一时刻 `ls .omo/debt/items/*.yaml`
+    是 113 个文件；本 worktree @`aa58486cb` 同读 0；连 state_root 那份 `~/.local/state/omostation/prod/.omo/state/system.yaml`（638
+    字节，mtime 2026-10-28）里 `debt_weight_items` 长度也是 0。也就是说，"工件没物化"这条解释被排除了——字段本身在两个根上都是空的。
+
+
+    【为什么长期没人发现】`projects/omo/tests/test_omo_cli_modules.py:753-762` 有 `test_cmd_debt_list`，用例在
+    `tmp_path` 里**自己写一份** `state/system.yaml` 并塞进 `debt_weight_items` 字典，然后断言列表输出正确。它造的是生产端从不产生的数据，于是这条
+    verb 在 CI 里永远绿——典型的「测试按构造就绿」+「接线 ≠ 非空转」，和批次23（`portfolio` 子命令有实现无派发）、批次24（drift
+    判据读宿主状态）同属一个家族：判据/读数的**存在**被测试证明，**可达性**没有任何证明。
+
+
+    【影响与定级】影响面我按证据收窄：`rg --no-ignore -nF "omo-debt list"` 全仓 0 命中，没有门禁、看板或 workflow
+    接它，所以不会静默改判任何自动化结论；受害的是人和 agent 的手工回读——本轮我就先读到 0、再靠数文件才发现 113，若直接引用那个 0 就会对外说"当前无债"。定
+    severity=medium、gate_level 保持 none。
+
+
+    【真实口径另有权威面（关键：不是缺数据）】`open=31` 这个正确数字其实早已存在：`.omo/debt/review-queue/current.yaml`（generated_at
+    2026-11-25T05:35:04Z）`summary.open_count=31`，`by_severity {high:7, medium:21,
+    low:3}`、`by_owner {governance-team:26, xiamingxing:5}`，与我逐文件按 `lifecycle_state`
+    统计（closed 40 / resolved 42 / identified 27 / in_progress 4 ⇒ 非终态 31）**完全一致**。所以修法是改接权威面，而不是新建投影：让
+    `cmd_debt_list` 读 review-queue/dashboard，或直接扫 `.omo/debt/items/*.yaml` 的 `lifecycle_state`
+    并按同一口径分类；同时在字段无生产方时显式报错/降级提示，而不是打 "0 total"。
+
+
+    【本条不代为实施】上述改动落在 `projects/omo` 治理内核（含 CLI 行为），属独立交付面，需正常 PR + 用例改造（现有 `test_cmd_debt_list`
+    必须改成断言真实来源或断言缺失时报错，否则改完仍绿）。本条目只登记与取证，未改 `omo_debt_cli.py`、未改 `state_schema.py`、未改
+    kairon 的拒绝逻辑，也没有为消除 0 而伪造数据。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【机制缺陷】`omo-debt list` 的读数是死的。`projects/omo/src/omo/omo_debt_cli.py:25-49`
+  的 `cmd_debt_list(omo_dir)` 只认一个来源：`omo_dir/state/system.yaml` 里的 `debt_weight_items`（:38
+  `items = system.get("debt_weight_items", {})`），:45-49 直接把 `len(items)` 当总数打出来。这个字段在本仓**没有任何生产方**：全仓
+  `rg -n -F debt_weight_items` 只有 4 处命中——读者自己、字段声明 `projects/runtime/src/runtime/state_schema.py:19`、以及两处测试。更硬的一层是，唯一可能把它填上的同步路径是**主动拒绝**写它的：`projects/knowledge/kairon/tests/scripts/test_sync_system_state.py:184-195`
+  的 `test_debt_weight_items_cannot_be_modified` 断言针对该字段的 FieldDiff 必抛 PermissionError，docstring
+  写明「debt_weight_items 字段必须被拒绝」。所以这不是"还没接上"，是设计上已封死写入、却保留了一个把它当唯一数据源的对外读数命令。
+
+
+  【现场读数】今天实测三处，全为 0，而现实是 113 条：canonical @`6e7a7e2ad` 跑 `python3 -m omo.omo_debt list
+  --omo-dir .omo` 得「0 total: 0 open / 0 resolved」，同一时刻 `ls .omo/debt/items/*.yaml`
+  是 113 个文件；本 worktree @`aa58486cb` 同读 0；连 state_root 那份 `~/.local/state/omostation/prod/.omo/state/system.yaml`（638
+  字节，mtime 2026-10-28）里 `debt_weight_items` 长度也是 0。也就是说，"工件没物化"这条解释被排除了——字段本身在两个根上都是空的。
+
+
+  【为什么长期没人发现】`projects/omo/tests/test_omo_cli_modules.py:753-762` 有 `test_cmd_debt_list`，用例在
+  `tmp_path` 里**自己写一份** `state/system.yaml` 并塞进 `debt_weight_items` 字典，然后断言列表输出正确。它造的是生产端从不产生的数据，于是这条
+  verb 在 CI 里永远绿——典型的「测试按构造就绿」+「接线 ≠ 非空转」，和批次23（`portfolio` 子命令有实现无派发）、批次24（drift
+  判据读宿主状态）同属一个家族：判据/读数的**存在**被测试证明，**可达性**没有任何证明。
+
+
+  【影响与定级】影响面我按证据收窄：`rg --no-ignore -nF "omo-debt list"` 全仓 0 命中，没有门禁、看板或 workflow
+  接它，所以不会静默改判任何自动化结论；受害的是人和 agent 的手工回读——本轮我就先读到 0、再靠数文件才发现 113，若直接引用那个 0 就会对外说"当前无债"。定
+  severity=medium、gate_level 保持 none。
+
+
+  【真实口径另有权威面（关键：不是缺数据）】`open=31` 这个正确数字其实早已存在：`.omo/debt/review-queue/current.yaml`（generated_at
+  2026-11-25T05:35:04Z）`summary.open_count=31`，`by_severity {high:7, medium:21, low:3}`、`by_owner
+  {governance-team:26, xiamingxing:5}`，与我逐文件按 `lifecycle_state` 统计（closed 40 / resolved
+  42 / identified 27 / in_progress 4 ⇒ 非终态 31）**完全一致**。所以修法是改接权威面，而不是新建投影：让 `cmd_debt_list`
+  读 review-queue/dashboard，或直接扫 `.omo/debt/items/*.yaml` 的 `lifecycle_state` 并按同一口径分类；同时在字段无生产方时显式报错/降级提示，而不是打
+  "0 total"。
+
+
+  【本条不代为实施】上述改动落在 `projects/omo` 治理内核（含 CLI 行为），属独立交付面，需正常 PR + 用例改造（现有 `test_cmd_debt_list`
+  必须改成断言真实来源或断言缺失时报错，否则改完仍绿）。本条目只登记与取证，未改 `omo_debt_cli.py`、未改 `state_schema.py`、未改
+  kairon 的拒绝逻辑，也没有为消除 0 而伪造数据。'
