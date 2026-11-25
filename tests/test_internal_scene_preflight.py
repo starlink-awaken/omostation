@@ -10,8 +10,6 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-import yaml
-
 MODULE_PATH = Path(__file__).parents[1] / "bin" / "ssot" / "internal-scene-preflight.py"
 STANDARDS_PATH = Path(__file__).parents[1] / ".omo" / "standards" / "scene-card-lifecycle.yaml"
 
@@ -65,6 +63,8 @@ def test_compliant_values_pass_without_exemption():
 
 def test_standards_enums_formalized():
     """standards 枚举必须含 proposal_only (lifecycle) 与 forbidden (activation)."""
+    import yaml  # 函数内 import: 收集期零三方依赖 (CI 裸 pytest 可收集)
+
     d = yaml.safe_load(open(STANDARDS_PATH, encoding="utf-8"))
     assert "proposal_only" in d["lifecycle"], "lifecycle 枚举缺 proposal_only"
     assert "forbidden" in d["activation"], "activation 枚举缺 forbidden"
