@@ -11,7 +11,7 @@ related:
 activation: inactive
 activation_blockers: []
 admission_track: internal_evidence_based
-approval_state: pending
+approval_state: confirmed
 lifecycle: draft
 scene_type: internal_pipeline
 
@@ -39,3 +39,4 @@ notes:
   - '实现: projects/family-hub/src/family_hub/runtime/asset_audit.py (核心审计引擎)'
   - '2026-09-12: spec 绑定 + 场景卡初始化，进入 assisted 生命周期'
   - '验证标准: 场景卡 30-sample + calibration >= 0.6'
+  - '2026-11-25: owner 会话原话「给你授权，你帮我处理吧」— approval_state pending→confirmed 收口；trial 未跑与 preflight 8 项 missing_fields 是独立数据债，不随本审批解锁，另案处理'
