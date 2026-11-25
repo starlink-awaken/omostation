@@ -88,6 +88,21 @@ history:
     【本条不代为实施】上述改动落在 `projects/omo` 治理内核（含 CLI 行为），属独立交付面，需正常 PR + 用例改造（现有 `test_cmd_debt_list`
     必须改成断言真实来源或断言缺失时报错，否则改完仍绿）。本条目只登记与取证，未改 `omo_debt_cli.py`、未改 `state_schema.py`、未改
     kairon 的拒绝逻辑，也没有为消除 0 而伪造数据。''.'
+- at: '2026-11-25T21:05:00+00:00'
+  action: mitigate
+  note: >-
+    **已修（子模块 PR omostation-omo#263）**：`omo_debt_cli.py` 新增 `read_debt_items(omo_dir)`
+    读 `<omo_dir>/debt/items/*.yaml` 的 `(id, lifecycle_state)`；`cmd_debt_list` **优先**用它，
+    按 `resolved`/`closed` 计入 resolved，目录缺席才回退旧的 system.yaml 口径（既有调用与两条
+    self-fulfilling 夹具语义不变）。单条 YAML 解析失败逐条跳过，不整批失败。
+    **读数对拍**：真实工作区 `.omo` → `130 total: 39 open / 91 resolved`，与逐文件
+    `lifecycle_state` 独立统计逐项一致（closed 45 + resolved 46 = 91；identified 36 + in_progress 3 = 39）；
+    改前同一命令打 `0 total: 0 open / 0 resolved`。
+    **用例**：`tests/test_omo_cli_modules.py` 新增四条（条目目录优先于死字段且 stale 条目不再出现 /
+    `closed` 计 resolved / 目录缺席返回 None / 坏条目被跳过），子模块 74 passed + ruff format/check 通过。
+    **边界**：只改「读数来源」，没有给 `debt_weight_items` 造生产方（该字段仍无写入方，同步面仍拒写）；
+    也没有把缺失键升级成报错 —— 目录缺席时仍是旧口径，不制造新红。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
