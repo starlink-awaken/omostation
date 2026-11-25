@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-agent
 affected_roots:
 - bin/plan/bet-closeout-auto.py
@@ -55,6 +55,10 @@ history:
     【修复方向】Step 3 要么真调 complete（带 completion_evidence 前置校验与幂等），要么把输出措辞改为「仅建议，未落盘」；Step
     4 改为 `bet-ledger.py lint`（无位置参数）并把 rc!=0 视为失败；Step 5 删除 rebase 提示，改为按 §6 的 push
     + gh pr create 路径。''.'
+- at: '2026-11-25T10:11:52.415247+00:00'
+  action: close
+  note: 已修复合入：lint 空转改硬失败、建议措辞不再谎报落盘、Step5 去掉被禁 rebase 提示
+  actor: governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
@@ -78,3 +82,16 @@ description: '【机制缺陷】bin/plan/bet-closeout-auto.py 的 docstring 与�
   【修复方向】Step 3 要么真调 complete（带 completion_evidence 前置校验与幂等），要么把输出措辞改为「仅建议，未落盘」；Step
   4 改为 `bet-ledger.py lint`（无位置参数）并把 rc!=0 视为失败；Step 5 删除 rebase 提示，改为按 §6 的 push
   + gh pr create 路径。'
+closed_at: '2026-11-25T10:11:52.415108+00:00'
+close_reason: 已修复合入：lint 空转改硬失败、建议措辞不再谎报落盘、Step5 去掉被禁 rebase 提示
+resolution_evidence: 'PR #5571 (merge 7fa88cee24ac00c8e90bd6144e3f17fadab2f8db): bin/plan/bet-closeout-auto.py
+  ① run_lint() 不再传台账位置参数 (lint 子命令无位置参数, 旧调用必然 argparse ''unrecognized arguments'')，且
+  rc!=0 由旧的 ⚠️ 继续放行改为 return 1；② docstring/Step3 由「改台账 status→done+done_at+completion_evidence」改为「本脚本不写台账」并给出带前置校验的落盘命令
+  bet-ledger.py complete <bet-id>；③ Step5 删掉 `git fetch origin main && git rebase
+  origin/main` (AGENTS §6 禁止吸收上游)，改为 push + `gh pr create --base main --head <branch>`；④
+  --dry-run help 改成真实语义 (只跳过 Step 4)。回归 tests/bin/test_bet_closeout_auto.py 新增 5 个真实
+  CLI 契约用例 (临时树 + bet-ledger 替身触发 rc 传播、回读台账证明未写、断言输出无 git rebase) + 活仓库端到端断言出现 ''✅
+  lint PASS''；顺带修掉该模块把夹具写进已跟踪 .omo/_knowledge/retros/ 的泄漏 (RETRO_DIR 改指 tmp 树)。实测
+  pytest tests/bin/test_bet_closeout_auto.py -q → 14 passed；负控制 (argv 改回带 str(LEDGER))
+  → test_live_lint_step_really_runs FAILED；check-test-collection.py → PASS (可收集 6420,
+  5 项环境依赖)。'
