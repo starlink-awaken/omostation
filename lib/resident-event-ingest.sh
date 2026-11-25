@@ -16,6 +16,8 @@ set -euo pipefail
 _SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _REPO_ROOT="$(cd "$_SELF_DIR/.." && pwd)"
 OMO_PROJECT="$_REPO_ROOT/projects/omo"
+_LEDGER="${OMO_EVENT_LEDGER_DB:-${OMOSTATION_STATE_ROOT:+${OMOSTATION_STATE_ROOT}/runtime/omo/event-ledger.sqlite3}}"
+_LEDGER="${_LEDGER:-$_REPO_ROOT/runtime/omo/event-ledger.sqlite3}"
 
 exec /opt/homebrew/bin/uv run --frozen --project "$OMO_PROJECT" \
-  python -m omo.resident.cli ingest
+  python -m omo.resident.cli ingest --ledger "$_LEDGER" "$@"

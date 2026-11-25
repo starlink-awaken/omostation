@@ -18,6 +18,8 @@ on:
       - "projects/omo"
       - "projects/omo/tests/**"
       - "projects/ecos/scripts/contract_gatekeeper.py"
+      - "tests/unit/test_writeplane_root_pin.py"
+      - "tests/unit/test_resident_write_plane_split.py"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   pull_request:
@@ -37,6 +39,8 @@ on:
       - "projects/omo"
       - "projects/omo/tests/**"
       - "projects/ecos/scripts/contract_gatekeeper.py"
+      - "tests/unit/test_writeplane_root_pin.py"
+      - "tests/unit/test_resident_write_plane_split.py"
       - "CLAUDE.md"
       - "LAYER-INDEX.md"
   schedule:
