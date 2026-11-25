@@ -7,7 +7,7 @@ scope: "workspace"
 severity: "medium"
 weight: 0.1
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
@@ -29,11 +29,32 @@ description: >-
   `_check_template_data_consistency()` 每次发布都打出同一句告警（"It does NOT block
   publication — it only warns"），即该缺口长期可见但无人处理。
 decision_needed: >-
-  要裁决的是：这 9 个字段里哪些应由发布器 payload 补上（observed_at / refresh 属发布器自身
-  即可算出的事实），哪些是 refresh.py 时代产物、应随模板一并退役（pending_publications /
-  reconciliation_candidates / current_findings / value_loop / anomaly_events / library）。
-  在裁定前不动模板也不动 payload —— 两边都改会制造新的不一致。
+  [已裁定 2026-11-25, 见 BET-Y2Q4-T10-354 spec 裁定表] 6 个 refresh.py 时代产物
+  (pending_publications / reconciliation_candidates / current_findings / value_loop /
+  anomaly_events / library) 模板侧退役; live_sources 修兜底读 payload 现成的
+  source_states (21 键); observed_at / refresh 已由 Wave 5 (#5548) 发布器补齐。
+  原文 (存档): 要裁决的是——这 9 个字段里哪些应由发布器 payload 补上
+  (observed_at / refresh 属发布器自身即可算出的事实), 哪些是 refresh.py 时代产物、
+  应随模板一并退役。在裁定前不动模板也不动 payload。
 history:
+- at: "2026-11-25T14:30:00+00:00"
+  action: resolve
+  note: >-
+    BET-Y2Q4-T10-354 收口 (principal 2026-11-25 会话授权「给你授权，你帮我处理吧」+「go」)。
+    逐项裁定与修复 (全部行为等价或死面清除):
+    (1) live_sources 修兜底 —— 3920 行 `\|\| {}` 改读 payload 现成 `D.source_states`
+    (21 键), swarm 面板「Live Sources」从恒 NO_DATA 变真实数据; 4193 行去 D.live_sources
+    首选。(2) 6 个 refresh.py 时代产物退役: pending_publications + reconciliation_candidates
+    连死面板整卡移除 (「等待精确人工授权」article / 「Reconciliation 候选包」card);
+    current_findings 渲染行 + 空 ul 移除 (卡片 summary-source 仍活); value_loop/anomaly_events
+    死引用改字面量 `{\}` (fallback/空态逻辑原样); library 规范化行 + 死拼接移除。
+    实测: 守卫 dry-run missing 7 → 0 (模板 D.* 引用 62 → 55, 全对齐 payload)。
+    **订正 2026-11-10 的跨仓论**: 本仓 `bin/panorama/assets/host/template.html` 经 #4636
+    (2026-10-05 T10-226 host 回同步) 已是 SSOT (zhixing-host-sync HOST_FILES 映射),
+    页面真身 (curl 实页含 sourceHealthSummary) 与本仓版一致 —— 跨仓边界不存在;
+    宿主根 `~/.local/share/zhixing-dashboard/template.html` 是 422 行旧演化残留
+    (非 SSOT)。交付: 本仓 merge 后由 zhixing-dashboard-refresh 刷新周期发布新
+    release, current symlink 切新即生效。
 - at: "2026-11-10T08:30:00+00:00"
   action: identify
   note: >-
