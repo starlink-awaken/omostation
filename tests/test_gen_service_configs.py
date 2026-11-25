@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import plistlib
+import sys
 from pathlib import Path
 
 MODULE_PATH = Path(__file__).parents[1] / "bin" / "mof" / "gen-service-configs.py"
@@ -426,3 +427,75 @@ def test_working_directory_and_calendar_list_rendered() -> None:
     assert data["WorkingDirectory"] == "/tmp"
     assert data["EnvironmentVariables"] == {"PATH": "/usr/bin:/bin"}
     assert data["StartCalendarInterval"] == [{"Minute": 5}, {"Minute": 35}]
+
+
+# ── 读数可行动: drift 报字段级差异 + 被比文件出处 ──
+# 债条目 OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE
+# 原先只报 label, 排障要另造 plistlib 装置才能知道「到底哪个字段不一样」。
+
+
+def test_plist_field_diffs_names_only_changed_keys() -> None:
+    module = _module()
+    generated = plistlib.dumps({"Label": "a", "Minute": 5, "Path": "/x"}).decode()
+    installed = plistlib.dumps({"Label": "a", "Minute": 9, "Path": "/x"}).decode()
+
+    assert module._plist_field_diffs(installed, generated) == ["Minute"]
+
+
+def test_plist_field_diffs_identical_is_empty() -> None:
+    module = _module()
+    blob = plistlib.dumps({"Label": "a"}).decode()
+
+    assert module._plist_field_diffs(blob, blob) == []
+
+
+def test_plist_field_diffs_marks_unparseable() -> None:
+    """任一侧解析失败 (含 plist 缺失时的空串) 不给假字段名。"""
+    module = _module()
+
+    assert module._plist_field_diffs("", "<plist></plist>") == ["<unparseable>"]
+    assert module._plist_field_diffs("<plist>", plistlib.dumps({"A": 1}).decode()) == ["<unparseable>"]
+
+
+def test_check_reports_field_level_provenance_for_drift(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    module = _module()
+    launchd = tmp_path / "LaunchAgents"
+    launchd.mkdir()
+    generated = plistlib.dumps(
+        {"Label": "com.example.valid", "ProgramArguments": [sys.executable], "Minute": 5}
+    ).decode()
+    installed = plistlib.dumps(
+        {"Label": "com.example.valid", "ProgramArguments": [sys.executable], "Minute": 9}
+    ).decode()
+    (launchd / "com.example.valid.plist").write_text(installed, encoding="utf-8")
+
+    monkeypatch.setattr(module, "_launchd_dir", lambda: launchd)
+    monkeypatch.setattr(module, "gen_launchd_plist", lambda svc: generated)
+    monkeypatch.setattr(
+        module,
+        "load_services",
+        lambda path=None: [
+            {
+                "id": "generated.valid",
+                "enabled": True,
+                "scheduler": "launchd",
+                "label": "com.example.valid",
+                "program": {"interpreter": "stable-python3", "entrypoint": "bin/example.py"},
+            }
+        ],
+    )
+    monkeypatch.setattr(module.sys, "argv", ["gen-service-configs.py", "--check", "--json"])
+
+    assert module.main() == 1
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["drift_count"] == 1
+    detail = report["drift_details"][0]
+    assert detail["label"] == "com.example.valid"
+    assert detail["fields"] == ["Minute"]
+    assert detail["plist_path"].endswith("com.example.valid.plist")
+    assert detail["plist_mtime"]
