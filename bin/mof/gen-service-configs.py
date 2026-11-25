@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from xml.sax.saxutils import escape as _xml_escape
 
@@ -298,6 +299,30 @@ def _plist_equivalent(existing: str, generated: str) -> bool:
         return plistlib.loads(existing.encode()) == plistlib.loads(generated.encode())
     except Exception:
         return _strip_xml_comments(existing).strip() == _strip_xml_comments(generated).strip()
+
+
+def _plist_field_diffs(existing: str, generated: str) -> list[str]:
+    """语义差异的顶层字段名 —— 让 drift 读数可行动。
+
+    债条目 OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE:
+    原先只报 label, 排障要另造 plistlib 装置去比出「到底哪个字段不一样」。
+    任一侧解析失败 (含 plist 缺失时的空串) 返回 ["<unparseable>"]。
+    """
+    try:
+        left = plistlib.loads(existing.encode())
+        right = plistlib.loads(generated.encode())
+    except Exception:
+        return ["<unparseable>"]
+    if not isinstance(left, dict) or not isinstance(right, dict):
+        return ["<unparseable>"]
+    return [key for key in sorted(set(left) | set(right)) if left.get(key) != right.get(key)]
+
+
+def _iso_mtime(path: Path) -> str | None:
+    try:
+        return datetime.fromtimestamp(path.stat().st_mtime, UTC).isoformat()
+    except OSError:
+        return None
 
 
 def gen_launchd_plist(svc: dict) -> str:
@@ -1064,6 +1089,7 @@ def main() -> int:
                 print(f"❌ --only {label}: 不是生成器自有 launchd 服务 — 拒绝执行", file=sys.stderr)
             return 1
     drifts: list[str] = []
+    drift_details: list[dict] = []
     bad_services: list[str] = []
     for svc in services:
         if not svc.get("enabled", True) or svc.get("scheduler") != "launchd":
@@ -1115,6 +1141,16 @@ def main() -> int:
             # 实质字段差异 (解释器/参数/路径/调度) 仍如实报。
             if not _plist_equivalent(existing, plist):
                 drifts.append(f"{svc['label']}: plist 与 services.yaml 不一致 (drift)")
+                drift_details.append(
+                    {
+                        "label": svc["label"],
+                        "fields": (
+                            ["<plist 不存在>"] if not target.exists() else _plist_field_diffs(existing, plist)
+                        ),
+                        "plist_path": str(target),
+                        "plist_mtime": _iso_mtime(target),
+                    }
+                )
         else:
             print(f"--- {svc['label']} ---")
             print(plist)
@@ -1132,13 +1168,20 @@ def main() -> int:
                 print("⏭ launchd observer unavailable; plist byte comparison skipped")
             return 0 if report["ok"] else 1
         if args.json:
-            report = {"ok": not drifts, "drift_count": len(drifts), "drifts": drifts}
+            report = {
+                "ok": not drifts,
+                "drift_count": len(drifts),
+                "drifts": drifts,
+                "drift_details": drift_details,
+            }
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0 if report["ok"] else 1
         if drifts:
             print(f"❌ {len(drifts)} drift:")
-            for d in drifts:
-                print(f"  - {d}")
+            for message, detail in zip(drifts, drift_details):
+                print(f"  - {message}")
+                print(f"      字段差异 {detail['fields']}")
+                print(f"      被比文件 {detail['plist_path']} (mtime={detail['plist_mtime']})")
             return 1
         launchd_count = sum(1 for s in services if s.get("scheduler") == "launchd")
         print(f"✅ 0 drift ({launchd_count} launchd services)")
