@@ -1,0 +1,98 @@
+id: OMO-DEBT-PUSH-SUBMODULE-SYNC-INVALID-TRANSITIONS-BLOCK-PUSH
+title: pre-push submodule-sync 把 .invalid 未初始化瞬态判成 blocking 失败，worktree 交付被自己的钩子堵死
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/ssot/sync-submodules-push.sh
+- .githooks/pre-push
+- bin/gac/hook-runner.sh
+- bin/ssot/submodule-reachability-gate.py
+- bin/gac/gac-worktree.sh
+evidence_refs:
+- '实测 2026-11-25 ws-ssotfix `git push`: `[hook-runner] ❌ [submodule-sync] failed (89ms)`，统计行
+  `待push=0 失败=1 无上游=0 缺失=15 (dry-run=0, verification-only)`，唯一失败项 `❌ projects/knowledge/gbrain:
+  无法读取当前分支`，整条 push 被 exit nonzero 拦下'
+- '肇事检出实况（ws-ssotfix，2026-11-25）：`projects/knowledge/gbrain/.git` 是 97B gitdir 指针
+  → `.git/worktrees/ws-ssotfix/modules/projects/knowledge/gbrain`，其 HEAD 内容 `ref:
+  refs/heads/.invalid`，`for-each-ref` 零 refs，pin `d347eb3bdefac993dbd0f9e646cbb608a18d7bb7`
+  经 `git cat-file -t` 报 `could not get object info`'
+- 分类判据错位：`bin/ssot/sync-submodules-push.sh:31` 只用「`.git` 存在与否」判未初始化；带 `.git` 而 HEAD
+  不可读的 `.invalid` 瞬态穿过该分支，落到 `:38` 的 `rev-parse --abbrev-ref HEAD` 失败即 `failed++`（`:40`
+  打印 `无法读取当前分支`）
+- 对照同一脚本 `:45-49`：detached HEAD 被计入 `missing`（跳过），且 `:47` 自己写明「reachability 由 submodule-reachability-gate
+  兜底」—— 即 `.invalid` 这种更弱的状态反而拿到了比 detached 更严的判决
+- '形态来源已登记在别处：AGENTS.md §worktree「release 自触发守卫的在途 init（`.invalid` 瞬态）」；2026-11-25
+  在 ws-debt22 的 `projects/omo` 上二次复现，`git submodule update --init --depth 1 projects/omo`
+  报 `fatal: Unable to find current revision in submodule path ''projects/omo''`'
+- 绕行成本：须经「从 canonical 对象库 fetch pin + checkout FETCH_HEAD」把检出补成可读（不动根 gitlink）后钩子才放行；快速
+  claim（SKIP_SUBMODULE_INIT / init 超时）每次都可能再撞
+mitigation_refs: []
+opened_at: '2026-11-25T12:53:38.784141+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T12:53:38.784141+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-PUSH-SUBMODULE-SYNC-INVALID-TRANSITIONS-BLOCK-PUSH.
+  actor: governance-agent
+- at: '2026-11-25T12:55:11.152755+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【单位口径】行号在 origin/main@0ada7d4ef 的 bin/ssot/sync-submodules-push.sh
+    上复核；「失败/缺失/无上游」计数取脚本末行 `统计:` 读数；pin 对象存在性用 `git cat-file -t`；时间为 UTC。
+
+
+    【现象】隔离 worktree 里 `git push` 被 pre-push 的 submodule-sync 拦成 blocking：统计行给出 `失败=1`，唯一失败项是
+    `❌ projects/knowledge/gbrain: 无法读取当前分支`，而同一份输出里另有 15 个子模块被正常判为「未初始化, 跳过」或「detached
+    HEAD, 跳过」。也就是说，本 PR 的 gitlink 一个都没动（`git status --short` 指针变更数 = 0），push 却被子模块检出状态堵死。
+
+
+    【根因】脚本用「`.git` 是否存在」当作「子模块是否初始化」的代理指标（:31）。而 worktree 快速 claim / 守卫在途 init 会留下第三种形态：`.git`
+    文件在、gitdir 里零 refs、HEAD 指向 `refs/heads/.invalid`、pin 对象根本没取到。这种形态穿过 :31，落到 :38
+    的 `rev-parse --abbrev-ref HEAD` 失败分支，被记成 failed（:40）并在末段 exit nonzero。对照 :45-49：detached
+    HEAD（比它更强的状态）走 `missing++` 跳过，并且 :47 自己写明「reachability 由 submodule-reachability-gate
+    兜底」——未初始化瞬态反而拿到了比 detached 更严的判决。
+
+
+    【判据】某条子模块判定应当读「pin 对象 + HEAD 可读性」，而不是读 `.git` 存在性；本钩子的语义是「本地领先远程的未推 commit」，对没有对象库、没有
+    refs 的检出这个问题本身不成立，既无 commit 可推也无 upstream 可比。
+
+
+    【处置】绕行方案已实测可用：从 canonical 子模块对象库 `git --git-dir=<wt gitdir> fetch <canonical>
+    <pin>` 后 `checkout FETCH_HEAD`（不改根 gitlink、不联网），钩子随即走正常分支放行；2026-11-25 在 ws-ssotfix/gbrain
+    与 ws-debt22/omo 两处分别复现并绕过。修法待定，方向是 :31 的判据换成「HEAD 不可读 / 零 refs / pin 缺失 ⇒ 与未初始化同类，计入
+    missing 并跳过」，同时保留 reachability gate 兜底，避免把真实的未推 commit 也一并放过。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【单位口径】行号在 origin/main@0ada7d4ef 的 bin/ssot/sync-submodules-push.sh 上复核；「失败/缺失/无上游」计数取脚本末行
+  `统计:` 读数；pin 对象存在性用 `git cat-file -t`；时间为 UTC。
+
+
+  【现象】隔离 worktree 里 `git push` 被 pre-push 的 submodule-sync 拦成 blocking：统计行给出 `失败=1`，唯一失败项是
+  `❌ projects/knowledge/gbrain: 无法读取当前分支`，而同一份输出里另有 15 个子模块被正常判为「未初始化, 跳过」或「detached
+  HEAD, 跳过」。也就是说，本 PR 的 gitlink 一个都没动（`git status --short` 指针变更数 = 0），push 却被子模块检出状态堵死。
+
+
+  【根因】脚本用「`.git` 是否存在」当作「子模块是否初始化」的代理指标（:31）。而 worktree 快速 claim / 守卫在途 init 会留下第三种形态：`.git`
+  文件在、gitdir 里零 refs、HEAD 指向 `refs/heads/.invalid`、pin 对象根本没取到。这种形态穿过 :31，落到 :38 的
+  `rev-parse --abbrev-ref HEAD` 失败分支，被记成 failed（:40）并在末段 exit nonzero。对照 :45-49：detached
+  HEAD（比它更强的状态）走 `missing++` 跳过，并且 :47 自己写明「reachability 由 submodule-reachability-gate
+  兜底」——未初始化瞬态反而拿到了比 detached 更严的判决。
+
+
+  【判据】某条子模块判定应当读「pin 对象 + HEAD 可读性」，而不是读 `.git` 存在性；本钩子的语义是「本地领先远程的未推 commit」，对没有对象库、没有
+  refs 的检出这个问题本身不成立，既无 commit 可推也无 upstream 可比。
+
+
+  【处置】绕行方案已实测可用：从 canonical 子模块对象库 `git --git-dir=<wt gitdir> fetch <canonical> <pin>`
+  后 `checkout FETCH_HEAD`（不改根 gitlink、不联网），钩子随即走正常分支放行；2026-11-25 在 ws-ssotfix/gbrain
+  与 ws-debt22/omo 两处分别复现并绕过。修法待定，方向是 :31 的判据换成「HEAD 不可读 / 零 refs / pin 缺失 ⇒ 与未初始化同类，计入
+  missing 并跳过」，同时保留 reachability gate 兜底，避免把真实的未推 commit 也一并放过。'
