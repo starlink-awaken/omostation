@@ -273,6 +273,9 @@ run_hook_pre_push() {
     if [ -n "$_push_range" ]; then
       export PUSH_RANGE="$_push_range"
       run_check "change-lane-check" "$py run --profile pyyaml -- bin/change-lane-check.py" true 5 || FAILED=1
+      if [ -f "$ROOT/bin/ssot/write-owner-audit.py" ]; then
+        run_check "write-owner-audit" "$py run --profile pyyaml -- bin/ssot/write-owner-audit.py --range auto --verify-local-proof" true 5 || FAILED=1
+      fi
     else
       echo "[hook-runner] ⚠️ [change-lane-check] SKIP 无法解析本次 push 的 commit 范围" >&2
     fi
