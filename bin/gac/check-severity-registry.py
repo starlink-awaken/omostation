@@ -110,9 +110,34 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    measured = SGF_POLICY_YAML.is_file()
     sgf = _load_sgf()
     gates = sgf.get("gates") or []
     gates_by_id = {g.get("id"): g for g in gates if g.get("id")}
+
+    if not measured:
+        # 参考面 `projects/ecos/.../sgf-policy.yaml` 在**未检出的子模块**里。
+        # 旧实现把它当空基准 `{}`, 于是每个 primary lock 都报「not declared」——
+        # `checked=0 passed=0 mismatched=3`（实测干净检出）。那是「缺基准 ⇒ 全红」,
+        # 与「缺输入 ⇒ PASS」是同一病根的两半。改为自报没测成, 由门禁归 not_measured;
+        # 退出码仍 0 —— 缺输入不是仓库缺陷。见债条目 GATE-CLEAN-CHECKOUT-NOISE。
+        report = {
+            "ok": True,
+            "measured": False,
+            "reason": "reference_absent",
+            "mode": "full" if args.full else "static",
+            "policy_path": None,
+            "summary": {"checked": 0, "passed": 0, "mismatched": 0},
+            "findings": [],
+        }
+        if args.json:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(
+                "check-severity-registry: PASS (sgf-policy.yaml 不在本检出 —— "
+                "参考面缺席, 未判定)"
+            )
+        return 0
 
     findings: list[dict] = []
     summary: dict[str, int] = {"checked": 0, "passed": 0, "mismatched": 0}
@@ -220,6 +245,7 @@ def main(argv: list[str] | None = None) -> int:
     ok = not findings
     report = {
         "ok": ok,
+        "measured": True,
         "mode": "full" if args.full else "static",
         "policy_path": str(SGF_POLICY_YAML.relative_to(WORKSPACE)) if SGF_POLICY_YAML.is_file() else None,
         "summary": summary,
