@@ -312,3 +312,18 @@ workers:
     capabilities: [code_change, test_execution, verification]
     allowed_operation_level: L1
     write_scope: {mode: task_declared_only}
+
+  # BET-Y2Q4-T10-279 CR-4 (2026-11-25 principal 逐项授权): 远端 CPU 节点 Worker 声明。
+  # class: remote_cpu_node —— 物理批执行节点, 非 agent CLI (workers.yaml 首个节点型 worker);
+  # transports 契约 (workspace_admission/provider_conformance) 按 declared 惯例留待
+  # coordinator promote 时补全 (见本文件 244 行注释); 并发预算按 CR-5 授权硬限。
+  - id: compute-i9-01
+    enabled: false
+    admission_state: declared
+    provider_ref: compute-i9-01
+    role: worker
+    class: remote_cpu_node
+    capabilities: [code_change, test_execution, batch_execution]
+    allowed_operation_level: L1
+    write_scope: {mode: task_declared_only}
+    concurrency_budget: 2  # 同节点总运行 Worker <=2; 同仓写并发 <=1 (CR-5 授权, Phase 2 admission 后生效)

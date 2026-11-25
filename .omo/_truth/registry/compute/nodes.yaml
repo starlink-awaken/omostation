@@ -40,3 +40,13 @@ nodes:
     description: "公有云大模型算力资源池"
     status: active
     tier: cloud
+
+  # BET-Y2Q4-T10-279 CR-4 受治理登记 (2026-11-25 principal 逐项授权, Phase0/Phase1 报告 §5)
+  # 物理实体机按 tier: edge 归层; 不登记可路由地址 (discovery 62 行约束), 运行时可达性由监控面负责
+  - id: compute-i9-01
+    type: remote
+    architecture: amd64
+    os: linux
+    description: "单位网远端 CPU 执行节点 (i9-14900HX 32vCPU/31GiB), 受治理 Code/Test/Batch 作业面; tailnet 身份 unit-node-04"
+    status: active
+    tier: edge
