@@ -17,6 +17,16 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 WORKSPACE = Path(__file__).resolve().parents[2]
+
+sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+from input_absence import input_absent as _absence  # noqa: E402
+
+
+def _input_absent(rel: str) -> bool:
+    """实现收敛到 bin/lib/input_absence.py（2026-11-25）；此处为薄适配。"""
+    return _absence(rel, WORKSPACE)
+
+
 LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 LOCAL_DOC_GLOBS = (
     "AGENTS.md",
@@ -116,35 +126,6 @@ def check_file(path: Path) -> list[dict[str, object]]:
             }
         )
     return findings
-
-
-def _input_absent(rel: str) -> bool:
-    """断链目标落在「输入没备齐」的位置 —— 与 `bin/gac/gac-healthcheck.py::input_absent` 同口径。
-
-    三种：未检出的子模块（干净检出 / claim 快速路径）、gitignore 覆盖的生成态、已归档旧路径。
-    相对路径一律锚在 WORKSPACE；仓外绝对路径直接判 False。
-    """
-    p = Path(rel)
-    if p.is_absolute():
-        try:
-            rel = str(p.relative_to(WORKSPACE))
-        except ValueError:
-            return False
-    parts = Path(rel).parts
-    if len(parts) >= 2 and parts[0] == "projects":
-        return not (WORKSPACE / "projects" / parts[1] / ".git").exists()
-    if rel.startswith("bin/_archive/"):
-        return True
-    try:
-        return subprocess.run(
-            ["git", "check-ignore", "-q", "--no-index", rel],
-            cwd=WORKSPACE,
-            capture_output=True,
-            timeout=15,
-            check=False,
-        ).returncode == 0
-    except (OSError, subprocess.SubprocessError):
-        return False
 
 
 def _measured(findings: list[dict[str, object]]) -> tuple[bool, list[str]]:
