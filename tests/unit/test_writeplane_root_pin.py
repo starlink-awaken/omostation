@@ -113,11 +113,17 @@ SPEC_MARKER_READINGS = {
     #   panorama-collect.py (.omo/state/agent-cell/semantic/roles.jsonl) ⇒ .omo/state 103→102
     #   auto-pruner.py + drift-face-detector.py (runtime/dashboard/agent-brief.json) ⇒ runtime 47→45
     # 门禁三读数 170/161/107 → 167/158/107。
+    # 2026-11-25 Wave 5 WP1 运行态可读性与烟测 state_root 对齐:
+    #   panorama-collect.py 改为 state_file_read(...) 读取 cell_states / signal-poller /
+    #   journey_executions / memory_dual_track / theta_facts (⇒ .omo/state -4, .omo/_delivery -5,
+    #   .omo/_knowledge -2);
+    #   agent-cell-semantic-smoke.py 与 scene-signal-poller.py 改为调用时刻 state_root()
+    #   (⇒ .omo/state -1, .omo/_delivery -2)。门禁三读数 167/158/107 → 160/152/106。
     ".omo/_truth": 162,
-    ".omo/state": 102,
-    ".omo/_delivery": 78,
+    ".omo/state": 97,
+    ".omo/_delivery": 71,
     "runtime": 45,
-    ".omo/_knowledge": 62,
+    ".omo/_knowledge": 60,
 }
 # 2026-11-06 BET-Y2Q4-T10-289 AC-02（准入谓词改按族，**分桶读数一条未动**）：门禁三读数
 # 153/143/95 → 173/163/107。差额 20 站点 / 20 对 / 12 个文件里 9 个是新出现的文件，逐项是
@@ -127,9 +133,9 @@ SPEC_MARKER_READINGS = {
 # 差额 3 站点 / 2 对全在 `bin/panorama/panorama-collect.py`，即 OUT_DIR 与 collect_alerts
 # 第二读点（`ROOT / "runtime/dashboard/data.json"` 两处）—— 它们此前钉检出根，现在跟随
 # OUTPUT_ROOT/DATA_JSON。文件数不变（该文件另有 3 处仍钉检出根）。
-SPEC_GATED_SITES = 167
-SPEC_GATED_PAIRS = 158
-SPEC_GATED_FILES = 107
+SPEC_GATED_SITES = 160
+SPEC_GATED_PAIRS = 152
+SPEC_GATED_FILES = 106
 
 # 2026-10-13 由 BET-Y2Q4-T10-250 的扫描生成的登记面（(文件, 拼出的相对路径) 去重）。
 # 还掉一处债 = 从这份名单里删掉那一行，且必须同时改掉那个脚本；名单只减不增。
@@ -237,14 +243,11 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/ops/smart_alert.py', 'runtime/pids/<fstr>'),
         ('bin/ops/unified_metrics.py', 'runtime/pids/<fstr>'),
         ('bin/panorama/panorama-collect.py', '.omo/state/a2a-messages.jsonl'),
-        ('bin/panorama/panorama-collect.py', '.omo/state/agent-cell/cell_states.json'),
         ('bin/panorama/panorama-collect.py', '.omo/state/agent-tick-daemon.jsonl'),
         ('bin/panorama/panorama-collect.py', '.omo/state/evolution-proposals/*'),
         ('bin/panorama/panorama-collect.py', '.omo/state/handoffs/*'),
         ('bin/panorama/panorama-collect.py', '.omo/state/health.yaml'),
-        ('bin/panorama/panorama-collect.py', '.omo/state/mos/theta-facts.json'),
         ('bin/panorama/panorama-collect.py', '.omo/state/pipeline-events.jsonl'),
-        ('bin/panorama/panorama-collect.py', '.omo/state/signal-poller-state.json'),
         ('bin/panorama/panorama-collect.py', '.omo/state/value-baselines'),
         ('bin/panorama/panorama-collect.py', 'runtime/cron/remote-hygiene.log'),
         ('bin/panorama/panorama-serve.py', 'runtime/dashboard'),
@@ -252,7 +255,6 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/plan/bet-ledger.py', 'runtime/omo/human-attestation-allowed-signers'),
         ('bin/reports/quarterly-report.py', '.omo/state/health.yaml'),
         ('bin/ssot/agent-cell-pool-live-smoke.py', '.omo/state/agent-cell/cell_states.json'),
-        ('bin/ssot/agent-cell-semantic-smoke.py', '.omo/state/agent-cell/semantic'),
         ('bin/ssot/auto-pruner.py', '.omo/state/heartbeats'),
         ('bin/ssot/drift-face-detector.py', '.omo/state/heartbeats'),
         ('bin/ssot/episode-source-aggregator.py', '.omo/state'),
@@ -281,7 +283,6 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/bc-os/north_star_meter_v4.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
         ('bin/bc-os/proposal-triage.py', '.omo/_knowledge/evolution-proposals'),
         ('bin/gac/event-loop-lint.py', '.omo/_knowledge/omo-events.jsonl'),
-        ('bin/panorama/panorama-collect.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
         ('bin/panorama/panorama-collect.py', '.omo/_knowledge/decision-proposals'),
         ('bin/ssot/decision-agent.py', '.omo/_knowledge/evolution-proposals'),
         ('bin/ssot/event-ingest-adapter.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
@@ -290,8 +291,7 @@ BASELINE_WRITESPANE_PAIRS = frozenset(
         ('bin/ssot/resident-orchestrator-daemon.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
         ('bin/ssot/scene-evolution-loop.py', '.omo/_knowledge/evolution-proposals'),
         ('bin/ssot/system-health-check.py', '.omo/_knowledge/workflow-mesh/events.jsonl'),
-        # `.omo/_delivery` 6 处 + `.omo/_truth` 1 处：同一判据在另两个混合面上的连带命中。
-        ('bin/panorama/panorama-collect.py', '.omo/_delivery/observability/events.jsonl'),
+        # `.omo/_delivery` 5 处 + `.omo/_truth` 1 处：同一判据在另两个混合面上的连带命中。
         ('bin/ssot/alert-forwarder.py', '.omo/_delivery/alert-forwarder/watermark.json'),
         ('bin/ssot/alert-forwarder.py', '.omo/_delivery/observability/events.jsonl'),
         ('bin/ssot/event-ingest-adapter.py', '.omo/_delivery/event-ingest/watermark.json'),
@@ -886,13 +886,13 @@ def test_marker_table_is_load_bearing():
 
 
 def test_family_gate_counts_the_specific_family_knowledge_sites():
-    """spec §2 的三分桶在 tip 上必须是 13 / 5 / 44，且 13 处全部进门禁集合。"""
+    """spec §2 的三分桶在 tip 上必须是 12 / 5 / 43，且 12 处全部进门禁集合。"""
     sites = scan_checkout_pinned_sites(ROOT)
     buckets = knowledge_bucket(sites)
     assert {k: len(v) for k, v in buckets.items()} == {
-        "SPECIFIC_FAMILY": 13,
+        "SPECIFIC_FAMILY": 12,
         "CONTAINER": 5,
-        "NOT_DECLARED": 44,
+        "NOT_DECLARED": 43,
     }, {k: len(v) for k, v in buckets.items()}
     gated = gated_pairs(sites)
     specific = {(f, whole) for f, _, _, whole in buckets["SPECIFIC_FAMILY"]}
@@ -901,15 +901,15 @@ def test_family_gate_counts_the_specific_family_knowledge_sites():
 
 
 def test_family_gate_keeps_container_and_unregistered_planes_visible_but_uncounted():
-    """「可见不计」两面：容器本身 5 处 + 不在任何族下 44 处，都在扫描输出里、都不在门禁集合里。
+    """「可见不计」两面：容器本身 5 处 + 不在任何族下 43 处，都在扫描输出里、都不在门禁集合里。
 
     这条是 AC-02 末句的承重判据 —— 把容器 `.omo/_knowledge` 当成可计族（或把整串 marker 加进
-    `GATED_MARKERS`）会当场把它打红，因为那时这 49 处全部进 `gated`。
+    `GATED_MARKERS`）会当场把它打红，因为那时这 48 处全部进 `gated`。
     """
     sites = scan_checkout_pinned_sites(ROOT)
     buckets = knowledge_bucket(sites)
     uncounted = buckets["CONTAINER"] + buckets["NOT_DECLARED"]
-    assert len(uncounted) == 49, len(uncounted)  # 站点口径；同一文件的同名容器会并成一对
+    assert len(uncounted) == 48, len(uncounted)  # 站点口径；同一文件的同名容器会并成一对
     invisible = {(f, whole) for f, _, _, whole in uncounted}
     visible = {(f, whole) for f, _, m, whole in sites if m == ".omo/_knowledge"}
     assert invisible <= visible, "有站点从扫描里消失了 —— 排除面退化成不可见"
@@ -970,8 +970,8 @@ def test_family_table_is_load_bearing_and_single_sourced(monkeypatch):
         sys.modules[__name__], "GATEABLE_FAMILIES", frozenset(), raising=False
     )
     after = gated_pairs(sites)
-    assert after < before, "族表清空后门禁集合没变 —— 说明那 20 处不是族表带来的"
-    assert (len(after), len(before)) == (138, 158), (len(after), len(before))
+    assert after < before, "族表清空后门禁集合没变 —— 说明那 18 处不是族表带来的"
+    assert (len(after), len(before)) == (134, 152), (len(after), len(before))
 
 
 

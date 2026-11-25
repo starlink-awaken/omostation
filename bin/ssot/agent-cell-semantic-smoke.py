@@ -21,8 +21,31 @@ from typing import Any
 
 _CONFIGURED_ROOT = os.environ.get("AGENT_CELL_ROOT") or os.environ.get("PANORAMA_ROOT")
 ROOT = Path(_CONFIGURED_ROOT).resolve() if _CONFIGURED_ROOT else Path(__file__).resolve().parents[2]
+
+for _candidate_lib in (Path(__file__).resolve().parents[1] / "lib", ROOT / "bin" / "lib"):
+    if _candidate_lib.is_dir() and str(_candidate_lib) not in sys.path:
+        sys.path.insert(0, str(_candidate_lib))
+
+try:
+    from repo_root import state_root  # noqa: E402
+except ModuleNotFoundError:  # standalone host copy without sibling bin/lib
+    def state_root() -> Path:
+        env = os.environ.get("OMOSTATION_STATE_ROOT")
+        return Path(env).expanduser().absolute() if env else ROOT
 _CONFIGURED_STATE_DIR = os.environ.get("AGENT_CELL_STATE_DIR")
-STATE_DIR = Path(_CONFIGURED_STATE_DIR).resolve() if _CONFIGURED_STATE_DIR else ROOT / ".omo/state/agent-cell/semantic"
+STATE_DIR_RELATIVE = ".omo/state/agent-cell/semantic"
+STATE_DIR: Path | None = Path(_CONFIGURED_STATE_DIR).resolve() if _CONFIGURED_STATE_DIR else None
+
+
+def _state_dir() -> Path:
+    if STATE_DIR is not None:
+        return STATE_DIR
+    configured = os.environ.get("AGENT_CELL_STATE_DIR")
+    if configured:
+        return Path(configured).resolve()
+    if os.environ.get("OMOSTATION_STATE_ROOT"):
+        return state_root() / STATE_DIR_RELATIVE
+    return ROOT / STATE_DIR_RELATIVE
 SCHEMA = "agent-cell-semantic-smoke/v1"
 PLANNER = "role:agent-cell-semantic-planner"
 EXECUTOR = "role:agent-cell-semantic-executor"
@@ -100,8 +123,9 @@ def run_smoke() -> dict[str, Any]:
     except ImportError as exc:
         raise RuntimeError("OMO source is unavailable; initialize projects/omo") from exc
 
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    registry = RoleRegistry(STATE_DIR / "roles.jsonl")
+    active_state_dir = _state_dir()
+    active_state_dir.mkdir(parents=True, exist_ok=True)
+    registry = RoleRegistry(active_state_dir / "roles.jsonl")
     planner = _ensure_role(registry, PLANNER, "semantic.plan")
     executor = _ensure_role(registry, EXECUTOR, "semantic.execute")
     if not registry.verify_role(PLANNER, "semantic.plan").allowed:
@@ -139,13 +163,13 @@ def run_smoke() -> dict[str, Any]:
         consumer_role=EXECUTOR,
         payload_digest=payload_digest,
     )
-    capsule_store = CapsuleStore(STATE_DIR / "capsules.jsonl")
+    capsule_store = CapsuleStore(active_state_dir / "capsules.jsonl")
     capsule_store.append(capsule)
 
-    mesh = WorkflowMeshStore(STATE_DIR / ".omo")
+    mesh = WorkflowMeshStore(active_state_dir / ".omo")
     handoff = record_capsule_handoff(mesh, capsule)
 
-    queue = TaskQueue(STATE_DIR / "task-queue.sqlite3", max_queue=32, max_attempts=1)
+    queue = TaskQueue(active_state_dir / "task-queue.sqlite3", max_queue=32, max_attempts=1)
     task_payload = {
         "capsule_id": capsule.capsule_id,
         "capsule_digest": capsule.digest,
@@ -167,17 +191,17 @@ def run_smoke() -> dict[str, Any]:
 
     # Reload every durable store and verify the persisted lifecycle, not only
     # the in-memory objects used to create it.
-    roles = RoleRegistry(STATE_DIR / "roles.jsonl")
-    capsules = CapsuleStore(STATE_DIR / "capsules.jsonl")
+    roles = RoleRegistry(active_state_dir / "roles.jsonl")
+    capsules = CapsuleStore(active_state_dir / "capsules.jsonl")
     reloaded_capsule = capsules.get(capsule.capsule_id)
-    reloaded_mesh = WorkflowMeshStore(STATE_DIR / ".omo")
+    reloaded_mesh = WorkflowMeshStore(active_state_dir / ".omo")
     handoff_events = [
         event
         for event in reloaded_mesh.events()
         if event.get("payload", {}).get("handoff", {}).get("capsule", {}).get("capsule_id")
         == capsule.capsule_id
     ]
-    persisted_task = TaskQueue(STATE_DIR / "task-queue.sqlite3").get(submitted.task_id)
+    persisted_task = TaskQueue(active_state_dir / "task-queue.sqlite3").get(submitted.task_id)
     ok = bool(
         roles.verify_role(PLANNER, "semantic.plan").allowed
         and roles.verify_role(EXECUTOR, "semantic.execute").allowed
@@ -221,12 +245,12 @@ def run_smoke() -> dict[str, Any]:
         "external_side_effects": "none",
         "value_claim": "NOT_PROVEN",
     }
-    stored_receipt = _append_receipt(STATE_DIR / "semantic-smoke-receipts.jsonl", receipt)
+    stored_receipt = _append_receipt(active_state_dir / "semantic-smoke-receipts.jsonl", receipt)
     return {
         "schema": SCHEMA,
         "ok": True,
         "run_id": run_id,
-        "state_dir": str(STATE_DIR),
+        "state_dir": str(active_state_dir),
         "capsule_id": capsule.capsule_id,
         "task_id": submitted.task_id,
         "receipt_digest": stored_receipt["receipt_digest"],
@@ -238,7 +262,8 @@ def run_smoke() -> dict[str, Any]:
 
 def verify_latest() -> dict[str, Any]:
     """Verify the durable receipt chain and latest cross-store bindings."""
-    receipts = _load_jsonl(STATE_DIR / "semantic-smoke-receipts.jsonl")
+    active_state_dir = _state_dir()
+    receipts = _load_jsonl(active_state_dir / "semantic-smoke-receipts.jsonl")
     if not receipts:
         return {"schema": SCHEMA, "ok": True, "verdict": "EMPTY", "receipt_count": 0}
     try:
@@ -254,13 +279,13 @@ def verify_latest() -> dict[str, Any]:
             "receipt_count": len(receipts),
             "error": f"OMO source unavailable: {type(exc).__name__}",
         }
-    roles_path = STATE_DIR / "roles.jsonl"
-    capsules_path = STATE_DIR / "capsules.jsonl"
-    queue_path = STATE_DIR / "task-queue.sqlite3"
+    roles_path = active_state_dir / "roles.jsonl"
+    capsules_path = active_state_dir / "capsules.jsonl"
+    queue_path = active_state_dir / "task-queue.sqlite3"
     roles = RoleRegistry(roles_path)
     capsules = CapsuleStore(capsules_path)
     queue = TaskQueue(queue_path)
-    mesh = WorkflowMeshStore(STATE_DIR / ".omo")
+    mesh = WorkflowMeshStore(active_state_dir / ".omo")
     mesh_events = mesh.events()
     capsules_by_id = {record.capsule_id: record for record in capsules.list()}
     previous = None

@@ -26,6 +26,7 @@ EXPECTED_FILES = {
     "runtime_paths.py": "runtime_paths.py.asset",
     "observatory_query.py": "observatory_query.py.asset",
     "panorama-collect-main.py": "panorama-collect-main.py.asset",
+    "panel-collect.py": "panel-collect.py.asset",
     "copilot_service.py": "copilot_service.py.asset",
     "rag_engine.py": "rag_engine.py.asset",
     "strategy_sources.py": "strategy_sources.py.asset",

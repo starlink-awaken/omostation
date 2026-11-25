@@ -2697,7 +2697,7 @@ def collect_agent_cell_pool() -> dict:
     projection reads the canonical JSON file directly.  Only bounded summaries
     are exposed; prompts, plans, results, and other context never enter the UI.
     """
-    state_file = ROOT / ".omo/state/agent-cell/cell_states.json"
+    state_file = state_file_read(".omo/state/agent-cell/cell_states.json", root=ROOT)
     projection = {
         "schema": "agent-cell-pool-projection/v1",
         "source": "runtime://.omo/state/agent-cell/cell_states.json",
@@ -2812,9 +2812,15 @@ def _verify_agent_cell_semantic() -> dict:
     environment = os.environ.copy()
     omo_src = str(ROOT / "projects/omo/src")
     environment["PYTHONPATH"] = omo_src + (os.pathsep + environment["PYTHONPATH"] if environment.get("PYTHONPATH") else "")
+    command = [sys.executable, str(verifier), "--verify", "--json"]
+    if "AGENT_CELL_STATE_DIR" not in environment and os.environ.get("OMOSTATION_STATE_ROOT"):
+        semantic_dir = state_root() / ".omo/state/agent-cell/semantic"
+        if semantic_dir.is_dir():
+            command.extend(["--state-dir", str(semantic_dir)])
+            environment["AGENT_CELL_STATE_DIR"] = str(semantic_dir)
     try:
         completed = subprocess.run(
-            [sys.executable, str(verifier), "--verify", "--json"],
+            command,
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -4102,13 +4108,13 @@ def collect_signal_poller() -> dict:
     """信号轮询器状态：watermark / 连接器 / 派发计数。"""
     import json as _json
     watermarks: dict[str, dict] = {}
-    wm_path = ROOT / ".omo/_delivery/signal-poller/watermarks.json"
+    wm_path = state_file_read(".omo/_delivery/signal-poller/watermarks.json", root=ROOT)
     if wm_path.exists():
         try:
             watermarks = _json.loads(wm_path.read_text())
         except Exception:
             watermarks = {}
-    state_path = ROOT / ".omo/state/signal-poller-state.json"
+    state_path = state_file_read(".omo/state/signal-poller-state.json", root=ROOT)
     state = {}
     if state_path.exists():
         try:
@@ -4122,7 +4128,7 @@ def collect_signal_poller() -> dict:
     # polling was actively happening. dry_run_skipped counts too: "polled" !=
     # "acted on".
     poll_count = 0
-    log_path = ROOT / ".omo/_delivery/signal-poller/poll-log.jsonl"
+    log_path = state_file_read(".omo/_delivery/signal-poller/poll-log.jsonl", root=ROOT)
     if log_path.exists():
         try:
             poll_count = sum(1 for line in log_path.read_text().splitlines() if line.strip())
@@ -4146,15 +4152,16 @@ def collect_journey_executions() -> dict:
     so every candidate path is read and merged.
     """
     import json as _json
-    event_paths = [
-        ROOT / ".omo/_delivery/observability/events.jsonl",
-        ROOT / ".omo/_knowledge/workflow-mesh/events.jsonl",
-        ROOT / ".omo/_delivery/event-ingest/events.jsonl",
-        ROOT / ".omo/_delivery/agent-workflows/events.jsonl",
-    ]
+    event_rels = (
+        ".omo/_delivery/observability/events.jsonl",
+        ".omo/_knowledge/workflow-mesh/events.jsonl",
+        ".omo/_delivery/event-ingest/events.jsonl",
+        ".omo/_delivery/agent-workflows/events.jsonl",
+    )
+    resolved_paths = [(rel, state_file_read(rel, root=ROOT)) for rel in event_rels]
     escalated = succeeded = failed = 0
     escalated_by_scene: dict[str, int] = {}
-    for events_path in event_paths:
+    for _rel, events_path in resolved_paths:
         if not events_path.exists():
             continue
         for line in events_path.read_text().strip().splitlines():
@@ -4187,7 +4194,7 @@ def collect_journey_executions() -> dict:
         "total": total,
         "auto_complete_rate": round(succeeded / total, 3) if total else None,
         "top_escalated": sorted(escalated_by_scene.items(), key=lambda x: -x[1])[:5],
-        "event_paths_scanned": [str(p.relative_to(ROOT)) for p in event_paths if p.exists()],
+        "event_paths_scanned": [rel for rel, p in resolved_paths if p.exists()],
     }
 
 
@@ -4457,12 +4464,12 @@ def collect_memory_dual_track() -> dict:
     """记忆双轨：Raw + Theta。"""
     raw_events = []
     try:
-        with open(ROOT / ".omo/_knowledge/governance-history.jsonl") as f:
+        with open(state_file_read(".omo/_knowledge/governance-history.jsonl", root=ROOT)) as f:
             raw_events = f.readlines()[-15:]
     except Exception:
         pass
     theta_facts = 0
-    theta_file = ROOT / ".omo/state/mos/theta-facts.json"
+    theta_file = state_file_read(".omo/state/mos/theta-facts.json", root=ROOT)
     if theta_file.is_file():
         try:
             import json
@@ -4666,7 +4673,7 @@ def collect_skill_inventory() -> dict:
 
 def collect_theta_facts() -> dict:
     """Theta 事实：MOS 提取的结构化事实。"""
-    theta_file = ROOT / ".omo/state/mos/theta-facts.json"
+    theta_file = state_file_read(".omo/state/mos/theta-facts.json", root=ROOT)
     facts = []
     if theta_file.is_file():
         try:
@@ -5489,8 +5496,10 @@ def build_payload() -> dict:
     ci_data = collect_ci()
     asd = collect_asd()
     workspace_observation = _collect_workspace_hygiene_observation()
+    generated_at = datetime.now(UTC).isoformat()
     payload = {
-        "generated_at": datetime.now(UTC).isoformat(),
+        "generated_at": generated_at,
+        "observed_at": generated_at,
         "mode": "read-only-ssot-aggregation",
         "release_manifest": collect_release_manifest(),
         "gates": collect_gates({"asd": asd}),
@@ -5643,6 +5652,11 @@ def build_payload() -> dict:
                         pass
     except Exception:
         _strategic = None
+    if not isinstance(payload.get("refresh"), dict):
+        payload["refresh"] = {
+            "observed_at": payload["observed_at"],
+            "failed_sources": [],
+        }
     payload["direct_observation_envelope"]["generation_id"] = payload["generation_id"]
     payload["strategic"] = _strategic or _build_strategic_projection(payload)
     # objective_coverage must run AFTER panel_value is attached so BUSINESS_VALUE

@@ -32,17 +32,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Literal
 
 from _shared import ROOT, load_yaml, utc_now
 
+_LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
+from repo_root import state_file_read  # noqa: E402
+
 SIGNAL_SOURCES = ROOT / ".omo" / "_truth" / "registry" / "signal-sources.yaml"
-POLLER_STATE = ROOT / ".omo" / "state" / "signal-poller-state.json"
+_DEFAULT_POLLER_STATE = ROOT / ".omo" / "state" / "signal-poller-state.json"
 # T2-03: poller 信号落盘面 — 真实 last_signal_at (registry yaml 值为注册期死值)
-SIGNALS_FILE = ROOT / ".omo" / "state" / "signal-signals.json"
+_DEFAULT_SIGNALS_FILE = ROOT / ".omo" / "state" / "signal-signals.json"
+POLLER_STATE = _DEFAULT_POLLER_STATE
+SIGNALS_FILE = _DEFAULT_SIGNALS_FILE
 
 # Freshness multiplier: 2x poll_interval per schema_contract.health_must_not
 FRESHNESS_MULTIPLIER = 2
@@ -221,9 +230,14 @@ def derive_health(
 
 def _load_poller_state() -> dict[str, str]:
     """Load signal-poller-state.json (availability data)."""
-    if POLLER_STATE.exists():
+    path = (
+        POLLER_STATE
+        if POLLER_STATE != _DEFAULT_POLLER_STATE
+        else state_file_read(".omo/state/signal-poller-state.json", root=ROOT)
+    )
+    if path.exists():
         try:
-            return json.loads(POLLER_STATE.read_text(encoding="utf-8"))
+            return json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
     return {}
@@ -231,9 +245,14 @@ def _load_poller_state() -> dict[str, str]:
 
 def _load_last_signals() -> dict[str, str]:
     """T2-03: 读取 poller 落盘的真实 last_signal_at (source_id → ISO ts)."""
-    if SIGNALS_FILE.exists():
+    path = (
+        SIGNALS_FILE
+        if SIGNALS_FILE != _DEFAULT_SIGNALS_FILE
+        else state_file_read(".omo/state/signal-signals.json", root=ROOT)
+    )
+    if path.exists():
         try:
-            return json.loads(SIGNALS_FILE.read_text(encoding="utf-8"))
+            return json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
     return {}
