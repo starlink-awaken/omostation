@@ -8,7 +8,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
+
+# 下面两条直接读 omo 内核源码做「已修正树」对照; 干净检出上该文件缺席属输入没备齐。
+_OMO_CLI_SRC = REPO_ROOT / "projects" / "omo" / "src" / "omo" / "cli.py"
+_REQUIRES_OMO_CLI = pytest.mark.skipif(
+    not _OMO_CLI_SRC.exists(),
+    reason=(
+        f"omo 内核源码缺席: {_OMO_CLI_SRC} —— "
+        "先 `git submodule update --init projects/omo`（检出形态, 不是回归）"
+    ),
+)
 SCRIPT = REPO_ROOT / "bin" / "gac" / "check-sfop-slots.py"
 
 
@@ -496,6 +508,7 @@ class TestCellEntryBypass:
         assert any("naming dispatch_backend does not fail-close" in err for err in result["errors"])
         assert mod.cell_entry_bypass_errors("dispatch_backend") != []
 
+    @_REQUIRES_OMO_CLI
     def test_swallowed_dispatch_function_fails(self, tmp_path: Path) -> None:
         mod = _load_mod()
         corrected = (REPO_ROOT / "projects/omo/src/omo/cli.py").read_text(encoding="utf-8")
@@ -503,6 +516,7 @@ class TestCellEntryBypass:
         assert result["ok"] is False
         assert any("dispatch_backend hides an event-write error" in err for err in result["errors"])
 
+    @_REQUIRES_OMO_CLI
     def test_corrected_tree_has_no_cr_sfop_03(self, tmp_path: Path) -> None:
         mod = _load_mod()
         cli = (REPO_ROOT / "projects/omo/src/omo/cli.py").read_text(encoding="utf-8")
