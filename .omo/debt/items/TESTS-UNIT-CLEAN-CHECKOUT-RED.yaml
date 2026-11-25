@@ -190,3 +190,25 @@ history:
       (c) 继续续期 —— 但按现有措辞会一再过期, 且掩盖「声明指向不存在的实现」。
     **本轮不动**: 删改能力目录属对外声明面变更, 超出测试判据类改动的授权; 先把证据摆出来。
   actor: "governance-agent"
+- at: "2026-11-25T06:25:00+00:00"
+  action: evaluate
+  note: >-
+    **收口读数（#5551 之后全平面复跑）**: 4 片并行 `pytest tests/test_*.py` ——
+    shard1 `3F/596P/10S → 0F/596P/13S`, shard2 `2F/635P/3S → 0F/635P/5S`,
+    shard3 `0F/787P` 不变, shard0 `1F/1019P → 2F/1018P`。
+    **预期外多出的一条**: `test_agent_workflow.py::test_compliance_auto_fix_orphan_lock`
+    —— 单跑 1 passed（**非确定性**）。首因: 该用例对**真实根**跑
+    `agent-workflow.py compliance` 并断言输出里没有 `orphan_lock`; 而 compliance 读的是
+    **跨 worktree 共享的锁面** `.omo/_delivery/agent-workflows/`（symlink 到 canonical,
+    见 AGENTS.md §6「治理协调面是全机共享面」）。并发 agent 只要在跑/留锁, 该断言就红 ——
+    实测失败输出里带 `active_runs=1`, 即当时确实有一个他在跑的 run。
+    与 §7 已记的「verify 会跑断言共享主区 host 运行态的检查 —— 并发环境下」同一条,
+    这不是新形状, 是该判据在**顶层平面**的又一处实例。
+    **本轮不动**: 修法要么把用例改成在隔离 workspace 里**种**一个孤儿锁再断言被清掉
+    （需要能造出合规的根结构）, 要么在共享面上种/清锁 —— 后者会动别人的活锁
+    （§6 已实证 prune 会拆掉 active run 的锁）, 风险不可接受。先登记待裁。
+    **结论**: 顶层平面残余 = **1 条稳定真信号**（`KNOWN_GAP_EXPIRES`, 另条深挖见上）
+    + **1 条并发敏感**（本条）。环境性失败已清零。
+    **纪律**: 「6 条」那个读数本身也只是在**当时**的并发状态下成立 —— 平面里有并发敏感用例时,
+    任何一次读数都要标注采集时刻, 不能当成稳态常量引用。
+  actor: "governance-agent"
