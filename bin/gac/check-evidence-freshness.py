@@ -140,10 +140,15 @@ def main(argv: list[str] | None = None) -> int:
     ok = len(violations) == 0
 
     if args.json:
+        # `measured=false` 是 GATE-CLEAN-CHECKOUT-NOISE 的「check 自报没测成」契约:
+        # 报告生成失败时本 check 没有产出任何测量值, 不该以 score=0.0 混进「测出红」
+        # (见 `_declared_not_measured`)。判定语义不变 —— 退出码仍是 1。
         print(
             json.dumps(
                 {
                     "ok": ok,
+                    "measured": measured,
+                    "reason": None if measured else "generation_failed",
                     "score": score,
                     "age_days": age_days,
                     "max_age_days": MAX_AGE.days,

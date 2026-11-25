@@ -333,7 +333,9 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-evidence-freshness",
-            "command": ["bin/gac/check-evidence-freshness.py"],
+            # --json: 让本 check 能在报告生成失败时自报 `measured: false`
+            # (GATE-CLEAN-CHECKOUT-NOISE), 而不是把 `score=0.0` 混进「测出红」。
+            "command": ["bin/gac/check-evidence-freshness.py", "--json"],
         },
         {
             "id": "check-governance-trend",
