@@ -27,6 +27,15 @@ set -euo pipefail
 
 INSTALL_ROOT="${OMOSTATION_INSTALL_ROOT:-$HOME/.local/opt/omostation}"
 CHECKOUT="${OMOSTATION_CHECKOUT:-$HOME/Workspace}"
+if [[ -z "${OMOSTATION_CODE_MAIN+x}" ]]; then
+  if [[ "$INSTALL_ROOT" == "$HOME/.local/opt/omostation" ]]; then
+    CODE_MAIN="$HOME/.local/share/zhixing-dashboard/code-main"
+  else
+    CODE_MAIN=""
+  fi
+else
+  CODE_MAIN="$OMOSTATION_CODE_MAIN"
+fi
 DEFAULT_REF="origin/main"
 
 if [[ ! -d "$INSTALL_ROOT/.git" ]]; then
@@ -35,6 +44,7 @@ if [[ ! -d "$INSTALL_ROOT/.git" ]]; then
 fi
 
 current_anchor() { git -C "$INSTALL_ROOT" rev-parse HEAD 2>/dev/null || echo "(none)"; }
+has_code_main() { [[ -n "$CODE_MAIN" && -e "$CODE_MAIN/.git" ]]; }
 
 CHECK_ONLY=0
 case "${1:-}" in
@@ -44,6 +54,11 @@ case "${1:-}" in
     echo "anchor_date:   $(git -C "$INSTALL_ROOT" log -1 --format=%ci 2>/dev/null || echo '-')"
     echo "origin_main:   $(git -C "$INSTALL_ROOT" rev-parse "$DEFAULT_REF" 2>/dev/null || echo '-')"
     echo "checkout_sha:  $(git -C "$CHECKOUT" rev-parse HEAD 2>/dev/null || echo '-') (读平面, 仅参考)"
+    if has_code_main; then
+      echo "code_main:     $CODE_MAIN"
+      echo "code_main_sha: $(git -C "$CODE_MAIN" rev-parse HEAD 2>/dev/null || echo '-')"
+      echo "code_main_ref: $(git -C "$CODE_MAIN" rev-parse refs/remotes/origin/main 2>/dev/null || echo '-')"
+    fi
     if [[ -f "$INSTALL_ROOT/runtime/release-manifest.json" ]]; then
       echo "manifest:      $INSTALL_ROOT/runtime/release-manifest.json"
     fi
@@ -104,8 +119,21 @@ fi
 
 checkout_sha="$(git -C "$CHECKOUT" rev-parse HEAD 2>/dev/null || echo '-')"
 
+check_code_main_alignment() {
+  has_code_main || return 0
+  local cm_head cm_ref
+  cm_head="$(git -C "$CODE_MAIN" rev-parse HEAD 2>/dev/null || echo '-')"
+  cm_ref="$(git -C "$CODE_MAIN" rev-parse refs/remotes/origin/main 2>/dev/null || echo '-')"
+  if [[ "$cm_head" != "$target" || "$cm_ref" != "$target" ]]; then
+    echo "code-main 与目标 origin/main 不一致 ($CODE_MAIN): head=$cm_head origin/main=$cm_ref 目标=$target"
+    echo "  → 驾驶舱采集可能抛 projection_code_root_not_current_main; 重锚: bin/ssot/anchor-install-root.sh"
+    exit 1
+  fi
+}
+
 if [[ "$CHECK_ONLY" = 1 ]]; then
   if [[ "$cur" == "$target" ]]; then
+    check_code_main_alignment
     echo "锚点一致 origin/main: $cur"
     exit 0
   fi
@@ -118,6 +146,7 @@ if [[ "$CHECK_ONLY" = 1 ]]; then
     echo "  → 常驻族在跑旧代码; 重锚: bin/ssot/anchor-install-root.sh"
     exit 1
   fi
+  check_code_main_alignment
   echo "锚点 ($cur) 不落后于 origin/main ($target): behind=${behind} ahead=${ahead}"
   echo "  检出根 HEAD=$checkout_sha (读平面, 仅参考)"
   exit 0
@@ -159,11 +188,45 @@ if [[ -n "$dirty_status" && "${ANCHOR_ALLOW_DIRTY:-0}" != "1" ]]; then
   exit 6
 fi
 
+if has_code_main; then
+  cm_dirty="$(git -C "$CODE_MAIN" status --porcelain=v1 --untracked-files=all --ignore-submodules=all 2>/dev/null || true)"
+  if [[ -n "$cm_dirty" && "${ANCHOR_ALLOW_DIRTY:-0}" != "1" ]]; then
+    echo "拒绝: code-main 工作区存在未提交的修改 (dirty): $CODE_MAIN" >&2
+    echo "$cm_dirty" | head -20 >&2
+    echo "  请先清理 $CODE_MAIN，或使用 ANCHOR_ALLOW_DIRTY=1 显式放行。" >&2
+    exit 6
+  fi
+fi
+
 git -C "$INSTALL_ROOT" checkout --detach "$target" >/dev/null
 echo "-- 同步子模块"
 git -C "$INSTALL_ROOT" submodule update --init --recursive --no-fetch >/dev/null 2>&1 || git -C "$INSTALL_ROOT" submodule update --init --recursive >/dev/null 2>&1 || true
 echo "-- 同步 omo venv (常驻族运行依赖)"
 (cd "$INSTALL_ROOT/projects/omo" && uv sync --frozen >/dev/null 2>&1) || echo "   ⚠️ omo venv 同步失败 (需人工检查)"
+
+code_main_sha=""
+if has_code_main; then
+  echo "-- 同步 code-main (从安装位直拉 HEAD，防本地只读仓 refs/heads/main 倒退)"
+  if ! git -C "$CODE_MAIN" fetch --no-tags "$INSTALL_ROOT" "+HEAD:refs/remotes/origin/main" >/dev/null 2>&1; then
+    echo "同步 code-main 失败: 无法从安装位 $INSTALL_ROOT 拉取 $target" >&2
+    exit 7
+  fi
+  cm_fetched="$(git -C "$CODE_MAIN" rev-parse refs/remotes/origin/main 2>/dev/null || echo '-')"
+  if [[ "$cm_fetched" != "$target" ]]; then
+    echo "同步 code-main 校验失败: refs/remotes/origin/main=$cm_fetched != $target" >&2
+    exit 7
+  fi
+  git -C "$CODE_MAIN" checkout --detach "$target" >/dev/null
+  if [[ -f "$CODE_MAIN/.gitmodules" ]]; then
+    for _sm in projects/omo projects/ecos; do
+      if grep -q "path = ${_sm}$" "$CODE_MAIN/.gitmodules" 2>/dev/null; then
+        git -C "$CODE_MAIN" submodule update --init --no-fetch "$_sm" >/dev/null 2>&1 || \
+          git -C "$CODE_MAIN" submodule update --init "$_sm" >/dev/null 2>&1 || true
+      fi
+    done
+  fi
+  code_main_sha="$(git -C "$CODE_MAIN" rev-parse HEAD 2>/dev/null || true)"
+fi
 
 echo "-- 生成发布溯源清单 (release-manifest.json)"
 cur_anchor_sha="$(current_anchor)"
@@ -175,6 +238,8 @@ install_root = sys.argv[1]
 target = sys.argv[2]
 cur_head = sys.argv[3]
 checkout_sha = sys.argv[4]
+code_main = sys.argv[5]
+code_main_sha = sys.argv[6]
 
 submodules = {}
 try:
@@ -198,8 +263,11 @@ manifest = {
     'producer': 'bin/ssot/anchor-install-root.sh',
     'submodule_shas': submodules,
 }
+if code_main_sha:
+    manifest['code_main'] = code_main
+    manifest['code_main_sha'] = code_main_sha
 print(json.dumps(manifest, indent=2))
-" "$INSTALL_ROOT" "$target" "$cur_anchor_sha" "$checkout_sha")"
+" "$INSTALL_ROOT" "$target" "$cur_anchor_sha" "$checkout_sha" "$CODE_MAIN" "$code_main_sha")"
 
 mkdir -p "$INSTALL_ROOT/runtime" 2>/dev/null || true
 if [[ -d "$INSTALL_ROOT/runtime" ]]; then

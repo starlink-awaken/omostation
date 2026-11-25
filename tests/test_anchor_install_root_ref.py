@@ -76,6 +76,7 @@ def _run(planes: dict[str, str], *a: str, checkout_commit: str | None = None,
         **_ENV_BASE,
         "OMOSTATION_INSTALL_ROOT": planes["install"],
         "OMOSTATION_CHECKOUT": planes["checkout"],
+        "OMOSTATION_CODE_MAIN": "",
         **(env_extra or {}),
     }
     return subprocess.run(["bash", str(SCRIPT), *a], capture_output=True, text=True, env=env, check=False)
@@ -218,6 +219,63 @@ def test_reanchor_is_idempotent_on_consecutive_runs(planes, tmp_path):
     r2 = _run(planes)
     assert r2.returncode == 0, f"前进后重锚不应因自身 manifest 自阻: {r2.stdout} {r2.stderr}"
     assert _git(Path(planes["install"]), "rev-parse", "HEAD").stdout.strip() == sha2
+
+
+def test_reanchor_syncs_code_main_without_regressing_from_stale_checkout_origin(planes, tmp_path):
+    """code-main 的 origin 指向陈旧只读检出时，重锚必须从安装位直拉并更新 origin/main，绝不倒退。"""
+    code_main = tmp_path / "code-main"
+    _git(tmp_path, "clone", "-q", planes["checkout"], str(code_main))
+
+    sha = _advance_origin_main(planes, tmp_path, 2)
+    extra = {"OMOSTATION_CODE_MAIN": str(code_main)}
+
+    r = _run(planes, env_extra=extra)
+    assert r.returncode == 0, f"{r.stdout} {r.stderr}"
+    assert _git(code_main, "rev-parse", "HEAD").stdout.strip() == sha
+    assert _git(code_main, "rev-parse", "refs/remotes/origin/main").stdout.strip() == sha
+
+    import json
+    data = json.loads((Path(planes["install"]) / "runtime" / "release-manifest.json").read_text(encoding="utf-8"))
+    assert data["code_main"] == str(code_main)
+    assert data["code_main_sha"] == sha
+
+    # 连续重锚与 --check 均须幂等通过
+    assert _run(planes, env_extra=extra).returncode == 0
+    assert _run(planes, "--check", env_extra=extra).returncode == 0
+    st = _run(planes, "--status", env_extra=extra)
+    assert st.returncode == 0
+    assert f"code_main_sha: {sha}" in st.stdout
+
+
+def test_check_fails_when_code_main_lags_behind_target(planes, tmp_path):
+    """安装位已对齐 origin/main、但 code-main 滞后时，--check 必须失败 (exit 1)。"""
+    code_main = tmp_path / "code-main"
+    _git(tmp_path, "clone", "-q", planes["origin"], str(code_main))
+
+    sha = _advance_origin_main(planes, tmp_path, 1)
+    _git(Path(planes["install"]), "fetch", "-q", "origin")
+    _git(Path(planes["install"]), "checkout", "-q", "--detach", sha)
+
+    r = _run(planes, "--check", env_extra={"OMOSTATION_CODE_MAIN": str(code_main)})
+    assert r.returncode == 1, f"code-main 滞后必须 exit 1: {r.stdout} {r.stderr}"
+    assert "code-main" in r.stdout
+
+
+def test_dirty_code_main_is_rejected_without_opt_in(planes, tmp_path):
+    """code-main 工作区存在未提交改动时拒绝重锚 (exit 6)，ANCHOR_ALLOW_DIRTY=1 方可放行。"""
+    code_main = tmp_path / "code-main"
+    _git(tmp_path, "clone", "-q", planes["origin"], str(code_main))
+    sha = _advance_origin_main(planes, tmp_path, 1)
+    (code_main / "dirty_cm.txt").write_text("uncommitted", encoding="utf-8")
+
+    r = _run(planes, env_extra={"OMOSTATION_CODE_MAIN": str(code_main)})
+    assert r.returncode == 6, f"dirty code-main 必须 exit 6: {r.stdout} {r.stderr}"
+    assert "code-main" in r.stderr
+    assert _git(Path(planes["install"]), "rev-parse", "HEAD").stdout.strip() == planes["c1"]
+
+    r_ok = _run(planes, env_extra={"OMOSTATION_CODE_MAIN": str(code_main), "ANCHOR_ALLOW_DIRTY": "1"})
+    assert r_ok.returncode == 0, f"{r_ok.stdout} {r_ok.stderr}"
+    assert _git(code_main, "rev-parse", "HEAD").stdout.strip() == sha
 
 
 if __name__ == "__main__":
