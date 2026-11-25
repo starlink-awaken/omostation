@@ -74,3 +74,22 @@ history:
     **纪律**: 修一类缺陷后, 立刻问「同一机制还有没有别的面」—— 本轮 #5585/#5588/#5590
     是同一根因（两套权威面）连续三次换面。
   actor: "governance-agent"
+- at: "2026-11-25T21:30:00+00:00"
+  action: evidence-reinforce
+  note: >-
+    **给选项 (a) 的可行性补一条实测（不代决）**：把「只在 DEFAULT、齐备树/CI 从不执行」的
+    6 条逐条手跑（origin/main `fec4b7cd`，子模块齐全的 worktree），**全部 rc=0**：
+
+    | gate | 命令 | rc | 末行 |
+    |---|---|---|---|
+    | `bdsk-shadow-sandbox` | `bin/gac/bdsk-shadow-sandbox.py` | 0 | `STATIC_CLEAR：不构成 Commit/Push/Merge 授权` |
+    | `debt-integrity-check` | `bin/gac/debt-integrity-check.py` | 0 | `All 130 seed items exist` |
+    | `error-knowledge-check` | `bin/gac/error-knowledge.py check` | 0 | `ok (58 pitfalls)` |
+    | `submodule-ancestry-gate`（改名自 `check-submodule-rewind`） | `bin/gac/check-submodule-rewind.py --range origin/main HEAD` | 0 | `未检测到子模块指针回退` |
+    | `sweep-index-check` | `bin/sweep/sweep_index.py --check`（注意路径是 `bin/sweep/`，非描述里的 `bin/ssot/`） | 0 | `INDEX.md matches 2 reports` |
+    | `test-coverage-check` | `bin/gac/test-coverage-check.py` | 0 | `所有 Python 项目均有测试目录` |
+
+    ⇒ 选项 (a)「DEFAULT 作并集底座、缺的 id 回填」**不会立刻变红**；仍待 owner 裁定是否回填
+    （本条不代决）。同时记一条装置口径：`DEFAULT_POLICY` 用正则数字 `"id":` 得 **75** 条，
+    条目正文写 74 —— 差 1 来自正则把嵌套/其它 `"id"` 也算入，**以 `GATES_LIST` 实际长度为准**。
+  actor: "governance-agent"
