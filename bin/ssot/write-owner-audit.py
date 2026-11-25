@@ -13,7 +13,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
@@ -134,9 +134,11 @@ def _candidate_receipt_logs() -> list[Path]:
     override = os.environ.get("OMO_DEBT_RECEIPT_LOG", "").strip()
     if override:
         return [Path(override).expanduser()]
-    candidates = [WORKSPACE / ".omo" / "_delivery" / "omo-debt-writes.jsonl"]
+    candidates: list[Path] = []
     if _is_real_checkout():
-        sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+        lib_dir = str(WORKSPACE / "bin" / "lib")
+        if lib_dir not in sys.path:
+            sys.path.insert(0, lib_dir)
         try:
             import repo_root
 
@@ -144,6 +146,7 @@ def _candidate_receipt_logs() -> list[Path]:
             candidates.append(
                 Path.home() / ".local" / "state" / "omostation" / "prod" / ".omo" / "_delivery" / "omo-debt-writes.jsonl"
             )
+            candidates.append(repo_root.code_root() / ".omo" / "_delivery" / "omo-debt-writes.jsonl")
             try:
                 candidates.append(repo_root.canonical_root() / ".omo" / "_delivery" / "omo-debt-writes.jsonl")
             except RuntimeError:
@@ -157,9 +160,11 @@ def _candidate_runs_dirs() -> list[Path]:
     override = os.environ.get("OMO_WORKFLOW_RUNS_DIR", "").strip()
     if override:
         return [Path(override).expanduser()]
-    candidates = [WORKSPACE / ".omo" / "_delivery" / "agent-workflows" / "runs"]
+    candidates: list[Path] = []
     if _is_real_checkout():
-        sys.path.insert(0, str(WORKSPACE / "bin" / "lib"))
+        lib_dir = str(WORKSPACE / "bin" / "lib")
+        if lib_dir not in sys.path:
+            sys.path.insert(0, lib_dir)
         try:
             import repo_root
 
@@ -175,6 +180,7 @@ def _candidate_runs_dirs() -> list[Path]:
                 / "agent-workflows"
                 / "runs"
             )
+            candidates.append(repo_root.code_root() / ".omo" / "_delivery" / "agent-workflows" / "runs")
             try:
                 candidates.append(repo_root.canonical_root() / ".omo" / "_delivery" / "agent-workflows" / "runs")
             except RuntimeError:
@@ -238,8 +244,8 @@ def _parse_iso_ts(value: object) -> datetime | None:
     except ValueError:
         return None
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def _run_is_fresh(data: dict, run_file: Path, cutoff: datetime) -> bool:
@@ -253,7 +259,7 @@ def _run_is_fresh(data: dict, run_file: Path, cutoff: datetime) -> bool:
             if ts is not None:
                 return ts >= cutoff
     try:
-        return datetime.fromtimestamp(run_file.stat().st_mtime, tz=timezone.utc) >= cutoff
+        return datetime.fromtimestamp(run_file.stat().st_mtime, tz=UTC) >= cutoff
     except OSError:
         return False
 
@@ -302,7 +308,7 @@ def _find_matching_workflow_claim(rel_path: str) -> dict | None:
     import yaml
 
     run_id_env = os.environ.get("AGENT_WORKFLOW_RUN_ID", "").strip()
-    cutoff = datetime.now(timezone.utc) - timedelta(days=_CLAIM_FRESHNESS_DAYS)
+    cutoff = datetime.now(UTC) - timedelta(days=_CLAIM_FRESHNESS_DAYS)
 
     if run_id_env:
         for runs_dir in _candidate_runs_dirs():
