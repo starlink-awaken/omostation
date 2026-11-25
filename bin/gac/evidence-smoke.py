@@ -132,15 +132,12 @@ KNOWN_GAP_PREFIXES: dict[str, str] = {
     # gbrain 已整合 (2026-06-25, 指向 gbrain serve stdio MCP)
     # system 已整合 (2026-06-25, 补 7 wrapper + 删 2 死声明, resolve率 99%)
     # protocols-layer 已删 (2026-06-26, kairon CLAUDE.md 明确历史别名非 live package, 删 BOS 声明)
-    # wps-office-mcp / wps-skills (2026-07-02, ToolBox 仓独立 ~/ToolBox/, 仓未 build dist/index.js.
-    #   治本: ToolBox maintainer 跑 build; 临时不计鸿沟, 30 天复查. 见 evidence-smoke #P0-④.)
-    "bos://capability/wps-office-mcp/": "ToolBox wps-office-mcp dist/index.js 未 build (external ~/ToolBox; re-audited 2026-10-13, extend to 2026-11-12)",
-    "bos://capability/wps-skills/": "ToolBox wps-skills dist/index.js 未 build (external ~/ToolBox; re-audited 2026-10-13, extend to 2026-11-12)",
+    # wps-office-mcp / wps-skills: 2026-11-25 Principal 1A 裁决正式下线 (实现目录与消费者均已消失，清空豁免).
     # kairon decision/graph: 2026-10-13 re-audit 移除豁免 — _check_internal 嵌套路径搜索
     #   (projects/*/*, 见其 370-379 行) 已落地, 治本完成, 不再需要豁免。
     # observatory: 2026-10-13 re-audit 移除豁免 — cockpit observatory/topology_engine.py 已落地。
 }
-KNOWN_GAP_EXPIRES = "2026-11-12"  # re-audit (was 2026-10-13; kairon/observatory 治本落地移除, wps 续期)
+KNOWN_GAP_EXPIRES: str | None = None  # 当前 0 项豁免 (2026-11-25 Principal 1A 裁决下线 wps-*)
 
 
 def _is_known_gap(uri: str) -> tuple[bool, str]:
