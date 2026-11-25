@@ -1,0 +1,124 @@
+"""Multica collector — reads Multica runtime/agent/squad data."""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+from datetime import datetime, timezone
+
+from collectors.base import CollectionError, DataCollector
+from collectors.registry import register
+
+_DEFAULT_MULTICA = "/Users/xiamingxing/.local/bin/multica"
+_ENTITIES = ("runtime", "agent", "squad")
+_RUNTIME_FIELDS = ("id", "name", "custom_name", "provider", "status", "last_seen_at")
+_AGENT_FIELDS = ("id", "name", "model", "runtime_id", "runtime_mode", "status", "permission_mode")
+_SQUAD_FIELDS = ("id", "name", "member_count", "leader_id")
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _merge_csv_tokens(existing: str, additions: tuple[str, ...]) -> str:
+    items: list[str] = []
+    for raw in existing.split(","):
+        token = raw.strip()
+        if token and token not in items:
+            items.append(token)
+    for token in additions:
+        if token not in items:
+            items.append(token)
+    return ",".join(items)
+
+
+def _multica_env(base_env: dict[str, str] | None = None) -> dict[str, str]:
+    env = dict(os.environ if base_env is None else base_env)
+    for key in ("NO_PROXY", "no_proxy"):
+        env[key] = _merge_csv_tokens(env.get(key, ""), ("api.multica.ai", ".multica.ai"))
+    # Disable Go hybrid mlkem key exchange, which intermittently times out against
+    # api.multica.ai on this network path (matches refresh.py.asset).
+    env["GODEBUG"] = _merge_csv_tokens(env.get("GODEBUG", ""), ("tlsmlkem=0",))
+    return env
+
+
+def _multica_binary(configured: str | None = None) -> str:
+    candidate = configured or os.environ.get("MULTICA_BIN")
+    if candidate:
+        return candidate
+    return shutil.which("multica") or _DEFAULT_MULTICA
+
+
+def _project_items(items: list, fields: tuple[str, ...]) -> list[dict]:
+    return [{key: entry.get(key) for key in fields} for entry in items if isinstance(entry, dict)]
+
+
+@register("multica", timeout=62)
+class MulticaCollector(DataCollector):
+    """Collect runtime, agent, and squad state from the multica CLI."""
+
+    name = "multica"
+    multica_bin: str | None = None
+
+    def collect(self) -> dict:
+        binary = _multica_binary(self.multica_bin)
+        env = _multica_env()
+        raw: dict[str, list] = {}
+        for entity in _ENTITIES:
+            try:
+                proc = subprocess.run(
+                    [binary, entity, "list", "--output", "json"],
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    timeout=18,
+                )
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                raise CollectionError(
+                    self.name,
+                    f"multica {entity} list failed: {str(exc)[:180]}",
+                    cause=exc,
+                ) from exc
+            if proc.returncode != 0:
+                detail = (proc.stderr or proc.stdout).strip()[:180] or f"exit={proc.returncode}"
+                raise CollectionError(
+                    self.name,
+                    f"multica {entity} list failed: {detail}",
+                )
+            try:
+                parsed = json.loads(proc.stdout)
+            except json.JSONDecodeError as exc:
+                raise CollectionError(
+                    self.name,
+                    f"multica {entity} list failed: invalid JSON ({exc.msg})",
+                    cause=exc,
+                ) from exc
+            if not isinstance(parsed, list):
+                raise CollectionError(
+                    self.name,
+                    f"multica {entity} list failed: expected list, got {type(parsed).__name__}",
+                )
+            raw[entity] = parsed
+
+        return {
+            "state": "OBSERVED",
+            "runtimes": _project_items(raw["runtime"], _RUNTIME_FIELDS),
+            "agents": _project_items(raw["agent"], _AGENT_FIELDS),
+            "squads": _project_items(raw["squad"], _SQUAD_FIELDS),
+            "observed_at": _now(),
+        }
+
+    def validate(self, data: dict) -> bool:
+        if not isinstance(data, dict):
+            return False
+        if "runtimes" in data:
+            return (
+                isinstance(data.get("runtimes"), list)
+                and isinstance(data.get("agents"), list)
+                and isinstance(data.get("squads"), list)
+            )
+        if "runtime" in data:
+            return isinstance(data.get("runtime"), (list, dict, type(None)))
+        return False

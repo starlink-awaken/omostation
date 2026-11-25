@@ -40,6 +40,7 @@ EXPECTED_FILES = {
     "collectors/agent_brief.py": "agent_brief_collector.py.asset",
     "collectors/base.py": "collectors.base.py.asset",
     "collectors/orca.py": "collectors.orca.py.asset",
+    "collectors/multica.py": "collectors.multica.py.asset",
     "collectors/ruflo.py": "ruflo_collector.py.asset",
     "collectors/environment.py": "collectors.environment.py.asset",
     "collectors/reference_cell.py": "reference_cell_collector.py.asset",

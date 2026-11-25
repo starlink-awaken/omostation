@@ -278,5 +278,22 @@ def test_dirty_code_main_is_rejected_without_opt_in(planes, tmp_path):
     assert _git(code_main, "rev-parse", "HEAD").stdout.strip() == sha
 
 
+def test_check_fails_when_code_main_tracked_files_dirty(planes, tmp_path):
+    """install 与 code-main SHA 对齐、但 code-main 存在已跟踪文件改动或脏子模块时，--check 必须 exit 1。"""
+    code_main = tmp_path / "code-main"
+    _git(tmp_path, "clone", "-q", planes["origin"], str(code_main))
+
+    sha = _advance_origin_main(planes, tmp_path, 1)
+    extra = {"OMOSTATION_CODE_MAIN": str(code_main)}
+    assert _run(planes, env_extra=extra).returncode == 0
+    assert _git(code_main, "rev-parse", "HEAD").stdout.strip() == sha
+
+    # 模拟已跟踪改动（与 orchestrator._run_collector 的 --untracked-files=no 同口径）
+    (code_main / "c1.txt").write_text("dirty tracked change\n", encoding="utf-8")
+    r = _run(planes, "--check", env_extra=extra)
+    assert r.returncode == 1, f"code-main tracked dirty 必须 exit 1: {r.stdout} {r.stderr}"
+    assert "managed_code_root_dirty" in r.stdout
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

@@ -91,6 +91,7 @@ HOST_FILES: tuple[tuple[str, str], ...] = (
     ("collectors/agent_brief.py", "agent_brief_collector.py.asset"),
     ("collectors/base.py", "collectors.base.py.asset"),
     ("collectors/orca.py", "collectors.orca.py.asset"),
+    ("collectors/multica.py", "collectors.multica.py.asset"),
     ("collectors/ruflo.py", "ruflo_collector.py.asset"),
     ("collectors/environment.py", "collectors.environment.py.asset"),
     # 2026-10-21: reference_cell 与 ruflo 的 verifier 路径此前是裸相对路径, 在
