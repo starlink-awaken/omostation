@@ -13,8 +13,22 @@ import io
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "bin" / "ssot" / "check-doc-l0-mapping.py"
+
+# 分母来自 L0 约束源 (projects/ecos); 干净检出上它缺席会让本检查直接报错,
+# 与用例要钉的「零分母判红」是两回事 -> 整个模块跳过。
+_L0_CONSTRAINTS_SRC = (
+    ROOT / "projects" / "ecos" / "src" / "ecos" / "ssot" / "registry" / "L0-constraints.yaml"
+)
+if not _L0_CONSTRAINTS_SRC.exists():
+    pytest.skip(
+        f"L0 约束源缺席: {_L0_CONSTRAINTS_SRC} —— "
+        "先 `git submodule update --init projects/ecos`（检出形态, 不是回归）",
+        allow_module_level=True,
+    )
 
 
 def _load():
