@@ -125,6 +125,13 @@ pre-push:
       description: "origin fetch+push URL 指向校验 (2026-09-13 强化: push URL 单独校验)"
       fix: "python3 bin/ssot/fix-remotes.py 2>/dev/null || git submodule update --init <空目录子模块>; git config remote.origin.url https://github.com/starlink-awaken/omostation.git"
 
+    - id: write-owner-audit
+      script: "bin/ssot/write-owner-audit.py --range auto --verify-local-proof"
+      blocking: true
+      timeout: 5
+      description: "写权限所有权审计 (本地 pre-push 阻断: 核验 broker SHA 回执或 agent-workflow claim)"
+      fix: "对 .omo/debt/ 请用 omo-debt CLI 写入，或先用 uv run --with pyyaml python bin/agent-workflow.py claim <run-id> --path <path> 认领路径"
+
 # ── post-checkout ───────────────────────────────────────────
 post-checkout:
   description: "分支检出后命名合规 + remote 自愈"
