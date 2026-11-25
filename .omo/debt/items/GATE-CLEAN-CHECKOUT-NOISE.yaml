@@ -229,3 +229,22 @@ history:
     原因登记成显式词汇表 `KNOWN_NOT_MEASURED_REASONS`（七项各有出处）,
     未登记即告警（#5596）。这条不变式此前只存在于分散的用例里, 现在门禁自己会叫。
   actor: 'governance-agent'
+- at: '2026-11-25T18:55:00+00:00'
+  action: evidence-reinforce
+  note: >-
+    **齐备树复核（2026-11-25, origin/main `5e42b573c`, 5 个子模块 init）**：
+    `--strict --json` 得 `hard_fails=3 / not_measured=3`, 三条红逐条定性完毕,
+    **没有一条是本轮新发现的仓库缺陷**：
+    ① `agent-workflow-doctor` —— stderr 直指 `projects/knowledge/kairon` 未检出
+       （`Distribution not found at: …/packages/kairon-observability`, preflight 同列该子模块未 init）;
+    ② `check-evidence-freshness` —— `generation_failed/import_failed`,
+       自跑 evidence-smoke 时 agora 侧 `No module named 'fastmcp'`（当前解释器无该依赖),
+       已按契约归入 `not_measured`;
+    ③ `check-governance-ratio` —— 45.5% > 40%, 本地有 ledger 故有判据输入;
+       CI 无 ledger 恒 PASS 已由 `OMO-DEBT-GATE-GOVERNANCE-RATIO-CI-HAS-NO-POPULATION-WAIVER-CANNOT-COINCIDE`
+       与 `OMO-DEBT-GOVERNANCE-RATIO-INFLOW-MISROUTED-TO-GOVERNANCE-WORKFLOW` 登记, 属 owner 待裁。
+    **顺带证实一条设计不是缺陷**：自报 `measured:false` 的 check 仍留在 `hard_fails`
+    （`check-evidence-freshness` 同时出现在两个列表）—— `gac-local-gate.py:1707` 起
+    hard_fails 的构造刻意不做分流, `not_measured` 只是**并列的定性通道**,
+    与本条 `decision_needed` (b)「判定语义刻意不动」一致, 别把它当聚合 bug 去「修」。
+  actor: 'governance-agent'
