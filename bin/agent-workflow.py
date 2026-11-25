@@ -317,7 +317,7 @@ if _ecos_src is not None:
     sys.path.insert(0, str(_ecos_src))
 
 from omo.workflow import (
-    WORKSPACE,
+    WORKSPACE,  # noqa: F811
     WorkflowError,
     load_registry,
     main,
