@@ -1,5 +1,5 @@
 id: "TESTS-UNIT-CLEAN-CHECKOUT-RED"
-title: "测试面在「未 init 子模块」的检出上红：tests/unit 已修完（0）、tests/integration 干净、顶层 tests/test_*.py 2026-11-25 实测 **9 failed**（全为输入未备齐，旧记的 223 已陈旧）—— 同一病根的三种面值"
+title: "测试面在「未 init 子模块」的检出上红：tests/unit 已修完（0）、tests/integration 干净、顶层 tests/test_*.py 的 9 条残留已于 2026-11-25 补守卫清掉（#5607；历史读数 223→9→0）—— 同一病根的三种面值"
 dimension: "governance"
 subdimension: "consistency"
 domain: "infrastructure"
@@ -243,4 +243,18 @@ history:
     否则下一轮 agent 会按 223 去规划工作量（与「行号指针漂移」同族）。
     **边界**：本测量为 6 进程并行，个别用例若对共享 state 面敏感可能与串行读数有出入；
     失败集与首因逐条来自各自进程日志（`/tmp/chunks/log_*`），未做串行复算。
+  actor: "governance-agent"
+- at: "2026-11-25T23:05:00+00:00"
+  action: mitigate
+  note: >-
+    **上述 9 条已全部补「输入没备齐则跳过」守卫**（#5607，延续 #5382/#5383 范式）：
+    `test_agent_workflow_projection.py`(4，需 `projects/omo/src`)、
+    `test_governance_evolution.py`(3，需 `projects/cockpit/.../commands/governance.py`)、
+    `test_cross_repo_consistency.py::test_ecos_port_registry_exists`(1，需 `projects/ecos/port-registry.yaml`)、
+    `test_bet_claim_broadcast.py::test_start_guard_scenarios`(1，`bin/agent-workflow.py` import 期即要求 omo 内核包)。
+    **两态实测**：干净检出（fresh worktree @`0ffe6035b`）这 4 个文件 **35 passed / 9 skipped / 0 failed**
+    （改前 9 failed）；齐备树 **44 passed / 0 skipped** —— 守卫不误伤。
+    ⇒ 顶层平面读数 **223 → 9 → 0**。**边界**：仅覆盖这 9 条；其余顶层用例本次未逐条复算，
+    但它们在上一次 6 片并行测量里已通过或已 skip。条目顶层 decision_needed（tests/unit 策略
+    (a)/(b)/(c)）仍待 owner，本条不代决。
   actor: "governance-agent"
