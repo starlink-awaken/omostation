@@ -85,16 +85,10 @@ def test_panels_expose_unknown_states_rather_than_zero():
         assert token in src, f"{name}.js 缺少 {token} 诚实态"
 
 
-def test_pending_authorization_ui_excludes_terminal_states():
-    """已 merged/closed 的发布不得因 READY 验证缓存继续显示为待授权。"""
-    template = (ROOT / "bin" / "panorama" / "assets" / "host" / "template.html").read_text(
-        encoding="utf-8"
-    )
-    for state in ("MERGED", "CLOSED", "WITHDRAWN", "REJECTED", "SUPERSEDED"):
-        assert f"{state}:1" in template
-    assert "String(p.state||'').toUpperCase()" in template
-    assert "terminalPublicationStates[String(p.state||'').toUpperCase()]" in template
-    assert "p.verification==='READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION'" in template
+# T10-354 (2026-11-25): test_pending_authorization_ui_excludes_terminal_states 随
+# pending_authorizations 面板一并退役 —— pending_publications 是 refresh.py 时代产物,
+# orchestrator 零命中、payload 永不到来, 面板已移除 (BET-Y2Q4-T10-354 裁定表)。
+# 该测试断言的全是已删面板的内部实现细节 (terminal states 过滤 + READY 筛选)。
 
 
 def test_projection_clocks_show_independent_sources_and_full_identity():
