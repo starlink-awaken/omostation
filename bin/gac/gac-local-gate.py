@@ -249,7 +249,9 @@ DEFAULT_POLICY = {
         # adding/removing rows there is the safe edit surface.
         {
             "id": "check-severity-registry",
-            "command": ["bin/gac/check-severity-registry.py"],
+            # --json: 参考面在 `projects/ecos/**`（未检出子模块），缺席时本 check
+            # 自报 `measured: false`, 而不是把空基准当成「全部未声明」而全红。
+            "command": ["bin/gac/check-severity-registry.py", "--json"],
         },
         # CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 决策(3): cron 解释器可执行性。
         # 不进 SOFT_CHECKS —— 阻断与否由脚本自己的限期 (ENFORCE_AFTER) 决定,
