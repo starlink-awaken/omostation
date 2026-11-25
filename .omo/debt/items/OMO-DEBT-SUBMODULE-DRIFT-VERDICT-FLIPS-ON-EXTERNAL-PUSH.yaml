@@ -1,0 +1,178 @@
+id: OMO-DEBT-SUBMODULE-DRIFT-VERDICT-FLIPS-ON-EXTERNAL-PUSH
+title: 漂移判决随子仓外部推送翻转：同一 pin 同一 root 树 ahead→DIVERGED，红因与 diff 无关且老 base 分支仍绿
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- "bin/gac/check-submodule-pointer-drift.py"
+- ".github/workflows/governance-check.yml"
+- "projects/ecos"
+evidence_refs:
+- "ecos PR #98 squash 为 2518e4b41（author 2026-11-24T12:08:15Z，parents=68af35412）后：root 原 pin a895e90da 与新 tip
+  两向 merge-base --is-ancestor 均 rc=1 ⇒ 该 pin 判 DIVERGED（阻塞）；而 68af35412 → 2518e4b41 为 rc=0 ⇒ 判 behind（非阻塞，仅
+  --strict 转红）。root 树在此期间未改动 gitlink"
+- "main run 45389998376 FAIL vs 45386505707 PASS，同一步 Submodule pointer drift check，root diff 为空"
+- "PR #5540 run 45390903596 同步骤 FAIL，而其 diff 中 mode 160000 条目数=0（本 PR 未碰任何 gitlink）"
+- "4 个旧基线分支的 projects/ecos gitlink 仍为 68af35412 ⇒ 同一子仓 tip 下判决随 base 年龄分裂（behind 绿 / DIVERGED 红）"
+- "本地复现判据链（未重跑 CI）：checker :108 以 git -C projects/ecos rev-parse origin/main 取子仓 tip；#5540 head 树 pin=a895e90da
+  且两向祖先皆假 ⇒ 该 PR 重跑不会转绿，须先刷新分支 gitlink（属指针平面，非本 agent 权限）"
+- "git ls-remote --heads origin 'refs/heads/auto/*'：0 条 ⇒ 无被批准的 DIVERGED 自动处置通道在用"
+mitigation_refs: []
+opened_at: '2026-11-24T23:39:23.284304+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T23:39:23.284304+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-SUBMODULE-DRIFT-VERDICT-FLIPS-ON-EXTERNAL-PUSH.
+- at: '2026-11-24T23:39:23.474834+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【单位口径】run 编号=GitHub Actions run id；时间一律
+    UTC（Z 后缀）；分支数=git ls-remote --heads 过滤后计数；行号在 origin/main@5dbafcca0 与其子模块检出上复核。
+
+
+    【现象】同一个 root 树、同一个 projects/ecos gitlink（a895e90dafe0），漂移判决从非阻塞的 ahead 翻成阻塞的 DIVERGED，触发条件是子仓
+    omostation-ecos 侧发生了一次我自己这边完全没参与的落地：ecos PR #98 以 squash 方式落地同一份工作，产生兄弟提交 2518e4b4154a（author
+    date 2026-11-24T12:08:15Z）。root 仓在此期间没有任何提交改动 gitlink。
+
+
+    【机制】check-submodule-pointer-drift.py 的三态全由祖先关系决定：:112 is_ancestor() 执行 git merge-base
+    --is-ancestor；:146 gitlink 是 origin/main 祖先 ⇒ behind（非阻塞，:277 提示 No divergence）；:155
+    origin/main 是 gitlink 祖先 ⇒ ahead（非阻塞，.github/workflows/governance-check.yml:831
+    注释明写 ahead is intentionally non-blocking）；两向皆假 ⇒ :177 DIVERGED，:222 收集、:228 决定
+    rc=1，工作流 :812-814 打印 ❌ submodule pointer divergence detected 并 exit 1。因此判决依赖「查子仓
+    origin/main 的那一刻它在哪」，而不是依赖 root 交付内容：
+
+    - 记录时（root 提交 266619d3a / PR #5526，作者时间 2026-11-24T07:06:18Z）ecos main=68af35412，是
+    a895e90d 的祖先 ⇒ ahead ⇒ 绿。
+
+    - squash 落地后 ecos main=2518e4b41，与 a895e90d 成兄弟 ⇒ 两向 is_ancestor 皆假 ⇒ DIVERGED
+    ⇒ 红。
+
+    本机实测：git -C projects/ecos merge-base --is-ancestor a895e90dafe0 origin/main 返回
+    rc=1（改前 fetch 到 68af35412 时同向为真）。
+
+
+    【一手后果（不是推断，是当次交付实测）】
+
+    - root main 自身：push 事件 run 45389998376（12:04:22Z 触发）governance-verify › Submodule
+    pointer drift check FAIL，job 138430876417 日志中该子模块读数为 status DIVERGED / gitlink
+    a895e90dafe0 / origin_main 2518e4b4154a；而上一次 main push run 45386505707（11:41:36Z）为
+    success。红线出现窗口即在这两次之间。
+
+    - 我的 PR #5540（run 45390903596）在同步红于同一步骤，而 git diff --name-only origin/main...HEAD
+    只有 2 个 .omo 文件、git diff --raw 中 mode 160000 行数=0，即本 PR 不含任何 gitlink 变更，pin 是从
+    base 继承的。
+
+    - 老 base 分支不受影响：git ls-remote --heads origin 与 git ls-tree 交叉核对，agent/governance-agent/{a9drift353,a9drift355,iscbaseline358,pitfalls-index-v2}
+    四条分支仍 pin 68af35412 ⇒ 判 behind ⇒ 绿。于是「同一个 root 内容口径」的交付因分支 base 年龄不同而拿到相反门禁结论，读数取决于检出新旧而非改动对错（与
+    AGENTS §7 既有「陈旧检出会伪造结论」同族，但此处是把该性质用进了门禁判决本身）。
+
+
+    【无 sanctioned 自动补救通道】工作流自己的措辞把 DIVERGED 排除在外：governance-check.yml:804-805 写 Reachable
+    behind pointers remain a supply signal handled by the auto-bump PR，:836 的 strict
+    auto-bump gate 仅当 head_ref 以 auto/submodule-bump- 开头才运行；实测 git ls-remote --heads
+    origin 中 refs/heads/auto/* 计数为 0（无在途 bump PR）。也就是说：DIVERGED 既不在 auto-bump 的覆盖语义里，strict
+    门又会在同一判据上再次失败，红只能靠人工决定（改指针或子仓真合并）解除——本次实际解除方式是 root 提交 604e401a3 把指针改成 main tip，见同批
+    OMO-DEBT-SUBMODULE-DRIFT-GATE-SILENCED-BY-POINTER-MOVE。
+
+
+    【去重】OMO-DEBT-SUBMODULE-DRIFT-GATE-SILENCED-BY-POINTER-MOVE 谈判据缺内容核对因而可被移动指针消解；本条谈判决对外部推送的不可归因与
+    base 年龄依赖。已 closed 的 SUBMODULE-GATEKEEPER-PERSISTENT-RED 是「常红由真实违规导致」，与本条「红由外部事件事后降临、且与
+    diff 无关」方向相反；OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE 不涉及门禁判决。
+
+
+    【决策菜单（均需 principal 取舍）】
+
+    ① 让判决可归因：读数里带上被查的子仓 tip 与采样时刻（现在只有 tip 短 sha，无时间戳），红时能直接回答「是子仓动了还是我动了」。
+
+    ② 把 DIVERGED 也纳入 auto-bump 通道，但要求 bump PR 携带内容集合差（见同条 A 的 ①），否则等于允许自动抹平。
+
+    ③ 规定被 root pin 过的子仓分支禁止 squash 落地（只能真合并），从源头避免 ahead→DIVERGED 翻转。
+
+    ④ owner 判定本次 68 个实例的归属（与 A 的 ④ 同一件事，不重复决策）。
+
+
+    【自检】以上 run id、行号、分支计数、merge-base rc 均为本次会话实测输出；「改前 is_ancestor 为真」是据 266619d3a
+    记录 pin 时 ecos main=68af35412 与 a895e90d 的父子链（git log 显示 a895e90d 的父为 d3deffca2、其父为
+    68af35412）复算得出，非当次抓取，已标明。红/绿窗口用两次 main run 的触发时间界定，不宣称精确翻转瞬间（子仓 push 时刻与 squash
+    author date 可差数分钟，我无该仓 push 事件读数）。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【单位口径】run 编号=GitHub Actions run id；时间一律 UTC（Z 后缀）；分支数=git ls-remote
+  --heads 过滤后计数；行号在 origin/main@5dbafcca0 与其子模块检出上复核。
+
+
+  【现象】同一个 root 树、同一个 projects/ecos gitlink（a895e90dafe0），漂移判决从非阻塞的 ahead 翻成阻塞的 DIVERGED，触发条件是子仓
+  omostation-ecos 侧发生了一次我自己这边完全没参与的落地：ecos PR #98 以 squash 方式落地同一份工作，产生兄弟提交 2518e4b4154a（author
+  date 2026-11-24T12:08:15Z）。root 仓在此期间没有任何提交改动 gitlink。
+
+
+  【机制】check-submodule-pointer-drift.py 的三态全由祖先关系决定：:112 is_ancestor() 执行 git merge-base
+  --is-ancestor；:146 gitlink 是 origin/main 祖先 ⇒ behind（非阻塞，:277 提示 No divergence）；:155
+  origin/main 是 gitlink 祖先 ⇒ ahead（非阻塞，.github/workflows/governance-check.yml:831
+  注释明写 ahead is intentionally non-blocking）；两向皆假 ⇒ :177 DIVERGED，:222 收集、:228 决定 rc=1，工作流
+  :812-814 打印 ❌ submodule pointer divergence detected 并 exit 1。因此判决依赖「查子仓 origin/main
+  的那一刻它在哪」，而不是依赖 root 交付内容：
+
+  - 记录时（root 提交 266619d3a / PR #5526，作者时间 2026-11-24T07:06:18Z）ecos main=68af35412，是
+  a895e90d 的祖先 ⇒ ahead ⇒ 绿。
+
+  - squash 落地后 ecos main=2518e4b41，与 a895e90d 成兄弟 ⇒ 两向 is_ancestor 皆假 ⇒ DIVERGED ⇒
+  红。
+
+  本机实测：git -C projects/ecos merge-base --is-ancestor a895e90dafe0 origin/main 返回 rc=1（改前
+  fetch 到 68af35412 时同向为真）。
+
+
+  【一手后果（不是推断，是当次交付实测）】
+
+  - root main 自身：push 事件 run 45389998376（12:04:22Z 触发）governance-verify › Submodule
+  pointer drift check FAIL，job 138430876417 日志中该子模块读数为 status DIVERGED / gitlink a895e90dafe0
+  / origin_main 2518e4b4154a；而上一次 main push run 45386505707（11:41:36Z）为 success。红线出现窗口即在这两次之间。
+
+  - 我的 PR #5540（run 45390903596）在同步红于同一步骤，而 git diff --name-only origin/main...HEAD
+  只有 2 个 .omo 文件、git diff --raw 中 mode 160000 行数=0，即本 PR 不含任何 gitlink 变更，pin 是从 base
+  继承的。
+
+  - 老 base 分支不受影响：git ls-remote --heads origin 与 git ls-tree 交叉核对，agent/governance-agent/{a9drift353,a9drift355,iscbaseline358,pitfalls-index-v2}
+  四条分支仍 pin 68af35412 ⇒ 判 behind ⇒ 绿。于是「同一个 root 内容口径」的交付因分支 base 年龄不同而拿到相反门禁结论，读数取决于检出新旧而非改动对错（与
+  AGENTS §7 既有「陈旧检出会伪造结论」同族，但此处是把该性质用进了门禁判决本身）。
+
+
+  【无 sanctioned 自动补救通道】工作流自己的措辞把 DIVERGED 排除在外：governance-check.yml:804-805 写 Reachable
+  behind pointers remain a supply signal handled by the auto-bump PR，:836 的 strict
+  auto-bump gate 仅当 head_ref 以 auto/submodule-bump- 开头才运行；实测 git ls-remote --heads
+  origin 中 refs/heads/auto/* 计数为 0（无在途 bump PR）。也就是说：DIVERGED 既不在 auto-bump 的覆盖语义里，strict
+  门又会在同一判据上再次失败，红只能靠人工决定（改指针或子仓真合并）解除——本次实际解除方式是 root 提交 604e401a3 把指针改成 main tip，见同批
+  OMO-DEBT-SUBMODULE-DRIFT-GATE-SILENCED-BY-POINTER-MOVE。
+
+
+  【去重】OMO-DEBT-SUBMODULE-DRIFT-GATE-SILENCED-BY-POINTER-MOVE 谈判据缺内容核对因而可被移动指针消解；本条谈判决对外部推送的不可归因与
+  base 年龄依赖。已 closed 的 SUBMODULE-GATEKEEPER-PERSISTENT-RED 是「常红由真实违规导致」，与本条「红由外部事件事后降临、且与
+  diff 无关」方向相反；OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE 不涉及门禁判决。
+
+
+  【决策菜单（均需 principal 取舍）】
+
+  ① 让判决可归因：读数里带上被查的子仓 tip 与采样时刻（现在只有 tip 短 sha，无时间戳），红时能直接回答「是子仓动了还是我动了」。
+
+  ② 把 DIVERGED 也纳入 auto-bump 通道，但要求 bump PR 携带内容集合差（见同条 A 的 ①），否则等于允许自动抹平。
+
+  ③ 规定被 root pin 过的子仓分支禁止 squash 落地（只能真合并），从源头避免 ahead→DIVERGED 翻转。
+
+  ④ owner 判定本次 68 个实例的归属（与 A 的 ④ 同一件事，不重复决策）。
+
+
+  【自检】以上 run id、行号、分支计数、merge-base rc 均为本次会话实测输出；「改前 is_ancestor 为真」是据 266619d3a 记录
+  pin 时 ecos main=68af35412 与 a895e90d 的父子链（git log 显示 a895e90d 的父为 d3deffca2、其父为
+  68af35412）复算得出，非当次抓取，已标明。红/绿窗口用两次 main run 的触发时间界定，不宣称精确翻转瞬间（子仓 push 时刻与 squash
+  author date 可差数分钟，我无该仓 push 事件读数）。'

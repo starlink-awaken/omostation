@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-agent
 affected_roots:
 - bin/gac/gac-worktree.sh
@@ -149,6 +149,10 @@ history:
     `@{u}` 的未推送量，非 0 则保留分支并打出恢复命令）；给主仓侧补一条与 :208-214 对称的 unpushed gate；用例走真实 CLI 入口（`bash
     bin/gac/gac-worktree.sh merge <session>`）钉住「分支含未推送提交 ⇒ 不得删」。本条只登记，不改 gac-worktree.sh
     与门禁口径（改动面归工具 owner 决定）。''.'
+- at: '2026-11-25T10:02:36.457548+00:00'
+  action: close
+  note: 已修复合入：分支清理收口为单点 prune_local_branch，有未推送 commit 即保留
+  actor: governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
@@ -187,3 +191,11 @@ description: '【机制缺陷】bin/gac/gac-worktree.sh 的 post_merge_release()
   的未推送量，非 0 则保留分支并打出恢复命令）；给主仓侧补一条与 :208-214 对称的 unpushed gate；用例走真实 CLI 入口（`bash bin/gac/gac-worktree.sh
   merge <session>`）钉住「分支含未推送提交 ⇒ 不得删」。本条只登记，不改 gac-worktree.sh 与门禁口径（改动面归工具 owner
   决定）。'
+closed_at: '2026-11-25T10:02:36.457536+00:00'
+close_reason: 已修复合入：分支清理收口为单点 prune_local_branch，有未推送 commit 即保留
+resolution_evidence: 'PR #5566 (merge edc0ef4c17ac30c639bb5fc2a7f3ede6e067b4aa): bin/gac/gac-worktree.sh
+  新增 prune_local_branch()，merge 收尾与 release 两处共用（旧写法 `git log --oneline --not origin/main
+  <branch>` 把两个 rev 都标 uninteresting ⇒ 恒空判据，且 release 路径的守卫因 CLI 派发被替换掉而空转 7 周）。判据改为
+  `git rev-list --count <branch> --not --remotes`，非 0 即保留分支。回归 tests/test_gac_worktree_merge_cleanup.sh
+  新增 E 段（分支带未推送 commit ⇒ 保留 + 打出保留原因 + claim 仍清）与 C 段两处接线契约；夹具用裸 origin，GAC_WORKTREE_LIB_ONLY=1
+  走真实入口。实测 22 ✅ / 0 ❌；负控制：去掉守卫改回裸 -D ⇒ E 段 FAILED 并打出 `Deleted branch ...`。'

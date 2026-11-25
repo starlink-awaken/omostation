@@ -1,0 +1,308 @@
+id: OMO-DEBT-SUBMODULE-DRIFT-GATE-SILENCED-BY-POINTER-MOVE
+title: 子模块漂移门的绿可由移动指针自证：判据无内容核对，一次 re-pin 让 68 个 M1 实例从 main 可见面消失
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- bin/gac/check-submodule-pointer-drift.py
+- .omo/_truth/registry/governance-checks.yaml
+- docs/generated/agent-redlines.md
+- projects/ecos
+evidence_refs:
+- "relates_to 口径（按 origin/main 内容解析）：90 条声明规则中 20 条的 relates_to 目标属于消失的 68 个 id，去重 20 个 id 且均不是 root 声明 id；子串与词边界两种匹配同为 21/43"
+- "测量缺陷自记：前缀 GAC-RULE- 长 9 字符，一度按 [10:-5] 切片致 relates_to 统计假报 0，按 [9:-5] 重测得 20"
+- git ls-tree origin/main -- projects/ecos：160000 commit 2518e4b4154a（改前为 a895e90dafe0）
+- 'git show 604e401a3 --stat（PR #5541，2026-11-24T12:54:33Z 合入）：1 file changed, 1 insertion(+),
+  1 deletion(-)，仅 gitlink 行'
+- '改后 bin/gac/check-submodule-pointer-drift.py 本机读数：Total: 16 submodules | 16 aligned
+  | 0 ahead | 0 unverifiable | 0 behind | 0 DIVERGED'
+- 集合差（git -C projects/ecos ls-tree -r）：a895e90dafe0 有 137 个 GAC-RULE-* 实例文件，2518e4b4154a
+  有 91 个；仅旧 pin 有 68，仅 main 有 22，交集 69
+- 68 个逐个 git -C projects/ecos cat-file -e origin/main:<path> 全部非 0 ⇒ 对 root main 不可见；git
+  ls-remote --heads origin 命中 refs/heads/agent/phase3-governance-declared-ecos（内容未删）
+- '引用侧（git show origin/main: 读取）：governance-checks.yaml 含其中 21 个 id 串，docs/generated/agent-redlines.md
+  含 43 个，redlines.yaml 含 0 个'
+- 反向事实：按 origin/main 解析 governance-checks.yaml 得 90 个声明 id，在当前 pin 上 0 个缺实例
+mitigation_refs: []
+opened_at: '2026-11-24T23:39:23.219356+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T23:39:23.219356+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-SUBMODULE-DRIFT-GATE-SILENCED-BY-POINTER-MOVE.
+- at: '2026-11-24T23:39:23.411964+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【单位口径】本条所有数字标注测量方式：文件数=git ls-tree 条目数；id
+    串命中=Python `in` 子串测试（非词边界），词数=`re.findall(r''CR-[A-Z0-9-]+'')` 去重集合大小。
+
+
+    【现象】root main 的 projects/ecos gitlink 在提交 604e401a3（PR #5541，合入 2026-11-24T12:54:33Z）由
+    a895e90dafe0 改为 2518e4b4154a，diff 为 1 file changed, 1 insertion(+), 1 deletion(-)（纯指针行）。改后
+    bin/gac/check-submodule-pointer-drift.py 在本机输出 Total: 16 submodules | 16 aligned
+    | 0 ahead | 0 unverifiable | 0 behind | 0 DIVERGED，即上一批登记时把 root main 与所有新建分支打入红线的阻塞信号直接消失。
+
+
+    【机制】判据只做祖先比较：check-submodule-pointer-drift.py:112 is_ancestor() 调 git merge-base
+    --is-ancestor；:146 命中判 behind，:155 命中判 ahead，:177 两向皆假判 DIVERGED；:222/:228 汇总
+    DIVERGED（--strict 时含 behind）并决定 rc。整条链上没有任何一步比较两侧内容（无 ls-tree/diff 参与），也没有任何一步核对「root
+    声明/文档引用的 CR id 是否在 pin 可见」。于是 gate 的成功条件（pin ∈ 子仓 main）恰好由它所监管的动作（把 pin 挪到 main
+    tip）满足——改指针即自证绿。
+
+
+    【一手测量：re-pin 的可见面代价】git -C projects/ecos ls-tree -r <ref> --name-only 过滤 /GAC-RULE-
+    后取集合差：
+
+    - 改前的 pin a895e90dafe0：137 个 GAC-RULE-* 实例文件；当前 ecos origin/main 2518e4b41：91
+    个；交集 69，仅旧 pin 有 68，仅 main 有 22。
+
+    - 那 68 个文件对 root main 是否可达：逐个 git -C projects/ecos cat-file -e origin/main:<path>
+    返回非 0（抽样 5 个复核一致）⇒ 68 个 M1 实例文件从 root main 可见面消失，不是被删（仍可从 origin/agent/phase3-governance-declared-ecos
+    取到，git ls-remote --heads 命中 1）。
+
+    - 引用侧（子串口径，按 origin/main 内容而非本地工作树读）：governance-checks.yaml 含其中 21 个 id 串；docs/generated/agent-redlines.md（生成物）含其中
+    43 个；.omo/_truth/registry/redlines.yaml 含 0 个。
+
+    - 同时必须记录反向事实，避免把本条读成「丢了代码」：root 声明的规则面未破——按 ^\s*-?\s*id:\s*(CR-...) 解析 origin/main
+    的 governance-checks.yaml 得 90 个 id，这 90 个在当前 pin 上 0 个缺实例。即 68 个消失实例是超出 root 声明面的超集部分，其权威归属需
+    owner 判定，而不是任何已声明规则的缺失。
+
+
+    【生成物侧的次级观测（不作为结论，只登记疑点）】bin/mof/gen-agent-redlines.py:18 REGISTRY=.omo/_truth/registry/governance-checks.yaml、:70
+    redlines_path=.omo/_truth/registry/redlines.yaml 是脚本里出现的两个读取路径，但生成物 docs/generated/agent-redlines.md
+    的 CR-* 去重词集为 138，其中 100 个词既不在 governance-checks.yaml 词集（124）也不在 redlines.yaml
+    词集（0）⇒ 该生成物的真实读数来源无法由脚本内这两个常量解释。本条不断言其成因（生成器另有来源、历史累积、或另有写入方），仅登记「生成物宣称的规则 id
+    中 43 个的 M1 实例不在当前 pin 可见面」这一可复现读数；tests 侧仅 tests/test_chain_bind.py 提到 agent-redlines，未见任何门把该生成物与
+    pin 上的实例集合做核对。
+
+
+    【去重】OMO-DEBT-SUBMODULE-DRIFT-VERDICT-FLIPS-ON-EXTERNAL-PUSH（同批登记）对象是判决在外部推送下翻转的稳定性，本条对象是判据缺内容核对因而可被移动指针自证绿；已
+    closed 的 SUBMODULE-GATEKEEPER-PERSISTENT-RED 讲的是子模块直写违规导致常红，SUBMODULE_DRIFT（resolved）只记
+    3/17 漂移已巡检，均不覆盖本条的「绿侧不可信」。
+
+
+    【决策菜单（均需 principal 取舍，我不代为决定）】
+
+    ① 给 --fix / --fix --apply 加内容前置：改指针前先算两侧文件集合差与规模，超阈值（如 N 个实例级文件消失）拒绝 --apply 只输出建议。
+
+    ② 新增判据：把 root 声明面（governance-checks.yaml 的 id 集合）与生成物（agent-redlines.md 词集）对 pin
+    可见实例做双向核对，缺侧报警。
+
+    ③ 让「改指针消解 DIVERGED」这件事本身要求留痕：re-pin 提交必须携带内容差读数（现 #5541 未含）。
+
+    ④ 由 owner 判定那 68 个 GAC-RULE 实例是权威侧内容（需在 ecos 重新落地）还是有意裁撤（需登记裁撤决定），本条不预设。
+
+
+    【自检】行号在 origin/main@5dbafcca0 上复核；集合差与 cat-file 可达性为实测非推断；「21/43 引用」为子串口径并已在单位口径段声明其局限；本地工作树与
+    origin/main 不同源，全部引用侧数字改用 git show origin/main:<path> 读取（本条撰写过程中曾因读本地文件得出「21 条被
+    registry 声明」的错误推断，已按 origin/main 重量并记为 AGENTS §7 既有条目「本地工作树 ≠ origin/main 状态」的第
+    4 次一手复发）。''.'
+- at: '2026-11-25T00:34:07.078438+00:00'
+  action: update_description
+  note: 'Updated description from ''【单位口径】本条所有数字标注测量方式：文件数=git ls-tree 条目数；id 串命中=Python
+    `in` 子串测试（非词边界），词数=`re.findall(r''CR-[A-Z0-9-]+'')` 去重集合大小。
+
+
+    【现象】root main 的 projects/ecos gitlink 在提交 604e401a3（PR #5541，合入 2026-11-24T12:54:33Z）由
+    a895e90dafe0 改为 2518e4b4154a，diff 为 1 file changed, 1 insertion(+), 1 deletion(-)（纯指针行）。改后
+    bin/gac/check-submodule-pointer-drift.py 在本机输出 Total: 16 submodules | 16 aligned
+    | 0 ahead | 0 unverifiable | 0 behind | 0 DIVERGED，即上一批登记时把 root main 与所有新建分支打入红线的阻塞信号直接消失。
+
+
+    【机制】判据只做祖先比较：check-submodule-pointer-drift.py:112 is_ancestor() 调 git merge-base
+    --is-ancestor；:146 命中判 behind，:155 命中判 ahead，:177 两向皆假判 DIVERGED；:222/:228 汇总
+    DIVERGED（--strict 时含 behind）并决定 rc。整条链上没有任何一步比较两侧内容（无 ls-tree/diff 参与），也没有任何一步核对「root
+    声明/文档引用的 CR id 是否在 pin 可见」。于是 gate 的成功条件（pin ∈ 子仓 main）恰好由它所监管的动作（把 pin 挪到 main
+    tip）满足——改指针即自证绿。
+
+
+    【一手测量：re-pin 的可见面代价】git -C projects/ecos ls-tree -r <ref> --name-only 过滤 /GAC-RULE-
+    后取集合差：
+
+    - 改前的 pin a895e90dafe0：137 个 GAC-RULE-* 实例文件；当前 ecos origin/main 2518e4b41：91
+    个；交集 69，仅旧 pin 有 68，仅 main 有 22。
+
+    - 那 68 个文件对 root main 是否可达：逐个 git -C projects/ecos cat-file -e origin/main:<path>
+    返回非 0（抽样 5 个复核一致）⇒ 68 个 M1 实例文件从 root main 可见面消失，不是被删（仍可从 origin/agent/phase3-governance-declared-ecos
+    取到，git ls-remote --heads 命中 1）。
+
+    - 引用侧（子串口径，按 origin/main 内容而非本地工作树读）：governance-checks.yaml 含其中 21 个 id 串；docs/generated/agent-redlines.md（生成物）含其中
+    43 个；.omo/_truth/registry/redlines.yaml 含 0 个。
+
+    - 同时必须记录反向事实，避免把本条读成「丢了代码」：root 声明的规则面未破——按 ^\s*-?\s*id:\s*(CR-...) 解析 origin/main
+    的 governance-checks.yaml 得 90 个 id，这 90 个在当前 pin 上 0 个缺实例。即 68 个消失实例是超出 root 声明面的超集部分，其权威归属需
+    owner 判定，而不是任何已声明规则的缺失。
+
+
+    【生成物侧的次级观测（不作为结论，只登记疑点）】bin/mof/gen-agent-redlines.py:18 REGISTRY=.omo/_truth/registry/governance-checks.yaml、:70
+    redlines_path=.omo/_truth/registry/redlines.yaml 是脚本里出现的两个读取路径，但生成物 docs/generated/agent-redlines.md
+    的 CR-* 去重词集为 138，其中 100 个词既不在 governance-checks.yaml 词集（124）也不在 redlines.yaml
+    词集（0）⇒ 该生成物的真实读数来源无法由脚本内这两个常量解释。本条不断言其成因（生成器另有来源、历史累积、或另有写入方），仅登记「生成物宣称的规则 id
+    中 43 个的 M1 实例不在当前 pin 可见面」这一可复现读数；tests 侧仅 tests/test_chain_bind.py 提到 agent-redlines，未见任何门把该生成物与
+    pin 上的实例集合做核对。
+
+
+    【去重】OMO-DEBT-SUBMODULE-DRIFT-VERDICT-FLIPS-ON-EXTERNAL-PUSH（同批登记）对象是判决在外部推送下翻转的稳定性，本条对象是判据缺内容核对因而可被移动指针自证绿；已
+    closed 的 SUBMODULE-GATEKEEPER-PERSISTENT-RED 讲的是子模块直写违规导致常红，SUBMODULE_DRIFT（resolved）只记
+    3/17 漂移已巡检，均不覆盖本条的「绿侧不可信」。
+
+
+    【决策菜单（均需 principal 取舍，我不代为决定）】
+
+    ① 给 --fix / --fix --apply 加内容前置：改指针前先算两侧文件集合差与规模，超阈值（如 N 个实例级文件消失）拒绝 --apply 只输出建议。
+
+    ② 新增判据：把 root 声明面（governance-checks.yaml 的 id 集合）与生成物（agent-redlines.md 词集）对 pin
+    可见实例做双向核对，缺侧报警。
+
+    ③ 让「改指针消解 DIVERGED」这件事本身要求留痕：re-pin 提交必须携带内容差读数（现 #5541 未含）。
+
+    ④ 由 owner 判定那 68 个 GAC-RULE 实例是权威侧内容（需在 ecos 重新落地）还是有意裁撤（需登记裁撤决定），本条不预设。
+
+
+    【自检】行号在 origin/main@5dbafcca0 上复核；集合差与 cat-file 可达性为实测非推断；「21/43 引用」为子串口径并已在单位口径段声明其局限；本地工作树与
+    origin/main 不同源，全部引用侧数字改用 git show origin/main:<path> 读取（本条撰写过程中曾因读本地文件得出「21 条被
+    registry 声明」的错误推断，已按 origin/main 重量并记为 AGENTS §7 既有条目「本地工作树 ≠ origin/main 状态」的第
+    4 次一手复发）。'' to ''【单位口径】本条所有数字标注测量方式：文件数=git ls-tree 条目数；id 串命中=Python `in` 子串测试（非词边界），词数=`re.findall(r''CR-[A-Z0-9-]+'')`
+    去重集合大小。
+
+
+    【现象】root main 的 projects/ecos gitlink 在提交 604e401a3（PR #5541，合入 2026-11-24T12:54:33Z）由
+    a895e90dafe0 改为 2518e4b4154a，diff 为 1 file changed, 1 insertion(+), 1 deletion(-)（纯指针行）。改后
+    bin/gac/check-submodule-pointer-drift.py 在本机输出 Total: 16 submodules | 16 aligned
+    | 0 ahead | 0 unverifiable | 0 behind | 0 DIVERGED，即上一批登记时把 root main 与所有新建分支打入红线的阻塞信号直接消失。
+
+
+    【机制】判据只做祖先比较：check-submodule-pointer-drift.py:112 is_ancestor() 调 git merge-base
+    --is-ancestor；:146 命中判 behind，:155 命中判 ahead，:177 两向皆假判 DIVERGED；:222/:228 汇总
+    DIVERGED（--strict 时含 behind）并决定 rc。整条链上没有任何一步比较两侧内容（无 ls-tree/diff 参与），也没有任何一步核对「root
+    声明/文档引用的 CR id 是否在 pin 可见」。于是 gate 的成功条件（pin ∈ 子仓 main）恰好由它所监管的动作（把 pin 挪到 main
+    tip）满足——改指针即自证绿。
+
+
+    【一手测量：re-pin 的可见面代价】git -C projects/ecos ls-tree -r <ref> --name-only 过滤 /GAC-RULE-
+    后取集合差：
+
+    - 改前的 pin a895e90dafe0：137 个 GAC-RULE-* 实例文件；当前 ecos origin/main 2518e4b41：91
+    个；交集 69，仅旧 pin 有 68，仅 main 有 22。
+
+    - 那 68 个文件对 root main 是否可达：逐个 git -C projects/ecos cat-file -e origin/main:<path>
+    返回非 0（抽样 5 个复核一致）⇒ 68 个 M1 实例文件从 root main 可见面消失，不是被删（仍可从 origin/agent/phase3-governance-declared-ecos
+    取到，git ls-remote --heads 命中 1）。
+
+    - 引用侧（按 origin/main 内容而非本地工作树读）：governance-checks.yaml 含其中 21 个 id 串，docs/generated/agent-redlines.md（生成物）含
+    43 个，.omo/_truth/registry/redlines.yaml 含 0 个；口径对账：子串匹配与词边界匹配（前后不接 [A-Za-z0-9_-]）两种算法同为
+    21/43，不存在前缀虚高。
+
+    - 同时记录反向事实，避免把本条读成「丢了代码」：root 声明的规则面未破——解析 origin/main 的 governance-checks.yaml
+    得 90 个 CR-* 声明 id，这 90 个在当前 pin 上 0 个缺实例（68 个消失 id 与声明 id 的交集为 0）。但引用面确有损伤：90
+    条声明规则中 20 条的 relates_to 交叉引用目标落在消失的 68 个 id 内（去重 20 个 id，且这 20 个自身都不是 root 声明
+    id）⇒ 本条的准确定性是「20 条 relates_to 悬空引用 + 68 个实例移出可见面」，不是「已声明规则失效」，也不是「丢码」；权威归属仍需 owner
+    判定。
+
+
+    【生成物侧的次级观测（不作为结论，只登记疑点）】bin/mof/gen-agent-redlines.py:18 REGISTRY=.omo/_truth/registry/governance-checks.yaml、:70
+    redlines_path=.omo/_truth/registry/redlines.yaml 是脚本里出现的两个读取路径，但生成物 docs/generated/agent-redlines.md
+    的 CR-* 去重词集为 138，其中 100 个词既不在 governance-checks.yaml 词集（124）也不在 redlines.yaml
+    词集（0）⇒ 该生成物的真实读数来源无法由脚本内这两个常量解释。本条不断言其成因（生成器另有来源、历史累积、或另有写入方），仅登记「生成物宣称的规则 id
+    中 43 个的 M1 实例不在当前 pin 可见面」这一可复现读数；tests 侧仅 tests/test_chain_bind.py 提到 agent-redlines，未见任何门把该生成物与
+    pin 上的实例集合做核对。
+
+
+    【去重】OMO-DEBT-SUBMODULE-DRIFT-VERDICT-FLIPS-ON-EXTERNAL-PUSH（同批登记）对象是判决在外部推送下翻转的稳定性，本条对象是判据缺内容核对因而可被移动指针自证绿；已
+    closed 的 SUBMODULE-GATEKEEPER-PERSISTENT-RED 讲的是子模块直写违规导致常红，SUBMODULE_DRIFT（resolved）只记
+    3/17 漂移已巡检，均不覆盖本条的「绿侧不可信」。
+
+
+    【决策菜单（均需 principal 取舍，我不代为决定）】
+
+    ① 给 --fix / --fix --apply 加内容前置：改指针前先算两侧文件集合差与规模，超阈值（如 N 个实例级文件消失）拒绝 --apply 只输出建议。
+
+    ② 新增判据：把 root 声明面（governance-checks.yaml 的 id 集合）与生成物（agent-redlines.md 词集）对 pin
+    可见实例做双向核对，缺侧报警。
+
+    ③ 让「改指针消解 DIVERGED」这件事本身要求留痕：re-pin 提交必须携带内容差读数（现 #5541 未含）。
+
+    ④ 由 owner 判定那 68 个 GAC-RULE 实例是权威侧内容（需在 ecos 重新落地）还是有意裁撤（需登记裁撤决定），本条不预设。
+
+
+    【自检】行号在 origin/main@5dbafcca0 上复核；集合差与 cat-file 可达性为实测非推断；「21/43 引用」为子串口径并已在单位口径段声明其局限；本地工作树与
+    origin/main 不同源，全部引用侧数字改用 git show origin/main:<path> 读取（本条撰写过程中曾因读本地文件得出「21 条被
+    registry 声明」的错误推断，已按 origin/main 重量并记为 AGENTS §7 既有条目「本地工作树 ≠ origin/main 状态」的第
+    4 次一手复发）。同批另记一次自身测量缺陷：把前缀 GAC-RULE-（9 字符）按 10 切片，导致一轮 relates_to 统计假报 0，已按正确切片重测得上述
+    20 条；属 AGENTS §7「根常量少算一级」家族的第 5 次一手复发。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【单位口径】本条所有数字标注测量方式：文件数=git ls-tree 条目数；id 串命中=Python `in` 子串测试（非词边界），词数=`re.findall(r''CR-[A-Z0-9-]+'')`
+  去重集合大小。
+
+
+  【现象】root main 的 projects/ecos gitlink 在提交 604e401a3（PR #5541，合入 2026-11-24T12:54:33Z）由
+  a895e90dafe0 改为 2518e4b4154a，diff 为 1 file changed, 1 insertion(+), 1 deletion(-)（纯指针行）。改后
+  bin/gac/check-submodule-pointer-drift.py 在本机输出 Total: 16 submodules | 16 aligned
+  | 0 ahead | 0 unverifiable | 0 behind | 0 DIVERGED，即上一批登记时把 root main 与所有新建分支打入红线的阻塞信号直接消失。
+
+
+  【机制】判据只做祖先比较：check-submodule-pointer-drift.py:112 is_ancestor() 调 git merge-base
+  --is-ancestor；:146 命中判 behind，:155 命中判 ahead，:177 两向皆假判 DIVERGED；:222/:228 汇总 DIVERGED（--strict
+  时含 behind）并决定 rc。整条链上没有任何一步比较两侧内容（无 ls-tree/diff 参与），也没有任何一步核对「root 声明/文档引用的 CR
+  id 是否在 pin 可见」。于是 gate 的成功条件（pin ∈ 子仓 main）恰好由它所监管的动作（把 pin 挪到 main tip）满足——改指针即自证绿。
+
+
+  【一手测量：re-pin 的可见面代价】git -C projects/ecos ls-tree -r <ref> --name-only 过滤 /GAC-RULE-
+  后取集合差：
+
+  - 改前的 pin a895e90dafe0：137 个 GAC-RULE-* 实例文件；当前 ecos origin/main 2518e4b41：91 个；交集
+  69，仅旧 pin 有 68，仅 main 有 22。
+
+  - 那 68 个文件对 root main 是否可达：逐个 git -C projects/ecos cat-file -e origin/main:<path>
+  返回非 0（抽样 5 个复核一致）⇒ 68 个 M1 实例文件从 root main 可见面消失，不是被删（仍可从 origin/agent/phase3-governance-declared-ecos
+  取到，git ls-remote --heads 命中 1）。
+
+  - 引用侧（按 origin/main 内容而非本地工作树读）：governance-checks.yaml 含其中 21 个 id 串，docs/generated/agent-redlines.md（生成物）含
+  43 个，.omo/_truth/registry/redlines.yaml 含 0 个；口径对账：子串匹配与词边界匹配（前后不接 [A-Za-z0-9_-]）两种算法同为
+  21/43，不存在前缀虚高。
+
+  - 同时记录反向事实，避免把本条读成「丢了代码」：root 声明的规则面未破——解析 origin/main 的 governance-checks.yaml
+  得 90 个 CR-* 声明 id，这 90 个在当前 pin 上 0 个缺实例（68 个消失 id 与声明 id 的交集为 0）。但引用面确有损伤：90 条声明规则中
+  20 条的 relates_to 交叉引用目标落在消失的 68 个 id 内（去重 20 个 id，且这 20 个自身都不是 root 声明 id）⇒ 本条的准确定性是「20
+  条 relates_to 悬空引用 + 68 个实例移出可见面」，不是「已声明规则失效」，也不是「丢码」；权威归属仍需 owner 判定。
+
+
+  【生成物侧的次级观测（不作为结论，只登记疑点）】bin/mof/gen-agent-redlines.py:18 REGISTRY=.omo/_truth/registry/governance-checks.yaml、:70
+  redlines_path=.omo/_truth/registry/redlines.yaml 是脚本里出现的两个读取路径，但生成物 docs/generated/agent-redlines.md
+  的 CR-* 去重词集为 138，其中 100 个词既不在 governance-checks.yaml 词集（124）也不在 redlines.yaml 词集（0）⇒
+  该生成物的真实读数来源无法由脚本内这两个常量解释。本条不断言其成因（生成器另有来源、历史累积、或另有写入方），仅登记「生成物宣称的规则 id 中 43 个的 M1
+  实例不在当前 pin 可见面」这一可复现读数；tests 侧仅 tests/test_chain_bind.py 提到 agent-redlines，未见任何门把该生成物与
+  pin 上的实例集合做核对。
+
+
+  【去重】OMO-DEBT-SUBMODULE-DRIFT-VERDICT-FLIPS-ON-EXTERNAL-PUSH（同批登记）对象是判决在外部推送下翻转的稳定性，本条对象是判据缺内容核对因而可被移动指针自证绿；已
+  closed 的 SUBMODULE-GATEKEEPER-PERSISTENT-RED 讲的是子模块直写违规导致常红，SUBMODULE_DRIFT（resolved）只记
+  3/17 漂移已巡检，均不覆盖本条的「绿侧不可信」。
+
+
+  【决策菜单（均需 principal 取舍，我不代为决定）】
+
+  ① 给 --fix / --fix --apply 加内容前置：改指针前先算两侧文件集合差与规模，超阈值（如 N 个实例级文件消失）拒绝 --apply 只输出建议。
+
+  ② 新增判据：把 root 声明面（governance-checks.yaml 的 id 集合）与生成物（agent-redlines.md 词集）对 pin
+  可见实例做双向核对，缺侧报警。
+
+  ③ 让「改指针消解 DIVERGED」这件事本身要求留痕：re-pin 提交必须携带内容差读数（现 #5541 未含）。
+
+  ④ 由 owner 判定那 68 个 GAC-RULE 实例是权威侧内容（需在 ecos 重新落地）还是有意裁撤（需登记裁撤决定），本条不预设。
+
+
+  【自检】行号在 origin/main@5dbafcca0 上复核；集合差与 cat-file 可达性为实测非推断；「21/43 引用」为子串口径并已在单位口径段声明其局限；本地工作树与
+  origin/main 不同源，全部引用侧数字改用 git show origin/main:<path> 读取（本条撰写过程中曾因读本地文件得出「21 条被
+  registry 声明」的错误推断，已按 origin/main 重量并记为 AGENTS §7 既有条目「本地工作树 ≠ origin/main 状态」的第
+  4 次一手复发）。同批另记一次自身测量缺陷：把前缀 GAC-RULE-（9 字符）按 10 切片，导致一轮 relates_to 统计假报 0，已按正确切片重测得上述
+  20 条；属 AGENTS §7「根常量少算一级」家族的第 5 次一手复发。'

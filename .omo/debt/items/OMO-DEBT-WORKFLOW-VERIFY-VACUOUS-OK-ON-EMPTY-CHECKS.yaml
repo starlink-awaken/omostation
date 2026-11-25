@@ -1,0 +1,280 @@
+id: OMO-DEBT-WORKFLOW-VERIFY-VACUOUS-OK-ON-EMPTY-CHECKS
+title: verify 在空检查集上虚真：--from-diff 看不见已提交交付，checks=0 仍打印 ok 且 rc=0
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: high
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/workflow/diagnostics_verify.py
+- projects/omo/src/omo/workflow/core.py
+- projects/omo/src/omo/workflow/cli.py
+- .omo/_truth/registry/agent-workflows/_root.yaml
+evidence_refs:
+- '同一 run 两次读数：--from-diff --execute ⇒ "verify: ok (executed) files=1 checks=0" 且
+  rc=0；显式 --file（3 个 debt item）⇒ checks=1 且 ssot-guardian rc=2（缺 .omo/state/system.yaml），跑
+  materialize-system-state.py 后同命令 rc=0（checks=1, ssot-guardian duration 1.9s）'
+- core.py:380-394 changed_files_from_git 仅用 git diff / git diff --cached（不比较 origin/main）：同一函数在
+  canonical 工作区返回 27 个文件（他人未提交改动），在干净 worktree 返回 1 个文件（与本批 4 文件无交集）
+- load_registry() 后 diff_checks 行数=31，always=True 行数=0 ⇒ 无关文件集下 checks=[]；diagnostics_verify.py:112
+  all([]) 恒真，:121 check_count=0，:159-160 打印 ok，cli.py:352 return 0
+- '下游不核对形状：tests/test_workflow_locks.py:569/672/703 以 {"check_count": 0, "checks":
+  []} 作桩返回，:1247 为 {"ok": True, "check_count": 1, "checks": []}（计数与列表自相矛盾仍被消费）；test_workflow_mesh.py:173
+  与 test_workflow_workspace_isolation.py:319 同样以桩替代真实报告'
+mitigation_refs: []
+opened_at: '2026-11-25T01:09:32.629241+00:00'
+last_reviewed_at: '2026-11-25'
+next_review_at: '2026-12-09'
+gate_level: none
+history:
+- at: '2026-11-25T01:09:32.629241+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-WORKFLOW-VERIFY-VACUOUS-OK-ON-EMPTY-CHECKS.
+- at: '2026-11-25T01:09:32.671775+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【单位口径】files/checks 计数取自 build_verify_report
+    返回体的 len(changed_files) 与 check_count；rc=进程退出码；行号在 projects/omo 当前 pin 检出上复核；「空检查集」指
+    results 列表长度为 0，不是检查失败。
+
+
+    【现象】同一条 run 的 verify 先打印 `agent-workflow verify: ok (executed) files=1 checks=0`
+    且 rc=0，而该次交付真实集是 4 个文件；改用显式 --file 后检查数变为 1（3 个 debt item）/2（registry 文件），并当场抓到
+    ssot-guardian rc=2（缺 .omo/state/system.yaml，物化后同命令 rc=0）。也就是说第一次的「ok」里没有任何检查被执行，同时还漏掉了随后被证实存在的输入缺失。
+
+
+    【机制】三段共同构成虚真：
+
+    1. core.py:380-394 changed_files_from_git 只跑 git diff --name-only 与 git diff --cached
+    --name-only（工作树/暂存区），不与 origin/main 比较 ⇒ 交付一旦 commit 就从 --from-diff 视野消失。同函数在
+    canonical 工作区返回 27 个文件（他人未提交改动，与本批交付无关），在干净 worktree 返回 1 个文件（与本批 4 文件无交集）。
+
+    2. diagnostics_verify.py:94 select_diff_checks 依赖 registry 级 diff_checks 的 paths
+    匹配；load_registry() 后 diff_checks 共 31 行，其中 always=True 的行数=0 ⇒ 文件集为空或无关时 checks=[]。
+
+    3. diagnostics_verify.py:112 ok = all(result.get("ok", False) for result in results)
+    and bool(claim_coverage["ok"])，空列表上 all() 恒真；:121 check_count=len(results)=0；:159-160
+    照常打印 ok 与 checks=0；cli.py:352 return 0 if report["ok"] else 1 ⇒ 退出码 0。
+
+    后果：「没有任何检查被执行」与「所有检查都通过」在读数、退出码、事件记录（:125-150 append_ledger_event 同用这个 ok）上完全不可区分，而
+    bet-closeout-chain 步 6 正是把 verify 结果当 closeout 前置凭证。
+
+
+    【下游不核对形状（实测）】projects/omo/tests/test_workflow_locks.py:569/672/703 直接把 {"ok":
+    True/False, "check_count": 0, "checks": []} 作为 build_verify_report 的桩返回喂给被测代码，:1247
+    还给出 check_count=1 而 checks=[] 的自相矛盾三元组；test_workflow_mesh.py:173、test_workflow_workspace_isolation.py:319
+    同样用桩值代替真实报告。⇒ 既没有任何用例钉住「空检查集应判 fail」，消费侧也不校验 count 与列表的一致性，真实世界里的 checks=0 会被下游照单收下。
+
+
+    【去重】批内条目 OMO-DEBT-WORKFLOW-CLOSEOUT-OK-FIELD-TAUTOLOGY 的对象是 closeout 的 ok=status
+    恒等式（lifecycle.py:1715/:1739，实测 rc=1）；本条对象是 verify 的 ok 在空检查集上虚真（diagnostics_verify.py:112，实测
+    rc=0），判定位置、恒等式形态与后果都不同。二者同族互补，不重复登记。
+
+
+    【决策菜单（均需 principal 取舍，我不代为决定）】
+
+    ① 空结果判定：results 为空且未显式 --all 时判 fail，或新增 explicit_no_checks 字段并令 rc≠0。
+
+    ② 报告里标注文件来源 files_source ∈ {explicit_file, from_diff_worktree, all}，closeout 只接受
+    explicit_file/all。
+
+    ③ --from-diff 增加可选 base（如 --base origin/main），使已 commit 的交付仍可被采集。
+
+    ④ 给 diff_checks 增补覆盖 .omo/debt/items/** 与 .omo/_truth/registry/debt.yaml 的必需行（当前
+    31 行里 0 行 always=True，这两类路径只被 ssot-guardian/gac-local-gate 间接命中）。
+
+    ⑤ 输入缺失类 FAIL 与内容类 FAIL 分桶（本条里 ssot-guardian rc=2 属缺生成态，非交付缺陷，但读数与内容 FAIL 同为 rc=2）。
+
+    ⑥ 用例侧处置：是否禁止用桩返回替代真实 build_verify_report（现有 5 处桩），改由契约测试钉住形状。
+
+
+    【自检】31 与 always=0 为 load_registry() 后 len()/计数实测；行号在子模块检出上核对（主仓 git grep 看不到子模块内部，曾因此产生空读数，已改
+    git -C projects/ecos / 子模块内检索口径）；「files=1」那一次未复算具体是哪个文件，只确认与本批 4 文件无交集；tests 命中口径为
+    rg -n ''check_count|checks == 0|checks=0'' projects/omo/tests（未放开到全仓，故「无用例钉住」按该抽样口径陈述）；本条不含对本机
+    .omo/state/system.yaml 缺失成因的判断（该文件按 AGENTS 属运行态产物，摘库与否由 owner 决定）。
+
+    ''.'
+- at: '2026-11-25T01:14:46.530163+00:00'
+  action: update_description
+  note: 'Updated description from ''【单位口径】files/checks 计数取自 build_verify_report 返回体的
+    len(changed_files) 与 check_count；rc=进程退出码；行号在 projects/omo 当前 pin 检出上复核；「空检查集」指
+    results 列表长度为 0，不是检查失败。
+
+
+    【现象】同一条 run 的 verify 先打印 `agent-workflow verify: ok (executed) files=1 checks=0`
+    且 rc=0，而该次交付真实集是 4 个文件；改用显式 --file 后检查数变为 1（3 个 debt item）/2（registry 文件），并当场抓到
+    ssot-guardian rc=2（缺 .omo/state/system.yaml，物化后同命令 rc=0）。也就是说第一次的「ok」里没有任何检查被执行，同时还漏掉了随后被证实存在的输入缺失。
+
+
+    【机制】三段共同构成虚真：
+
+    1. core.py:380-394 changed_files_from_git 只跑 git diff --name-only 与 git diff --cached
+    --name-only（工作树/暂存区），不与 origin/main 比较 ⇒ 交付一旦 commit 就从 --from-diff 视野消失。同函数在
+    canonical 工作区返回 27 个文件（他人未提交改动，与本批交付无关），在干净 worktree 返回 1 个文件（与本批 4 文件无交集）。
+
+    2. diagnostics_verify.py:94 select_diff_checks 依赖 registry 级 diff_checks 的 paths
+    匹配；load_registry() 后 diff_checks 共 31 行，其中 always=True 的行数=0 ⇒ 文件集为空或无关时 checks=[]。
+
+    3. diagnostics_verify.py:112 ok = all(result.get("ok", False) for result in results)
+    and bool(claim_coverage["ok"])，空列表上 all() 恒真；:121 check_count=len(results)=0；:159-160
+    照常打印 ok 与 checks=0；cli.py:352 return 0 if report["ok"] else 1 ⇒ 退出码 0。
+
+    后果：「没有任何检查被执行」与「所有检查都通过」在读数、退出码、事件记录（:125-150 append_ledger_event 同用这个 ok）上完全不可区分，而
+    bet-closeout-chain 步 6 正是把 verify 结果当 closeout 前置凭证。
+
+
+    【下游不核对形状（实测）】projects/omo/tests/test_workflow_locks.py:569/672/703 直接把 {"ok":
+    True/False, "check_count": 0, "checks": []} 作为 build_verify_report 的桩返回喂给被测代码，:1247
+    还给出 check_count=1 而 checks=[] 的自相矛盾三元组；test_workflow_mesh.py:173、test_workflow_workspace_isolation.py:319
+    同样用桩值代替真实报告。⇒ 既没有任何用例钉住「空检查集应判 fail」，消费侧也不校验 count 与列表的一致性，真实世界里的 checks=0 会被下游照单收下。
+
+
+    【去重】批内条目 OMO-DEBT-WORKFLOW-CLOSEOUT-OK-FIELD-TAUTOLOGY 的对象是 closeout 的 ok=status
+    恒等式（lifecycle.py:1715/:1739，实测 rc=1）；本条对象是 verify 的 ok 在空检查集上虚真（diagnostics_verify.py:112，实测
+    rc=0），判定位置、恒等式形态与后果都不同。二者同族互补，不重复登记。
+
+
+    【决策菜单（均需 principal 取舍，我不代为决定）】
+
+    ① 空结果判定：results 为空且未显式 --all 时判 fail，或新增 explicit_no_checks 字段并令 rc≠0。
+
+    ② 报告里标注文件来源 files_source ∈ {explicit_file, from_diff_worktree, all}，closeout 只接受
+    explicit_file/all。
+
+    ③ --from-diff 增加可选 base（如 --base origin/main），使已 commit 的交付仍可被采集。
+
+    ④ 给 diff_checks 增补覆盖 .omo/debt/items/** 与 .omo/_truth/registry/debt.yaml 的必需行（当前
+    31 行里 0 行 always=True，这两类路径只被 ssot-guardian/gac-local-gate 间接命中）。
+
+    ⑤ 输入缺失类 FAIL 与内容类 FAIL 分桶（本条里 ssot-guardian rc=2 属缺生成态，非交付缺陷，但读数与内容 FAIL 同为 rc=2）。
+
+    ⑥ 用例侧处置：是否禁止用桩返回替代真实 build_verify_report（现有 5 处桩），改由契约测试钉住形状。
+
+
+    【自检】31 与 always=0 为 load_registry() 后 len()/计数实测；行号在子模块检出上核对（主仓 git grep 看不到子模块内部，曾因此产生空读数，已改
+    git -C projects/ecos / 子模块内检索口径）；「files=1」那一次未复算具体是哪个文件，只确认与本批 4 文件无交集；tests 命中口径为
+    rg -n ''check_count|checks == 0|checks=0'' projects/omo/tests（未放开到全仓，故「无用例钉住」按该抽样口径陈述）；本条不含对本机
+    .omo/state/system.yaml 缺失成因的判断（该文件按 AGENTS 属运行态产物，摘库与否由 owner 决定）。
+
+    '' to ''【单位口径】files/checks 计数取自 build_verify_report 返回体的 len(changed_files) 与
+    check_count；rc=进程退出码；行号在 projects/omo 当前 pin 检出上复核；「空检查集」指 results 列表长度为 0，不是检查失败。
+
+
+    【现象】同一条 run 的 verify 先打印 `agent-workflow verify: ok (executed) files=1 checks=0`
+    且 rc=0，而该次交付真实集是 4 个文件；改用显式 --file 后检查数变为 1（3 个 debt item）/2（registry 文件），并当场抓到
+    ssot-guardian rc=2（缺 .omo/state/system.yaml，物化后同命令 rc=0）。也就是说第一次的「ok」里没有任何检查被执行，同时还漏掉了随后被证实存在的输入缺失。
+
+
+    【机制】三段共同构成虚真：
+
+    1. core.py:380-394 changed_files_from_git 只跑 git diff --name-only 与 git diff --cached
+    --name-only（工作树/暂存区），不与 origin/main 比较 ⇒ 交付一旦 commit 就从 --from-diff 视野消失。同函数在
+    canonical 工作区返回 27 个文件（他人未提交改动，与本批交付无关），在干净 worktree 返回 1 个文件（与本批 4 文件无交集）。
+
+    2. diagnostics_verify.py:94 select_diff_checks 依赖 registry 级 diff_checks 的 paths
+    匹配；load_registry() 后 diff_checks 共 31 行，其中 always=True 的行数=0 ⇒ 文件集为空或无关时 checks=[]。
+
+    3. diagnostics_verify.py:112 ok = all(result.get("ok", False) for result in results)
+    and bool(claim_coverage["ok"])，空列表上 all() 恒真；:121 check_count=len(results)=0；:159-160
+    照常打印 ok 与 checks=0；cli.py:352 return 0 if report["ok"] else 1 ⇒ 退出码 0。
+
+    后果：「没有任何检查被执行」与「所有检查都通过」在读数、退出码、事件记录（:125-150 append_ledger_event 同用这个 ok）上完全不可区分，而
+    bet-closeout-chain 步 6 正是把 verify 结果当 closeout 前置凭证。
+
+
+    【下游不核对形状（实测）】projects/omo/tests/test_workflow_locks.py:569/672/703 直接把 {"ok":
+    True/False, "check_count": 0, "checks": []} 作为 build_verify_report 的桩返回喂给被测代码，:1247
+    还给出 check_count=1 而 checks=[] 的自相矛盾三元组；test_workflow_mesh.py:173、test_workflow_workspace_isolation.py:319
+    同样用桩值代替真实报告。⇒ 既没有任何用例钉住「空检查集应判 fail」，消费侧也不校验 count 与列表的一致性，真实世界里的 checks=0 会被下游照单收下。
+
+
+    【去重】批内条目 OMO-DEBT-WORKFLOW-CLOSEOUT-OK-FIELD-TAUTOLOGY 的对象是 closeout 的 ok=status
+    恒等式（lifecycle.py:1715/:1739，实测 rc=1）；本条对象是 verify 的 ok 在空检查集上虚真（diagnostics_verify.py:112，实测
+    rc=0），判定位置、恒等式形态与后果都不同。二者同族互补，不重复登记。
+
+
+    【决策菜单（均需 principal 取舍，我不代为决定）】
+
+    ① 空结果判定：results 为空且未显式 --all 时判 fail，或新增 explicit_no_checks 字段并令 rc≠0。
+
+    ② 报告里标注文件来源 files_source ∈ {explicit_file, from_diff_worktree, all}，closeout 只接受
+    explicit_file/all。
+
+    ③ --from-diff 增加可选 base（如 --base origin/main），使已 commit 的交付仍可被采集。
+
+    ④ 给 diff_checks 增补覆盖 .omo/debt/items/** 与 .omo/_truth/registry/debt.yaml 的必需行（当前
+    31 行里 0 行 always=True，这两类路径只被 ssot-guardian/gac-local-gate 间接命中）。
+
+    ⑤ 输入缺失类 FAIL 与内容类 FAIL 分桶（本条里 ssot-guardian rc=2 属缺生成态，非交付缺陷，但读数与内容 FAIL 同为 rc=2）。
+
+    ⑥ 用例侧处置：是否禁止用桩返回替代真实 build_verify_report（现有 5 处桩），改由契约测试钉住形状。
+
+
+    【自检】31 与 always=0 为 load_registry() 后 len()/计数实测；行号在 projects/omo 子模块检出上逐条 Read
+    复核（主仓 git grep 看不到子模块内部，曾因此产生空读数，改用直接读检出文件与 rg 子模块路径）；「files=1」那一次未复算具体是哪个文件，只确认与本批
+    4 文件无交集；tests 命中口径为 rg -n ''check_count|checks == 0|checks=0'' projects/omo/tests（未放开到全仓，故「无用例钉住」按该抽样口径陈述）；本条不含对本机
+    .omo/state/system.yaml 缺失成因的判断（该文件按 AGENTS 属运行态产物，摘库与否由 owner 决定）。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【单位口径】files/checks 计数取自 build_verify_report 返回体的 len(changed_files)
+  与 check_count；rc=进程退出码；行号在 projects/omo 当前 pin 检出上复核；「空检查集」指 results 列表长度为 0，不是检查失败。
+
+
+  【现象】同一条 run 的 verify 先打印 `agent-workflow verify: ok (executed) files=1 checks=0`
+  且 rc=0，而该次交付真实集是 4 个文件；改用显式 --file 后检查数变为 1（3 个 debt item）/2（registry 文件），并当场抓到
+  ssot-guardian rc=2（缺 .omo/state/system.yaml，物化后同命令 rc=0）。也就是说第一次的「ok」里没有任何检查被执行，同时还漏掉了随后被证实存在的输入缺失。
+
+
+  【机制】三段共同构成虚真：
+
+  1. core.py:380-394 changed_files_from_git 只跑 git diff --name-only 与 git diff --cached
+  --name-only（工作树/暂存区），不与 origin/main 比较 ⇒ 交付一旦 commit 就从 --from-diff 视野消失。同函数在 canonical
+  工作区返回 27 个文件（他人未提交改动，与本批交付无关），在干净 worktree 返回 1 个文件（与本批 4 文件无交集）。
+
+  2. diagnostics_verify.py:94 select_diff_checks 依赖 registry 级 diff_checks 的 paths
+  匹配；load_registry() 后 diff_checks 共 31 行，其中 always=True 的行数=0 ⇒ 文件集为空或无关时 checks=[]。
+
+  3. diagnostics_verify.py:112 ok = all(result.get("ok", False) for result in results)
+  and bool(claim_coverage["ok"])，空列表上 all() 恒真；:121 check_count=len(results)=0；:159-160
+  照常打印 ok 与 checks=0；cli.py:352 return 0 if report["ok"] else 1 ⇒ 退出码 0。
+
+  后果：「没有任何检查被执行」与「所有检查都通过」在读数、退出码、事件记录（:125-150 append_ledger_event 同用这个 ok）上完全不可区分，而
+  bet-closeout-chain 步 6 正是把 verify 结果当 closeout 前置凭证。
+
+
+  【下游不核对形状（实测）】projects/omo/tests/test_workflow_locks.py:569/672/703 直接把 {"ok": True/False,
+  "check_count": 0, "checks": []} 作为 build_verify_report 的桩返回喂给被测代码，:1247 还给出 check_count=1
+  而 checks=[] 的自相矛盾三元组；test_workflow_mesh.py:173、test_workflow_workspace_isolation.py:319
+  同样用桩值代替真实报告。⇒ 既没有任何用例钉住「空检查集应判 fail」，消费侧也不校验 count 与列表的一致性，真实世界里的 checks=0 会被下游照单收下。
+
+
+  【去重】批内条目 OMO-DEBT-WORKFLOW-CLOSEOUT-OK-FIELD-TAUTOLOGY 的对象是 closeout 的 ok=status
+  恒等式（lifecycle.py:1715/:1739，实测 rc=1）；本条对象是 verify 的 ok 在空检查集上虚真（diagnostics_verify.py:112，实测
+  rc=0），判定位置、恒等式形态与后果都不同。二者同族互补，不重复登记。
+
+
+  【决策菜单（均需 principal 取舍，我不代为决定）】
+
+  ① 空结果判定：results 为空且未显式 --all 时判 fail，或新增 explicit_no_checks 字段并令 rc≠0。
+
+  ② 报告里标注文件来源 files_source ∈ {explicit_file, from_diff_worktree, all}，closeout 只接受
+  explicit_file/all。
+
+  ③ --from-diff 增加可选 base（如 --base origin/main），使已 commit 的交付仍可被采集。
+
+  ④ 给 diff_checks 增补覆盖 .omo/debt/items/** 与 .omo/_truth/registry/debt.yaml 的必需行（当前
+  31 行里 0 行 always=True，这两类路径只被 ssot-guardian/gac-local-gate 间接命中）。
+
+  ⑤ 输入缺失类 FAIL 与内容类 FAIL 分桶（本条里 ssot-guardian rc=2 属缺生成态，非交付缺陷，但读数与内容 FAIL 同为 rc=2）。
+
+  ⑥ 用例侧处置：是否禁止用桩返回替代真实 build_verify_report（现有 5 处桩），改由契约测试钉住形状。
+
+
+  【自检】31 与 always=0 为 load_registry() 后 len()/计数实测；行号在 projects/omo 子模块检出上逐条 Read
+  复核（主仓 git grep 看不到子模块内部，曾因此产生空读数，改用直接读检出文件与 rg 子模块路径）；「files=1」那一次未复算具体是哪个文件，只确认与本批
+  4 文件无交集；tests 命中口径为 rg -n ''check_count|checks == 0|checks=0'' projects/omo/tests（未放开到全仓，故「无用例钉住」按该抽样口径陈述）；本条不含对本机
+  .omo/state/system.yaml 缺失成因的判断（该文件按 AGENTS 属运行态产物，摘库与否由 owner 决定）。'

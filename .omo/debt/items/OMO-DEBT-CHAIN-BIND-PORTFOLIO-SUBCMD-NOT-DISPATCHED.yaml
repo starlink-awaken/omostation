@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-agent
 affected_roots:
 - bin/plan/chain-bind-check.py
@@ -85,6 +85,10 @@ history:
     \ 改成有实现支撑的取值；④ 若要接进 CI，先按纪律走 advisory 观察，是否升级 blocking 由 principal 决定。取证装置坑同记：`...\
     \ 2>&1 | tail -3; echo rc=$?` 取到的是 tail 的 rc（zsh PIPESTATUS 陷阱，AGENTS §7 已登记同形），本轮改用\
     \ subprocess 才拿到真实 rc=1。'."
+- at: '2026-11-25T10:02:36.446859+00:00'
+  action: close
+  note: 已修复合入：portfolio 子命令补进 main() 硬编码派发字典
+  actor: governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
@@ -121,3 +125,11 @@ description: "【机制缺陷】bin/plan/chain-bind-check.py 把 T1-06 的 Miles
   \ 断言 MILESTONE_MET；③ campaign 侧要么补谓词、要么把 `status: derived` 改成有实现支撑的取值；④ 若要接进 CI，先按纪律走\
   \ advisory 观察，是否升级 blocking 由 principal 决定。取证装置坑同记：`... 2>&1 | tail -3; echo rc=$?`\
   \ 取到的是 tail 的 rc（zsh PIPESTATUS 陷阱，AGENTS §7 已登记同形），本轮改用 subprocess 才拿到真实 rc=1。"
+closed_at: '2026-11-25T10:02:36.446346+00:00'
+close_reason: 已修复合入：portfolio 子命令补进 main() 硬编码派发字典
+resolution_evidence: 'PR #5563 (merge b8653f1996449d9f39514f8299758e1b0d151330): bin/plan/chain-bind-check.py
+  main() 派发字典加入 "portfolio": cmd_portfolio。回归走真实 CLI 入口 tests/test_chain_bind.py::test_every_registered_subcommand_reaches_its_handler
+  —— 子命令名单取自 `chain-bind-check.py --help` 自己枚举（不在用例里另抄一份，避免与被管面脱钩），逐个 probe 断言输出无
+  Traceback/KeyError。实测修复前 `portfolio --milestone-id MS-W0-CONTRACT` rc=1 KeyError:
+  ''portfolio''，修复后 rc=0 {"code": "MILESTONE_MET", "ok": true}；14 passed。负控制：删掉派发行
+  → 1 failed。'
