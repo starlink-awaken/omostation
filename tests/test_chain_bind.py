@@ -499,3 +499,69 @@ def test_every_registered_subcommand_reaches_its_handler() -> None:
         combined = probe.stdout + probe.stderr
         assert "Traceback" not in combined, f"{name} died inside dispatch:\n{combined}"
         assert "KeyError" not in combined, f"{name} is registered but not dispatched:\n{combined}"
+
+
+# ── retro↔BET 归属交叉核对 ──
+# 债条目 OMO-DEBT-RETRO-ATTRIBUTION-FILENAME-ONLY-NO-CROSSCHECK:
+# 归属只有文件名一个信号, 此前 chain 侧只核对文件存在、从不读内容。
+
+
+def _write_retro(ws: Path, bet_id: str, frontmatter: dict | None) -> None:
+    directory = ws / ".omo" / "_knowledge" / "retros"
+    directory.mkdir(parents=True, exist_ok=True)
+    text = ""
+    if frontmatter is not None:
+        text = "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n"
+    (directory / f"{bet_id}.md").write_text(text + f"# retro {bet_id}\n", encoding="utf-8")
+
+
+def test_retro_attribution_mismatch_flags_declared_other_bet(tmp_path: Path) -> None:
+    _write_retro(tmp_path, "BET-Y1Q1-T6-02", {"bet_id": "BET-Y1Q1-T6-99"})
+
+    got = BIND.retro_attribution_mismatch(tmp_path, "BET-Y1Q1-T6-02")
+
+    assert got is not None
+    assert "retro_bet_id_mismatch" in got
+    assert "BET-Y1Q1-T6-99" in got
+
+
+def test_retro_attribution_mismatch_ignores_absent_key(tmp_path: Path) -> None:
+    """缺 ``bet_id`` 键不报 —— 强制加键会一次性造出 267 条红（本条未登记该缺陷）。"""
+    _write_retro(tmp_path, "BET-Y1Q1-T6-02", {"title": "no id here"})
+    assert BIND.retro_attribution_mismatch(tmp_path, "BET-Y1Q1-T6-02") is None
+
+
+def test_retro_attribution_mismatch_accepts_matching_key(tmp_path: Path) -> None:
+    _write_retro(tmp_path, "BET-Y1Q1-T6-03", {"bet_id": "BET-Y1Q1-T6-03"})
+    assert BIND.retro_attribution_mismatch(tmp_path, "BET-Y1Q1-T6-03") is None
+
+
+def test_retro_attribution_mismatch_skips_absent_file_and_frontmatter(tmp_path: Path) -> None:
+    assert BIND.retro_attribution_mismatch(tmp_path, "BET-NOPE") is None
+    _write_retro(tmp_path, "BET-Y1Q1-T6-04", None)
+    assert BIND.retro_attribution_mismatch(tmp_path, "BET-Y1Q1-T6-04") is None
+
+
+def test_evaluate_complete_propagates_retro_mismatch(tmp_path: Path, monkeypatch) -> None:
+    retro = tmp_path / "retro.md"
+    retro.write_text("---\nbet_id: BET-OTHER\n---\nbody\n", encoding="utf-8")
+    monkeypatch.setattr(BIND, "bound_runs_for_bet", lambda ws, bid: [{"id": "run-1"}])
+    monkeypatch.setattr(BIND, "north_star_present", lambda ws: True)
+    monkeypatch.setattr(BIND, "retro_path_for", lambda ws, bid: retro)
+
+    verdict = BIND.evaluate_complete({"id": "BET-Y1Q1-T6-05", "retro": "required"}, tmp_path)
+
+    assert verdict.ok is False
+    assert any("retro_bet_id_mismatch" in reason for reason in verdict.reasons)
+
+
+def test_evaluate_complete_clean_when_retro_attribution_matches(tmp_path: Path, monkeypatch) -> None:
+    retro = tmp_path / "retro.md"
+    retro.write_text("---\nbet_id: BET-Y1Q1-T6-05\n---\nbody\n", encoding="utf-8")
+    monkeypatch.setattr(BIND, "bound_runs_for_bet", lambda ws, bid: [{"id": "run-1"}])
+    monkeypatch.setattr(BIND, "north_star_present", lambda ws: True)
+    monkeypatch.setattr(BIND, "retro_path_for", lambda ws, bid: retro)
+
+    verdict = BIND.evaluate_complete({"id": "BET-Y1Q1-T6-05", "retro": "required"}, tmp_path)
+
+    assert verdict.ok is True, verdict.reasons
