@@ -1,0 +1,51 @@
+id: "PANORAMA-BRIEF-REPUBLISH-SECOND-BOUNDARY-FLAKE"
+title: "agent-brief 重复发布幂等用例跨秒即失败：载荷含秒级 generated_at，两次调用不同秒 ⇒ revision_id 不同"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.1
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/panorama/panorama-collect.py
+- tests/unit/test_panorama_agent_brief.py
+evidence_refs:
+- bin/panorama/panorama-collect.py
+- tests/unit/test_panorama_agent_brief.py
+mitigation_refs: []
+opened_at: "2026-11-26"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-26"
+gate_level: none
+description: >-
+  `tests/unit/test_panorama_agent_brief.py::test_republish_same_payload_is_idempotent_not_collision`
+  断言「同一 payload 连续发布两次 ⇒ 同一 `revision_id`」。但 `collect_agent_visibility()`
+  产出的载荷里含**秒级**墙钟：`bin/panorama/panorama-collect.py:735`
+  `generated = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)`
+  → `:737-738` 写进 `generated_at` / `fresh_until_at`，并随 `_finalize_bound_agent_brief`
+  进入发布的 payload。于是**两次调用跨过一整秒**时载荷就不同，`revision_id` 不同 ⇒ 用例红。
+
+  **实测**：2026-11-26 在 #5592 的 governance-verify 上失败（`b328ba643…` vs `653bd2c0…`），
+  同一用例本机单跑通过、job 重跑也通过 —— 典型的时间边界抖动，不是逻辑错。
+  **方向同样反了**：失败概率随时长上升（载荷里的秒越多越容易跨秒），而这条用例的
+  本意是证明幂等，不该随运行时间漂移。
+
+  处置选项（本条不代决）：
+  - (a) 用例侧冻结时间（monkeypatch `panorama_collect` 的时钟），两条调用读出同一 `generated_at`；
+  - (b) 把 `generated_at`/`fresh_until_at` 从「参与 revision 计算的载荷」里剥出去
+    （它们是本元数据而非可见性内容），revision 只跟随真正的可见性内容；
+  - (c) 断言放宽为「同秒内幂等」，并把跨秒行为单独一条用例覆盖。
+  倾向 (a)（最小、不动产品语义），但若 (b) 成立则更干净。
+history:
+- at: "2026-11-26T02:00:00+00:00"
+  action: register
+  note: >-
+    **发现经过**：给一条纯债务 YAML 的 PR（#5592）跑治理检查时，governance-verify 的
+    `tests/unit/test_panorama_agent_brief.py` 报 `assert first["revision_id"] == second["revision_id"]`
+    失败；本机单跑通过、job 重跑通过。定位到载荷里的秒级 `generated_at`。
+    **判据** —— 用例自称「同一 payload」，就先确认 payload 真的与时间无关;
+    凡是断言幂等/确定性的用例，都要问「载荷里有没有墙钟」。
+  actor: "governance-agent"
