@@ -1,0 +1,62 @@
+id: "GATE-DEFAULT-DUPLICATE-STATE-FRESHNESS"
+title: "DEFAULT_POLICY 重复声明 state-freshness-check（两条命令不同，default_total 74 掩盖了 75 条里的重复）"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "low"
+weight: 0.05
+entropy_class: "classification"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/gac/gac-local-gate.py
+evidence_refs:
+- bin/gac/gac-local-gate.py
+- .omo/debt/items/GATE-SURFACE-POLICY-VS-DEFAULT-DIVERGENCE.yaml
+- .omo/debt/items/GATE-POLICY-SOURCE-COVERAGE-SKEW.yaml
+mitigation_refs: []
+opened_at: "2026-11-26T02:00:00+00:00"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-26"
+gate_level: none
+description: >-
+  `bin/gac/gac-local-gate.py` 的 `DEFAULT_POLICY["gates"]` 里 `state-freshness-check`
+  被声明了**两次**，且命令不同：
+
+  | 行 | 命令 | 其它字段 |
+  |---|---|---|
+  | `:173-176` | `bin/gac/state-freshness-check.py` | `ci_only: True` |
+  | `:209-212` | `bin/gac/state-freshness-check.py --json` | 无 |
+
+  **后果**：
+  1. fallback 口径（子模块未检出、`--strict` 走 DEFAULT）下同一个 check 会跑两遍，
+     其中一遍不带 `--json`，因而无法自报 `measured:false`；
+  2. `gate_coverage_report()` 的 `effective/default_total` 取的是 **id 集合**
+     （`len({g["id"] ...})`），于是 DEFAULT 显示 74 条而实际有 75 个条目 ——
+     重复被静默折叠，读报告的人看不到它；
+  3. `CI_ONLY_CHECKS` 同样是 id 集合，重复不影响它，但两条 entry 的 `ci_only` 不一致
+     （一条 True 一条无），到底哪条生效取决于遍历顺序。
+
+  **对照**：生效的 `projects/ecos/.../sgf-policy.yaml` 里该 id **没有**重复
+  （齐备树不受影响），所以这是 fallback 专属缺陷，也解释了为什么它在齐备树测量中不可见。
+
+  **发现经过**：校准 `GATE-SURFACE-POLICY-VS-DEFAULT-DIVERGENCE` 的旧读数（87 vs 84）时，
+  用 `gate_coverage_report()` 量到 `effective=96 / default_total=74`，与「数条目得 75」对不上，
+  差 1 追出这条重复。
+decision_needed: >-
+  两条留哪条（或改成不同 id）由 owner 定：
+  (a) 保留带 `--json` 的那条 —— 与其余 check 的机器可读口径一致，但要确认 `ci_only`
+      语义（现在只有一条带 ci_only）是否仍需要；删掉 ci_only 那条会让它在非 CI 的
+      strict 场合也执行；
+  (b) 保留 `ci_only: True` 那条 —— 维持原有执行面，但它不带 `--json`，fallback 下
+      无法自报「没测成」；
+  (c) 拆成两个 id（例如 `state-freshness-check` + `state-freshness-check-json`）——
+      保留两种行为，代价是门禁条目 +1、投影/覆盖报告口径要同步。
+  **本条不代为选定**；只登记与取证。可选的后续（未做）：给 `gate_coverage_report()`
+  加一条「policy 内 id 重复」的自检，让这类重复在报告里显形而不是靠集合差偶然暴露。
+history:
+- at: "2026-11-26T02:00:00+00:00"
+  action: register
+  note: Registered debt item GATE-DEFAULT-DUPLICATE-STATE-FRESHNESS.
+  actor: "governance-agent"

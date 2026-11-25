@@ -133,3 +133,18 @@ history:
     CLI 默认值或**有声**回落（如 `dim-weight.py` 会返回「样本不足, 使用默认权重」）。
     所以这不是系统性问题，是单点。
   actor: "governance-agent"
+- at: "2026-11-26T02:15:00+00:00"
+  action: correct
+  note: >-
+    **旧读数已陈旧，订正为实测**：正文与 `load_sgf_policy()` docstring（`:27-30`）记的是
+    「policy 77 / default 72, strict 87 vs 84, 差集 19」。2026-11-26 在齐备树
+    （origin/main `325cf0a41`，5 个子模块 init）调 `gate_coverage_report()` 实得
+    **`source=sgf_policy, effective=96, default_total=74`**；`GATES_LIST` 的 96 是
+    sgf-policy 的 78 条加上主仓条件追加（`write-owner-audit` / `doc-governance` /
+    `current-state-coherence` / `task-verify` / `test-host-hygiene` / `x2-rule-lint` /
+    `check-conflict-markers` 等），差集方向与结论不变（partial 少 28、齐备少 6）。
+    **顺带查出一处重复**：DEFAULT_POLICY 里 `state-freshness-check` 有两条（命令不同），
+    条目数 75 而 id 集合 74 —— 已另立 `GATE-DEFAULT-DUPLICATE-STATE-FRESHNESS`。
+    **纪律**：这类「两套策略规模」的数字同样会漂移，且漂移后单看一边看不出问题 ——
+    本次是因为「报告说 74、手数 75」对不上才追出来的。
+  actor: "governance-agent"
