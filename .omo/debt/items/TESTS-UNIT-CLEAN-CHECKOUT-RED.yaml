@@ -134,3 +134,39 @@ history:
     **边界**: 本条 `decision_needed` 的 (a)/(b)/(c) 仍未裁; 本次只补足**单元面里这三个文件的
     守卫精度与自清理**, 顶层 `tests/test_*.py` 的 223 failed + 21 errors 未动。
   actor: "governance-agent"
+- at: "2026-11-25T03:55:00+00:00"
+  action: evaluate
+  note: >-
+    **顶层平面复测: 223 failed + 21 errors → 6 failed / 3037 passed**（本条标题与
+    description 里的旧数字已被这次读数取代，勿再引用）。配置: `claim` 快速路径 worktree
+    （顶层子模块经 post-checkout 守卫本地对齐, 嵌套未 init）, 4 片并行 `pytest tests/test_*.py`;
+    对照组 canonical 同批 20 文件 289 passed。逐条首因（6 条全部定性, 其中 5 条秒级单跑复现、
+    1 条为 600s 超时留 shard 级证据）:
+      1. `test_bos_deprecated_count.py::TestEvidenceSmokeCli::test_gate_mode_emits_known_gap_expiry`
+         —— **真信号**: `KNOWN_GAP_EXPIRES=2026-11-12` 已过, 应清理 `KNOWN_GAP_PREFIXES`。
+         到期未清, 不是假红; 不要靠改日期「修」掉。
+      2. `test_north_star_meter_v2.py::test_cli_keeps_python39_compatible_timezone_imports`
+         —— 状态面 event ledger 不在本检出/本 profile 的状态根, 脚本自报
+         `reason=event_ledger_missing, status=unprovable`, 用例把「不可证」当失败。
+         修法: 该 reason 下 skip。反向判据: 把账本物化进检出后该用例 1 passed 不跳。
+      3-4. `test_pipeline_e2e.py::test_pipeline_embedding_station` 与
+         `test_embedding_mps.py::test_reranker_orders_and_budget`
+         —— omlxc 的 uv 环境无 `mlx`, 引擎降级而流水线以
+         `RuntimeError: rerank model unavailable` 红; 原 skipif 只探 HF 缓存里
+         **模型权重在不在**, 不探**引擎跑不跑得起来**。修法: 加 `_omlxc_mlx_importable()`。
+      5. `test_embedding_mps.py::test_engine_hybrid_and_budget`
+         —— 同一 benchmark 子进程 600s 超时（环境性时长, 非断言失败）。
+      6. `test_fix_submodule_drift.py::test_submodule_drift_detection`
+         —— 守卫只扫顶层 `.gitmodules`, 漏 `projects/agora/projects/{aetherforge,l4-kernel}`
+         两个**嵌套**子模块 ⇒ detector 报 uninitialized_count=2。修法: 守卫改问
+         `git submodule status --recursive`（扫描面 = 被管面）。
+    **顺带发现（生产侧, 本轮未修）**: `projects/omlxc/src/omlxc/dataplane/reranker.py`
+    文件头声称「over-budget reruns degrade to dense cosine ordering」, `RerankEngine`
+    也确实记录 `fallback_reason` 并保持 `backend != "mlx-local"`, 但 `rerank()` 在 docs
+    非空时直接 `raise RuntimeError("rerank model unavailable")` —— 降级分支不可达
+    （同函数 `not docs` 分支返回的 dict 里就有 `"degraded": self.backend != "mlx-local"`）。
+    而 `test_embedding_mps` 恰恰断言 `degraded is True`, 即测试期望的是**降级成功**。
+    属跨子仓改动, 本轮只在测试侧按「环境缺失则不可测」处理, 生产侧待裁。
+    **纪律**: 分片并行的读数必须逐条单跑复现才采信（本轮 5 条秒级复现, 1 条留 shard 级证据
+    并在报告中显式标注其性质）。
+  actor: "governance-agent"
