@@ -10,6 +10,7 @@ review_queue_ref: .omo/debt/review-queue/current.yaml
 action_packet_ref: .omo/debt/action-packet/current.yaml
 owner_routing_ref: .omo/debt/owner-routing/current.yaml
 seed_items:
+- .omo/debt/items/OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE.yaml
 - .omo/debt/items/DECL_EXEC_GAP.yaml
 - .omo/debt/items/UNASSIGNED_ENTROPY.yaml
 - .omo/debt/items/L1_HEALTH_PROBES.yaml

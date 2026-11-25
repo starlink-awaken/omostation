@@ -1,0 +1,218 @@
+id: OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE
+title: agent-workflow closeout 的 --evidence 零校验且转 ok 后不可修正：诊断占位串永久留在 run 审计记录，人工证据与自动生成行共用同一个
+  evidence_count
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- projects/omo/src/omo/workflow/cli.py
+- projects/omo/src/omo/workflow/lifecycle.py
+- projects/omo/src/omo/workflow_mesh.py
+- .omo/_delivery/agent-workflows/
+- .omo/debt/items/
+evidence_refs:
+- projects/omo/src/omo/workflow/cli.py
+- projects/omo/src/omo/workflow/lifecycle.py
+- projects/omo/src/omo/workflow_mesh.py
+- .omo/debt/items/OMO-DEBT-BROKER-WRITE-VERBS-ACCEPT-EMPTY-EVIDENCE-TEXT.yaml
+- .omo/debt/items/OMO-DEBT-EVIDENCE-REF-ACCEPTANCE-TWO-JUDGES.yaml
+mitigation_refs: []
+opened_at: '2026-11-24T11:58:27.591113+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T11:58:27.591113+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE.
+- at: '2026-11-24T11:59:25.067892+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【批次 19】agent-workflow closeout 的 --evidence
+    零校验，且转 ok 后不可修正
+
+
+    §1 两条机制（代码原文，origin/main 9b8aa9bea）
+
+    (a) 无内容校验：`projects/omo/src/omo/workflow/cli.py:213` 给 closeout 定义的 `--evidence`
+    是 `action="append", default=[]`，既不 required 也无内容判据；`:517-527` 的 closeout 分支把 `args.evidence`
+    原样交给 `closeout_run`。`projects/omo/src/omo/workflow/lifecycle.py:1708-1712` 再拼成
+    `[*evidence, 自动 verify 行, 自动 observe 行]`，最后 `:1574-1575` 以 `payload["evidence"].extend(...)`
+    落盘——全链路无 `strip()`、无长度下限、无占位串识别。
+
+    (b) 不可修正：`closeout_run` 对 `status=="ok"` 的第一步就是 `heartbeat_run(...)`（`:1690-1691`），而
+    `heartbeat_run` 在非 active run 上直接 raise `cannot heartbeat non-active run ... (status=ok)`（`:1048-1049`）。run
+    YAML 侧唯一的 evidence 写点就是 (a) 里的 extend；仓库内 `add_evidence` / `record_evidence` /
+    `attach_evidence` 类动词 grep 零命中；mesh 的 `snapshot["evidence"][evidence_id]` 由事件流按固定
+    key 白名单填充（`projects/omo/src/omo/workflow_mesh.py:1078-1092`），不接受事后人工补充。
+
+
+    §2 与 `close` 的口径不对称（在册 ADR-0209 A1 只覆盖一半）
+
+    `cli.py:505-510` 对 `close --status ok` 有「至少一条 --evidence」守卫，注释写明理由（protocol honesty）；同一段派发里的
+    closeout 分支没有对应守卫。后果：closeout 总会自带 2 行自动生成记录，`evidence_count`（`lifecycle.py:1719`）永不为
+    0，于是「一次没有任何人工闭局证据的 closeout」在计数上与「带 600 字判据原文的 closeout」同为 ≥2 —— 计数无法区分，而 §14.2
+    类留痕要求看的正是这个。
+
+
+    §3 一手现场（本会话真实发生，非沙箱）
+
+    2026-11-24T11:49:54Z，批次 18 的 closeout 首跑被内部 verify 拦（瞬态读数，见 §5）。为分诊而以 `--evidence
+    "retry-for-diagnosis"` 再跑一次：rc=0，run `20261124T112136Z-governance-state-mutation-747a2eac`
+    转 `status: ok`，该 19 字符诊断占位串成为其 `evidence[0]`，与两行自动生成记录并列为全部三条。随后带正式闭局证据的第二次 closeout
+    被 `cannot heartbeat non-active run (status=ok)` 拒（rc=2）——占位串已不可替换，也不可追加更正。
+
+    真实证据只能另走 append-only 事件面：`omo event emit --type agent_mutation_complete` 写入 `.omo/_knowledge/omo-events.jsonl`（实测该文件
+    tracked=0、ignored=yes，本次落在第 330 行），六字段按 AGENTS §14.2。于是同一件事在 run 记录与事件面留下两份不一致读数：前者说「证据是
+    retry-for-diagnosis」，后者才是正式记录。
+
+
+    §4 为什么这不是批次 18 A 项的重复
+
+    `OMO-DEBT-BROKER-WRITE-VERBS-ACCEPT-EMPTY-EVIDENCE-TEXT` 讲的是 `omo-debt desc/register`
+    对入参空值无护栏；本条讲的是 `agent-workflow closeout`：代码位置不同、修复面不同（这里需要的是追加类动词或人工/自动证据分计数，而不是入参
+    strip 守卫），并且多一个 A 项没有的性质——写入后不可修正。两条并列而非并案，合并与否归 principal。
+
+
+    §5 取证方式与边界
+
+    - 结论来源是代码原文（带行号）+ 本会话一手现场。未做 live 的「空 --evidence closeout」探针：在 worktree 里 `start`+`closeout`
+    会写进共享的 `.omo/_delivery/agent-workflows`（实测是指向 canonical 的符号链接、同一 inode），留一个探测
+    run 属污染受管 state 面，代价高于收益。所以「closeout 传空 evidence 也会成功」这句是按 §1(a) 的代码路径推出的，不是实测的。
+
+    - 批次 18 期间观测到 gate 一次 `[FAIL] check-evidence-freshness`（11:45:53）与其后 7 次复跑全 rc=0；本条不据此对
+    freshness 判据下结论。已在册的 `DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT`（closed，2026-11-23）讲的是
+    worktree 内 mtime 等于 checkout 时刻这一类同形读数，是否同源未取证。
+
+    - 引用自检：写库前把全部行号断言逐条跑了一遍（15 处），抓出 3 处偏差——`:1689-1690` 实为 `:1690-1691`、mesh key
+    白名单起点是 `:1078` 而非 `:1064`、`closeout_evidence` 列表的 `]` 在 `:1712` 而不是 `observe_report`
+    那行（`:1711`）。已按 origin/main 9b8aa9bea 校正，本条所有行号都是该 commit 上的读数。
+
+    - 仪器自纠：本批测量再次踩 `rg -r` 把下一个 token 当替换串（那次伪造出 `n {run_id}` 的行文），改用 `rg -n` 才读到
+    `lifecycle.py:1049` 原文；这是批次 17/18 在册记录之后同一坑的第三次复发。
+
+
+    §6 待裁（三选一 + 一项授权）
+
+    ① 对称守卫 —— 给 closeout 的 status=ok 加与 `close` 一致的人工 evidence 存在性要求，可另加「strip 后长度
+    ≥N、拒绝纯占位/纯空白」判据。代价：现存以 closeout 自动证据收尾的编排会开始失败，且 N 需要口径。
+
+    ② 追加动词 —— 新增只追加、不改写旧行的 `amend-evidence` / `note` 类动词，允许在已 ok 的 run 上补带时间戳的更正证据。代价：run
+    记录从「一次写入即终态」变成多版本，消费方要按时间取末值。
+
+    ③ 分开计数 —— 保持不可修正，但把自动生成的 2 行与人工 evidence 分开计数（如 `manual_evidence_count`），并在 observe/compliance
+    面要求人工 ≥1。代价：只是可见性改进，占位串仍留在记录里。
+
+    ④ 授权项 —— 是否回填本次那两条一手记录，即在 run `20261124T112136Z-...` 上补写正式证据指针。那是改受管 state 面且无
+    sanctioned 动词可用（等于手工编辑 `.omo/_delivery`），需 principal 明确授权，我不代为执行。
+
+    ''.'
+- at: '2026-11-24T11:59:25.111052+00:00'
+  action: schedule
+  note: Next review set to 2026-12-08.
+- at: '2026-11-24T11:59:25+00:00'
+  action: measurement_provenance
+  note: >-
+    15 处行号断言逐条核对，抓出 3 处偏差并按 9b8aa9bea 校正；未在共享 state 面做 live 空 evidence 探针（会在指向 canonical 的 .omo/_delivery 留探测 run），故 §1(a) 的空值成功是代码路径推论，一手现场只有占位串那一次。仪器坑：rg -r 吞 token，改 rg -n 重测。
+- at: '2026-11-24T11:59:25+00:00'
+  action: restore_lifecycle_state
+  note: >-
+    broker schedule 依 omo_debt_lifecycle.py:74 把 lifecycle_state 从 identified 翻成 scheduled；本批以文本级替换还原 identified（还原前断言 scheduled 恰 1 次），next_review_at=2026-12-08 由 schedule 写入。
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【批次 19】agent-workflow closeout 的 --evidence 零校验，且转 ok 后不可修正
+
+
+  §1 两条机制（代码原文，origin/main 9b8aa9bea）
+
+  (a) 无内容校验：`projects/omo/src/omo/workflow/cli.py:213` 给 closeout 定义的 `--evidence`
+  是 `action="append", default=[]`，既不 required 也无内容判据；`:517-527` 的 closeout 分支把 `args.evidence`
+  原样交给 `closeout_run`。`projects/omo/src/omo/workflow/lifecycle.py:1708-1712` 再拼成 `[*evidence,
+  自动 verify 行, 自动 observe 行]`，最后 `:1574-1575` 以 `payload["evidence"].extend(...)`
+  落盘——全链路无 `strip()`、无长度下限、无占位串识别。
+
+  (b) 不可修正：`closeout_run` 对 `status=="ok"` 的第一步就是 `heartbeat_run(...)`（`:1690-1691`），而
+  `heartbeat_run` 在非 active run 上直接 raise `cannot heartbeat non-active run ... (status=ok)`（`:1048-1049`）。run
+  YAML 侧唯一的 evidence 写点就是 (a) 里的 extend；仓库内 `add_evidence` / `record_evidence` / `attach_evidence`
+  类动词 grep 零命中；mesh 的 `snapshot["evidence"][evidence_id]` 由事件流按固定 key 白名单填充（`projects/omo/src/omo/workflow_mesh.py:1078-1092`），不接受事后人工补充。
+
+
+  §2 与 `close` 的口径不对称（在册 ADR-0209 A1 只覆盖一半）
+
+  `cli.py:505-510` 对 `close --status ok` 有「至少一条 --evidence」守卫，注释写明理由（protocol honesty）；同一段派发里的
+  closeout 分支没有对应守卫。后果：closeout 总会自带 2 行自动生成记录，`evidence_count`（`lifecycle.py:1719`）永不为
+  0，于是「一次没有任何人工闭局证据的 closeout」在计数上与「带 600 字判据原文的 closeout」同为 ≥2 —— 计数无法区分，而 §14.2
+  类留痕要求看的正是这个。
+
+
+  §3 一手现场（本会话真实发生，非沙箱）
+
+  2026-11-24T11:49:54Z，批次 18 的 closeout 首跑被内部 verify 拦（瞬态读数，见 §5）。为分诊而以 `--evidence
+  "retry-for-diagnosis"` 再跑一次：rc=0，run `20261124T112136Z-governance-state-mutation-747a2eac`
+  转 `status: ok`，该 19 字符诊断占位串成为其 `evidence[0]`，与两行自动生成记录并列为全部三条。随后带正式闭局证据的第二次 closeout
+  被 `cannot heartbeat non-active run (status=ok)` 拒（rc=2）——占位串已不可替换，也不可追加更正。
+
+  真实证据只能另走 append-only 事件面：`omo event emit --type agent_mutation_complete` 写入 `.omo/_knowledge/omo-events.jsonl`（实测该文件
+  tracked=0、ignored=yes，本次落在第 330 行），六字段按 AGENTS §14.2。于是同一件事在 run 记录与事件面留下两份不一致读数：前者说「证据是
+  retry-for-diagnosis」，后者才是正式记录。
+
+
+  §4 为什么这不是批次 18 A 项的重复
+
+  `OMO-DEBT-BROKER-WRITE-VERBS-ACCEPT-EMPTY-EVIDENCE-TEXT` 讲的是 `omo-debt desc/register`
+  对入参空值无护栏；本条讲的是 `agent-workflow closeout`：代码位置不同、修复面不同（这里需要的是追加类动词或人工/自动证据分计数，而不是入参
+  strip 守卫），并且多一个 A 项没有的性质——写入后不可修正。两条并列而非并案，合并与否归 principal。
+
+
+  §5 取证方式与边界
+
+  - 结论来源是代码原文（带行号）+ 本会话一手现场。未做 live 的「空 --evidence closeout」探针：在 worktree 里 `start`+`closeout`
+  会写进共享的 `.omo/_delivery/agent-workflows`（实测是指向 canonical 的符号链接、同一 inode），留一个探测 run
+  属污染受管 state 面，代价高于收益。所以「closeout 传空 evidence 也会成功」这句是按 §1(a) 的代码路径推出的，不是实测的。
+
+  - 批次 18 期间观测到 gate 一次 `[FAIL] check-evidence-freshness`（11:45:53）与其后 7 次复跑全 rc=0；本条不据此对
+  freshness 判据下结论。已在册的 `DEBT-STALE-EVIDENCE-FS-MTIME-CHECKOUT-ARTIFACT`（closed，2026-11-23）讲的是
+  worktree 内 mtime 等于 checkout 时刻这一类同形读数，是否同源未取证。
+
+  - 引用自检：写库前把全部行号断言逐条跑了一遍（15 处），抓出 3 处偏差——`:1689-1690` 实为 `:1690-1691`、mesh key 白名单起点是
+  `:1078` 而非 `:1064`、`closeout_evidence` 列表的 `]` 在 `:1712` 而不是 `observe_report` 那行（`:1711`）。已按
+  origin/main 9b8aa9bea 校正，本条所有行号都是该 commit 上的读数。
+
+  - 仪器自纠：本批测量再次踩 `rg -r` 把下一个 token 当替换串（那次伪造出 `n {run_id}` 的行文），改用 `rg -n` 才读到 `lifecycle.py:1049`
+  原文；这是批次 17/18 在册记录之后同一坑的第三次复发。
+
+
+  §6 待裁（三选一 + 一项授权）
+
+  ① 对称守卫 —— 给 closeout 的 status=ok 加与 `close` 一致的人工 evidence 存在性要求，可另加「strip 后长度 ≥N、拒绝纯占位/纯空白」判据。代价：现存以
+  closeout 自动证据收尾的编排会开始失败，且 N 需要口径。
+
+  ② 追加动词 —— 新增只追加、不改写旧行的 `amend-evidence` / `note` 类动词，允许在已 ok 的 run 上补带时间戳的更正证据。代价：run
+  记录从「一次写入即终态」变成多版本，消费方要按时间取末值。
+
+  ③ 分开计数 —— 保持不可修正，但把自动生成的 2 行与人工 evidence 分开计数（如 `manual_evidence_count`），并在 observe/compliance
+  面要求人工 ≥1。代价：只是可见性改进，占位串仍留在记录里。
+
+  ④ 授权项 —— 是否回填本次那两条一手记录，即在 run `20261124T112136Z-...` 上补写正式证据指针。那是改受管 state 面且无 sanctioned
+  动词可用（等于手工编辑 `.omo/_delivery`），需 principal 明确授权，我不代为执行。
+
+  '
+decision_needed: '待裁（三选一 + 一项授权，均属工具契约与 state 面变更，不由 agent 选定）：
+
+
+  ① 对称守卫 —— closeout 的 status=ok 增加与 close 一致的人工 evidence 存在性要求（cli.py:505-510 同一口径），可另加 strip 后长度下限与占位串拒绝。代价：以 closeout 自动证据收尾的既有编排会开始失败，长度下限需定 N。
+
+
+  ② 追加动词 —— 新增只追加、不改写旧行的 amend-evidence / note 类动词，使已 ok 的 run 能补带时间戳的更正证据。代价：run 记录由「一次写入即终态」变多版本，消费方需按时间取末值。
+
+
+  ③ 分开计数 —— 保持不可修正，但自动生成 2 行与人工 evidence 分列计数（如 manual_evidence_count），并在 observe/compliance 面要求人工 ≥1。代价：仅可见性改进，占位串仍留在记录里。
+
+
+  ④ 授权项 —— 是否回填 run 20261124T112136Z-governance-state-mutation-747a2eac 的正式证据指针。无 sanctioned 动词可用，等于手工编辑 .omo/_delivery 受管面，需 principal 明确授权；本批只把事实登记入册，未动该 run 文件。'
