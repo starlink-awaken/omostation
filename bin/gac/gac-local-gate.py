@@ -323,7 +323,9 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-evidence-honest-closure",
-            "command": ["bin/gac/check-evidence-honest-closure.py"],
+            # --json: runs 目录在 `.omo/_delivery/**`（gitignore 面），CI 干净检出里
+            # 不存在；带 flag 才能让本 check 自报 `measured: false` 而不是空绿。
+            "command": ["bin/gac/check-evidence-honest-closure.py", "--json"],
         },
         {
             "id": "check-gateway-status-doc",
