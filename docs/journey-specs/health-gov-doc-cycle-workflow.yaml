@@ -7,10 +7,11 @@ created: 2026-09-15
 owner: xiamingxing
 note: >
   BET-Y2Q1-T7-06 交付场景契约；BET-Y2Q1-T7-07 补齐本 journey 文件以消解
-  scene-card related 悬空。状态机对齐 domain/health_gov/doc_pipeline.py：
-  registered → drafted → (approved|returned) → dispatched；returned 可回到 drafted。
+  scene-card related 悬空。状态机对齐 domain/health_gov/doc_pipeline.py 并保持
+  DAG 有界重试：registered → drafted → (approved|returned)；returned →
+  redrafted → (approved|escalated)；approved → dispatched。
 description: >
-  来文登记 → 拟办 → 批阅(同意/退回/转办) → 红头导出 → 办结发出；
+  来文登记 → 拟办 → 批阅(同意/退回重拟/升级) → 红头导出 → 办结发出；
   会议纪要督办为并行支线（record_minutes → close_action → supervise）。
 
 trigger:
@@ -29,8 +30,14 @@ states:
     next: [dispatched]
   - name: returned
     scene: health-gov-doc-cycle
-    next: [drafted]
+    next: [redrafted, escalated]
+  - name: redrafted
+    scene: health-gov-doc-cycle
+    next: [approved, escalated]
   - name: dispatched
+    scene: health-gov-doc-cycle
+    next: []
+  - name: escalated
     scene: health-gov-doc-cycle
     next: []
 
@@ -45,8 +52,17 @@ transitions:
     to: returned
     condition: "decision == '退回'"
   - from: returned
-    to: drafted
+    to: redrafted
     condition: "redraft_ok == true"
+  - from: returned
+    to: escalated
+    condition: "redraft_ok != true"
+  - from: redrafted
+    to: approved
+    condition: "decision == '同意'"
+  - from: redrafted
+    to: escalated
+    condition: "decision != '同意'"
   - from: approved
     to: dispatched
     condition: "dispatch_ok == true"
