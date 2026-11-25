@@ -43,7 +43,6 @@ last-reviewed: 2026-09-24
 - **决策**: 从 v2 (unprovable) 升 v3 (A 100, B 50, C 97.1 → composite 85/100, provable)
 - **理由**: v2 需 principal_id 单点输入, v3 从 telemetry 自动算, evidence-driven
 - **路径**: decisions.md 入库 + cockpit decide 子命令 (V3-01)
-||||||| 7f541d0f9
 - **验证**: 战略矩阵维度 1 场景 YELLOW → GREEN
 
 ## [2026-08-25] P1: 战略一致性矩阵落地
