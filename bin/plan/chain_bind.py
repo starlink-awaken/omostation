@@ -7,9 +7,12 @@ No fourth tracker: reuses Plan §0.3, 3y-bet-ledger, agent-workflow runs, retros
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 NORTH_STAR_REF = "docs/STRATEGY-3YEAR-PLAN-2026H2-2029.md"
 NORTH_STAR_SENTENCE = (
@@ -125,6 +128,37 @@ def north_star_present(workspace: Path) -> bool:
 
 def retro_path_for(workspace: Path, bet_id: str) -> Path:
     return workspace / RETRO_REL / f"{bet_id}.md"
+
+
+def retro_attribution_mismatch(workspace: Path, bet_id: str) -> str | None:
+    """retro frontmatter 的 ``bet_id`` 与文件名不一致时返回原因, 否则 ``None``。
+
+    债条目 OMO-DEBT-RETRO-ATTRIBUTION-FILENAME-ONLY-NO-CROSSCHECK：归属只有文件名
+    一个信号, 267/608 条 retro 根本没有 ``bet_id`` 键, 而 chain 侧此前只核对
+    ``retros/<BET-ID>.md`` 是否存在、从不读内容 —— 「误标到别条 BET」无人能判。
+    有键却不一致才报；**缺键不报**（强制加键会一次性造出 267 条红）。
+    无 frontmatter / 解析失败也跳过：那不是本函数该判的缺陷。
+    """
+    path = retro_path_for(workspace, bet_id)
+    if not path.is_file():
+        return None
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    match = re.match(r"^---\n.*?\n---\n", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        front = yaml.safe_load(match.group(0).strip().removeprefix("---").removesuffix("---")) or {}
+    except yaml.YAMLError:
+        return None
+    if not isinstance(front, dict) or "bet_id" not in front:
+        return None
+    declared = str(front.get("bet_id") or "").strip()
+    if declared and declared != bet_id:
+        return f"retro_bet_id_mismatch: 文件名 {bet_id} vs frontmatter {declared}"
+    return None
 
 
 def load_yaml(path: Path) -> Any:
@@ -341,13 +375,17 @@ def evaluate_closeout(
     ledger = load_ledger(workspace)
     bet = bet_by_id(ledger, bet_id) or {"id": bet_id, "retro": "required"}
     retro_req = bet.get("retro") in ("required", "light")
-    return evaluate_bind(
+    verdict = evaluate_bind(
         bet_id=bet_id,
         run_bet_id=bet_id,
         north_star_present=north_star_present(workspace),
         retro_required=bool(retro_req),
         retro_present=retro_path_for(workspace, bet_id).is_file(),
     )
+    mismatch = retro_attribution_mismatch(workspace, bet_id)
+    if mismatch:
+        return BindVerdict(False, [*verdict.reasons, mismatch])
+    return verdict
 
 
 def _has_governance_bet(workspace: Path) -> bool:
@@ -378,13 +416,17 @@ def evaluate_complete(
     bet_id = str(bet.get("id") or "")
     bound = bound_runs_for_bet(workspace, bet_id)
     run_bet = bet_id if bound else ""
-    return evaluate_bind(
+    verdict = evaluate_bind(
         bet_id=bet_id,
         run_bet_id=run_bet,
         north_star_present=north_star_present(workspace),
         retro_required=True,
         retro_present=retro_path_for(workspace, bet_id).is_file(),
     )
+    mismatch = retro_attribution_mismatch(workspace, bet_id)
+    if mismatch:
+        return BindVerdict(False, [*verdict.reasons, mismatch])
+    return verdict
 
 
 def overdue_retros(workspace: Path) -> list[str]:
