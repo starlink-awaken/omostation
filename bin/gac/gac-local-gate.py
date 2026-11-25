@@ -1546,6 +1546,42 @@ def interpreter_roots_report(
     }
 
 
+# check **自己声明**它运行所需的子模块。未检出 ⇒ 该 check 不可能测出结论,
+# 归 not_measured（reason=dependencies_unchecked）。
+#
+# 判据是**声明**而不是报错文本匹配（后者正是本仓禁止的形状）; 并且 CI 递归检出
+# 全部子模块 ⇒ 这张表在 CI **永不触发**, 不改 CI 语义。见债条目 GATE-CLEAN-CHECKOUT-NOISE。
+REQUIRED_SUBMODULES: dict[str, tuple[str, ...]] = {
+    "agent-workflow-lint": ("projects/omo",),
+    "agent-workflow-integrations": ("projects/omo",),
+    "agent-workflow-adapters": ("projects/omo",),
+    "agent-workflow-bootstrap": ("projects/omo",),
+    "agent-workflow-verify-plan": ("projects/omo",),
+    "agent-workflow-compliance": ("projects/omo",),
+    "agent-workflow-doctor": ("projects/omo",),
+    "agent-workflow-observe": ("projects/omo",),
+    "test-gac-engine": ("projects/ecos",),
+    "doc-ssot-lint": ("projects/ecos",),
+    "governance-semantic-gate": ("projects/ecos",),
+    "mof-capabilities-drift-check": ("projects/ecos",),
+    "check-severity-registry": ("projects/ecos",),
+    "m4-bootstrap-reflex": ("projects/ecos",),
+    "governance-evolution": ("projects/agora", "projects/cockpit"),
+    "check-cockpit-ui-dist": ("projects/cockpit-ui",),
+}
+
+
+def _dependencies_unchecked(name: str, unchecked: set[str]) -> tuple[str | None, dict[str, object]]:
+    """声明的子模块里有未检出的 ⇒ (reason, detail); 否则 (None, {})。"""
+    required = REQUIRED_SUBMODULES.get(name)
+    if not required:
+        return None, {}
+    missing = [rel for rel in required if rel in unchecked]
+    if not missing:
+        return None, {}
+    return "dependencies_unchecked", {"required_submodules": list(required), "unchecked": missing}
+
+
 def run_gate(
     scope: str = "staged",
     files: list[str] | None = None,
@@ -1565,6 +1601,8 @@ def run_gate(
         checks = _apply_adaptive_thresholds(checks, metrics_file)
     results = run_checks(checks)
     finding_topics = extract_finding_topics(results)
+    preflight = preflight_report()
+    unchecked = set(preflight.get("uninitialized_submodules") or [])
     not_measured: list[dict[str, object]] = []
     for (name, command), result in zip(checks, results):
         if not isinstance(result, dict):
@@ -1574,9 +1612,12 @@ def run_gate(
         if reason is None:
             entrypoint = _missing_entrypoint(name, command, result)
             if entrypoint is None:
-                continue
-            reason = "entrypoint_missing"
-            detail = {"entrypoint": entrypoint}
+                reason, detail = _dependencies_unchecked(name, unchecked)
+            else:
+                reason = "entrypoint_missing"
+                detail = {"entrypoint": entrypoint}
+        if reason is None:
+            continue
         not_measured.append(
             {"name": name, "reason": reason, "command": result.get("command"), **detail}
         )
@@ -1593,7 +1634,6 @@ def run_gate(
 
     # Concurrent-write isolation: 比对所有 check 跑完后的 fingerprint
     drift = _check_drift(_state_fingerprint_snapshot)
-    preflight = preflight_report()
     report = {
         "ok": ok,
         "preflight": preflight,
