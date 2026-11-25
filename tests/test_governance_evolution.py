@@ -12,6 +12,19 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "gac" / "governance-evolution.py"
 
+# validate/status 会核对真实交付面, 其中「cockpit governance 命令」是子模块产物;
+# 干净检出上缺席即「输入没备齐」, 跳过 (与 test_cross_repo_consistency 的既有守卫同风格)。
+_COCKPIT_GOVERNANCE_CMD = (
+    ROOT / "projects" / "cockpit" / "src" / "cockpit" / "commands" / "governance.py"
+)
+_REQUIRES_COCKPIT_GOVERNANCE = pytest.mark.skipif(
+    not _COCKPIT_GOVERNANCE_CMD.exists(),
+    reason=(
+        f"cockpit 交付面缺席: {_COCKPIT_GOVERNANCE_CMD} —— "
+        "先 `git submodule update --init projects/cockpit`（检出形态, 不是回归）"
+    ),
+)
+
 
 def _python_with_yaml() -> str:
     candidates = [
@@ -56,6 +69,7 @@ def _run_evolution(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+@_REQUIRES_COCKPIT_GOVERNANCE
 def test_governance_evolution_registry_validates() -> None:
     result = _run_evolution("validate", "--json")
 
@@ -95,6 +109,7 @@ print(json.dumps({{path: module.classify_release_package(path)[0] for path in {p
     }
 
 
+@_REQUIRES_COCKPIT_GOVERNANCE
 def test_governance_evolution_exposes_required_initiatives() -> None:
     result = _run_evolution("status", "--json")
 
@@ -124,6 +139,7 @@ def test_governance_evolution_traces_are_machine_readable() -> None:
     assert "trace.omo-evolution-loop" in trace_ids
 
 
+@_REQUIRES_COCKPIT_GOVERNANCE
 def test_governance_evolution_bos_routes_are_aligned() -> None:
     result = _run_evolution("status", "--json")
 
