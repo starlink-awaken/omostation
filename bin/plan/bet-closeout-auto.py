@@ -3,15 +3,16 @@
 
 封装 ledger closeout 的重复步骤:
 1. 验证 retro 文件存在 + frontmatter 完整
-2. 改台账 status → done + done_at + completion_evidence (若缺)
-3. 跑 lint + gac-local-gate 验证
-4. 提示 commit / push / gh pr 步骤 (不自动执行, 因风险)
+2. 台账定位 + 读当前 status
+3. 给出台账迁移建议 —— **本脚本不写台账**, 落盘是 `bet-ledger.py complete <bet-id>` 的活
+4. 跑 bet-ledger lint 自检 (rc != 0 即整单失败, 不放行)
+5. 提示 commit / push / gh pr 步骤 (不自动执行, 因风险)
 
 用法:
   python3 bin/plan/bet-closeout-auto.py <bet-id> [--dry-run]
 
 依赖:
-  bin/plan/bet-ledger.py  (status / lint / complete)
+  bin/plan/bet-ledger.py  (lint / complete)
   bin/ssot/doc-governance-check.py  (frontmatter 验证)
 """
 
@@ -82,9 +83,14 @@ def get_current_status(bet_id: str) -> str | None:
 
 
 def run_lint() -> tuple[bool, str]:
-    """跑 bet-ledger lint."""
+    """跑 bet-ledger lint.
+
+    不传台账位置参数: `bet-ledger.py lint` 自己按 profile 解析根, 多传一个 path 会让
+    argparse 直接 `unrecognized arguments` 非零退出 —— 旧版把那个 rc 打成 ⚠️ 就继续放行,
+    于是这一步全程空转 (OMO-DEBT-BET-CLOSEOUT-AUTO-PROPOSES-AS-APPLIES).
+    """
     result = subprocess.run(
-        ["python3", "bin/plan/bet-ledger.py", "lint", str(LEDGER)],
+        ["python3", "bin/plan/bet-ledger.py", "lint"],
         capture_output=True,
         text=True,
         cwd=ROOT,
@@ -98,7 +104,7 @@ def main() -> int:
     ap.add_argument(
         "--dry-run",
         action="store_true",
-        help="只检查 + 报告, 不修改台账",
+        help="跳过 Step 4 的 lint 自检, 只跑检查与建议 (本脚本任何模式都不写台账)",
     )
     args = ap.parse_args()
 
@@ -121,17 +127,19 @@ def main() -> int:
     current = get_current_status(bet_id)
     print(f"  ✅ 找到 {bet_id} (line {line_no}), 当前 status={current}")
 
-    # Step 3: 台账修改建议
-    print("\nStep 3 · 台账修改建议")
+    # Step 3: 台账迁移建议 —— 这一段只打印, 不落盘; 措辞不得让人以为已经改过台账.
+    print("\nStep 3 · 台账迁移建议 (本脚本不写台账)")
     if current == "done":
-        print(f"  ℹ️ status 已 done, 跳过修改")
+        print("  ℹ️ status 已 done, 无需迁移")
     else:
         print("  需修改项:")
         print(f"    - status: {current} → done")
         print(f"    - done_at: '{utc_now_iso()}'")
         print("    - completion_evidence: {axes: {...}, overall_state: delivery_accepted}")
+        print(f"  落盘走带前置校验的一条路 (evidence/spec/D0/chain 都在它内部判):")
+        print(f"    $ python3 bin/plan/bet-ledger.py complete {bet_id}")
 
-    # Step 4: lint 验证 (--dry-run 跳过)
+    # Step 4: lint 自检 (--dry-run 跳过). rc != 0 是硬失败, 不是 ⚠️.
     print("\nStep 4 · bet-ledger lint")
     if args.dry_run:
         print("  [dry-run] 跳过 lint")
@@ -140,17 +148,20 @@ def main() -> int:
         if ok:
             print("  ✅ lint PASS")
         else:
-            print(f"  ⚠️ lint 输出: {output[:500]}")
+            print(f"  ❌ lint FAIL (rc != 0), 台账不可交付; 输出前 500 字:")
+            print(f"  {output[:500]}")
+            return 1
 
     # Step 5: 后续步骤提示
     print("\nStep 5 · 后续 commit/push 提示 (本脚本不自动执行)")
     print("  $ git add docs/plans/3y-bet-ledger.yaml .omo/_knowledge/retros/<id>.md")
     print("  $ git commit -m 'fix(<scope>): close <bet-id> — done_at + retro + CE'")
-    print("  $ git fetch origin main && git rebase origin/main")
     print("  $ git push -u origin agent/governance-agent/<bet-id>")
-    print("  $ gh pr create --title '...' --body-file docs/reports/...closeout.md")
+    print("  $ gh pr create --base main --head agent/governance-agent/<bet-id> \\")
+    print("      --title '...' --body-file docs/reports/...closeout.md")
     print("  $ gh pr checks <pr-num> --watch")
     print("  $ gh pr merge <pr-num> --admin --squash --delete-branch")
+    print("  (base 漂移不用吸收: 本仓禁止用 rebase / merge / pull 把上游并进交付分支, AGENTS §6)")
 
     print(f"\n━━━ closeout-auto: {bet_id} ━━━ 完成")
     return 0
