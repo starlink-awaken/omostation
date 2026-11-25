@@ -326,7 +326,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="dump current blocking run_ids as baseline grace list (for M2 migration).",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # M2: --dump-baseline 输出当前 blocking run_ids (生成 grace 清单)
     if args.dump_baseline:
@@ -348,9 +348,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if not RUNS_DIR.is_dir():
+        # `.omo/_delivery/**` 是 gitignore 面 —— CI 干净检出里没有 runs 目录。
+        # 旧实现返回 `ok: true, summary.closed=0`, 与「扫了 170+ 个 run 且全部已落地」
+        # 同形（空绿）。改为自报没测成, 由 gac-local-gate 归到 not_measured;
+        # 退出码仍 0 —— 缺输入不是仓库缺陷。
         print(
             json.dumps(
-                {"ok": True, "summary": {"closed": 0}, "findings": []},
+                {
+                    "ok": True,
+                    "measured": False,
+                    "reason": "no_runs_dir",
+                    "summary": {"closed": 0},
+                    "findings": [],
+                },
                 ensure_ascii=False,
                 indent=2,
             )
@@ -439,7 +449,7 @@ def main(argv: list[str] | None = None) -> int:
             summary["warn"] += 1
 
     ok = summary["blocking"] == 0
-    report = {"ok": ok, "summary": summary, "findings": findings}
+    report = {"ok": ok, "measured": True, "summary": summary, "findings": findings}
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:

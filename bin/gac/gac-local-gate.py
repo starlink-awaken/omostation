@@ -284,7 +284,9 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-work-landed",
-            "command": ["bin/gac/check-work-landed.py"],
+            # --json: runs 目录在 `.omo/_delivery/**`（gitignore 面），CI 干净检出里
+            # 不存在；带 flag 才能让本 check 自报 `measured: false` 而不是空绿。
+            "command": ["bin/gac/check-work-landed.py", "--json"],
             # 全量 run 扫描 (closed 170+, 每 ref 一次 git 查询) 实测 ~100s;
             # 45s 会超时被杀误报 FAIL (2026-10-14 实证: 直接跑 PASS 97s, gate 内 FAIL)
             "timeout": 240,
