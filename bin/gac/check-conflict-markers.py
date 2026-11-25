@@ -86,7 +86,14 @@ def _disk_content(path: str) -> str | None:
 
 
 def _scan(content: str) -> list[tuple[int, str]]:
-    """返回 [(行号, 类型)]. ======= 仅在有 head/tail 时计, 防 md/hr 误报."""
+    """返回 [(行号, 类型)].
+
+    `||||||| ` (diff3 base) 后跟对象名, 正常代码与 Markdown 几乎不出现 ——
+    孤立出现也报: 它正是「人工删了 ``<<<<<<<`` / ``>>>>>>>`` 两段、漏删 base 段」
+    的残留形态 —— 此前这类命中会被 head/tail 前提整批丢弃, 检测器对它构造性失明。
+
+    `=======` 孤立出现仍不报 (markdown 分隔线/hr 误报), 以同文件有 head/tail 为前提。
+    """
     hits: list[tuple[int, str]] = []
     for i, line in enumerate(content.splitlines(), 1):
         if CONFLICT_HEAD.match(line):
@@ -98,9 +105,12 @@ def _scan(content: str) -> list[tuple[int, str]]:
         elif CONFLICT_SEP.match(line):
             hits.append((i, "separator"))
     has_headtail = any(k in ("head", "tail") for _, k in hits)
+    has_base = any(k == "base" for _, k in hits)
+    if not (has_headtail or has_base):
+        return []  # 只有孤立的 ======= 不算 (md/hr 误报)
     if has_headtail:
         return hits
-    return []  # 只有孤立的 ======= 不算 (md/hr 误报)
+    return [(lineno, kind) for lineno, kind in hits if kind == "base"]
 
 
 def main() -> int:

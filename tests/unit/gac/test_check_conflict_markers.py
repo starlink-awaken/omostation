@@ -48,6 +48,34 @@ def test_scan_separator_alone_is_not_a_hit():
     assert mod._scan("a\n=======\nb\n") == []
 
 
+def test_scan_lone_diff3_base_is_a_hit():
+    """孤立 `||||||| <sha>` 必须报 —— 它是「删了 head/tail、漏删 base」的残留形态。
+
+    正反一对：同文件的孤立 `=======` 仍不报（md/hr 误报），所以这条断言
+    不是靠「一律放行」通过的。
+    """
+    mod = _load()
+    hits = mod._scan("before\n||||||| 7f541d0f9\nafter\n")
+    assert hits == [(2, "base")]
+    assert mod._scan("a\n=======\nb\n") == []
+
+
+def test_scan_base_with_separator_but_no_headtail_reports_base_only():
+    mod = _load()
+    hits = mod._scan("||||||| abc123\n=======\n")
+    assert [kind for _, kind in hits] == ["base"]
+
+
+def test_real_main_is_clean_after_cleanup():
+    """唯一一处真实残留 (.omo/notepads/delegation-guardrails/decisions.md:46,
+    由 PR #4291 入库) 已随本轮清掉 —— 检测器修好后 gate 不得因历史实例转红。"""
+    mod = _load()
+    text = (ROOT / ".omo" / "notepads" / "delegation-guardrails" / "decisions.md").read_text(
+        encoding="utf-8"
+    )
+    assert mod._scan(text) == []
+
+
 def test_staged_blob_gitlink_returns_none_without_crash():
     """gitlink (`git show :path` 报 bad object) 返回 None, 不抛错."""
     mod = _load()

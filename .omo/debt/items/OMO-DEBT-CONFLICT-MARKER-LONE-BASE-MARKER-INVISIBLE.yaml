@@ -64,6 +64,27 @@ history:
 
     【修复方向（不在本条债的执行范围）】_scan 应把 base 命中当作独立可报信号（或至少在 has_headtail 为假时保留 base 命中），并补「孤立
     base 也能检出」的单测钉住；separator 维持现状（md/hr 误报确实高）。''.'
+- at: '2026-11-25T20:05:00+00:00'
+  action: mitigate
+  note: >-
+    **已修**：`_scan` 现在把 `base` 当作独立可报信号 —— 无 head/tail 但有 base 时返回 base 命中；
+    只有 separator 时仍返回 `[]`（md/hr 误报未放宽）。A/B 实测（同一份样本喂改前/改后实现）：
+
+    | 样本 | 改前 | 改后 |
+    |---|---|---|
+    | `a / ||||||| 7f541d0f9 / b` | `[]` | `[(2,'base')]` |
+    | `a / ======= / b` | `[]` | `[]` |
+    | `<<<<<<< / ======= / >>>>>>>` | 三类全报 | 三类全报（不变） |
+    | `||||||| abc123 / =======` | `[]` | `[(1,'base')]` |
+
+    **唯一真实残留已清**：`.omo/notepads/delegation-guardrails/decisions.md:46`
+    （PR #4291 入库的 `||||||| 7f541d0f9`）—— 全仓 tracked 逐文件重扫（含隐藏目录）改前 1 处、
+    清后 0 处；`check-conflict-markers.py --all` rc=0。
+    **判据**：`tests/unit/gac/test_check_conflict_markers.py` 新增三条 —— 孤立 base 报、
+    base+separator 只报 base、真实文件清后扫描为空；原「孤立 `=======` 不报」一条保留
+    （正反一对，防「一律放行」）。
+    **边界**：只放宽 base；separator 仍与 head/tail 绑定。未动 `--staged`/`--all` 扫描面。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
