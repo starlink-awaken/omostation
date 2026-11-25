@@ -1,0 +1,17 @@
+schema: script-registry/v1
+id: bin/lib/input_absence.py
+name: Input Absence
+category: governance
+owner: governance-team
+description: "「输入没备齐」判据的**单一实现**（库模块，非可执行脚本）：input_absent()/repo_relative() 判定未检出子模块、gitignore 覆盖的生成态与已归档旧路径；unchecked_gitlinks()/parse_unchecked() 走 git submodule status --recursive（含嵌套）。2026-11-25 由 gac-healthcheck / doc-link-check / auto-fix-loop / check-capability-ownership / gen-dependency-baseline 五处同口径副本收敛而来，调用方保留同名薄适配。"
+inputs: []
+outputs: []
+dependencies: []
+triggers: []
+related:
+  - tests/unit/gac/test_gac_healthcheck_three_state.py
+  - tests/unit/test_doc_link_check_not_measured.py
+  - tests/unit/gac/test_capown_autofix_paths_absent.py
+  - tests/unit/gac/test_dependency_baseline_not_measured.py
+maturity: draft
+last_reviewed: "2026-11-25"
