@@ -8,6 +8,8 @@ severity: "medium"
 weight: 0.1
 entropy_class: "medium"
 lifecycle_state: "resolved"
+closed_at: "2026-11-25"
+close_reason: "BET-Y2Q4-T10-354 收口: 7 字段逐项裁定 (6 退役 + live_sources 兜底 source_states), 守卫 dry-run missing 7→0; 详见 PR #5586 与 docs/reports/2026-11-25-dashboard-template-contract-t10-354-closeout.md"
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
