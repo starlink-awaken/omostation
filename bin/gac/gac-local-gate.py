@@ -187,7 +187,9 @@ DEFAULT_POLICY = {
         },
         {
             "id": "dependency-baseline-drift",
-            "command": ["bin/mof/gen-dependency-baseline.py", "--check"],
+            # --json: 有未检出子模块时自报 measured:false（pyproject 不在本检出里,
+            # 无法判定 STALE/MISSING）。
+            "command": ["bin/mof/gen-dependency-baseline.py", "--check", "--json"],
             "ci_only": True,
         },
         {
