@@ -296,7 +296,9 @@ DEFAULT_POLICY = {
         },
         {
             "id": "check-governance-ratio",
-            "command": ["bin/gac/check-governance-ratio.py"],
+            # --json: 账本缺席时(`.omo/_delivery/**` 是 gitignore 面, CI 干净检出即如此)
+            # 让本 check 自报 `measured: false`, 而不是以 `ok: true, ratio: 0.0` 空绿。
+            "command": ["bin/gac/check-governance-ratio.py", "--json"],
         },
         {
             "id": "check-redline-coverage",

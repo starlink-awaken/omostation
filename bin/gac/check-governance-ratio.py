@@ -159,8 +159,15 @@ def main(argv: list[str] | None = None) -> int:
     waiver_hits = _active_waivers()
 
     if not LEDGER.is_file():
+        # `.omo/_delivery/**` 是 gitignore 面 —— CI 的干净检出里**没有**这份账本。
+        # 旧实现这里返回 `ok: true, ratio: 0.0`, 于是一个**阻断级**门禁在 CI 里
+        # 恒 PASS (空绿): 实测本机 42.3% > 40% 上限, CI 却永远看不到。
+        # 改为自报「没测成」, 让 gac-local-gate 归到 not_measured (见
+        # `_declared_not_measured`); 退出码仍为 0 —— 缺输入不是仓库缺陷。
         report = {
             "ok": True,
+            "measured": False,
+            "reason": "no_ledger",
             "window_days": args.window_days,
             "ratio": 0.0,
             "message": "no ledger",
@@ -245,6 +252,7 @@ def main(argv: list[str] | None = None) -> int:
 
     report = {
         "ok": ok,
+        "measured": True,
         "level": level,
         "reason": reason,
         "window_days": args.window_days,

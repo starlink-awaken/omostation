@@ -13,6 +13,8 @@ Validates the _classify() function in check-governance-ratio.py:
 from __future__ import annotations
 
 import importlib.util
+import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -233,3 +235,40 @@ class TestCollaborationObjective:
             "objective": "fix bug in module Y",
         }
         assert mod._classify(evt) == "flex"
+
+
+class TestNotMeasuredContract:
+    """账本缺席时必须自报「没测成」，不能以 ratio=0.0 空绿。
+
+    动机：`.omo/_delivery/**` 是 gitignore 面，CI 的干净检出里没有这份账本 ——
+    旧实现在那里返回 `ok: true, ratio: 0.0`，一个阻断级门禁于是永远 PASS。
+    """
+
+    def test_missing_ledger_declares_not_measured(self, mod, monkeypatch, tmp_path, capsys):
+        monkeypatch.setattr(mod, "LEDGER", tmp_path / "absent.jsonl")
+        rc = mod.main(["--json"])
+        out = json.loads(capsys.readouterr().out)
+        assert rc == 0, "缺输入不是仓库缺陷，不该阻断"
+        assert out["measured"] is False
+        assert out["reason"] == "no_ledger"
+
+    def test_present_ledger_is_measured(self, mod, monkeypatch, tmp_path, capsys):
+        ledger = tmp_path / "events.jsonl"
+        recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        ledger.write_text(
+            json.dumps(
+                {
+                    "event": "agent_workflow_start",
+                    "ts": recent,
+                    "agent_profile": "governance-agent",
+                    "workflow_id": "governance-state-mutation",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(mod, "LEDGER", ledger)
+        rc = mod.main(["--json"])
+        out = json.loads(capsys.readouterr().out)
+        assert rc in (0, 1)
+        assert out["measured"] is True
