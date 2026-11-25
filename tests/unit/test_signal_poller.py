@@ -157,3 +157,24 @@ def test_netease_real_container_path_registered():
     src = next(s for s in docs[0]["sources"] if s["id"] == "netease_mailmaster_inbox")
     assert "com.netease.macmail" in src["path"], f"netease 路径回退: {src['path']}"
     assert src.get("probe_depth"), "netease 需要 probe_depth (深库文件探测)"
+
+
+def test_signal_poller_and_freshness_follow_omostation_state_root_after_import(tmp_path, monkeypatch):
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
+    poller = _load("sp_sr", ROOT / "bin" / "ssot" / "signal-poller.py")
+    freshness = _load("fr_sr", ROOT / "bin" / "ssot" / "freshness.py")
+    state_root_dir = tmp_path / "state"
+    box = tmp_path / "box"
+    box.mkdir()
+    (box / "item.txt").write_text("signal", encoding="utf-8")
+    sources = [{"id": "src_sr", "transport": "local_filesystem", "path": str(box), "poll_interval": "300s"}]
+    monkeypatch.setattr(poller, "_load_signal_sources", lambda: sources)
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_root_dir))
+
+    triggers = poller.poll_once()
+    assert len(triggers) == 1
+    assert (state_root_dir / ".omo/state/signal-poller-state.json").is_file()
+    assert (state_root_dir / ".omo/state/signal-signals.json").is_file()
+
+    projs = freshness.project_all_health(sources=sources)
+    assert projs[0].status == "healthy"

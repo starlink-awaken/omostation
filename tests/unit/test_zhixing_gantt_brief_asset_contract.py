@@ -22,8 +22,9 @@ def test_host_sync_registers_brief_without_dropping_existing_entries():
     让每一次增删都**必须**经过这里，而不是静默发生。
     """
     tool = load("gantt_brief_sync", ROOT/"bin/gac/zhixing-host-sync.py")
-    assert len(tool.HOST_FILES) == 26
+    assert len(tool.HOST_FILES) == 27
     assert dict(tool.HOST_FILES)["collectors/agent_brief.py"] == "agent_brief_collector.py.asset"
+    assert dict(tool.HOST_FILES)["panel-collect.py"] == "panel-collect.py.asset"
     assert {"strategy_projection.py", "refresh.py", "orchestrator.py", "live_server.py", "collectors/portfolio.py"} <= set(dict(tool.HOST_FILES))
     assert all((ASSETS/repo).is_file() for _, repo in tool.HOST_FILES)
 

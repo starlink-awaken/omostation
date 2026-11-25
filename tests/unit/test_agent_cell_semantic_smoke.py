@@ -73,3 +73,15 @@ def test_runtime_supports_deployed_root_and_state_overrides(tmp_path, monkeypatc
     spec.loader.exec_module(module)
     assert module.ROOT == repo_root.resolve()
     assert module.STATE_DIR == state_dir.resolve()
+
+
+def test_state_dir_follows_omostation_state_root_declared_after_import(tmp_path, monkeypatch) -> None:
+    monkeypatch.delenv("AGENT_CELL_STATE_DIR", raising=False)
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
+    module = _module()
+    assert module.STATE_DIR is None
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(tmp_path))
+    assert module._state_dir().resolve() == (tmp_path / ".omo/state/agent-cell/semantic").resolve()
+    report = module.run_smoke()
+    assert report["ok"] is True
+    assert module.verify_latest()["verdict"] == "PASS"

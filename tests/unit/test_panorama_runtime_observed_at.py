@@ -63,3 +63,51 @@ def test_collect_runtime_exposes_observation_clock(monkeypatch):
     parsed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
     assert parsed.tzinfo is not None
     assert abs((datetime.now(UTC) - parsed).total_seconds()) < 120
+
+
+def test_collectors_read_state_root_and_build_payload_exposes_observed_at_and_refresh(tmp_path, monkeypatch):
+    module = _load(monkeypatch)
+    code_root = tmp_path / "install"
+    state_dir = tmp_path / "state"
+    code_root.mkdir()
+    (state_dir / ".omo/_delivery/signal-poller").mkdir(parents=True)
+    (state_dir / ".omo/state/mos").mkdir(parents=True)
+    (state_dir / ".omo/_knowledge/workflow-mesh").mkdir(parents=True)
+    (state_dir / ".omo/_delivery/signal-poller/watermarks.json").write_text(
+        json.dumps({"s:c": {"seen_ids": ["1"], "last_poll": "2026-11-25T00:00:00+00:00"}}),
+        encoding="utf-8",
+    )
+    (state_dir / ".omo/state/signal-poller-state.json").write_text(
+        json.dumps({"src1": "abcd"}), encoding="utf-8"
+    )
+    (state_dir / ".omo/_delivery/signal-poller/poll-log.jsonl").write_text(
+        '{"scene_id":"s"}\n', encoding="utf-8"
+    )
+    (state_dir / ".omo/state/mos/theta-facts.json").write_text(
+        json.dumps([{"type": "fact"}]), encoding="utf-8"
+    )
+    (state_dir / ".omo/_knowledge/workflow-mesh/events.jsonl").write_text(
+        json.dumps({"event_type": "scene.succeeded", "payload": {"scene_id": "s1"}}) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(module, "ROOT", code_root)
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_dir))
+
+    sp = module.collect_signal_poller()
+    assert sp["watermark_entries"] == 1
+    assert sp["poll_count"] == 1
+    assert sp["state_keys"] == ["src1"]
+
+    je = module.collect_journey_executions()
+    assert je["succeeded"] == 1
+    assert je["event_paths_scanned"] == [".omo/_knowledge/workflow-mesh/events.jsonl"]
+
+    md = module.collect_memory_dual_track()
+    assert md["theta_facts"] == 1
+    tf = module.collect_theta_facts()
+    assert tf["total"] == 1
+
+    # Verify top-level observed_at and refresh contract helper expectations on real source AST/output
+    src = SCRIPT.read_text(encoding="utf-8")
+    assert '"observed_at": generated_at' in src
+    assert 'if not isinstance(payload.get("refresh"), dict):' in src

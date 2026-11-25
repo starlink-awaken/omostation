@@ -880,7 +880,6 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
     },
     ".omo/_delivery/observability/events.jsonl": {
         ("bin/compass_radar.py", "CALLER"),
-        ("bin/panorama/panorama-collect.py", "CHECKOUT"),
         ("bin/ssot/alert-forwarder.py", "CHECKOUT"),
         ("bin/ssot/observability-events.py", "CHECKOUT"),
     },
@@ -1015,7 +1014,6 @@ SPLIT_EXACT: dict[str, set[tuple[str, str]]] = {
     ".omo/_knowledge/workflow-mesh/events.jsonl": {
         ("bin/bc-os/north_star_meter_v3.py", "CHECKOUT"),
         ("bin/bc-os/north_star_meter_v4.py", "CHECKOUT"),
-        ("bin/panorama/panorama-collect.py", "CHECKOUT"),
         ("bin/plan/bet-ledger.py", "CHECKOUT"),
         ("bin/ssot/event-ingest-adapter.py", "CHECKOUT"),
         ("bin/ssot/mail_daemon.py", "CHECKOUT"),
@@ -1998,7 +1996,7 @@ def test_container_family_covers_itself_but_not_its_descendants():
 
 
 def test_family_table_is_declared_not_closed_over_the_scanned_bucket():
-    """适用范围（spec §7 AC-05 末句）：裁的是 `.omo/_knowledge` 桶这 62 站点，不是族表全量。
+    """适用范围（spec §7 AC-05 末句）：裁的是 `.omo/_knowledge` 桶这 60 站点，不是族表全量。
 
     这条用例是那句声明的**可跑版本**：尺 B 的分桶里 `NOT_DECLARED` 必须仍然非零。若哪天它归零
     （族表补全或桶改名），说明适用范围变了，本条连同 ADR-0456 addendum 的适用范围那句一起改，
@@ -2013,9 +2011,10 @@ def test_family_table_is_declared_not_closed_over_the_scanned_bucket():
         buckets = ruler_b.knowledge_bucket(ruler_b.scan_checkout_pinned_sites(ROOT))
     finally:
         sys.modules.pop("t289_ruler_b_for_closure", None)
-    assert len(buckets["NOT_DECLARED"]) == 44, len(buckets["NOT_DECLARED"])
-    assert len(buckets["SPECIFIC_FAMILY"]) == 13
+    # 2026-11-25 WP1: panorama-collect.py governance-history.jsonl & workflow-mesh/events.jsonl migrated to state_file_read
+    assert len(buckets["NOT_DECLARED"]) == 43, len(buckets["NOT_DECLARED"])
+    assert len(buckets["SPECIFIC_FAMILY"]) == 12
     unregistered_in_bucket = {
         s[3] for s in buckets["NOT_DECLARED"] if _family_covers(s[3]) is None
     }
-    assert unregistered_in_bucket, "44 个未登记面全部被族表覆盖了 —— 适用范围那句要重写"
+    assert unregistered_in_bucket, "43 个未登记面全部被族表覆盖了 —— 适用范围那句要重写"

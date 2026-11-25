@@ -212,3 +212,44 @@ def test_collector_projects_semantic_verifier_fail_closed(tmp_path, monkeypatch)
     assert result["mesh_bindings_ok"] is True
     assert result["queue_bindings_ok"] is True
     assert result["claims_authority_invoked"] is False
+
+
+def test_agent_cell_pool_and_semantic_honor_omostation_state_root(tmp_path, monkeypatch) -> None:
+    """OMOSTATION_STATE_ROOT declared, runtime files only in state_root → collector reads them."""
+    code_root = tmp_path / "install_root"
+    state_dir = tmp_path / "state_root"
+    (code_root / "bin/ssot").mkdir(parents=True)
+    shutil.copy(SMOKE_SCRIPT, code_root / "bin/ssot" / SMOKE_SCRIPT.name)
+    semantic_src = ROOT / "bin/ssot/agent-cell-semantic-smoke.py"
+    shutil.copy(semantic_src, code_root / "bin/ssot" / semantic_src.name)
+
+    # Run pool smoke into state_dir while code_root stays empty
+    smoke = _smoke_module()
+    cell_file = state_dir / ".omo/state/agent-cell/cell_states.json"
+    cell_file.parent.mkdir(parents=True, exist_ok=True)
+    smoke.run_smoke(cell_file)
+
+    # Run semantic smoke into state_dir/semantic using OMOSTATION_STATE_ROOT after import
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_dir))
+    sem_spec = importlib.util.spec_from_file_location(
+        "agent_cell_semantic_state_root_probe", code_root / "bin/ssot/agent-cell-semantic-smoke.py"
+    )
+    assert sem_spec and sem_spec.loader
+    sem_mod = importlib.util.module_from_spec(sem_spec)
+    sem_spec.loader.exec_module(sem_mod)
+    sem_report = sem_mod.run_smoke()
+    assert sem_report["ok"] is True
+    assert Path(sem_report["state_dir"]).resolve() == (state_dir / ".omo/state/agent-cell/semantic").resolve()
+
+    panorama = _module()
+    monkeypatch.setattr(panorama, "ROOT", code_root)
+    pool_res = panorama.collect_agent_cell_pool()
+    assert pool_res["verdict"] == "PASS"
+    assert pool_res["receipt_verification"]["verdict"] == "PASS"
+    assert pool_res["receipt_verification"]["receipt_count"] == 1
+
+    # Mock ROOT/projects/omo/src fallback to real repo omo/src via PYTHONPATH in env
+    monkeypatch.setenv("PYTHONPATH", str(ROOT / "projects/omo/src"))
+    sem_res = panorama.collect_agent_cell_semantic()
+    assert sem_res["verdict"] == "PASS"
+    assert sem_res["receipt_count"] == 1

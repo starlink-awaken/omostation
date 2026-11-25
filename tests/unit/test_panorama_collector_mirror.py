@@ -16,6 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "bin/panorama/panorama-collect.py"
 MIRROR = ROOT / "bin/panorama/assets/host/panorama-collect-main.py.asset"
+PANEL_SOURCE = ROOT / "bin/panorama/panel-collect.py"
+PANEL_MIRROR = ROOT / "bin/panorama/assets/host/panel-collect.py.asset"
 
 
 def _differs(left: bytes, right: bytes) -> bool:
@@ -45,3 +47,15 @@ def test_neither_side_is_a_symlink():
     """符号链接会让「逐字节一致」退化成「指向别处」。"""
     assert not SOURCE.is_symlink()
     assert not MIRROR.is_symlink()
+    assert not PANEL_SOURCE.is_symlink()
+    assert not PANEL_MIRROR.is_symlink()
+
+
+def test_panel_collect_mirror_is_verbatim_copy():
+    """panel-collect.py 与宿主镜像 panel-collect.py.asset 必须逐字节一致。"""
+    assert PANEL_SOURCE.is_file()
+    assert PANEL_MIRROR.is_file()
+    assert not _differs(PANEL_SOURCE.read_bytes(), PANEL_MIRROR.read_bytes()), (
+        "panel-collect 宿主镜像不一致。"
+        f"同步: cp {PANEL_SOURCE} {PANEL_MIRROR}"
+    )

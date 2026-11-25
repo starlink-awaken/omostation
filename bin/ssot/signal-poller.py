@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -21,13 +22,38 @@ from typing import Any
 
 from _shared import ROOT, load_yaml, utc_now
 
+_LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
+from repo_root import state_root  # noqa: E402
+
 # W0-03: wire canonical freshness-based health derivation
 from freshness import project_all_health
 
 SIGNAL_SOURCES = ROOT / ".omo" / "_truth" / "registry" / "signal-sources.yaml"
-STATE_FILE = ROOT / ".omo" / "state" / "signal-poller-state.json"
+_STATE_FILE_REL = ".omo/state/signal-poller-state.json"
+_SIGNALS_FILE_REL = ".omo/state/signal-signals.json"
+_DEFAULT_STATE_FILE = ROOT / ".omo" / "state" / "signal-poller-state.json"
 # T2-03: 信号落盘面 — poller 可写的运行时状态, freshness 优先消费 (治理面 registry 不允许 daemon ad-hoc 写)
-SIGNALS_FILE = ROOT / ".omo" / "state" / "signal-signals.json"
+_DEFAULT_SIGNALS_FILE = ROOT / ".omo" / "state" / "signal-signals.json"
+STATE_FILE = _DEFAULT_STATE_FILE
+SIGNALS_FILE = _DEFAULT_SIGNALS_FILE
+
+
+def _poller_state_file() -> Path:
+    if STATE_FILE != _DEFAULT_STATE_FILE:
+        return STATE_FILE
+    if os.environ.get("OMOSTATION_STATE_ROOT"):
+        return state_root() / _STATE_FILE_REL
+    return STATE_FILE
+
+
+def _signals_file() -> Path:
+    if SIGNALS_FILE != _DEFAULT_SIGNALS_FILE:
+        return SIGNALS_FILE
+    if os.environ.get("OMOSTATION_STATE_ROOT"):
+        return state_root() / _SIGNALS_FILE_REL
+    return SIGNALS_FILE
 
 
 def _load_signal_sources() -> list[dict[str, Any]]:
@@ -38,17 +64,19 @@ def _load_signal_sources() -> list[dict[str, Any]]:
 
 def _load_state() -> dict[str, str]:
     """Load last-known signal hashes for dedup."""
-    if STATE_FILE.exists():
+    sf = _poller_state_file()
+    if sf.exists():
         try:
-            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            return json.loads(sf.read_text(encoding="utf-8"))
         except Exception:
             pass
     return {}
 
 
 def _save_state(state: dict[str, str]) -> None:
-    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    sf = _poller_state_file()
+    sf.parent.mkdir(parents=True, exist_ok=True)
+    sf.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
 
 def _hash_path(path: str, depth: int = 0) -> str:
@@ -98,16 +126,17 @@ def _record_signals(triggers: list[dict[str, Any]]) -> None:
     """
     if not triggers:
         return
+    sig_file = _signals_file()
     data: dict[str, str] = {}
-    if SIGNALS_FILE.exists():
+    if sig_file.exists():
         try:
-            data = json.loads(SIGNALS_FILE.read_text(encoding="utf-8"))
+            data = json.loads(sig_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             data = {}
     for t in triggers:
         data[t["source_id"]] = t["ts"]
-    SIGNALS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    SIGNALS_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    sig_file.parent.mkdir(parents=True, exist_ok=True)
+    sig_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
 def poll_once(root: Path | None = None) -> list[dict[str, Any]]:
@@ -198,9 +227,10 @@ def _auto_trigger(triggers: list[dict[str, Any]], root: Path) -> list[str]:
     import subprocess
 
     triggered: list[str] = []
+    mos_root = state_root() if os.environ.get("OMOSTATION_STATE_ROOT") else root
     for t in triggers:
         # MOS bridge: 信号 → 系统认知 (T-B1)
-        mos_result = _write_mos_snapshot(t, root)
+        mos_result = _write_mos_snapshot(t, mos_root)
         if mos_result.get("ok"):
             triggered.append(f"MOS: {t.get('source_id')} → world_snapshot")
         else:

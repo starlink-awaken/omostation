@@ -19,12 +19,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+_LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
+from repo_root import state_root  # noqa: E402
 
 
 # Documents 任务类分组调度 (2026-09-17): 避免 43 个场景同时刷屏.
@@ -44,8 +50,28 @@ def _documents_task_class_filter(scene_id):
 _ROOT = Path(__file__).resolve().parents[2]
 SCENES_DIR = _ROOT / ".omo" / "_truth" / "scenarios" / "v3"
 JOURNEY_ENGINE = _ROOT / "bin" / "ssot" / "journey-engine.py"
-WATERMARK_PATH = _ROOT / ".omo" / "_delivery" / "signal-poller" / "watermarks.json"
-POLL_LOG = _ROOT / ".omo" / "_delivery" / "signal-poller" / "poll-log.jsonl"
+_WATERMARK_REL = ".omo/_delivery/signal-poller/watermarks.json"
+_POLL_LOG_REL = ".omo/_delivery/signal-poller/poll-log.jsonl"
+_DEFAULT_WATERMARK_PATH = _ROOT / _WATERMARK_REL
+_DEFAULT_POLL_LOG = _ROOT / _POLL_LOG_REL
+WATERMARK_PATH = _DEFAULT_WATERMARK_PATH
+POLL_LOG = _DEFAULT_POLL_LOG
+
+
+def _watermark_path() -> Path:
+    if WATERMARK_PATH != _DEFAULT_WATERMARK_PATH:
+        return WATERMARK_PATH
+    if os.environ.get("OMOSTATION_STATE_ROOT"):
+        return state_root() / _WATERMARK_REL
+    return WATERMARK_PATH
+
+
+def _poll_log_path() -> Path:
+    if POLL_LOG != _DEFAULT_POLL_LOG:
+        return POLL_LOG
+    if os.environ.get("OMOSTATION_STATE_ROOT"):
+        return state_root() / _POLL_LOG_REL
+    return POLL_LOG
 
 # Live execution allowed only at these lifecycle levels
 LIVE_LIFECYCLES = {"assisted", "supervised", "routine"}
@@ -74,14 +100,15 @@ def _load_scene_cards() -> list[dict[str, Any]]:
 
 def _load_watermarks() -> dict[str, Any]:
     try:
-        return json.loads(WATERMARK_PATH.read_text(encoding="utf-8"))
+        return json.loads(_watermark_path().read_text(encoding="utf-8"))
     except Exception:
         return {}
 
 
 def _save_watermarks(wm: dict[str, Any]) -> None:
-    WATERMARK_PATH.parent.mkdir(parents=True, exist_ok=True)
-    WATERMARK_PATH.write_text(json.dumps(wm, ensure_ascii=False, indent=2), encoding="utf-8")
+    wm_path = _watermark_path()
+    wm_path.parent.mkdir(parents=True, exist_ok=True)
+    wm_path.write_text(json.dumps(wm, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _workspace_docs_list(limit: int = 10) -> list[dict[str, Any]]:
@@ -280,8 +307,9 @@ def poll(dry_run: bool = False, scene_filter: str | None = None,
                 results["details"].append(detail)
 
                 # Log to poll log
-                POLL_LOG.parent.mkdir(parents=True, exist_ok=True)
-                with open(POLL_LOG, "a", encoding="utf-8") as f:
+                log_path = _poll_log_path()
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(log_path, "a", encoding="utf-8") as f:
                     f.write(json.dumps({**detail, "ts": results["polled_at"]}, ensure_ascii=False) + "\n")
 
     results["connectors_polled"] = len(seen_connectors)

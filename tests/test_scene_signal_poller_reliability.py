@@ -108,3 +108,18 @@ def test_success_watermarks_signal(poller):
     first, _ = _run_poll(mod, fail_first=False)
     # second poll: everything already seen → nothing new
     assert first["new_signals"] == 0
+
+
+def test_scene_signal_poller_follows_omostation_state_root(tmp_path, monkeypatch):
+    monkeypatch.delenv("OMOSTATION_STATE_ROOT", raising=False)
+    mod = _load_module()
+    state_dir = tmp_path / "state_root"
+    scenes = tmp_path / "cards"
+    scenes.mkdir()
+    (scenes / "scene-test-ingest.yaml").write_text(json.dumps(CARD), encoding="utf-8")
+    mod.SCENES_DIR = scenes
+    monkeypatch.setenv("OMOSTATION_STATE_ROOT", str(state_dir))
+
+    _run_poll(mod, fail_first=False)
+    assert (state_dir / ".omo/_delivery/signal-poller/watermarks.json").is_file()
+    assert (state_dir / ".omo/_delivery/signal-poller/poll-log.jsonl").is_file()
