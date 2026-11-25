@@ -62,3 +62,62 @@ def test_printer_names_the_unexecuted_gates(mod, capsys):
     err = capsys.readouterr().err
     assert "debt-integrity-check" in err and "sweep-index-check" in err
     assert "96" in err
+
+
+# ── 策略内 id 重复（集合口径会把重复折叠成一条，覆盖读数因此少算）──
+# 发现经过: 报告说 default_total=74 而手数条目 75, 差 1 追出 state-freshness-check 重复。
+
+
+def test_coverage_exposes_entry_counts_and_duplicate_ids(mod):
+    cov = mod.gate_coverage_report()
+    effective_entries = [g["id"] for g in mod.GATES_LIST]
+    default_entries = [g["id"] for g in mod.DEFAULT_POLICY["gates"]]
+
+    assert cov["entries"]["effective"] == len(effective_entries)
+    assert cov["entries"]["default"] == len(default_entries)
+    # 条目数 >= id 数, 差值就是重复折叠掉的条数
+    assert cov["entries"]["effective"] >= cov["effective"]
+    assert cov["entries"]["default"] >= cov["default_total"]
+
+    def dups(ids):
+        return sorted({i for i in ids if ids.count(i) > 1})
+
+    assert set(cov["duplicate_ids"]["effective"]) == set(dups(effective_entries))
+    assert set(cov["duplicate_ids"]["default"]) == set(dups(default_entries))
+
+
+def test_current_default_duplicate_is_the_known_state_freshness_pair(mod):
+    """钉住当前实例；若 owner 把重复修掉, 这条会红并提示更新本断言。"""
+    assert mod.gate_coverage_report()["duplicate_ids"]["default"] == ["state-freshness-check"]
+
+
+def test_duplicate_detector_fires_on_injected_duplicate(mod, monkeypatch):
+    """合成违规自证: 往 DEFAULT 塞一条重复, 报告必须点名 —— 否则上面两条可能只是空转。"""
+    base = mod.DEFAULT_POLICY["gates"]
+    before = mod.gate_coverage_report()
+    before_gap = before["entries"]["default"] - before["default_total"]
+
+    clone = dict(next(g for g in base if g.get("id") == "doc-ssot-snapshots"))
+    monkeypatch.setattr(mod, "DEFAULT_POLICY", {**mod.DEFAULT_POLICY, "gates": [*base, clone]})
+
+    cov = mod.gate_coverage_report()
+
+    assert "doc-ssot-snapshots" in cov["duplicate_ids"]["default"]
+    assert cov["entries"]["default"] - cov["default_total"] == before_gap + 1
+
+
+def test_printer_names_duplicates(mod, capsys):
+    mod._print_gate_coverage(
+        {
+            "gate_coverage": {
+                "source": "sgf_policy",
+                "effective": 96,
+                "default_total": 74,
+                "only_in_default": [],
+                "duplicate_ids": {"default": ["state-freshness-check"], "effective": []},
+            }
+        }
+    )
+    err = capsys.readouterr().err
+    assert "id 重复" in err
+    assert "state-freshness-check" in err
