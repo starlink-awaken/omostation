@@ -48410,7 +48410,44 @@ bets:
     于 2026-11-24 会话原话「go, 授权, 批」逐卡批准: admin-inbox/admin-submit/
     agora-bos-gateway/health-archive/health-intake/health-visit-prep/health-visit/
     knowledge-curation。
-  status: pending
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@6e7a7e2ad544bafaf93310b6259d5e0e355b7e0a
+          tests:
+            ref: receipt://docs/reports/2026-11-25-proposal-lock-t10-352-closeout.md
+            sha256: sha256:9a12f3c75737423c741e0286d82e381d24a1c9bef7ed107d90d61675a4ad10e6
+          diff:
+            ref: receipt://docs/reports/2026-11-25-proposal-lock-t10-352-closeout.md
+            sha256: sha256:9a12f3c75737423c741e0286d82e381d24a1c9bef7ed107d90d61675a4ad10e6
+          rollback:
+            ref: receipt://docs/reports/2026-11-25-proposal-lock-t10-352-closeout.md
+            sha256: sha256:9a12f3c75737423c741e0286d82e381d24a1c9bef7ed107d90d61675a4ad10e6
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-25-proposal-lock-t10-352-closeout.md
+            sha256: sha256:9a12f3c75737423c741e0286d82e381d24a1c9bef7ed107d90d61675a4ad10e6
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-25-proposal-lock-t10-352-closeout.md
+            sha256: sha256:9a12f3c75737423c741e0286d82e381d24a1c9bef7ed107d90d61675a4ad10e6
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-352.md
+            sha256: sha256:44485309b385c8c936877b99f15ee66bee763dff513dc5ab3eb372c614c400ca
+          cleanup:
+            ref: receipt://docs/reports/2026-11-25-proposal-lock-t10-352-closeout.md
+            sha256: sha256:9a12f3c75737423c741e0286d82e381d24a1c9bef7ed107d90d61675a4ad10e6
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  done_at: 2026-11-25
+  status: done
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48471,7 +48508,44 @@ bets:
     zhixing-projection-republisher 的 environment 块回填 PATH (8 服务同值), resident
     6 服务补 outputs (stdout=stderr= ~/.local/log/omostation/<label>.log)。安装器注入
     源头与声明生成器不同源 (重装可能再漂) 留债另案, 不在本 BET 收编。
-  status: pending
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ae3e6aac58fbfacf7d0f71087de7029595b23839
+          tests:
+            ref: receipt://docs/reports/2026-11-25-service-decl-mirror-t10-353-closeout.md
+            sha256: sha256:8f7ccd0c3dd1a841b5d214c7e21e392f42345f075c8cbbe56497ba243f09ccba
+          diff:
+            ref: receipt://docs/reports/2026-11-25-service-decl-mirror-t10-353-closeout.md
+            sha256: sha256:8f7ccd0c3dd1a841b5d214c7e21e392f42345f075c8cbbe56497ba243f09ccba
+          rollback:
+            ref: receipt://docs/reports/2026-11-25-service-decl-mirror-t10-353-closeout.md
+            sha256: sha256:8f7ccd0c3dd1a841b5d214c7e21e392f42345f075c8cbbe56497ba243f09ccba
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-25-service-decl-mirror-t10-353-closeout.md
+            sha256: sha256:8f7ccd0c3dd1a841b5d214c7e21e392f42345f075c8cbbe56497ba243f09ccba
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-25-service-decl-mirror-t10-353-closeout.md
+            sha256: sha256:8f7ccd0c3dd1a841b5d214c7e21e392f42345f075c8cbbe56497ba243f09ccba
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-353.md
+            sha256: sha256:aefe689b4c47b0a7e92f71d50a21cf2d0ed75a41b0a22f9dd8441311d678c17b
+          cleanup:
+            ref: receipt://docs/reports/2026-11-25-service-decl-mirror-t10-353-closeout.md
+            sha256: sha256:8f7ccd0c3dd1a841b5d214c7e21e392f42345f075c8cbbe56497ba243f09ccba
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: delivery_accepted
+  done_at: 2026-11-25
+  status: done
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
