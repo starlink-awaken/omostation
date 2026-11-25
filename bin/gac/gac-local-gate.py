@@ -79,7 +79,9 @@ DEFAULT_POLICY = {
         {"id": "agent-workflow-lint", "command": ["bin/agent-workflow.py", "lint"]},
         {
             "id": "capability-ownership",
-            "command": ["bin/gac/check-capability-ownership.py"],
+            # --json: 注册能力实现全在未检出子模块时自报 measured:false,
+            # 而不是把「输入没备齐」计成删除防腐 FAIL。
+            "command": ["bin/gac/check-capability-ownership.py", "--json"],
             "note": "CAP-OWN: 能力所有权 + 删除防腐 (差距治理 S1). 注册能力实现缺失(IMPL-EXISTS) → 阻断; owner 缺失/孤儿能力 → info",
         },
         {
@@ -89,7 +91,8 @@ DEFAULT_POLICY = {
         },
         {
             "id": "auto-fix-loop",
-            "command": ["bin/gac/auto-fix-loop.py"],
+            # --json: PATH-DRIFT 目标全在未检出子模块时自报 measured:false。
+            "command": ["bin/gac/auto-fix-loop.py", "--json"],
             "note": "AUTO-FIX: 漂移检测→分类→修复闭环 (差距治理 S5). PATH-DRIFT error 级阻断; DERIVED-STALE/ORPHAN-SCRIPT 报告 + --apply 自动修复",
         },
         {
@@ -184,7 +187,9 @@ DEFAULT_POLICY = {
         },
         {
             "id": "dependency-baseline-drift",
-            "command": ["bin/mof/gen-dependency-baseline.py", "--check"],
+            # --json: 有未检出子模块时自报 measured:false（pyproject 不在本检出里,
+            # 无法判定 STALE/MISSING）。
+            "command": ["bin/mof/gen-dependency-baseline.py", "--check", "--json"],
             "ci_only": True,
         },
         {

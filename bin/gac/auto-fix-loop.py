@@ -137,14 +137,24 @@ def is_retro_path(path: str) -> bool:
 
 
 class Drift:
-    __slots__ = ("kind", "severity", "message", "fix_cmd", "auto_fixable")
+    __slots__ = ("kind", "severity", "message", "fix_cmd", "auto_fixable", "paths")
 
-    def __init__(self, kind: str, severity: str, message: str, fix_cmd: str = "", auto_fixable: bool = False) -> None:
+    def __init__(
+        self,
+        kind: str,
+        severity: str,
+        message: str,
+        fix_cmd: str = "",
+        auto_fixable: bool = False,
+        paths: tuple[str, ...] = (),
+    ) -> None:
         self.kind = kind
         self.severity = severity
         self.message = message
         self.fix_cmd = fix_cmd
         self.auto_fixable = auto_fixable
+        # 该漂移涉及的仓内路径（用于「目标全属输入没备齐 ⇒ 未判定」的结构化判据）
+        self.paths = paths
 
     def to_dict(self) -> dict:
         return {
@@ -153,7 +163,48 @@ class Drift:
             "message": self.message,
             "fix_cmd": self.fix_cmd,
             "auto_fixable": self.auto_fixable,
+            "paths": list(self.paths),
         }
+
+
+def _input_absent(rel: str) -> bool:
+    """漂移目标落在「输入没备齐」的位置 —— 与 `gac-healthcheck.input_absent` / `doc-link-check` 同口径。
+
+    未检出的子模块（干净检出 / claim 快速路径）、gitignore 覆盖的生成态、已归档旧路径。
+    相对路径锚在 WORKSPACE；仓外绝对路径直接判 False。
+    """
+    p = Path(rel)
+    if p.is_absolute():
+        try:
+            rel = str(p.relative_to(WORKSPACE))
+        except ValueError:
+            return False
+    parts = Path(rel).parts
+    if len(parts) >= 2 and parts[0] == "projects":
+        return not (WORKSPACE / "projects" / parts[1] / ".git").exists()
+    if rel.startswith("bin/_archive/"):
+        return True
+    try:
+        import subprocess as _sp
+
+        return _sp.run(
+            ["git", "check-ignore", "-q", "--no-index", rel],
+            cwd=WORKSPACE,
+            capture_output=True,
+            timeout=15,
+            check=False,
+        ).returncode == 0
+    except (OSError, _sp.SubprocessError):
+        return False
+
+
+def measured_flag(error_drifts: list["Drift"]) -> tuple[bool, list[str]]:
+    """error 级漂移的目标全属「输入没备齐」⇒ (False, 全部目标)。
+
+    抽成函数是为了让这条判据可被单测直接驱动（不依赖注册表状态）。
+    """
+    paths = [p for d in error_drifts for p in d.paths]
+    return (not paths) or any(not _input_absent(p) for p in paths), paths
 
 
 def _load_yaml(path: Path) -> dict | None:
@@ -211,6 +262,7 @@ def detect_drifts() -> list[Drift]:
     reg = _load_yaml(MOF_CAPABILITIES)
     if isinstance(reg, dict):
         missing: list[str] = []
+        missing_paths: list[str] = []
         for section in ("tools", "omo_tools", "p74_tools"):
             for cap, meta in (reg.get(section) or {}).items():
                 if isinstance(meta, dict) and meta.get("path") and "::" not in str(meta["path"]):
@@ -219,6 +271,7 @@ def detect_drifts() -> list[Drift]:
                         py = WORKSPACE / f"{str(meta['path'])}.py"
                         if not py.exists():
                             missing.append(f"{cap} → {meta['path']}")
+                            missing_paths.append(str(meta["path"]))
         if missing:
             drifts.append(
                 Drift(
@@ -228,6 +281,7 @@ def detect_drifts() -> list[Drift]:
                     f"(需判断删除/迁移, S1 案例: omo_lint_projection → omo_lint.py::cmd)",
                     "bin/gac/check-capability-ownership.py",
                     auto_fixable=False,
+                    paths=tuple(missing_paths),
                 )
             )
 
@@ -465,6 +519,11 @@ def main() -> int:
     else:
         remaining = drifts
 
+    # error 级漂移的目标全属「输入没备齐」⇒ 读数不可用 (见 _input_absent),
+    # 不阻断; 与 healthcheck / doc-link-check 同口径。必须在输出之前算好。
+    has_error = any(d.severity == "error" for d in remaining)
+    measured, _ = measured_flag([d for d in remaining if d.severity == "error"])
+
     if args.json:
         print(
             json.dumps(
@@ -472,6 +531,9 @@ def main() -> int:
                     "drifts": [d.to_dict() for d in remaining],
                     "applied": applied,
                     "count": len(remaining) + len(applied),
+                    # error 级漂移的目标全属「输入没备齐」⇒ 读数不可用 (见 _input_absent)
+                    "measured": measured,
+                    "reason": None if measured else "paths_absent",
                 },
                 ensure_ascii=False,
                 indent=2,
@@ -492,12 +554,12 @@ def main() -> int:
         for a in applied:
             status = "已修复" if a["applied"] else "失败"
             print(f"🟢 [{a['kind']}] {status}: {a['message']}")
+        if drifts and not measured:
+            print("ℹ️  error 级漂移的目标全属「输入没备齐」(未检出子模块 / gitignore 生成态) —— 未判定, 不阻断")
         if not args.apply and drifts:
             print("\n提示: 加 --apply 应用可安全自动修复项 (DERIVED-STALE/ORPHAN-SCRIPT)")
 
-    # 退出: 存在 error 级 (PATH-DRIFT) 需人工 → 1; 其余 0
-    has_error = any(d.severity == "error" for d in remaining)
-    return 1 if has_error else 0
+    return 1 if has_error and measured else 0
 
 
 if __name__ == "__main__":

@@ -60,13 +60,15 @@ SKIP_MARKER = object()
 
 
 class Finding:
-    __slots__ = ("check", "severity", "message", "capability")
+    __slots__ = ("check", "severity", "message", "capability", "path")
 
-    def __init__(self, check: str, severity: str, message: str, capability: str = "") -> None:
+    def __init__(self, check: str, severity: str, message: str, capability: str = "", path: str = "") -> None:
         self.check = check
         self.severity = severity
         self.message = message
         self.capability = capability
+        # 涉及的仓内路径 (用于「目标全属输入没备齐 ⇒ 未判定」的结构化判据)
+        self.path = path
 
     def to_dict(self) -> dict:
         return {
@@ -74,7 +76,45 @@ class Finding:
             "severity": self.severity,
             "message": self.message,
             "capability": self.capability,
+            "path": self.path,
         }
+
+
+def _input_absent(rel: str) -> bool:
+    """error 目标落在「输入没备齐」的位置 —— 与 `gac-healthcheck.input_absent` / `doc-link-check` 同口径。
+
+    未检出的子模块（干净检出 / claim 快速路径）、gitignore 覆盖的生成态、已归档旧路径。
+    相对路径锚在 ROOT；仓外绝对路径直接判 False。
+    """
+    p = Path(rel)
+    if p.is_absolute():
+        try:
+            rel = str(p.relative_to(ROOT))
+        except ValueError:
+            return False
+    parts = Path(rel).parts
+    if len(parts) >= 2 and parts[0] == "projects":
+        return not (ROOT / "projects" / parts[1] / ".git").exists()
+    if rel.startswith("bin/_archive/"):
+        return True
+    try:
+        import subprocess as _sp
+
+        return _sp.run(
+            ["git", "check-ignore", "-q", "--no-index", rel],
+            cwd=ROOT,
+            capture_output=True,
+            timeout=15,
+            check=False,
+        ).returncode == 0
+    except (OSError, _sp.SubprocessError):
+        return False
+
+
+def measured_flag(error_findings: list["Finding"]) -> tuple[bool, list[str]]:
+    """error 级目标全属「输入没备齐」⇒ (False, 全部目标)。抽成函数以便单测直接驱动。"""
+    paths = [f.path for f in error_findings if f.path]
+    return (not paths) or any(not _input_absent(p) for p in paths), paths
 
 
 def _load_yaml(path: Path) -> dict | None:
@@ -363,6 +403,7 @@ def main() -> int:
                         f"注册能力 {e['capability']} 实现缺失: {e['path']} "
                         f"(能力被删除但注册表未同步 → 删除防腐 FAIL)",
                         e["capability"],
+                        str(e["path"]),
                     )
                 )
 
@@ -382,8 +423,22 @@ def main() -> int:
                         )
                     )
 
+    # 阻断级: error findings; 但**全部** error 目标都属「输入没备齐」时不阻断。
+    n_error = sum(1 for f in findings if f.severity == "error")
+    measured, _ = measured_flag([f for f in findings if f.severity == "error"])
+
     if args.json:
-        print(json.dumps({"findings": [f.to_dict() for f in findings]}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "findings": [f.to_dict() for f in findings],
+                    "measured": measured,
+                    "reason": None if measured else "paths_absent",
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
     else:
         for f in findings:
             print(f"[{f.check}:{f.severity}] {f.message}")
@@ -392,10 +447,12 @@ def main() -> int:
             print(f"\n{len(findings)} findings ({n_error} errors, {len(findings)-n_error} non-errors)")
         else:
             print("✅ CAP-OWN: 无能力所有权/删除防腐问题")
+        if not measured:
+            print(
+                "ℹ️  error 级目标全属「输入没备齐」(未检出子模块 / gitignore 生成态) —— 未判定, 不阻断"
+            )
 
-    # 阻断级: error findings
-    n_error = sum(1 for f in findings if f.severity == "error")
-    return 1 if n_error else 0
+    return 1 if n_error and measured else 0
 
 
 if __name__ == "__main__":
