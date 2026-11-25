@@ -29,6 +29,7 @@ drift 类型:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 import tomllib
@@ -143,6 +144,52 @@ def derive_baseline(deps: dict) -> dict[str, dict]:
     return baseline
 
 
+def _parse_unchecked(status_text: str) -> list[str]:
+    """`git submodule status --recursive` 输出里 `-` 前缀（未初始化）的路径。"""
+    out: list[str] = []
+    for line in status_text.splitlines():
+        if line.startswith("-"):
+            parts = line[1:].split()
+            if len(parts) >= 2:
+                out.append(parts[1])
+    return out
+
+
+def unchecked_gitlinks() -> list[str]:
+    """工作树里**未初始化**的子模块路径（含嵌套 —— 问 git 本身，不解析 .gitmodules）。
+
+    这些子模块的 `pyproject.toml` 不在本检出里 ⇒ 基于全量 baseline 的 STALE 判定
+    无法成立（读不到消费者，就不能说它「已移除」）。
+    """
+    try:
+        import subprocess as _sp
+
+        res = _sp.run(
+            ["git", "submodule", "status", "--recursive"],
+            cwd=WORKSPACE,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+    except (OSError, _sp.SubprocessError):
+        return []
+    if res.returncode != 0:
+        return []
+    return _parse_unchecked(res.stdout)
+
+
+def measured_flag(drift_total: int) -> tuple[bool, list[str]]:
+    """扫描面不完整时读数不可用：drift 非空且存在未检出的子模块 ⇒ (False, 未检出清单)。
+
+    抽成函数是为了让判据可被单测直接驱动（不依赖真实的 .gitmodules 状态）。
+    """
+    unchecked = unchecked_gitlinks()
+    if drift_total and unchecked:
+        return False, unchecked
+    return True, unchecked
+
+
 def _load_current_baseline() -> dict[str, str]:
     """加载现有 baseline 的 name → baseline-string 映射 (轻量正则提取, 不全解析 yaml)."""
     if not BASELINE_YAML.is_file():
@@ -206,6 +253,7 @@ def check_drift(derived: dict, current: dict) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description="gen-dependency-baseline: dependency drift 检测 (ISC-15)")
     parser.add_argument("--check", action="store_true", help="对比 baseline 报 drift (exit 1 有 drift)")
+    parser.add_argument("--json", action="store_true", help="机器可读输出；扫描面不完整时自报 measured:false")
     parser.add_argument("--dry-run", action="store_true", help="打印从 pyproject 推导的 baseline")
     parser.add_argument(
         "--write",
@@ -240,7 +288,6 @@ def main() -> int:
     if args.write:
         # C2 方案 C (2026-07-01): subprocess 调 omo broker 写 baseline (不直写, 避 direct_omo_io 红线).
         # omo src/omo/ 路径豁免 contract_gatekeeper. 跟 omo_readiness (P63) 先例同构 (gen 算 → omo broker 写).
-        import json
         import os
         import subprocess
 
@@ -293,8 +340,6 @@ def main() -> int:
     if args.direct_write:
         # 直接写入 baseline YAML, 不走 omo broker.
         # 用于 worktree submit / CI 自动修复 (omo venv 不可用时).
-        import re
-
         BASELINE_FILE = WORKSPACE / ".omo" / "_truth" / "registry" / "dependency-baseline.yaml"
         current = _load_current_baseline()
         drift = check_drift(derived, current)
@@ -378,35 +423,60 @@ def main() -> int:
         current = _load_current_baseline()
         drift = check_drift(derived, current)
         total = sum(len(v) for v in drift.values())
-        if total == 0:
-            print(f"✅ dependency-baseline 无 drift ({len(derived)} deps 全部对齐)")
-            return 0
+        # 扫描面不完整（有未检出的子模块）时, STALE/MISSING 无法判定 —— 见 measured_flag。
+        measured, unchecked = measured_flag(total)
 
-        print(f"❌ 检测到 {total} 项 dependency-baseline drift:\n")
-        if drift["unconstrained"]:
-            print(f"  ⚠️  UNCONSTRAINED ({len(drift['unconstrained'])}): baseline (none) 但 pyproject 有下限 (C1 实证)")
-            for d in drift["unconstrained"]:
-                print(
-                    f"     - {d['name']}: baseline={d['current']} → pyproject={d['pyproject_lower']} ({d['consumers']} consumers)"
+        if args.json:
+            print(
+                json.dumps(
+                    {
+                        "ok": total == 0 or not measured,
+                        "measured": measured,
+                        "reason": None if measured else "scan_incomplete",
+                        "unchecked_submodules": unchecked,
+                        "scanned_pyprojects": len(list(WORKSPACE.glob("projects/**/pyproject.toml"))),
+                        "drift_total": total,
+                        "drift": drift,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
                 )
-        if drift["missing"]:
-            print(f"  ⚠️  MISSING ({len(drift['missing'])}): pyproject 有但 baseline 未登记")
-            for d in drift["missing"][:10]:
-                print(f"     - {d['name']} (consumers={d['consumers']}, derived={d['derived_baseline']})")
-            if len(drift["missing"]) > 10:
-                print(f"     ... 及其他 {len(drift['missing']) - 10} 项")
-        if drift["stale"]:
-            print(f"  ⚠️  STALE ({len(drift['stale'])}): baseline 有但 pyproject 无 (依赖已移除)")
-            for d in drift["stale"][:10]:
-                print(f"     - {d['name']} (baseline={d['current']})")
-        if drift["mismatched"]:
-            print(f"  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
-            for d in drift["mismatched"][:10]:
-                print(f"     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
-        print(
-            "\n修复: python bin/mof/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml"
-        )
-        return 1
+            )
+        elif total == 0:
+            print(f"✅ dependency-baseline 无 drift ({len(derived)} deps 全部对齐)")
+        else:
+            print(f"❌ 检测到 {total} 项 dependency-baseline drift:\n")
+            if drift["unconstrained"]:
+                print(f"  ⚠️  UNCONSTRAINED ({len(drift['unconstrained'])}): baseline (none) 但 pyproject 有下限 (C1 实证)")
+                for d in drift["unconstrained"]:
+                    print(
+                        f"     - {d['name']}: baseline={d['current']} → pyproject={d['pyproject_lower']} ({d['consumers']} consumers)"
+                    )
+            if drift["missing"]:
+                print(f"  ⚠️  MISSING ({len(drift['missing'])}): pyproject 有但 baseline 未登记")
+                for d in drift["missing"][:10]:
+                    print(f"     - {d['name']} (consumers={d['consumers']}, derived={d['derived_baseline']})")
+                if len(drift["missing"]) > 10:
+                    print(f"     ... 及其他 {len(drift['missing']) - 10} 项")
+            if drift["stale"]:
+                print(f"  ⚠️  STALE ({len(drift['stale'])}): baseline 有但 pyproject 无 (依赖已移除)")
+                for d in drift["stale"][:10]:
+                    print(f"     - {d['name']} (baseline={d['current']})")
+            if drift["mismatched"]:
+                print(f"  ⚠️  MISMATCHED ({len(drift['mismatched'])}): baseline 与 pyproject 下限不一致")
+                for d in drift["mismatched"][:10]:
+                    print(f"     - {d['name']}: baseline={d['current']} vs derived={d['derived']}")
+            if not measured:
+                print(
+                    f"\nℹ️  扫描面不完整：{len(unchecked)} 个子模块未检出（如 {unchecked[0]}）—— "
+                    "它们的 pyproject 不在本检出里, 上述 STALE/MISSING **未判定**, 不阻断。\n"
+                    "    先 `git submodule update --init <path>` 再读。"
+                )
+            print(
+                "\n修复: python bin/mof/gen-dependency-baseline.py --dry-run → 走 omo broker 写 .omo/_truth/registry/dependency-baseline.yaml"
+            )
+        # 读数不可用时不阻断：缺输入不是仓库缺陷（与其它自报契约同口径）。
+        return 0 if total == 0 or not measured else 1
 
     return 0
 
