@@ -662,6 +662,39 @@ sync_local_main_best_effort() {
 #      resolve_root_remote 的 canonical 守卫);
 #   ② 职责清晰: 「释放与清账」与「本地镜像同步」是两件事, 后者失败不得阻断前者.
 # 前置: 调用方必须已跑 fail-closed 校验 (verify_clean_for_force_removal / remove_verified_pasw).
+# 本地分支清理的单一口径: 分支上存在「不在任何远端」的 commit ⇒ 保留, 绝不强删。
+# release (:1193 一带) 与 post_merge_release 两处共用 —— 同一判据散在两个位置就会漂移
+# (AGENTS §7「同口径必须单点」), 且与子模块侧 `--check-submodules` (HEAD 在某远端分支上) 同构:
+# 判的是「这份工作换个机器还在不在」, 不是「内容像不像已合并」—— squash 合并会让后者把
+# 未推送提交误读成安全。
+#
+# 两个实测坑, 一并在这个函数里纠正:
+#   ① 旧写法 `git log --oneline --not "origin/main" "$branch"` **恒空** —— `--not` 切换的是
+#      后续**所有** rev 的 uninteresting 标志, 于是 origin/main 与分支自己被一起排除, 没有
+#      commit 可选。夹具实测: 老式恒空, 分支前置 (`git log feat --not origin/main`) 才列得出
+#      ⇒ release 那条「保留」分支从未放行过, 与 worktree-janitor.py:168 记录的「`--is-ancestor`
+#      不输出、恒为假」是同一形状。
+#   ② merge 成功路径上本脚本的 cwd 会随 worktree 一起消失, 2026-11-25 session t10351 即在
+#      `git branch -D` 处打出 `fatal: Unable to read current working directory` 又被行尾
+#      `|| true` 吞掉 ⇒ 未推送提交只是侥幸留存。故 git 一律带 -C "$WS_ROOT", 不依赖调用方 cwd。
+# 返回: 0 = 分支已删或本就不存在; 1 = 分支保留 (调用方不得据此失败).
+prune_local_branch() {  # $1 = branch
+  local branch="${1:-}" unpushed=""
+  [ -n "$branch" ] || return 0
+  git -C "$WS_ROOT" rev-parse --verify --quiet "${branch}^{commit}" >/dev/null || return 0
+  if ! unpushed=$(git -C "$WS_ROOT" rev-list --count "$branch" --not --remotes 2>/dev/null); then
+    echo "   分支 $branch 的未推送提交无法判定, 保留 (宁可留残枝, 不冒丢工风险)" >&2
+    return 1
+  fi
+  if [ "$unpushed" != "0" ]; then
+    echo "   分支 $branch 有 $unpushed 个不在任何远端的 commit, 保留 (确认已推送后手动 git branch -D)"
+    return 1
+  fi
+  git -C "$WS_ROOT" branch -D "$branch" 2>&1 | tail -1 || true
+  echo "   ✅ 分支 $branch 已删除 (无未推送提交)"
+  return 0
+}
+
 # 返回: 0 = worktree 已释放 (分支与 claim 已尽力清理); 1 = worktree 未移除 (保留分支与 claim).
 post_merge_release() {
   local session="$1" branch="$2" wt="$3"
@@ -672,8 +705,9 @@ post_merge_release() {
     return 1
   fi
   echo "✅ worktree 释放: $wt"
-  # 删本地分支 (远程已由 gh --delete-branch 删除). 失败不致命.
-  git branch -D "$branch" 2>&1 | tail -1 || true
+  # 删本地分支 (远程已由 gh --delete-branch 删除): 与 release 共用同一守卫, 分支上有
+  # main 外 commit —— 含「已提交但未推送」的交付腿 —— 一律保留, 不再无脑 -D. 失败不致命.
+  prune_local_branch "$branch" || true
   # claim 清理: 与 release 对齐.
   # 旧版 merge **从不**清理 ⇒ `.omo/_delivery/branch-claims/<session>.json` 每次残留,
   # 必须再跑一次 release 才清 (2026-09-28 E2-2 / 09-29 E2-3 两次实证).
@@ -1190,16 +1224,9 @@ except Exception: print('')" 2>/dev/null || true)"
     echo "✅ worktree 释放: $wt"
     # PASW: 清理 claim 记录
     pasw_claim_clean "$session"
-    # 分支清理: 已合并到 main → 删; 否则保留
+    # 分支清理: 已合并到 main → 删; 否则保留. 口径与 merge 收尾共用 prune_local_branch.
     branch="$(resolve_branch_for "$session")"
-    if git rev-parse --verify "$branch" >/dev/null 2>&1; then
-      if git log --oneline --not "origin/main" "$branch" 2>/dev/null | head -1 | grep -q .; then
-        echo "   分支 $branch 有 main 外 commit, 保留 (可手动 git branch -D)"
-      else
-        git branch -D "$branch" 2>&1 | tail -1
-        echo "   ✅ 分支 $branch 已删除 (内容已并入 main)"
-      fi
-    fi
+    prune_local_branch "$branch" || true
     ;;
 
   merge)
