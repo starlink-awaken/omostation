@@ -14,7 +14,7 @@ related:
 schema: scene-card/v1
 lifecycle: routine
 activation: active
-approval_state: approved
+approval_state: confirmed
 scene_id: agora-bos-gateway
 journey_id: intent-to-execution
 goal: AI agent 经 agora MCP 网关 (SSE :7431) 统一调用 BOS 能力 (bos:// 路由 + 准入 + 审计 + 可观测)

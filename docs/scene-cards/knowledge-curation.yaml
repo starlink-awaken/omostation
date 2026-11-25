@@ -14,7 +14,7 @@ schema: scene-card/v1
 scene_type: external_resource
 lifecycle: supervised
 activation: active
-approval_state: pending_business_confirmation
+approval_state: confirmed
 scene_id: knowledge-curation
 journey_id: knowledge-capture-pipeline
 journey_unresolved: no matching file in docs/journey-specs/

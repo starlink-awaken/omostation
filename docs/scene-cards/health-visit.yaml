@@ -11,6 +11,7 @@ bet: BET-Y1Q4-T8-04
 falsifier: "若 30 天内无 health 类任务触发，则场景无实际价值"
 scene_id: health-visit
 journey_id: health-medical-workflow
+approval_state: confirmed
 goal: 就诊结束后记录诊断/处方/医嘱, 形成就诊结构化档案
 trigger: 人工触发 (就诊完成后录入或口述转写)
 input_contract: 就诊结果描述 (诊断/处方/医嘱/复查要求, 文本口述均可)

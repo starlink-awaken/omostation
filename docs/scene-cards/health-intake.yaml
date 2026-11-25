@@ -11,6 +11,7 @@ bet: BET-Y1Q4-T8-04
 falsifier: "若 30 天内无 health 类任务触发，则场景无实际价值"
 scene_id: health-intake
 journey_id: health-medical-workflow
+approval_state: confirmed
 goal: 将症状/体征指标/医嘱等健康信息结构化记录到本地健康台账, 并判定是否需要就诊
 trigger: 人工触发 journey run (P1 无自动采集源, 敏感域约束)
 input_contract: 健康事件描述 (症状文本/指标数值/发生时间), 仅本地处理

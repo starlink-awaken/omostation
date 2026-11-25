@@ -11,6 +11,7 @@ bet: BET-Y1Q4-T8-04
 falsifier: "若 30 天内无 health 类任务触发，则场景无实际价值"
 scene_id: health-archive
 journey_id: health-medical-workflow
+approval_state: confirmed
 goal: 归档就诊档案与体检报告, 提取复查/用药时间节点形成追踪清单 (journey 终态)
 trigger: journey 前置状态 visited 的 records_received == true, 或 recorded 直接分叉进入
 input_contract: 就诊档案 + 报告文件 (本地路径)
