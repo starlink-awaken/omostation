@@ -1,0 +1,163 @@
+id: OMO-DEBT-WORKFLOW-CLOSEOUT-OK-FIELD-TAUTOLOGY
+title: closeout 的 ok 字段是 status 恒等式：非 ok 收尾已落盘放锁仍 rc=1，脚本无法区分被拒与已应用
+dimension: governance
+subdimension: tooling
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-team
+affected_roots:
+- "projects/omo/src/omo/workflow/lifecycle.py"
+- "projects/omo/src/omo/cli.py"
+- ".omo/_delivery/agent-workflows/runs"
+evidence_refs:
+- "实测：closeout --status blocked 已落盘并 released_locks=5，进程仍 rc=1，与「被门禁拒绝」不可区分"
+- "projects/omo/src/omo/workflow/lifecycle.py:1715 与 :1739：\"ok\": status == \"ok\"（恒等式，不含 applied/verify 信息）"
+- "projects/omo/src/omo/workflow/lifecycle.py:1716：\"error\": verify_report.get(\"reason\") or \"\" ⇒ ok=False 时常配空串"
+- "projects/omo/src/omo/cli.py:516（close 无条件 return 0）对照 cli.py:535（closeout return 0 if report[\"ok\"]）"
+- "run 记录 .omo/_delivery/agent-workflows/runs/20261124T115722Z-governance-state-mutation-ff161d99.yaml：status=blocked、closed_at 已写、5 把锁已释放，事件字段仍复刻同一恒等式（lifecycle.py:1750-1752）"
+mitigation_refs: []
+opened_at: '2026-11-24T23:39:23.348257+00:00'
+last_reviewed_at: '2026-11-24'
+next_review_at: '2026-12-08'
+gate_level: none
+history:
+- at: '2026-11-24T23:39:23.348257+00:00'
+  action: register
+  note: Registered debt item OMO-DEBT-WORKFLOW-CLOSEOUT-OK-FIELD-TAUTOLOGY.
+- at: '2026-11-24T23:39:23.536096+00:00'
+  action: update_description
+  note: 'Updated description from '''' to ''【单位口径】rc=进程退出码；行号在 origin/main@5dbafcca0
+    的 projects/omo 子模块检出上复核；锁计数=run 记录 released_locks 数组长度；时间为 UTC。
+
+
+    【现象】python3 bin/agent-workflow.py closeout <run> --status blocked --evidence "..."
+    在收尾完全成功的情况下返回 rc=1：stdout 打印 closeout 20261124T115722Z-governance-state-mutation-ff161d99
+    as blocked、verify checks=0 ok=True、observe=continue，盘上记录同步落地（status: blocked、closed_at:
+    2026-11-24T23:32:52Z、released_locks 长度 5、evidence 追加到位），但进程退出码为 1。
+
+
+    【机制：ok 字段是输入的恒等式】lifecycle.py:1679 closeout_run 构造 report 时，:1715 与 :1739 两处都写
+    "ok": status == "ok"，即 report 的 ok 只镜像调用者传进来的 status 字符串，与该次收尾是否真正落盘、锁是否释放、证据是否写入毫无关系。同一段里真正描述结果的字段另有
+    verify_ok（:1717 取 verify_report["ok"]）、observe_decision（:1718）、evidence_count（:1719），而
+    :1716 把 error 设为 verify_report.get("reason") or "" —— 于是非 ok 路径产出的记录同时具备 ok=False
+    与 error=""，语义自相矛盾。事件面继续放大它：:1750-1752 把 report["ok"] 原样写进事件载荷，恒等式因此进入 state 平面。
+
+
+    【机制：rc 由恒等式决定】cli.py:535 return 0 if report["ok"] else 1 ⇒ 任何 --status 非 ok 的收尾都返回
+    1。对照同一 CLI 的 close 分支：cli.py:516 无条件 return 0。即 close 与 closeout 两个动词对「以非 ok 状态完成收尾」给出相反的退出码，而二者写的是同一类记录。另
+    :1704-1707 的 verify/observe 拦截只对 status == "ok" 生效，blocked 路径既不跑 verify 也不跑 observe
+    校验，因此 rc=1 也不可能是「校验未过」的信号。
+
+
+    【为什么这不是小事】closeout 是本仓治理交付的收口步，被 Makefile 目标与脚本链当作终态使用（make agent-workflow-closeout
+    RUN_ID=<id>）。在 shell 链里 rc=1 意味着失败：
+
+    - 用 && 串联的编排会把已成功的 blocked 收尾判为失败，进而重试；重试撞上一次性终态——lifecycle.py:1048-1049 对非 active
+    run 抛 cannot heartbeat non-active run (status=...)，cli 层 rc=2。本次批次18 已实录该序列：先被内部校验拦、诊断期间留下占位证据、正确收尾再被拒（见
+    OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE）。也就是说「成功但 rc=1」与「一次性终态不可重放」组合起来，会把调用方推进已登记过的失败回路。
+
+    - 语义上无法区分三件事：收尾被拒（raise WorkflowError）、收尾已应用但状态非 ok、收尾已应用且 ok。脚本只能靠解析 stdout 文本区分，而
+    stdout 在 :532 的打印条件受 verbose 类开关影响。
+
+    这与 AGENTS §7 既有簇「broker/CLI 旗标语义反转伪装成门禁」同形：退出码说的和盘上发生的不是一回事。
+
+
+    【边界与未实测项（如实声明）】
+
+    - 我没有实测 close --status blocked 的 rc（代码路径为 cli.py:516 return 0，属推断）：实测需要再造一个探针
+    run 并写入共享 state 平面，而 run 记录一旦转终态不可修正，故只做代码级对照。
+
+    - 我没有改动任何已落盘记录来「修正」rc 表现；本次批次19 的 run 就按真实读数留档为 blocked。
+
+
+    【去重】OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE（批次19）谈 closeout
+    的 evidence 内容零校验与转终态后不可修正；本条谈 closeout 的返回值与 ok 字段语义。二者同函数但不同契约面：前者是写入内容无守卫，后者是执行结果无信号。已
+    closed 的 OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT 是锁 TTL 与 heartbeat 宽度，不覆盖本条。
+
+
+    【决策菜单（均需 principal 取舍）】
+
+    ① 拆 rc 语义：已落盘返回 0（附 status 字段区分 ok/blocked/failed），被拒返回 2，与 close 对齐。
+
+    ② 把 report["ok"] 改为 applied 语义（是否完成落盘与放锁），另设 outcome: ok|blocked|failed 承载状态，事件载荷
+    :1750-1752 同步换源。
+
+    ③ 保守做法：保留现 rc 约定，但在非 ok 分支显式打印 applied=true 且说明 rc=1 是设计意图，并在 workflow 文档里写明调用方不得用
+    && 串联。
+
+    ④ 是否回溯修订既有 run 事件里 ok 字段的含义（那要动受管 state 面，我不执行，需授权）。
+
+
+    【自检】rc=1 与盘上记录状态为同一次命令的前后两次实测（先 closeout 读 rc，再读 yaml 确认 status/closed_at/released_locks/evidence）；行号逐条按
+    origin/main 内容复核；本条不含任何对受管面的手工修改。''.'
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: '【单位口径】rc=进程退出码；行号在 origin/main@5dbafcca0 的 projects/omo 子模块检出上复核；锁计数=run
+  记录 released_locks 数组长度；时间为 UTC。
+
+
+  【现象】python3 bin/agent-workflow.py closeout <run> --status blocked --evidence "..."
+  在收尾完全成功的情况下返回 rc=1：stdout 打印 closeout 20261124T115722Z-governance-state-mutation-ff161d99
+  as blocked、verify checks=0 ok=True、observe=continue，盘上记录同步落地（status: blocked、closed_at:
+  2026-11-24T23:32:52Z、released_locks 长度 5、evidence 追加到位），但进程退出码为 1。
+
+
+  【机制：ok 字段是输入的恒等式】lifecycle.py:1679 closeout_run 构造 report 时，:1715 与 :1739 两处都写 "ok":
+  status == "ok"，即 report 的 ok 只镜像调用者传进来的 status 字符串，与该次收尾是否真正落盘、锁是否释放、证据是否写入毫无关系。同一段里真正描述结果的字段另有
+  verify_ok（:1717 取 verify_report["ok"]）、observe_decision（:1718）、evidence_count（:1719），而
+  :1716 把 error 设为 verify_report.get("reason") or "" —— 于是非 ok 路径产出的记录同时具备 ok=False
+  与 error=""，语义自相矛盾。事件面继续放大它：:1750-1752 把 report["ok"] 原样写进事件载荷，恒等式因此进入 state 平面。
+
+
+  【机制：rc 由恒等式决定】cli.py:535 return 0 if report["ok"] else 1 ⇒ 任何 --status 非 ok 的收尾都返回
+  1。对照同一 CLI 的 close 分支：cli.py:516 无条件 return 0。即 close 与 closeout 两个动词对「以非 ok 状态完成收尾」给出相反的退出码，而二者写的是同一类记录。另
+  :1704-1707 的 verify/observe 拦截只对 status == "ok" 生效，blocked 路径既不跑 verify 也不跑 observe
+  校验，因此 rc=1 也不可能是「校验未过」的信号。
+
+
+  【为什么这不是小事】closeout 是本仓治理交付的收口步，被 Makefile 目标与脚本链当作终态使用（make agent-workflow-closeout
+  RUN_ID=<id>）。在 shell 链里 rc=1 意味着失败：
+
+  - 用 && 串联的编排会把已成功的 blocked 收尾判为失败，进而重试；重试撞上一次性终态——lifecycle.py:1048-1049 对非 active
+  run 抛 cannot heartbeat non-active run (status=...)，cli 层 rc=2。本次批次18 已实录该序列：先被内部校验拦、诊断期间留下占位证据、正确收尾再被拒（见
+  OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE）。也就是说「成功但 rc=1」与「一次性终态不可重放」组合起来，会把调用方推进已登记过的失败回路。
+
+  - 语义上无法区分三件事：收尾被拒（raise WorkflowError）、收尾已应用但状态非 ok、收尾已应用且 ok。脚本只能靠解析 stdout 文本区分，而
+  stdout 在 :532 的打印条件受 verbose 类开关影响。
+
+  这与 AGENTS §7 既有簇「broker/CLI 旗标语义反转伪装成门禁」同形：退出码说的和盘上发生的不是一回事。
+
+
+  【边界与未实测项（如实声明）】
+
+  - 我没有实测 close --status blocked 的 rc（代码路径为 cli.py:516 return 0，属推断）：实测需要再造一个探针 run
+  并写入共享 state 平面，而 run 记录一旦转终态不可修正，故只做代码级对照。
+
+  - 我没有改动任何已落盘记录来「修正」rc 表现；本次批次19 的 run 就按真实读数留档为 blocked。
+
+
+  【去重】OMO-DEBT-WORKFLOW-CLOSEOUT-EVIDENCE-UNVALIDATED-IMMUTABLE（批次19）谈 closeout 的
+  evidence 内容零校验与转终态后不可修正；本条谈 closeout 的返回值与 ok 字段语义。二者同函数但不同契约面：前者是写入内容无守卫，后者是执行结果无信号。已
+  closed 的 OMO-WORKFLOW-STALE-HEARTBEAT-LOCK-THEFT 是锁 TTL 与 heartbeat 宽度，不覆盖本条。
+
+
+  【决策菜单（均需 principal 取舍）】
+
+  ① 拆 rc 语义：已落盘返回 0（附 status 字段区分 ok/blocked/failed），被拒返回 2，与 close 对齐。
+
+  ② 把 report["ok"] 改为 applied 语义（是否完成落盘与放锁），另设 outcome: ok|blocked|failed 承载状态，事件载荷
+  :1750-1752 同步换源。
+
+  ③ 保守做法：保留现 rc 约定，但在非 ok 分支显式打印 applied=true 且说明 rc=1 是设计意图，并在 workflow 文档里写明调用方不得用
+  && 串联。
+
+  ④ 是否回溯修订既有 run 事件里 ok 字段的含义（那要动受管 state 面，我不执行，需授权）。
+
+
+  【自检】rc=1 与盘上记录状态为同一次命令的前后两次实测（先 closeout 读 rc，再读 yaml 确认 status/closed_at/released_locks/evidence）；行号逐条按
+  origin/main 内容复核；本条不含任何对受管面的手工修改。'
