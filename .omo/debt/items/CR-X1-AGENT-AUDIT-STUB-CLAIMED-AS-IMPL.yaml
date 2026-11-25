@@ -73,16 +73,14 @@ description: >-
   （`submodules: recursive`）在 CI 里是满足的。**检出形态能伪造「恒红」**，
   与它能伪造「恒绿」是同一枚硬币的两面。
 decision_needed: >-
-  两问：
+  **只剩一问，且属 owner 政策裁定**：这个占位桩的**真实判准何时定** ——
+  「哪些面算外部 agent 接入」，尤其 `bin/ssot/a2a-adapter.py` 直写
+  `.omo/state/a2a-messages.jsonl` 这类绕过 ingress 的路径是否必须走 ingress，
+  没有裁定就不能把桩补成真检查（照写会当场红）。
 
-  - (1) **桩要不要留**：留 —— 那描述里的「实现: …」必须删掉或改成
-    「占位桩，未实现」（否则「已接线」由永真的 print 支撑）；
-    不留 —— 删掉桩与那句描述，或把桩补成真检查（真读 `runtime/omo/_delivery/ingress/
-    ingress-trail.jsonl` 的 `check_type: audit_chain` 语义）。
-  - (2) **id 对齐**：桩的 docstring 用 `CR-X1-EXTERNAL-AGENT-AUDIT`，规则是
-    `CR-X1-AGENT-AUDIT`。要么给规则加 alias（`registry-alias-map.yaml`，
-    检测器认 alias），要么把桩的 id 改成规则 id —— 但**别名必须让检测器认得**
-    （`_resolve_via_alias` 是大小写不敏感的精确串匹配，不是子串）。
+  原 (1)「桩要不要留」**已于 2026-11-16 落地**（留桩 + 摘掉「实现」声称，见 history
+  mitigate），不再重开；原 (2)「id 对齐」**前提已否证、从未需要动作**（桩的
+  `CHECK_ID` 就是它自己那条规则的 id，见 history correct），撤销。
   **本条不代决。**
 history:
 - at: "2026-11-16T06:05:00+00:00"
@@ -125,4 +123,22 @@ history:
     `status=not_implemented`; `python3 bin/gac/check-rule-wiring-coverage.py --json`
     在子模块齐全的树上 `candidates_unwired.governance-checks == []`（与改前一致，
     本次改动不触碰接线判定路径）。
+  actor: "governance-agent"
+- at: "2026-11-25T18:46:39+00:00"
+  action: correct
+  note: >-
+    **收口订正（复核 origin/main `5e42b573c`）**：
+    ① **已落地** —— `governance-checks.yaml:1772` 的 `CR-X1-EXTERNAL-AGENT-AUDIT.description`
+    明写「执行体: … 占位桩, 未实现」；`bin/gac/check-external-agent-audit.py` 自报
+    `{"status": "not_implemented", "enforced": false}`；`CR-X1-AGENT-AUDIT.source_ref`
+    已改指真实宿主 `projects/ecos/src/ecos/l0/governance/checkers.py`。
+    ② **前提否证，且从未需要动作** —— 桩的 `CHECK_ID = CR-X1-EXTERNAL-AGENT-AUDIT`
+    正是**它自己那条规则**（`:1760` `id: CR-X1-EXTERNAL-AGENT-AUDIT`）的 id，两者逐字相同。
+    原「桩 id 与规则 id 不一致」把**两条不同的规则**当成了同一条，故 alias 与改名都撤销。
+    **剩余**只有「真实判准何时定」这一 owner 政策问题（本条不代决）。
+    **判据**：同一份 origin/main 上 `grep -n CHECK_ID bin/gac/check-external-agent-audit.py`
+    与 `governance-checks.yaml` 里的 `id:` 同时命中 `CR-X1-EXTERNAL-AGENT-AUDIT`，且
+    `CR-X1-AGENT-AUDIT` 是另一条（`:345`，name「agent 操作审计链」）。
+    **纪律**：一条债条目在 mitigate 之后若长期停在 `identified` 且仍列着已被否证的问题，
+    下一轮 agent 会照着 dead question 再跑一遍 —— 登记面的**陈旧问题**与陈旧指针同罪。
   actor: "governance-agent"
