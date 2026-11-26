@@ -88,6 +88,7 @@ def test_check_skips_byte_comparison_when_host_observer_is_unavailable(
     assert module.main() == 0
     assert json.loads(capsys.readouterr().out) == {
         "ok": True,
+        "measured": False,
         "skipped": True,
         "reason": "launchd_observer_unavailable",
         "validation_errors": [],
@@ -119,6 +120,7 @@ def test_observer_unavailable_does_not_mask_malformed_declarations(
     assert module.main() == 1
     report = json.loads(capsys.readouterr().out)
     assert report["skipped"] is True
+    assert report["measured"] is False
     assert report["ok"] is False
     assert report["reason"] == "launchd_observer_unavailable"
     assert any("requires label" in e for e in report["validation_errors"])

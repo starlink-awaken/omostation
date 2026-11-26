@@ -70,6 +70,7 @@ def _run(script: Path, env: dict[str, str], *argv: str) -> subprocess.CompletedP
         ["bash", str(script), *argv],
         cwd=script.parents[2],
         env=env,
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
         check=False,

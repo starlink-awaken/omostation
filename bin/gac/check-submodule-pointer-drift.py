@@ -89,22 +89,23 @@ def get_gitlink(sub_path: str, from_head: bool = False) -> str | None:
     return None
 
 
-def get_submodule_origin_main(sub_path: str) -> str | None:
+def get_submodule_origin_main(sub_path: str, *, fetch: bool = True) -> str | None:
     sub_dir = REPO_ROOT / sub_path
     if not (sub_dir / ".git").exists() and not (sub_dir / ".git").is_file():
         return None
-    try:
-        subprocess.run(
-            ["git", "fetch", "origin", "--quiet"],
-            cwd=sub_dir,
-            env=_git_env(sub_dir),
-            capture_output=True,
-            check=False,
-            timeout=15,
-        )
-    except subprocess.TimeoutExpired:
-        # A stale remote probe must not wedge pre-push; use the last fetched ref.
-        pass
+    if fetch:
+        try:
+            subprocess.run(
+                ["git", "fetch", "origin", "--quiet"],
+                cwd=sub_dir,
+                env=_git_env(sub_dir),
+                capture_output=True,
+                check=False,
+                timeout=15,
+            )
+        except subprocess.TimeoutExpired:
+            # A stale remote probe must not wedge pre-push; use the last fetched ref.
+            pass
     sha = _git("rev-parse", "origin/main", cwd=sub_dir)
     return sha if sha else None
 
@@ -131,12 +132,14 @@ def _is_shallow(sub_path: str) -> bool:
     return shallow.exists()
 
 
-def check_drift(sub_path: str, from_head: bool = False) -> dict | None:
+def check_drift(
+    sub_path: str, from_head: bool = False, *, fetch: bool = True
+) -> dict | None:
     gitlink = get_gitlink(sub_path, from_head=from_head)
     if not gitlink:
         return None
 
-    origin_main = get_submodule_origin_main(sub_path)
+    origin_main = get_submodule_origin_main(sub_path, fetch=fetch)
     if not origin_main:
         return {"submodule": sub_path, "status": "skip", "reason": "no origin/main"}
 
@@ -181,9 +184,9 @@ def check_drift(sub_path: str, from_head: bool = False) -> dict | None:
     }
 
 
-def fix_pointer(sub_path: str, apply: bool = False) -> str:
+def fix_pointer(sub_path: str, apply: bool = False, *, fetch: bool = True) -> str:
     sub_dir = REPO_ROOT / sub_path
-    origin_main = get_submodule_origin_main(sub_path)
+    origin_main = get_submodule_origin_main(sub_path, fetch=fetch)
     if not origin_main:
         return "skip: no origin/main"
 
@@ -207,6 +210,11 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON 输出")
     parser.add_argument("--strict", action="store_true", help="behind 也算 drift")
     parser.add_argument("--from-head", action="store_true", help="读 HEAD 而非 index")
+    parser.add_argument(
+        "--no-fetch",
+        action="store_true",
+        help="跳过逐子模块 git fetch，只用最近一次 fetch 到的 refs（测试用；网络慢时省 15s×N）",
+    )
     args = parser.parse_args()
 
     submodules = get_submodules()
@@ -215,7 +223,7 @@ def main() -> int:
     behind = []
 
     for sub in sorted(submodules):
-        r = check_drift(sub, from_head=args.from_head)
+        r = check_drift(sub, from_head=args.from_head, fetch=not args.no_fetch)
         if r is None:
             continue
         results.append(r)
@@ -226,7 +234,7 @@ def main() -> int:
 
     if args.fix or args.apply:
         for r in diverged + (behind if args.strict else []):
-            fix_msg = fix_pointer(r["submodule"], apply=args.apply)
+            fix_msg = fix_pointer(r["submodule"], apply=args.apply, fetch=not args.no_fetch)
             r["fix"] = fix_msg
 
     if args.json:

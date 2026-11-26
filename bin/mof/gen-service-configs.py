@@ -1156,8 +1156,11 @@ def main() -> int:
             print(plist)
     if args.check:
         if not launchd_observer_available:
+            # 债条目 OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE
+            # 「缺席即绿」：没有本机 plist 可比时自报没测成, 而不是 ok:true 冒充通过。
             report = {
                 "ok": not bad_services,
+                "measured": False,
                 "skipped": True,
                 "reason": "launchd_observer_unavailable",
                 "validation_errors": bad_services,

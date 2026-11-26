@@ -27,9 +27,12 @@ def _load_module():
 
 
 def _run(*extra_args: str) -> subprocess.CompletedProcess:
+    # --no-fetch: 本文件多条用例都会跑真实检测器, 而检测器默认对每个子模块
+    # `git fetch`(15s 超时)。网络慢时整套用例被拖成「挂起」——测试不该依赖网络。
     return subprocess.run(
-        [sys.executable, str(SCRIPT), *extra_args],
+        [sys.executable, str(SCRIPT), "--no-fetch", *extra_args],
         cwd=REPO_ROOT,
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
         check=False,
@@ -133,3 +136,19 @@ def test_submodule_git_clears_superproject_environment(
     child_env = run.call_args.kwargs["env"]
     assert "GIT_DIR" not in child_env
     assert "GIT_WORK_TREE" not in child_env
+
+
+def test_no_fetch_skips_the_network_probe(monkeypatch) -> None:
+    """--no-fetch 必须真的不发起 git fetch（否则这条用例只是换个旗标继续等网络）。"""
+    module = _load_module()
+    calls: list[list[str]] = []
+    real_run = subprocess.run
+
+    def spy(args, **kwargs):
+        calls.append(list(args))
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(module.subprocess, "run", spy)
+    module.get_submodule_origin_main("projects/omo", fetch=False)
+
+    assert not any("fetch" in c for c in calls), calls
