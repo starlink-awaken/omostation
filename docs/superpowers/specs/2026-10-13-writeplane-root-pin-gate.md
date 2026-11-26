@@ -6,7 +6,7 @@ bet_id: BET-Y2Q4-T10-250
 status: accepted
 lifecycle: contract
 owner: governance-team
-last-reviewed: 2026-11-26
+last-reviewed: 2026-11-02
 ---
 
 # 写面根钉死门禁 —— 让「新增一处检出根拼法」当场变红
@@ -70,23 +70,11 @@ code/state 双根；`omo_paths` + 9 处 `DEFAULT_LEDGER` + `OMO_PRINCIPAL_ID` �
 > 钉检出根站点** ⇒ `.omo/_truth` 桶 **162 → 163**（该桶是排除面，不影响门禁管辖的
 > 153/143/95）。`SPEC_MARKER_READINGS` 已按同一次扫描重签（ISC-1 要求同源）。
 
-> 2026-11-26 第六次复核（BET-Y2Q4-T10-355 线，PR #5621 治理占比投影读侧）：
-> `bin/gac/check-governance-ratio.py` 新增
-> `PROJECTION_DIR = WORKSPACE / ".omo/_delivery/events/delivery-runs"`，是**新的一处**钉检出根
-> 站点 ⇒ `.omo/_delivery` 桶 **+1**。本轮同一次扫描的五桶实测
-> **162 / 97 / 72 / 45 / 60**（`.omo/_truth` / `.omo/state` / `.omo/_delivery` / `runtime` /
-> `.omo/_knowledge`），门禁三读数 **160 / 152 / 106** 未动 —— `_delivery` 是排除面，新增站点
-> 不进管辖集。`SPEC_MARKER_READINGS` 已按该读数重签（ISC-1 同源）。
-> ⚠️ 顺带如实登记：下方 §1 表的 `.omo/state` 103 / `.omo/_knowledge` 62 / `runtime` 50 与
-> `.omo/_truth` 163 仍是 2026-11-05 署名读数，Wave 1 / Wave 5 的读侧收敛只重签了判据基线、
-> 没同步这张表 ⇒ 表与实测对 4 个桶已漂移。本轮只重签 `.omo/_delivery` 行，其余行的复核
-> 属各自 wave 的责任，不代答。
-
 | marker | 站点 | 本轮判定 |
 |---|---|---|
 | `.omo/_truth/**` | 163 | 排除 —— 读面 SSOT，按 ADR-0456 跟随当前检出，`__file__` 拼法在此是契约不是缺陷 |
 | `.omo/state/**` | 103 | **纳入** 门禁 |
-| `.omo/_delivery/**` | 72 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义（2026-11-26 第六次复核重签，见上） |
+| `.omo/_delivery/**` | 78 | 排除 —— 全机 symlink 桥（`delivery_anchor.py:87`），AGENTS.md §7「gitignore ≠ 本地化」；改道它等于改协调面语义 |
 | `.omo/_knowledge/**` | 62 | 排除 —— 署名文档/历史面，随检出 |
 | `runtime/**` | 50 | **纳入** 门禁 |
 
