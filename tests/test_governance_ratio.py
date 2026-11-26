@@ -246,6 +246,9 @@ class TestNotMeasuredContract:
 
     def test_missing_ledger_declares_not_measured(self, mod, monkeypatch, tmp_path, capsys):
         monkeypatch.setattr(mod, "LEDGER", tmp_path / "absent.jsonl")
+        # 投影面必须一起隔离：真实仓库里 `.omo/_delivery/events/` 存在，
+        # 只 patch LEDGER 的用例会在有投影的机器上假红。
+        monkeypatch.setattr(mod, "PROJECTION_DIR", tmp_path / "no-projection")
         rc = mod.main(["--json"])
         out = json.loads(capsys.readouterr().out)
         assert rc == 0, "缺输入不是仓库缺陷，不该阻断"
@@ -272,3 +275,149 @@ class TestNotMeasuredContract:
         out = json.loads(capsys.readouterr().out)
         assert rc in (0, 1)
         assert out["measured"] is True
+
+
+class TestProjectionInput:
+    """CI 可读面：账本缺席但已提交投影存在时必须真测。
+
+    动机：账本在 gitignore 面且 worktree 里是指向 state root 的符号链接，
+    CI 干净检出结构性缺输入 ⇒ 40% 上限只在持有账本的机器上执法。
+    `omo.workflow.governance_projection` 把 start 事件镜像成一条一文件的
+    去机器化投影；本类钉住读侧行为与**分类等价性** —— 投影不得改变结论。
+    """
+
+    @staticmethod
+    def _recent(days: int = 1) -> str:
+        return (datetime.now(UTC) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @pytest.fixture
+    def isolated(self, mod, monkeypatch, tmp_path):
+        monkeypatch.setattr(mod, "LEDGER", tmp_path / "absent.jsonl")
+        proj = tmp_path / "delivery-runs"
+        proj.mkdir()
+        monkeypatch.setattr(mod, "PROJECTION_DIR", proj)
+        return mod, proj
+
+    def test_projection_only_is_measured(self, isolated, capsys):
+        mod, proj = isolated
+        rows = [
+            {"run_id": "r-gov", "agent_profile": "governance-agent",
+             "workflow_id": "governance-state-mutation"},
+            {"run_id": "r-flex", "agent_profile": "engineering-agent",
+             "workflow_id": "project-code-change"},
+        ]
+        for row in rows:
+            payload = {
+                "schema_version": "governance-ratio-event/v1",
+                "event": "agent_workflow_start",
+                "ts": self._recent(),
+                "locks": [],
+                "human_approval": False,
+                "is_collaboration": False,
+                **row,
+            }
+            (proj / f"{row['run_id']}.json").write_text(
+                json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        rc = mod.main(["--json"])
+        out = json.loads(capsys.readouterr().out)
+        assert out["measured"] is True
+        assert out["input_source"] == "projection"
+        assert out["total_runs"] == 2
+        assert out["buckets"]["governance"] == 1
+        assert rc in (0, 1)
+
+    def test_classification_parity_between_inputs(self, mod, monkeypatch, tmp_path, capsys):
+        """同一批 run 走账本与走投影，buckets 必须逐字相同。
+
+        两侧唯一差异是分类输入的形状（objective 文本 + 绝对锁路径 vs 两个派生
+        布尔 + 相对锁路径），所以这条同时钉住「投影没改变判据」。
+        """
+        ledger_rows = [
+            {"event": "agent_workflow_start", "ts": self._recent(), "run_id": "p1",
+             "agent_profile": "governance-agent", "workflow_id": "governance-state-mutation",
+             "objective": "收敛治理状态",
+             "locks": ["/Users/tester/Repo/.omo/_delivery/agent-workflows/locks/docs.lock.yaml"]},
+            {"event": "agent_workflow_start", "ts": self._recent(), "run_id": "p2",
+             "agent_profile": "engineering-agent", "workflow_id": "project-code-change",
+             "objective": "ship feature", "locks": []},
+            # 必须绕过 track/FLEX/profile/GOVERNANCE_WORKFLOWS/locks 五层才落到
+            # collaboration 分支；用 project-doc-change 会在 :131 就返回 flex，
+            # 这一行便成了钉不住判据的死重（变异对照实测过）。
+            {"event": "agent_workflow_start", "ts": self._recent(), "run_id": "p3",
+             "agent_profile": "engineering-agent", "workflow_id": "adhoc-review",
+             "objective": "docs: collaboration journey", "locks": []},
+            {"event": "agent_workflow_start", "ts": self._recent(), "run_id": "p4",
+             "agent_profile": "engineering-agent", "workflow_id": "adhoc-ship",
+             "objective": "[human] 授权收口", "locks": ["/Users/tester/Repo/.omo/_truth/x.yaml"]},
+        ]
+        ledger = tmp_path / "events.jsonl"
+        ledger.write_text(
+            "\n".join(json.dumps(r, ensure_ascii=False) for r in ledger_rows) + "\n",
+            encoding="utf-8")
+        proj = tmp_path / "delivery-runs"
+        proj.mkdir()
+        for r in ledger_rows:
+            projected = {
+                "schema_version": "governance-ratio-event/v1",
+                "event": "agent_workflow_start",
+                "ts": r["ts"],
+                "run_id": r["run_id"],
+                "agent_profile": r["agent_profile"],
+                "workflow_id": r["workflow_id"],
+                "locks": [x.replace("/Users/tester/Repo/", "") for x in r["locks"]],
+                "human_approval": r["objective"].startswith("[human]"),
+                "is_collaboration": "collaboration" in r["objective"].lower(),
+            }
+            (proj / f"{r['run_id']}.json").write_text(
+                json.dumps(projected, ensure_ascii=False), encoding="utf-8")
+
+        monkeypatch.setattr(mod, "LEDGER", ledger)
+        monkeypatch.setattr(mod, "PROJECTION_DIR", proj)
+        rc_a = mod.main(["--json"])
+        from_ledger = json.loads(capsys.readouterr().out)
+        monkeypatch.setattr(mod, "LEDGER", tmp_path / "absent.jsonl")
+        rc_b = mod.main(["--json"])
+        from_projection = json.loads(capsys.readouterr().out)
+
+        assert from_projection["input_source"] == "projection"
+        assert from_ledger["buckets"] == from_projection["buckets"]
+        assert from_ledger["ratio"] == from_projection["ratio"]
+        assert from_ledger["has_human_approval"] is True
+        assert from_ledger["has_human_approval"] == from_projection["has_human_approval"]
+        assert rc_a == rc_b
+
+    def test_malformed_projection_is_skipped(self, isolated, capsys):
+        mod, proj = isolated
+        (proj / "broken.json").write_text("{not json", encoding="utf-8")
+        (proj / "good.json").write_text(
+            json.dumps({"event": "agent_workflow_start", "ts": self._recent(),
+                        "run_id": "g1", "agent_profile": "governance-agent",
+                        "workflow_id": "governance-state-mutation", "locks": []}),
+            encoding="utf-8")
+        rc = mod.main(["--json"])
+        out = json.loads(capsys.readouterr().out)
+        assert out["measured"] is True
+        assert out["total_runs"] == 1
+        assert rc in (0, 1)
+
+    def test_ledger_wins_when_both_present(self, mod, monkeypatch, tmp_path, capsys):
+        ledger = tmp_path / "events.jsonl"
+        ledger.write_text(
+            json.dumps({"event": "agent_workflow_start", "ts": self._recent(),
+                        "run_id": "only-ledger", "agent_profile": "governance-agent",
+                        "workflow_id": "governance-state-mutation"}) + "\n",
+            encoding="utf-8")
+        proj = tmp_path / "delivery-runs"
+        proj.mkdir()
+        (proj / "only-proj.json").write_text(
+            json.dumps({"event": "agent_workflow_start", "ts": self._recent(),
+                        "run_id": "only-proj", "agent_profile": "engineering-agent",
+                        "workflow_id": "project-code-change", "locks": []}),
+            encoding="utf-8")
+        monkeypatch.setattr(mod, "LEDGER", ledger)
+        monkeypatch.setattr(mod, "PROJECTION_DIR", proj)
+        mod.main(["--json"])
+        out = json.loads(capsys.readouterr().out)
+        assert out["input_source"] == "ledger"
+        assert out["total_runs"] == 1
+        assert out["projection_files"] == 1
