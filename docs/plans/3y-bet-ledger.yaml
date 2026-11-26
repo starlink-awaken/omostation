@@ -48781,7 +48781,8 @@ bets:
     对齐)。结构病立债 (CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT): 主仓直提设计
     不修则每天复发; 附带定性: 生成器 1970 sentinel 是 ADR-0373 有意设计 (非 bug),
     11-03 的「epoch-0 bug 手工修正」注释系误解。
-  status: pending
+  status: done
+  done_at: 2026-11-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48816,6 +48817,42 @@ bets:
     expect: violation_count 0。
   - cmd: uv run --with pyyaml python bin/mof/gen-service-configs.py --check
     expect: 0 drift (78 launchd services)。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-26-service-decl-mirror-t10-355-closeout.md#diff
+            sha256: sha256:0d637e03d047469267fc53e03d15f8274e84dee14abda9dbed76366c34fdda0b
+          merged_reachable_commit:
+            ref: git://origin/main@7cc33c14e205abd3ad4c8d20763117c438b9638e
+          rollback:
+            ref: receipt://docs/reports/2026-11-26-service-decl-mirror-t10-355-closeout.md#rollback
+            sha256: sha256:0d637e03d047469267fc53e03d15f8274e84dee14abda9dbed76366c34fdda0b
+          tests:
+            ref: receipt://docs/reports/2026-11-26-service-decl-mirror-t10-355-closeout.md#受控测试
+            sha256: sha256:0d637e03d047469267fc53e03d15f8274e84dee14abda9dbed76366c34fdda0b
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-26-service-decl-mirror-t10-355-closeout.md#operational-轴
+            sha256: sha256:0d637e03d047469267fc53e03d15f8274e84dee14abda9dbed76366c34fdda0b
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-26-service-decl-mirror-t10-355-closeout.md
+            sha256: sha256:0d637e03d047469267fc53e03d15f8274e84dee14abda9dbed76366c34fdda0b
+          live_canary:
+            ref: receipt://docs/reports/2026-11-26-service-decl-mirror-t10-355-closeout.md#operational-轴
+            sha256: sha256:0d637e03d047469267fc53e03d15f8274e84dee14abda9dbed76366c34fdda0b
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+            sha256: sha256:6e1c0c140224db2fccf6f291392013c3a3b2a493e1bcf14f6707c67b01490e2b
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   circuit_breaker: >-
     若回填后发现声明与 plist 的不一致另有第四处 (如 interval/env), 停止并全量
     对账后一并修, 不留半吊子镜像。
