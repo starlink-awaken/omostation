@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -421,3 +422,153 @@ class TestProjectionInput:
         assert out["input_source"] == "ledger"
         assert out["total_runs"] == 1
         assert out["projection_files"] == 1
+
+
+class TestProjectionCoverage:
+    """warn-only 覆盖面守卫：只有**已提交**的投影才算 CI 可读输入。
+
+    动机：投影落在每个检出各自的真实目录里（只有 `agent-workflows` 走 symlink
+    桥），`gac-worktree.sh release` 把未提交的投影连同 worktree 一起删（2026-11-26
+    实测 15 份）⇒ 批 1 的管道可以静默绕过。本类钉「缺口按 tracked 计」，且
+    仪器读不出时不得写成 0，读数不得改变任何判定字段。
+    """
+
+    @staticmethod
+    def _git(root: Path, *args: str) -> None:
+        subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
+
+    @staticmethod
+    def _recent() -> str:
+        return (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @pytest.fixture
+    def repo(self, tmp_path: Path) -> tuple[Path, Path]:
+        root = tmp_path / "repo"
+        proj = root / ".omo" / "_delivery" / "events" / "delivery-runs"
+        proj.mkdir(parents=True)
+        self._git(root, "init", "-q")
+        self._git(root, "config", "user.email", "t@example.com")
+        self._git(root, "config", "user.name", "t")
+        return root, proj
+
+    def test_only_committed_projection_counts_as_covered(self, mod, repo) -> None:
+        """盘上 2 份、已提交 1 份、账本窗口 3 个 run ⇒ 缺口是 2，不是 1 也不是 0。"""
+        root, proj = repo
+        (proj / "r1.json").write_text("{}", encoding="utf-8")
+        (proj / "r2.json").write_text("{}", encoding="utf-8")
+        self._git(root, "add", ".omo/_delivery/events/delivery-runs/r1.json")
+        self._git(root, "commit", "-qm", "一份投影入库")
+        cov = mod._coverage(
+            [{"run_id": "r1"}, {"run_id": "r2"}, {"run_id": "r3"}],
+            2,
+            "ledger",
+            projection_dir=proj,
+            root=root,
+        )
+        assert cov["basis"] == "git_ls_files"
+        assert cov["tracked_projection_files"] == 1
+        assert cov["untracked_projection_files"] == 1
+        assert cov["window_runs"] == 3
+        assert cov["unprojected_runs"] == 2, "未提交的 r2 与无投影的 r3 都要计进缺口"
+
+    def test_instrument_absence_is_never_zero(self, mod, tmp_path: Path) -> None:
+        """投影不在检出内 / 根不是 git 仓库 —— 两种仪器失效都得返 None。"""
+        starts = [{"run_id": "r1"}, {"run_id": "r2"}]
+        anchored = tmp_path / "anchored"
+        anchored.mkdir()
+        outside = mod._coverage(
+            starts, 0, "ledger", projection_dir=tmp_path / "elsewhere", root=anchored
+        )
+        assert outside["basis"] == "projection_outside_checkout"
+        plain = tmp_path / "plain"
+        plain.mkdir()
+        not_a_repo = mod._coverage(starts, 0, "ledger", projection_dir=plain / ".omo", root=plain)
+        assert not_a_repo["basis"] == "git_ls_files_failed"
+        for cov in (outside, not_a_repo):
+            assert cov["tracked_projection_files"] is None, "读不出不得写成「零个已提交投影」"
+            assert cov["unprojected_runs"] is None
+            assert cov["untracked_projection_files"] is None
+
+    def test_subprocess_failure_reports_unavailable_not_zero(self, mod, monkeypatch, repo) -> None:
+        """git 根本调不起来（OSError）时，读数必须是 None + 专门 basis。
+
+        这条钉的是 `_tracked_projection_run_ids` 的 except 分支：实仓里 git 总在，
+        不注入故障就永远走不到 —— 而「返空集」在这个形状下与「零个已提交投影」
+        长得一样，正是 §7 的假绿形状。
+        """
+        root, proj = repo
+        calls: list[list[str]] = []
+
+        def boom(argv, **kwargs):
+            calls.append(argv)
+            raise OSError("git: spawn failed")
+
+        monkeypatch.setattr(mod.subprocess, "run", boom)
+        cov = mod._coverage([{"run_id": "r1"}], 1, "ledger", projection_dir=proj, root=root)
+        assert calls, "用例必须真的走到仪器调用，否则是在测桩"
+        assert cov["basis"] == "git_ls_files_unavailable"
+        assert cov["tracked_projection_files"] is None
+        assert cov["unprojected_runs"] is None
+
+    def test_projection_input_reports_no_gap_rather_than_zero(self, mod, repo) -> None:
+        """投影自己当输入时每个 run 都命中自己的文件 —— 恒 0 是假齐，得返 None。"""
+        root, proj = repo
+        (proj / "p1.json").write_text("{}", encoding="utf-8")
+        self._git(root, "add", "-A")
+        self._git(root, "commit", "-qm", "投影入库")
+        cov = mod._coverage([{"run_id": "p1"}], 1, "projection", projection_dir=proj, root=root)
+        assert cov["tracked_projection_files"] == 1
+        assert cov["unprojected_runs"] is None
+
+    @pytest.mark.parametrize("governance", [False, True], ids=["ratio 0%", "ratio 100%"])
+    def test_coverage_fields_never_change_the_verdict(
+        self, mod, monkeypatch, repo, capsys, governance: bool
+    ) -> None:
+        """同一个账本，投影未提交 vs 已提交 —— 除 coverage 外逐字段相等。
+
+        这是 warn-only 的**定义**：回填只让缺口可见，不把 CI 变成另一种结论。
+        必须两种区间都跑 —— 变异验证发现「只在超额区间跑」时，`ok` 已经是 False，
+        `False and 任何判据` 恒 False，覆盖面漏进判定的变异会被既有阻断掩盖掉。
+        """
+        root, proj = repo
+        runs = [f"x{i}" for i in range(11)]
+        profile, wf = (
+            ("governance-agent", "governance-state-mutation")
+            if governance
+            else ("engineering-agent", "project-code-change")
+        )
+        payload = "".join(
+            json.dumps(
+                {
+                    "event": "agent_workflow_start",
+                    "ts": self._recent(),
+                    "run_id": rid,
+                    "agent_profile": profile,
+                    "workflow_id": wf,
+                }
+            )
+            + "\n"
+            for rid in runs
+        )
+        (root / "events.jsonl").write_text(payload, encoding="utf-8")
+        for rid in runs:
+            (proj / f"{rid}.json").write_text("{}", encoding="utf-8")
+        monkeypatch.setattr(mod, "WORKSPACE", root)
+        monkeypatch.setattr(mod, "LEDGER", root / "events.jsonl")
+        monkeypatch.setattr(mod, "PROJECTION_DIR", proj)
+        monkeypatch.delenv("GITHUB_PR_NUMBER", raising=False)
+
+        rc_before = mod.main(["--json"])
+        out_before = json.loads(capsys.readouterr().out)
+        self._git(root, "add", "-A")
+        self._git(root, "commit", "-qm", "投影入库")
+        rc_after = mod.main(["--json"])
+        out_after = json.loads(capsys.readouterr().out)
+
+        assert out_before["coverage"]["unprojected_runs"] == 11
+        assert out_after["coverage"]["unprojected_runs"] == 0
+        # 装置本身得真的产出预期结论，否则「前后相等」是空断言
+        assert out_after["level"] == ("blocking" if governance else "ok"), out_after["reason"]
+        strip = lambda d: {k: v for k, v in d.items() if k != "coverage"}  # noqa: E731
+        assert strip(out_before) == strip(out_after), "覆盖面读数不得改变判定字段"
+        assert rc_before == rc_after
