@@ -7,7 +7,9 @@ scope: "workspace"
 severity: "medium"
 weight: 0.15
 entropy_class: "medium"
-lifecycle_state: "identified"
+lifecycle_state: "resolved"
+closed_at: "2026-11-26"
+closed_by: "BET-Y2Q4-T10-356"
 owner: "governance-team"
 affected_roots: []
 evidence_refs:
@@ -38,11 +40,13 @@ description: >-
   是有意的 sentinel 设计 (防 CI drift check 对生成时间戳恒红), 非 bug。
   本立案时差点被该注释带偏定性, 源码上下文核对后订正。
 decision_needed: >-
-  结构病修法需 owner 裁定: (a) cron 命令链改为「生成后走 worktree + 自动 PR」
-  (先例 83c23e1aa / #4858); (b) 最小治标 —— 命令链加 push, 失败则自动 reset
-  放弃本轮 (保平但不合 worktree 政策); (c) 生成器产物改为「不 commit 留工作区
-  由会话顺车」。次生病的 last-reviewed 持久化方案随修法定。误导注释在下次
-  cron 生成时自然消失, 无需单独处理。
+  [已裁定 2026-11-26, owner 拍板修法 (a)] cron 命令链改为「生成后走 worktree +
+  自动 PR」(先例 83c23e1aa / #4858), 由 BET-Y2Q4-T10-356 落地: 生成器加
+  --publish 模式 (临时 worktree 生成 → 无漂移即弃 → commit/push → gh pr
+  create + merge --squash --auto), 主仓工作区零接触, 失败绝不回退直提。
+  次生病 (frontmatter last-reviewed 被生成重置) 定性设计内收尾: sentinel
+  设计下生成物归机器权威, 人工审阅标记应记 debt/registry 而非生成物
+  frontmatter, 不另立债。
 history:
 - at: "2026-11-26T06:30:00+00:00"
   action: identify
@@ -53,3 +57,10 @@ history:
     origin/main (INDEX-MCP.md 恢复 11-03 版本)。立案时先误定性为「epoch-0
     bug 倒退」, 读生成器 600-603 行 ADR-0373 注释后订正为「sentinel 有意
     设计 + 主仓直提结构病」。BET-Y2Q4-T10-355 (PR 待建) 立案。
+- at: "2026-11-26T07:10:00+00:00"
+  action: resolve
+  note: >-
+    owner 拍板修法 (a), BET-Y2Q4-T10-356 落地: bin/ssot/gen-capability-registry.py
+    加 --publish (临时 worktree + 自动 PR, squash --auto), .omo/cron/registry.yaml
+    命令链换 --publish 并经 install-cron-plane 重装载面。主仓直提路径自此消亡,
+    每日 04:05 不再有分叉复发面。

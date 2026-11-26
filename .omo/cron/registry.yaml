@@ -515,13 +515,17 @@ jobs:
 
   - name: capability-registry-sync-daily
     schedule: "5 4 * * *"
-    command: 'cd "$HOME/Workspace" && /opt/homebrew/bin/python3.13 bin/ssot/gen-capability-registry.py >> runtime/cron/capability-registry-sync.log 2>&1 && git add docs/generated/capability-registry.yaml docs/INDEX-MCP.md docs/CLI-REFERENCE.md 2>/dev/null && { git diff --cached --quiet || git commit -m "chore(auto): capability-registry daily sync [skip ci]" >> runtime/cron/capability-registry-sync.log 2>&1 ; }'
+    command: 'cd "$HOME/Workspace" && /opt/homebrew/bin/python3.13 bin/ssot/gen-capability-registry.py --publish >> runtime/cron/capability-registry-sync.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
     owner: governance-team
     sfop_slot: S
-    reconciliation_note: capability-registry 每日同步 (04:05)，已在 crontab -l 运行，补齐登记。
+    reconciliation_note: >-
+      capability-registry 每日同步 (04:05)。BET-Y2Q4-T10-356 断根: 命令链由主仓
+      git 直提 (push 失败必分叉, 2026-11-26 实测 31 提交) 改为 --publish ——
+      临时 worktree 生成 + 自动 PR (先例 83c23e1aa / #4858), 主仓工作区零接触;
+      债 CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT 随之 resolve。
 
   - name: scene-calibration-weekly-active
     schedule: "0 6 * * 1"
