@@ -170,3 +170,22 @@ def test_missing_entrypoint_ignores_absolute_and_bare_commands(tmp_path: Path, m
     assert module._missing_entrypoint("x", ["/usr/bin/python3", "bin/x.py"], _failing(entrypoint="bin/x.py")) == "bin/x.py"
     # 纯裸命令没有入口可言
     assert module._missing_entrypoint("y", ["make", "test"], _failing(entrypoint="")) is None
+
+
+def test_service_config_drift_is_machine_readable_and_declares_absence(module=None) -> None:
+    """本机 plist 目录缺席时, service-config-drift 必须能自报没测成。
+
+    债条目 OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE：
+    此前命令不带 --json, 门禁读不到 measured:false, 只能看到 ok:true —— 「缺席即绿」。
+    """
+    gate = _load_gate()
+    # fallback 策略必须带 --json（齐备树生效的是 ecos 的 sgf-policy，由子模块侧决定）
+    entry = next(g for g in gate.DEFAULT_POLICY["gates"] if g["id"] == "service-config-drift")
+    assert "--json" in entry["command"]
+    assert gate._declared_not_measured(
+        {
+            "name": "service-config-drift",
+            "stdout": '{"ok": true, "measured": false, "reason": "launchd_observer_unavailable"}',
+        }
+    ) == "launchd_observer_unavailable"
+    assert "launchd_observer_unavailable" in gate.KNOWN_NOT_MEASURED_REASONS

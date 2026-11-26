@@ -51,6 +51,10 @@ def test_each_reason_traces_to_a_real_source(mod):
         "paths_absent": "capability-ownership / auto-fix-loop（#5582）",
         "scan_incomplete": "gen-dependency-baseline（#5585）",
         "generation_failed": "check-evidence-freshness（#5557）",
+        "launchd_observer_unavailable": (
+            "gen-service-configs --check（本机 ~/Library/LaunchAgents 缺席；"
+            "债条目 OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE）"
+        ),
     }
     assert set(mod.KNOWN_NOT_MEASURED_REASONS) == set(sources), (
         "词汇表与出处清单不一致 —— 改这里时必须同步"

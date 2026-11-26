@@ -74,8 +74,15 @@ def _run(tmp_path: Path, spool: Path, *args: str, extra_env: dict | None = None)
     }
     if extra_env:
         env.update(extra_env)
+    # stdin=DEVNULL: 伪 crontab shim 会 `cat > "$tmp"` 等 stdin；继承测试进程的
+    # 终端 stdin 会让整条套件无限挂起（债条目 TESTS-CRON-SHIM-HANG-ORDER-DEPENDENT）。
     return subprocess.run(
-        ["bash", str(SCRIPT), *args], env=env, capture_output=True, text=True, check=False
+        ["bash", str(SCRIPT), *args],
+        env=env,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        check=False,
     )
 
 
@@ -194,3 +201,22 @@ def test_registered_jobs_are_accepted(tmp_path: Path) -> None:
     result = _run(tmp_path, spool, "--dry-run", extra_env={"CRON_REGISTRY_OVERRIDE": str(registry)})
     assert result.returncode == 0, result.stderr
     assert TAG in result.stdout
+
+
+def test_run_helper_detaches_inherited_stdin(tmp_path: Path, monkeypatch) -> None:
+    """装置必须切断继承的 stdin —— 伪 crontab shim 走 `cat > "$tmp"`，
+    一旦继承到终端 stdin 就会让整条套件无限挂起
+    （债条目 TESTS-CRON-SHIM-HANG-ORDER-DEPENDENT）。"""
+    import subprocess as _sp
+
+    seen: dict = {}
+    real_run = _sp.run
+
+    def spy(args, **kwargs):
+        seen.update(kwargs)
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(_sp, "run", spy)
+    _run(tmp_path, tmp_path / "spool", "--dry-run")
+
+    assert seen.get("stdin") is _sp.DEVNULL

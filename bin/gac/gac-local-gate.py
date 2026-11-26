@@ -231,7 +231,8 @@ DEFAULT_POLICY = {
         },
         {
             "id": "service-config-drift",
-            "command": ["bin/mof/gen-service-configs.py", "--check"],
+            # --json: 本机 plist 目录缺席时自报 measured:false（否则只能读人类文本）
+            "command": ["bin/mof/gen-service-configs.py", "--check", "--json"],
             "ci_skip": True,
         },
         {"id": "bdsk-shadow-sandbox", "command": ["bin/gac/bdsk-shadow-sandbox.py"]},
@@ -1364,6 +1365,9 @@ KNOWN_NOT_MEASURED_REASONS = frozenset(
         "paths_absent",
         "scan_incomplete",
         "generation_failed",
+        # 本机 ~/Library/LaunchAgents 缺席 ⇒ 没有可比对的已装 plist（见
+        # OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE）
+        "launchd_observer_unavailable",
     }
 )
 

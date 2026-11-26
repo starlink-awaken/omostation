@@ -57,7 +57,14 @@ def _render(tmp_path: Path) -> list[str]:
         "SPOOL": str(spool),
         "CRON_REGISTRY_OVERRIDE": str(registry),
     }
-    subprocess.run(["bash", str(INSTALLER)], env=env, check=True, capture_output=True, text=True)
+    subprocess.run(
+        ["bash", str(INSTALLER)],
+        env=env,
+        stdin=subprocess.DEVNULL,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     return spool.read_text(encoding="utf-8").splitlines()
 
 
@@ -101,6 +108,7 @@ def test_event_ledger_path_equals_the_old_pin_without_profile_env() -> None:
     out = subprocess.run(
         [sys.executable, "-c", script, str(omo_src)],
         env=env,
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
         check=True,
@@ -131,6 +139,7 @@ def test_registry_coverage_guard_rejects_comments_and_proposed_entries(tmp_path:
     res = subprocess.run(
         ["bash", str(INSTALLER), "--dry-run"],
         env=env,
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
     )
@@ -143,6 +152,7 @@ def test_registry_coverage_guard_rejects_real_registry_without_active_crontab_re
     res = subprocess.run(
         ["bash", str(INSTALLER), "--dry-run"],
         env=env,
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
     )
