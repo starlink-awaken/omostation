@@ -48629,6 +48629,51 @@ bets:
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
+- id: BET-Y2Q4-T10-356
+  title: BET-Y2Q4-T10-356 capability-registry-sync-daily 断根 —— 主仓直提改 worktree+自动PR
+  goal: >-
+    债 CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT 三选一修法, owner 2026-11-26 拍板
+    (a): worktree + 自动 PR 化 (先例 83c23e1aa / #4858)。落地: 生成器
+    bin/ssot/gen-capability-registry.py 加 --publish 模式 —— fetch → 临时
+    worktree (origin/main 基) → 生成 → 无漂移即弃 → commit/push → gh pr create +
+    merge --squash --auto → 清理, 全程不碰主仓工作区, 失败绝不回退直提;
+    .omo/cron/registry.yaml 命令链换 --publish 并经 install-cron-plane 重装
+    装载面; 债条目 resolve (次生病 frontmatter 重置定性设计内收尾)。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - bin/ssot/gen-capability-registry.py
+  - .omo/cron/registry.yaml
+  - .omo/debt/items/CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-26-cron-pr-mode-bet-t10-356.md
+    spec_version: 1.0.0
+    content_digest: sha256:ca254f15ae9678f717c18ee7478702d12daeda541c6844b2c870bcb051d9f24f
+    decision_ref: decision://accepted/BET-Y2Q4-T10-356
+  non_goals:
+  - 不动 ADR-0373 sentinel (generated_at 1970 有意设计)。
+  - 不做 auto-merge 不可用时的兜底自动合并 (挂 PR 等人为可接受降级)。
+  - 不解决 INDEX-MCP.md frontmatter 人工标记持久化 (定性设计内)。
+  verify:
+  - cmd: python3 -c "import ast; ast.parse(open('bin/ssot/gen-capability-registry.py').read())"
+    expect: 语法通过。
+  - cmd: /opt/homebrew/bin/python3.13 bin/ssot/gen-capability-registry.py --publish
+    expect: 无漂移 → rc=0 且主仓工作区零污染; 有漂移 → PR 创建 + squash --auto。
+  - cmd: python3 bin/ops/install-cron-plane.py --install && crontab -l | grep capability-registry
+    expect: 新命令链装载 (--publish), 旧直提链消失。
+  circuit_breaker: >-
+    若 --publish 端到端在 gh 认证/keychain 上卡死, 不硬绕 (不落 GH_TOKEN 明文),
+    停止并回报 owner 处理 cron 环境; 主仓工作区出现任何污染立即回退。
 - id: BET-Y2Q4-T10-355
   title: BET-Y2Q4-T10-355 refresh 服务声明镜像回填 —— 日志/程序路径三处过期修正 + capability-sync 主仓直提债立案
   goal: >-
@@ -48922,7 +48967,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 603
+  total_bets: 604
   windows:
   - Y1Q1
   - Y1Q2
