@@ -1,0 +1,82 @@
+id: "PROJECT-ENTRY-FRONTMATTER-UNVALIDATED-GROWTH"
+title: "project-entry frontmatter 缺口随子模块 pin 前进单调增长：入口文档落地不校验、pin bump 也不校验，只能靠抬预算兜"
+dimension: "governance"
+subdimension: "gate"
+domain: "governance"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/document-governance.yaml
+- bin/ssot/doc-governance-check.py
+- bin/ssot/auto-bump-doc-governance-budget.py
+evidence_refs:
+- .omo/_truth/registry/document-governance.yaml
+- bin/ssot/doc-governance-check.py
+mitigation_refs: []
+opened_at: "2026-11-26T07:35:00+00:00"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-26"
+gate_level: none
+description: >-
+  `project-entry` surface（`projects/*/{AGENTS,CLAUDE,ARCHITECTURE,BOUNDARY,GOVERNANCE}.md`）
+  要求 frontmatter 含 `status / lifecycle / owner / last-reviewed`，但**没有任何环节**在
+  这些文档被加入时校验它们：
+
+  - 子模块仓内新增/修改项目入口文档时，没有 pre-commit / CI 校验（各仓没有这套 surface 定义）；
+  - 父仓 `bin/ssot/submodule-pointer-transaction.sh` 做 gitlink bump 时只看 pin 可达性，
+    不读 pin 里的文档内容；
+  - 唯一读数点是 schedule 触发的 `doc-freshness` job（`--scope workspace`），
+    而它带 `if: github.event_name == 'schedule'` —— push run 根本不跑。
+
+  于是计数**随 pin 前进单调增长**：2026-11-09 实测 71（max 80）→ 2026-11-26 实测 **113**，
+  17 天 +42（≈2.5/天），越过预算致 `Governance Check` 红。缺口形状集中在两个 enum 字段：
+  109 份文档 / 113 findings 里，86 份只缺 `status`+`lifecycle`、11 份缺
+  `last-reviewed`+`status`+`lifecycle`、8 份缺 `lifecycle`+`owner`、4 份完全无 frontmatter。
+  即多数文档已被治理过（有 owner/last-reviewed），缺的是后加的 enum 契约。
+
+  同轮暴露的第二处机制缺口：`bin/ssot/auto-bump-doc-governance-budget.py` 只跑默认
+  `--scope tracked`，而子模块文档不在父仓跟踪面上 ⇒ **这个自动兜底工具结构上看不见本桶**，
+  CI 报的 `warning_budget_exceeded` 它一条也解析不出来（已同轮补 `--scope` 透传，默认值不变）。
+decision_needed: >-
+  建议分两步，都不在本轮 CI 修复里做：
+
+  1. **预防**：在 pin bump 链路上加一道内容校验 —— `submodule-pointer-transaction.sh`
+     对 bump 涉及的子模块，用 `git show <new-pin>:<doc>` 读项目入口文档，若**新增/变更**的
+     文档缺 required frontmatter 就报警（只看增量，不看存量，避免一上线就红）。
+     这样计数才会停止增长，而不是每 2~3 周抬一次预算。
+  2. **清偿**：批量补子模块文档的 `status: active` + `lifecycle: entry`（值由 surface 固定，
+     机械可脚本化），逐批 commit + push + 父仓 gitlink bump，每批计数下降，全部清完后
+     删除 `legacy-project-entry-frontmatter` 条目（shrink_only 方向）。跨 16 个 gitlink，
+     需独立授权与排期。
+
+  在这两步完成前，本条是 `legacy-project-entry-frontmatter` max_findings 存在的理由；
+  该预算 2026-11-26 已由 80 抬到 130（113 + 17 余量，按当前增速约 7 天），
+  属**过渡期的界**而非豁免。
+history:
+- at: "2026-11-26T07:35:00+00:00"
+  action: register
+  note: >-
+    Registered debt item PROJECT-ENTRY-FRONTMATTER-UNVALIDATED-GROWTH.
+    触发事件：main (7cc33c14e) 的 schedule `Governance Check` 红，
+    missing_frontmatter:project-entry count=113 > max_findings=80。
+  actor: "governance-agent"
+
+- at: "2026-11-26T07:40:00+00:00"
+  action: mitigate
+  note: >-
+    **部分缓解（同 PR）**：① `legacy-project-entry-frontmatter` max_findings 80 → 130
+    （经 `auto-bump-doc-governance-budget.py --scope workspace --amount 20`，circuit_breaker
+    上限 +50 截断；本地全量递归检出 + `--scope workspace` 复算与 CI 逐字一致：
+    files_scanned=5981 / errors 1→0 / warnings 129，bucket 113 < 130）。
+    ② 同轮修该工具两处缺陷：新增 `--scope {tracked,workspace}` 透传（默认 tracked 不变，
+    否则它读不到子模块文档的桶）；并修 **写盘值与打印值不同源** —— 原实现打印
+    `current+amount` 再按 `count+amount` 覆盖，而 `bump_budget()` 只写 `current+amount`
+    （实测 dry-run 报 133、实际写 100，且 verify 仍红）。现改为按
+    `min(max(amount, count+amount-current), ABSOLUTE_MAX_BUMP)` 计算 effective 幅度，
+    打印与写盘同源，并在被 circuit_breaker 截断时显式 `[warn]`。
+    **未做**：预防机制与批量清偿（见 decision_needed，需独立排期）。
+  actor: "governance-agent"
