@@ -1032,16 +1032,17 @@ jobs:
     owner: governance-team
     sfop_slot: S
     reconciliation_note: >
-      2026-09-25 新增: mcptool-drift-report.yaml 此前是手工维护的孤儿文件 (零引用、
-      无生成器), 曾滞留 26 条 retired 工具假阳性 2 天 (PR #4277 / #4311)。本条把它
-      改为探针 --report 的产物, 每日自动重生成, 并按 capability-registry-sync-daily
-      同款模式自动提交 (git add + commit, 故不会持续留脏)。
-      ⚠️ PATH 必须显式带 /opt/homebrew/bin: 探针内部要调 uv run --project
-      projects/cockpit cockpit mcp --list-tools, 而 cron 默认 PATH (/usr/bin:/bin)
-      找不到 uv (实测 FileNotFoundError: No such file or directory: 'uv')。
-      探针有 drift 时 exit 1, 故与其后命令用 ';' 而非 '&&' 连接, 避免 drift 时跳过后续步骤。
-      ⚠️ 加了 HEAD == main 守卫: 主工作区常被并发 agent 占用在 feature 分支上,
-      无条件 git add/commit 会把报告提交进别人的分支 (污染其 PR)。非 main 时整条 job 跳过并记日志。
+      2026-11-26 断根 (BET-Y2Q4-T10-357): 命令链由主仓直提 (git add+commit,
+      push 失败滞留分叉; HEAD==main 守卫亦防不住) 改为 --publish —— 临时
+      worktree 生成 + 自动 PR (共享库 bin/lib/cron_pr_publish.py), 主仓工作区
+      零接触; drift 存在时探针 rc=1 是业务信号 (报告已写出), 由库的
+      cmd_nonzero_ok 语义承接, 旧「';' 连接」与「HEAD 守卫」设计随之消亡。
+      历史背景 (2026-09-25 新增): mcptool-drift-report.yaml 此前是手工维护的
+      孤儿文件 (零引用、无生成器), 曾滞留 26 条 retired 工具假阳性 2 天
+      (PR #4277 / #4311)。本条把它改为探针 --report 的产物, 每日自动重生成。
+      ⚠️ PATH 语义仍适用: 探针内部要调 uv run --project projects/cockpit,
+      cron 默认 PATH (/usr/bin:/bin) 找不到 uv/gh —— --publish 库内已显式
+      前置 /opt/homebrew/bin 与 ~/.local/bin (T357 实测)。
 
 # ── 待人工一次性拍板 (不影响本次收敛的文档统一, 只影响是否改变真实运行行为) ──
   # ── 2026-11-01 补登记: 10-24 crontab 重写事故后逐条核实的真实在跑调度 ──

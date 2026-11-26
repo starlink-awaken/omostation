@@ -48629,6 +48629,48 @@ bets:
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
+- id: BET-Y2Q4-T10-358
+  title: BET-Y2Q4-T10-358 管道吞 rc pitfall 立条 + mcptool reconciliation_note 订正 (T357 遗留收尾)
+  goal: >-
+    T357 遗留两件收尾: (1) 管道吞 rc 两次自伤立 pitfalls 条目 —— T356 形态
+    (traceback 后 rc=0 假成功) + T357 形态 (merge 失败被 tail 吞, && 链在旧
+    HEAD 跑出「已对齐」假象), 与 zsh 条目 PIPESTATUS 变体 (语法层) 不同根因
+    (POSIX 语义层), 独立立条 + AGENTS §7 簇表同步; (2) mcptool note 与命令链
+    脱节订正 (note 仍描述已消亡的 git add+commit 直提行为)。附带: 直提家族
+    全量清点确认零残留 (rg git commit 活命令链 0 命中, 家族仅 T356/T357 两
+    例且均已断根)。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P3
+  appetite: 30 minutes
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/pitfalls.md
+  - AGENTS.md
+  - .omo/cron/registry.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-26-pitfall-note-bet-t10-358.md
+    spec_version: 1.0.0
+    content_digest: sha256:46d3159a80dd219e4c8271d123920b60951a25fb7eddf4e9cf66dd02f6789f47
+    decision_ref: decision://accepted/BET-Y2Q4-T10-358
+  non_goals:
+  - 不动 zsh 条目原文 (PIPESTATUS 变体与本文互补不重复)。
+  - 不改 cron 命令链/脚本 (T356/T357 已断根)。
+  verify:
+  - cmd: python3 bin/gac/check-pitfalls-index.py --json
+    expect: 无新红 (frontmatter 已 bump 当日)。
+  - cmd: python3 -c "import yaml; yaml.safe_load(open('.omo/cron/registry.yaml')); print('OK')"
+    expect: YAML 解析通过。
+  circuit_breaker: >-
+    纯文档/声明面订正无执行面风险; 若 pitfalls-index 门禁报格式红, 修格式
+    而非删条目。
 - id: BET-Y2Q4-T10-357
   title: BET-Y2Q4-T10-357 mcptool-impl-drift 直提断根 (共享库提炼) + install-cron-plane 装重缺陷修复
   goal: >-
@@ -49018,7 +49060,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 605
+  total_bets: 606
   windows:
   - Y1Q1
   - Y1Q2
