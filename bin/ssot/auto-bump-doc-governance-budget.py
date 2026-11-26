@@ -96,6 +96,21 @@ def find_exception(yaml_content: str, rule: str, surface: str) -> tuple[int | No
     return None, None, -1
 
 
+def plan_bump(current: int, count: int, amount: int,
+              cap: int = ABSOLUTE_MAX_BUMP) -> dict[str, int]:
+    """计算本次 bump, 供**打印与写盘共用同一份结果**。
+
+    不变式: `bump_budget` 写盘的值必须等于这里给出的 `new_count` —— 两者同源,
+    否则 `--dry-run` 会报一个不会发生的数 (2026-11-26 实测: 报 133 实际写 100)。
+    幅度取 `max(amount, count + amount - current)`, 再被 circuit_breaker 截断;
+    截断后仍低于实测时 `capped=1`, 调用方必须显式告警而不是静默放行。
+    """
+    needed = count + amount - current
+    effective = min(max(amount, needed), cap)
+    new_count = current + effective
+    return {"amount": effective, "new_count": new_count, "capped": int(new_count < count)}
+
+
 def bump_budget(yaml_path: Path, line_no: int, rule: str, surface: str,
                 current: int, amount: int, exception_id: str) -> int:
     """bump max_findings +amount, 更新 reason 注释 + UTC 日期标记."""
@@ -137,6 +152,9 @@ def main() -> int:
                     help=f"bump 幅度 (默认 {DEFAULT_BUMP}, 上限 {ABSOLUTE_MAX_BUMP})")
     ap.add_argument("--strict", action="store_true",
                     help="对所有 failure 都 bump, 包括 count 已 <= budget 的")
+    ap.add_argument("--scope", choices=("tracked", "workspace"), default="tracked",
+                    help="读数口径。schedule CI 的 doc-freshness 用 workspace (含子模块工作区), "
+                         "tracked 读不到子模块文档的桶; 用 workspace 前须先完整检出子模块")
     args = ap.parse_args()
 
     if not YAML_PATH.exists():
@@ -152,7 +170,8 @@ def main() -> int:
 
     # 1. 跑 check (用 --no-new-warnings 触发 warning_budget_exceeded 错误)
     result = subprocess.run(
-        ["python3", "bin/ssot/doc-governance-check.py", "--no-new-warnings"],
+        ["python3", "bin/ssot/doc-governance-check.py", "--no-new-warnings",
+         "--scope", args.scope],
         capture_output=True,
         text=True,
     )
@@ -188,16 +207,21 @@ def main() -> int:
                 f"≤ budget={current}, no bump"
             )
             continue
-        new_count = current + args.amount
-        if new_count < count:
-            new_count = count + args.amount
+        # 目标: bump 后仍高于实测 (count + amount)。若默认幅度不够, 取够用的幅度,
+        # 但不得突破 circuit_breaker —— 写盘值与本行打印值必须同源。
+        plan = plan_bump(current, count, args.amount)
         summary.append(
             f"[bump] {found_id} ({rule}/{surface}) "
-            f"{current} → {new_count} (count={count})"
+            f"{current} → {plan['new_count']} (count={count})"
         )
+        if plan["capped"]:
+            summary.append(
+                f"[warn] {found_id}: circuit_breaker 上限 {ABSOLUTE_MAX_BUMP} 使新预算 "
+                f"{plan['new_count']} 仍低于实测 {count}, 需再跑一轮"
+            )
         if args.dry_run:
             continue
-        bump_budget(YAML_PATH, line_no, rule, surface, current, args.amount, found_id)
+        bump_budget(YAML_PATH, line_no, rule, surface, current, plan["amount"], found_id)
 
     print("\n".join(summary))
 
@@ -206,7 +230,8 @@ def main() -> int:
 
     # 4. 重新验证 (同样用 --no-new-warnings 模式)
     verify = subprocess.run(
-        ["python3", "bin/ssot/doc-governance-check.py", "--no-new-warnings"],
+        ["python3", "bin/ssot/doc-governance-check.py", "--no-new-warnings",
+         "--scope", args.scope],
         capture_output=True,
         text=True,
     )

@@ -164,6 +164,56 @@ def test_circuit_breaker_at_50():
     assert m.ABSOLUTE_MAX_BUMP == 50
 
 
+def test_plan_bump_keeps_headroom_over_measured():
+    """默认幅度不足以盖过实测时, 取够用的幅度 (2026-11-26: 80/113/20 → 130)。"""
+    m = _load()
+    plan = m.plan_bump(current=80, count=113, amount=20)
+    assert plan == {"amount": 50, "new_count": 130, "capped": 0}
+
+
+def test_plan_bump_uses_default_amount_when_sufficient():
+    m = _load()
+    plan = m.plan_bump(current=70, count=68, amount=20)
+    assert plan == {"amount": 20, "new_count": 90, "capped": 0}
+
+
+def test_plan_bump_is_capped_by_circuit_breaker():
+    """被 cap 截断时新预算可以仍低于实测 —— capped=1, 调用方必须显式告警。"""
+    m = _load()
+    plan = m.plan_bump(current=80, count=200, amount=20)
+    assert plan["amount"] == m.ABSOLUTE_MAX_BUMP
+    assert plan["new_count"] == 130
+    assert plan["capped"] == 1
+
+
+def test_plan_bump_is_what_gets_written(tmp_path):
+    """写盘值 == 打印值: main 把 plan['amount'] 交给 bump_budget, 两者必须同源。
+
+    回归的是 2026-11-26 的缺陷 —— 原实现打印 `count+amount` 而写盘 `current+amount`,
+    dry-run 报 133 实际写 100 且 verify 仍红。
+    """
+    m = _load()
+    yaml = tmp_path / "dg.yaml"
+    yaml.write_text("""warning_exceptions:
+  entries:
+    - id: test-budget
+      rule: missing_frontmatter
+      surface: project-entry
+      max_findings: 80
+      expires: 2027-03-31
+      reason: existing
+""")
+    plan = m.plan_bump(current=80, count=113, amount=20)
+    written = m.bump_budget(
+        yaml, line_no=4, rule="missing_frontmatter", surface="project-entry",
+        current=80, amount=plan["amount"], exception_id="test-budget",
+    )
+    assert written == plan["new_count"] == 130
+    content = yaml.read_text()
+    assert "max_findings: 130" in content
+    assert "# auto-bumped to 130 on" in content
+
+
 if __name__ == "__main__":
     import inspect
     tests = [(name, obj) for name, obj in globals().items()
