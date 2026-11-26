@@ -93,6 +93,7 @@ history:
     （本条不代决）。同时记一条装置口径：`DEFAULT_POLICY` 用正则数字 `"id":` 得 **75** 条，
     条目正文写 74 —— 差 1 来自正则把嵌套/其它 `"id"` 也算入，**以 `GATES_LIST` 实际长度为准**。
   actor: "governance-agent"
+
 - at: "2026-11-25T23:40:00+00:00"
   action: correct
   note: >-
@@ -106,4 +107,20 @@ history:
     真正剩的只有 (a)（把 5 条回填进生效策略）与 (c)（明确退役并加标记），两者都改变判定面，
     属 principal。**纪律**：给条目写「建议补 X」之前，先跑一次现行报告看 X 是否已在输出里 ——
     本条差一点把已落地的能力再实现一遍（与「幽灵判定双检」同族）。
+  actor: "governance-agent"
+- at: "2026-11-26T03:45:00+00:00"
+  action: mitigate
+  note: >-
+    **按 principal「按你建议来」裁定，选项 (a) 的收窄版已落地**：在
+    `gac-local-gate.py` 增加 `DEFAULT_BACKFILL_IDS`（5 条）＋「生效策略缺该 id 时从
+    DEFAULT_POLICY 回填同一个对象」。齐备树实测 `effective 96 → 101`、
+    `only_in_default` 只剩 `submodule-ancestry-gate`（刻意排除：与 sgf-policy 的
+    `check-submodule-rewind` 是同一脚本，回填等于跑两遍）。
+    **验证**：`--strict --json` 全量跑，`hard_fails=1` 且那 1 条是既有的
+    `check-governance-ratio`（owner 项），回填的 5 条全绿、无新增红。
+    判据：`test_gate_coverage_report.py::test_default_only_gates_are_backfilled_into_the_live_set`
+    （含「回填的是 DEFAULT 里同一对象」的身份断言）与
+    `::test_renamed_submodule_gate_is_not_backfilled`。
+    **边界**：只回填显式列出的 5 条（不是无脑并集），避免同名脚本重复执行；
+    被排除的那 1 条与其余争议项不受影响。
   actor: "governance-agent"
