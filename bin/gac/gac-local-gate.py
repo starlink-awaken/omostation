@@ -741,6 +741,28 @@ for _g in GATES_LIST:
     if _g["id"] in _OPS_ONLY_OVERRIDE_MAIN:
         _g["ops_only"] = True
 
+# ── 并集底座（2026-11-26）────────────────────────────────────────────────────
+# DEFAULT_POLICY 里这 5 条在 submodule 策略中没有等价命令, 于是齐备树/CI **从不执行**
+# （债条目 GATE-POLICY-SOURCE-COVERAGE-SKEW）。这里在生效策略缺该 id 时从 DEFAULT 回填,
+# 使两套策略的 gate 集合一致 —— 前提已实测: 这 5 条在齐备树手跑全部 rc=0, 回填不会立刻变红。
+#
+# 明确**不含** `submodule-ancestry-gate`: 它与 sgf-policy 的 `check-submodule-rewind`
+# 是同一脚本 (仅多 --range/--no-write-debt 旗标), 回填等于把同一个检查跑两遍。
+DEFAULT_BACKFILL_IDS = (
+    "bdsk-shadow-sandbox",
+    "debt-integrity-check",
+    "error-knowledge-check",
+    "sweep-index-check",
+    "test-coverage-check",
+)
+for _bid in DEFAULT_BACKFILL_IDS:
+    if not any(g.get("id") == _bid for g in GATES_LIST):
+        _backfilled = next(
+            (g for g in DEFAULT_POLICY["gates"] if g.get("id") == _bid), None
+        )
+        if _backfilled is not None:
+            GATES_LIST.append(_backfilled)
+
 CHECKS = tuple((g["id"], g["command"]) for g in GATES_LIST)
 CI_ONLY_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_only")}
 CI_SKIP_CHECKS = {g["id"] for g in GATES_LIST if g.get("ci_skip")}
