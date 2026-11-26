@@ -32,11 +32,9 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-import os
 import re
 import subprocess
 import sys
-import tempfile
 from datetime import date
 from pathlib import Path
 
@@ -699,117 +697,27 @@ def verify_runtime(registry: dict) -> int:
 
 
 def publish_via_pr() -> int:
-    """在临时 worktree 中重新生成并经 PR 发布 —— cron 断根模式 (BET-Y2Q4-T10-356).
-
-    债 CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT: 旧 cron 命令链在主仓工作区
-    git commit 直提, push 失败必分叉 (2026-11-26 实测滞留 1 提交 + 分叉 31 提交)。
-    owner 裁定修法 (a) (先例 83c23e1aa / PR #4858):
-      fetch → 临时 worktree (origin/main 基) → 生成 → 无漂移即弃 →
-      commit/push → gh pr create + merge --squash --auto → 清理
-    全程不碰主仓工作区; 任一步失败只清理退出, 绝不回退直提主仓。
-    """
-    today = date.today()
-    date_str = today.isoformat()
-    branch = f"auto/capability-sync-{today:%Y%m%d}"
-    tmp = Path(tempfile.mkdtemp(prefix="capsync-"))
-    # cron 的 PATH 精简 (/usr/bin:/bin), gh/git 需显式补位
-    env = dict(os.environ)
-    env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:" + env.get("PATH", "")
-
-    def git(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess:
-        cmd = ["git"]
-        if cwd is not None:
-            cmd += ["-C", str(cwd)]
-        cmd += args
-        return subprocess.run(cmd, capture_output=True, text=True, env=env)
-
-    def fail(step: str, r: subprocess.CompletedProcess) -> int:
-        print(f"❌ publish 失败 @ {step}: rc={r.returncode}", file=sys.stderr)
-        if r.stdout.strip():
-            print(r.stdout.strip(), file=sys.stderr)
-        if r.stderr.strip():
-            print(r.stderr.strip(), file=sys.stderr)
-        return 1
-
-    pr_url = ""
-    try:
-        # 1. 拿最新主干 (fetch 不动主仓工作区)
-        r = git("fetch", "origin", "main", cwd=WORKSPACE)
-        if r.returncode:
-            return fail("fetch origin main", r)
-
-        # 2. 临时 worktree 基于 origin/main (与主仓工作区完全隔离)
-        r = git("worktree", "add", "-b", branch, str(tmp), "origin/main", cwd=WORKSPACE)
-        if r.returncode:
-            return fail("worktree add", r)
-
-        # 2b. 子模块 checkout (实测 ~83s, 本地对象库复用): 生成器扫 projects/*
-        #     子模块源 (agora/cockpit...), 无子模块则 NativeInspectionError
-        r = git("-c", "protocol.file.allow=always",
-                "submodule", "update", "--init", "--depth", "1", cwd=tmp)
-        if r.returncode:
-            return fail("submodule update", r)
-
-        # 3. worktree 内重跑生成 (WORKSPACE 锚 __file__, 自动锚定 worktree 根)
-        r = subprocess.run(
-            [sys.executable, str(tmp / "bin" / "ssot" / "gen-capability-registry.py"), "--quiet"],
-            capture_output=True, text=True, env=env,
-        )
-        if r.returncode:
-            return fail("worktree 内生成", r)
-
-        # 4. 同旧 cron 面 add 三路径 (INDEX-MCP/CLI-REFERENCE 由 gen-help-docs 维护, 此处通常无 diff)
-        paths = [
+    """worktree + 自动 PR 发布 (T356 落地, T357 提炼到 bin/lib/cron_pr_publish)."""
+    _bin_lib = str(WORKSPACE / "bin" / "lib")
+    if _bin_lib not in sys.path:
+        sys.path.insert(0, _bin_lib)
+    from cron_pr_publish import publish_via_pr as _publish
+    return _publish(
+        workspace=WORKSPACE,
+        run_cmd=[sys.executable, "bin/ssot/gen-capability-registry.py", "--quiet"],
+        add_paths=[
             "docs/generated/capability-registry.yaml",
             "docs/INDEX-MCP.md",
             "docs/CLI-REFERENCE.md",
-        ]
-        git("add", "--", *paths, cwd=tmp)
-        r = git("diff", "--cached", "--quiet", cwd=tmp)
-        if r.returncode == 0:
-            print(f"✅ 能力注册表无漂移, 跳过发布 ({date_str})")
-            return 0
-
-        # 5. commit + push (不带 [skip ci]: required checks 需真跑才能 auto-merge)
-        r = git("commit", "-m", f"chore(auto): capability-registry daily sync ({date_str})", cwd=tmp)
-        if r.returncode:
-            return fail("commit", r)
-        r = git("push", "-u", "origin", branch, cwd=tmp)
-        if r.returncode:
-            return fail("push", r)
-
-        # 6. PR + 自动 squash (repo 未启用 auto-merge 时挂起等人, 可接受降级)
-        body = (
-            "cron capability-registry-sync-daily 自动发布 (BET-Y2Q4-T10-356 断根模式).\n"
+        ],
+        branch_prefix="auto/capability-sync",
+        title=f"chore(auto): capability-registry daily sync ({date.today().isoformat()})",
+        body=(
+            "cron capability-registry-sync-daily 自动发布 (BET-Y2Q4-T10-356 断根模式,\n"
             "债: CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT (owner 裁定修法 a).\n"
             "由临时 worktree 生成, 主仓工作区零接触。"
-        )
-        r = subprocess.run(
-            ["gh", "pr", "create", "--base", "main", "--head", branch,
-             "--title", f"chore(auto): capability-registry daily sync ({date_str})",
-             "--body", body],
-            capture_output=True, text=True, env=env, cwd=tmp,
-        )
-        if r.returncode:
-            return fail("gh pr create", r)
-        pr_url = r.stdout.strip().splitlines()[-1]
-        print(f"✅ PR 已创建: {pr_url}")
-        r = subprocess.run(
-            ["gh", "pr", "merge", pr_url, "--squash", "--auto", "--delete-branch"],
-            capture_output=True, text=True, env=env, cwd=tmp,
-        )
-        # auto-merge 未启用时 rc!=0: 分支已推远端不丢失, 降级挂起等人工, 不算失败
-        if r.returncode == 0:
-            print(f"✅ 已使能 auto-merge (squash): {pr_url}")
-        else:
-            print(f"⚠️  auto-merge 未生效 (repo 设置?), PR 挂起等人工: {pr_url}")
-        return 0
-    finally:
-        # 7. 清理: worktree 强删 + 本地分支删 (远端分支归 gh --delete-branch 管)
-        git("worktree", "remove", "--force", str(tmp), cwd=WORKSPACE)
-        git("branch", "-D", branch, cwd=WORKSPACE)
-        if pr_url:
-            print(f"📌 本次发布记录: {pr_url}")
+        ),
+    )
 
 
 def main() -> int:

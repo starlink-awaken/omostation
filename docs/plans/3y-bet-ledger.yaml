@@ -48629,6 +48629,57 @@ bets:
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
+- id: BET-Y2Q4-T10-357
+  title: BET-Y2Q4-T10-357 mcptool-impl-drift 直提断根 (共享库提炼) + install-cron-plane 装重缺陷修复
+  goal: >-
+    同族第二例 (T356 终报发现): check-mcptool-impl-drift (registry.yaml:1028,
+    每日 05:45) 与 capability-sync 同款主仓直提链, push 失败照样滞留分叉。
+    修法与 T356 同构 + DRY 提炼: publish_via_pr 抽共享库 bin/lib/cron_pr_publish.py
+    (参数化 run_cmd/add_paths/branch_prefix/cmd_nonzero_ok), 生成器改薄壳,
+    mcptool 加 --publish (cmd_nonzero_ok=True: drift rc=1 是业务信号)。
+    副腿顺手修 T356 收尾实测的装重缺陷: comparison_key 整行归一认不出命令链
+    改版后的旧行 → cron_normalize 加 script_signature (schedule 五域 + 本仓
+    脚本路径), _is_managed 判据扩「键相等或签名相等」, 旧行从此可被认领替换。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - bin/lib/cron_pr_publish.py
+  - bin/lib/cron_normalize.py
+  - bin/ssot/gen-capability-registry.py
+  - bin/ssot/check-mcptool-impl-drift.py
+  - bin/ops/install-cron-plane.py
+  - .omo/cron/registry.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-26-mcptool-pr-mode-bet-t10-357.md
+    spec_version: 1.0.0
+    content_digest: sha256:a477803723317d5a1e45911ed706198550f9b5046516deb201ef32a6ee8be358
+    decision_ref: decision://accepted/BET-Y2Q4-T10-357
+  non_goals:
+  - 不迁移其余 cron job (直提家族全量清点另立 BET)。
+  - 不改 gen-help-docs / post-commit-sync-check 职责边界。
+  - 不动 ADR-0373 sentinel。
+  verify:
+  - cmd: python3 -c "import ast; ast.parse(open('bin/lib/cron_pr_publish.py').read()); ast.parse(open('bin/ssot/check-mcptool-impl-drift.py').read())"
+    expect: 语法通过。
+  - cmd: /opt/homebrew/bin/python3.13 bin/ssot/gen-capability-registry.py --publish
+    expect: 回归 → 无漂移 rc=0 (与 T356 行为一致)。
+  - cmd: /opt/homebrew/bin/python3.13 bin/ssot/check-mcptool-impl-drift.py --publish
+    expect: 无漂移跳过 rc=0 / 有漂移 PR 创建 + squash --auto。
+  - cmd: crontab 造旧形态直提行 → python3 bin/ops/install-cron-plane.py --install → crontab -l
+    expect: 旧行被替换, 无新旧并存。
+  circuit_breaker: >-
+    若签名匹配在真实 crontab 上误删外部行, 立即恢复 T356 备份
+    (crontab-bak-20261126.txt) 并回退本 PR。
 - id: BET-Y2Q4-T10-356
   title: BET-Y2Q4-T10-356 capability-registry-sync-daily 断根 —— 主仓直提改 worktree+自动PR
   goal: >-
@@ -48967,7 +49018,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 604
+  total_bets: 605
   windows:
   - Y1Q1
   - Y1Q2

@@ -26,6 +26,7 @@ import argparse
 import json
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -33,6 +34,9 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 MCPTOOL_DIR = REPO / "projects/ecos/src/ecos/ssot/mof/m1/mcptool"
 REPORT_PATH = REPO / ".omo/_truth/registry/mcptool-drift-report.yaml"
+BIN_LIB = REPO / "bin" / "lib"
+if str(BIN_LIB) not in sys.path:
+    sys.path.insert(0, str(BIN_LIB))
 
 # server -> (实现命令, MCPTOOL 文件前缀)
 # AGORA uses source-based extraction (no --list-tools command)
@@ -260,7 +264,27 @@ def main() -> int:
         metavar="PATH",
         help="重生成 YAML 报告 (默认 .omo/_truth/registry/mcptool-drift-report.yaml)",
     )
+    parser.add_argument(
+        "--publish",
+        action="store_true",
+        help="在临时 worktree 中重生成报告并经 PR 发布 (cron 断根模式, 不碰主仓工作区)",
+    )
     args = parser.parse_args()
+
+    if args.publish:
+        from cron_pr_publish import publish_via_pr as _publish
+        return _publish(
+            workspace=REPO,
+            run_cmd=[sys.executable, "bin/ssot/check-mcptool-impl-drift.py", "--report"],
+            add_paths=[".omo/_truth/registry/mcptool-drift-report.yaml"],
+            branch_prefix="auto/mcptool-sync",
+            title=f"chore(auto): mcptool drift report sync ({date.today().isoformat()})",
+            body=(
+                "cron mcptool-drift-report-daily 自动发布 (BET-Y2Q4-T10-357 断根模式).\n"
+                "由临时 worktree 生成, 主仓工作区零接触。"
+            ),
+            cmd_nonzero_ok=True,  # drift rc=1 是业务信号, report 已写出
+        )
 
     drift = detect_drift()
 

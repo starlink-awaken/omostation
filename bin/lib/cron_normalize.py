@@ -114,6 +114,29 @@ def comparison_key(line: str) -> str:
     return normalize_interpreter(normalize_installed_line(s))
 
 
+_SCRIPT_PATH_RE = re.compile(r"bin/[A-Za-z0-9_./-]+\.(?:py|sh|ts)")
+
+
+def script_signature(line: str) -> str:
+    """schedule 五域 + 行内第一个本仓 bin/ 脚本路径 —— 命令链改版后的旧行认领键.
+
+    comparison_key 是归一化整行: 命令链一改版 (如直提链 → --publish 链) 旧行键
+    就对新不上, 被当外部行保留 → 新旧装重 (T356 收尾实测, T357 修)。本签名以
+    「同 schedule + 引用同本仓脚本」认定同一 job 的新旧形态。行内无本仓脚本
+    路径时返回 "" (不参与认领, 外部行安全)。
+    """
+    s = line.strip()
+    if not s or s.startswith("#"):
+        return ""
+    fields = s.split(None, 5)
+    if len(fields) < 6:
+        return ""
+    m = _SCRIPT_PATH_RE.search(s)
+    if not m:
+        return ""
+    return " ".join(fields[:5]) + " " + m.group(0)
+
+
 # ---------------------------------------------------------------------------
 # 解释器的宿主侧解析 (CRON-BARE-PYTHON3-PY39-IMPORT-DEATH 选项 ③)
 #
