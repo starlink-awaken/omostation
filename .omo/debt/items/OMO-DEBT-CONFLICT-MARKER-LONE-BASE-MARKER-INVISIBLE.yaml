@@ -7,7 +7,7 @@ scope: governance_kernel
 severity: high
 weight: 0.05
 entropy_class: classification
-lifecycle_state: identified
+lifecycle_state: closed
 owner: governance-agent
 affected_roots:
 - bin/gac/check-conflict-markers.py
@@ -15,9 +15,6 @@ affected_roots:
 - .omo/_truth/registry/governance-checks.yaml
 - .omo/notepads/delegation-guardrails/decisions.md
 evidence_refs:
-- bin/gac/check-conflict-markers.py:88-103 _scan() 末段 has_headtail=any(k in ('head','tail')
-  ...); 为假时 return []，把本文件已收集的 base/separator 命中全量丢弃 => 孤立 diff3 base 标记在构造上不可能被报出，与
-  --staged/--all 无关
 - '变异探针 2026-11-25 (ws-t10351，探针文件已删，工作树回干净): lone_base(''||||||| abc123'') staged
   rc=0 且打印「无冲突标记」; lone_sep(''======='') rc=0; head_tail rc=1; base_with_head rc=1'
 - 'main 现存实例: .omo/notepads/delegation-guardrails/decisions.md:46 ''||||||| 7f541d0f9''
@@ -25,6 +22,10 @@ evidence_refs:
   第 4 节末 ''||||||| 0f3e68143'' —— 两者对 --all 全量 tracked 扫描均报「无冲突标记」'
 - 盘点该两处时 rg 默认跳过隐藏目录 (.omo/**)，需 --no-ignore --hidden 才见; git check-ignore --no-index
   rc=1 证明非 gitignore 所致
+- tests/unit/gac/test_check-conflict-markers.py
+- bin/gac/check-conflict-markers.py
+- '修复后 bin/gac/check-conflict-markers.py _scan(): 无 head/tail 但有 base 时返回 base 命中;
+  仅 separator 仍返回 [] (md/hr 误报未放宽) —— 2026-11-26 闭合前复核'
 mitigation_refs: []
 opened_at: '2026-11-25T01:36:20.365707+00:00'
 last_reviewed_at: '2026-11-25'
@@ -66,25 +67,27 @@ history:
     base 也能检出」的单测钉住；separator 维持现状（md/hr 误报确实高）。''.'
 - at: '2026-11-25T20:05:00+00:00'
   action: mitigate
-  note: >-
-    **已修**：`_scan` 现在把 `base` 当作独立可报信号 —— 无 head/tail 但有 base 时返回 base 命中；
-    只有 separator 时仍返回 `[]`（md/hr 误报未放宽）。A/B 实测（同一份样本喂改前/改后实现）：
+  note: '**已修**：`_scan` 现在把 `base` 当作独立可报信号 —— 无 head/tail 但有 base 时返回 base 命中； 只有
+    separator 时仍返回 `[]`（md/hr 误报未放宽）。A/B 实测（同一份样本喂改前/改后实现）：
 
-    | 样本 | 改前 | 改后 |
-    |---|---|---|
-    | `a / ||||||| 7f541d0f9 / b` | `[]` | `[(2,'base')]` |
-    | `a / ======= / b` | `[]` | `[]` |
-    | `<<<<<<< / ======= / >>>>>>>` | 三类全报 | 三类全报（不变） |
-    | `||||||| abc123 / =======` | `[]` | `[(1,'base')]` |
+    | 样本 | 改前 | 改后 | |---|---|---| | `a / ||||||| 7f541d0f9 / b` | `[]` | `[(2,''base'')]`
+    | | `a / ======= / b` | `[]` | `[]` | | `<<<<<<< / ======= / >>>>>>>` | 三类全报 |
+    三类全报（不变） | | `||||||| abc123 / =======` | `[]` | `[(1,''base'')]` |
 
-    **唯一真实残留已清**：`.omo/notepads/delegation-guardrails/decisions.md:46`
-    （PR #4291 入库的 `||||||| 7f541d0f9`）—— 全仓 tracked 逐文件重扫（含隐藏目录）改前 1 处、
-    清后 0 处；`check-conflict-markers.py --all` rc=0。
-    **判据**：`tests/unit/gac/test_check_conflict_markers.py` 新增三条 —— 孤立 base 报、
-    base+separator 只报 base、真实文件清后扫描为空；原「孤立 `=======` 不报」一条保留
-    （正反一对，防「一律放行」）。
-    **边界**：只放宽 base；separator 仍与 head/tail 绑定。未动 `--staged`/`--all` 扫描面。
-  actor: 'governance-agent'
+    **唯一真实残留已清**：`.omo/notepads/delegation-guardrails/decisions.md:46` （PR #4291 入库的
+    `||||||| 7f541d0f9`）—— 全仓 tracked 逐文件重扫（含隐藏目录）改前 1 处、 清后 0 处；`check-conflict-markers.py
+    --all` rc=0。 **判据**：`tests/unit/gac/test_check_conflict_markers.py` 新增三条 —— 孤立
+    base 报、 base+separator 只报 base、真实文件清后扫描为空；原「孤立 `=======` 不报」一条保留 （正反一对，防「一律放行」）。
+    **边界**：只放宽 base；separator 仍与 head/tail 绑定。未动 `--staged`/`--all` 扫描面。'
+  actor: governance-agent
+- at: '2026-11-26T09:00:44.710453+00:00'
+  action: close
+  note: 检测器缺陷已修且实测复核通过：孤立 diff3 base 标记现在可报，全仓 tracked 内容 0 命中。
+  actor: governance-agent
+- at: '2026-11-26T09:28:32.912633+00:00'
+  action: update_refs
+  note: Updated refs (evidence=6, mitigation=0).
+  actor: governance-agent
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''
@@ -115,3 +118,10 @@ description: '【机制缺陷】bin/gac/check-conflict-markers.py 的 _scan()（
 
   【修复方向（不在本条债的执行范围）】_scan 应把 base 命中当作独立可报信号（或至少在 has_headtail 为假时保留 base 命中），并补「孤立
   base 也能检出」的单测钉住；separator 维持现状（md/hr 误报确实高）。'
+closed_at: '2026-11-26T09:00:44.710283+00:00'
+close_reason: 检测器缺陷已修且实测复核通过：孤立 diff3 base 标记现在可报，全仓 tracked 内容 0 命中。
+resolution_evidence: 2026-11-26 独立复核（closure 前）：① tests/unit/gac/test_check_conflict-markers.py
+  9 passed；② bin/gac/check-conflict-markers.py --all → '无冲突标记' rc=0；③ 自写正则逐 tracked
+  文件扫描（^<{7} |^>{7} |^\|{7} |^={7}）→ 0 命中；④ 原真实残留 .omo/notepads/delegation-guardrails/decisions.md
+  在 origin/main 上按 git show 读取无任何冲突标记行（文件仍在，blob 0a26cb0d4）。修复本体见同条 mitigate 记录（_scan
+  把 base 作为独立可报信号，separator 仍与 head/tail 绑定）。
