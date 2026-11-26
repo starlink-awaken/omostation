@@ -48931,7 +48931,38 @@ bets:
     对齐)。结构病立债 (CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT): 主仓直提设计
     不修则每天复发; 附带定性: 生成器 1970 sentinel 是 ADR-0373 有意设计 (非 bug),
     11-03 的「epoch-0 bug 手工修正」注释系误解。
-  status: pending
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@7cc33c14e205abd3ad4c8d20763117c438b9638e
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+          fresh_receipt:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+          cleanup:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-355.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+
+  status: done
+  done_at: 2026-11-26
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48952,7 +48983,7 @@ bets:
     content_digest: sha256:9586d359d5f7afd5b798ee6c4aee900ba3c9fc3d7e7f1da8b69c15ce78b7460b
     decision_ref: decision://accepted/BET-Y2Q4-T10-355
   non_goals:
-  - 不动本机 plist (generate: false 手写安装面, 由宿主维护)。
+  - "不动本机 plist (generate: false 手写安装面, 由宿主维护)。"
   - 不清理宿主根孤儿 orchestrator.py 残骸 (部署根文件, 属 dashboard 运维面)。
   - 不改 ADR-0373 sentinel 设计 (1970 非 bug, 生成器 600-603 行注释自证)。
   - 不在本 BET 重构 cron 直提为 worktree PR 模式 (立债留后续)。
