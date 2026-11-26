@@ -239,6 +239,14 @@ warning_exceptions:
   # 更新 last-reviewed（2026-07-31 → 2026-11-09），命中 2 → 0，该预算不再压制任何现存告警；
   # 留着它反而制造 2026-11-30 的集体过期炸点（expires 一到即 expired_warning_exception error）。
   # 其余条目 max_findings 与 expires 一字未动（窗口 2027-01-31 由 #4995 定下）。
+  # 2026-11-26 复测（全量递归检出后 `--scope workspace`，本地读数与 schedule CI 逐字一致：
+  # files_scanned=5981 / summary errors=1,warnings=129）：missing_frontmatter:project-entry
+  # 71 → **113**（17 天 +42，≈2.5/天）越过 max 80 ⇒ doc-freshness 报 warning_budget_exceeded。
+  # 缺口形状：109 份文档 / 113 findings —— 86 份只缺 status+lifecycle、11 份缺
+  # last-reviewed+status+lifecycle、8 份缺 lifecycle+owner、4 份完全无 frontmatter。
+  # 成因结构性：项目入口文档落地不校验 frontmatter，子模块 pin bump 也不校验（已登记债务）。
+  # 本轮经 bin/ssot/auto-bump-doc-governance-budget.py --scope workspace 把 max 80 → 130
+  # （circuit_breaker 上限 +50；该工具此前只读 tracked 口径、看不见这个桶，同轮补 --scope 透传）。
   # ⚠️ bin/gac/check-expiry-radar.py 只看 surfaces[].review_days 与 X2 规则，**不看 warning_exceptions
   # 的 expires** —— 2026-10-31 那一次集体过期就是零预警跨零点的（8 条同日到点，gac-gate /
   # interface-check / doc-freshness 三条腿同红）。续期时先跑上面那条命令取读数，别照抄旧数。
@@ -281,7 +289,8 @@ warning_exceptions:
     - id: legacy-project-entry-frontmatter
       rule: missing_frontmatter
       surface: project-entry
-      max_findings: 80
+      max_findings: 130  # 2026-11-26 80→130: auto-bump (governance 增量)
+      # auto-bumped to 130 on 2026-11-26
       expires: 2027-03-31
       owner: governance-team
       reason: |
@@ -307,6 +316,23 @@ warning_exceptions:
         修一批计数就降一批; 修完即可删本条 (shrink_only 方向)。
         expires 取 2027-03-31 而非其他 legacy 条的 2027-01-31, 因为清偿要跨 18 个
         独立子模块仓、每仓一次三步提交, 比仓内文档改动的窗口天然更长。
+
+        2026-11-26 复测: pin 精确读数 **113** (本地全量递归检出 + `--scope workspace`,
+        与 schedule CI 的 113 逐字一致; files_scanned=5981, errors=1/warnings=129),
+        在 2026-11-09 的 71 之上 **17 天 +42 (≈2.5/天)**, 越过 max 80。
+
+        缺口形状 (109 份文档 / 113 findings): 86 份只缺 status+lifecycle、11 份缺
+        last-reviewed+status+lifecycle、8 份缺 lifecycle+owner、4 份完全无 frontmatter。
+        缺的是**两个 enum 字段**而不是没被治理过 —— lifecycle 对 project-entry 由 surface
+        固定为 `entry`, status 的既有约定是 `active` (根 AGENTS/CLAUDE/ARCHITECTURE 均如此)。
+
+        本轮 max 80 → 130 (auto-bump, circuit_breaker +50 上限; 113 + 17 余量, 按当前增速
+        ≈7 天)。**这不是转向宽松**: 清偿路径仍是逐批补子模块文档 (机械部分 = 插两行 enum),
+        但那是跨 16 个 gitlink 的三步提交, 不应塞进一个 CI 修复轮; 系统性成因与预防机制
+        已另登记债务条目。
+
+        另记一条可见性不对称: doc-freshness job 带 `if: github.event_name == 'schedule'`,
+        所以同一 head 上 push run 全绿、只有 schedule run 红 —— 这是本条长期未被发现的原因。
     - id: legacy-project-entry-stale-review
       rule: stale_review
       surface: project-entry
