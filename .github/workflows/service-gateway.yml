@@ -14,6 +14,9 @@ on:
       - '.omo/_truth/registry/services.yaml'
   schedule:
     - cron: '0 */6 * * *'  # Every 6 hours
+  # health-check 只在 schedule 事件下执行 (见该 job 的 if 条件), push/PR 触发的 run
+  # 会跳过它 —— 与 governance-check.yml 同因, 手动 dispatch 用于按需复算 (2026-11-26)。
+  workflow_dispatch:
 
 jobs:
   test:
@@ -107,7 +110,8 @@ jobs:
 
   health-check:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    # workflow_dispatch 用于按需复算 (见顶部 on 注释); push/PR 仍不跑。
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
