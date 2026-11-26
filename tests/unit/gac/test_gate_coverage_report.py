@@ -121,3 +121,29 @@ def test_printer_names_duplicates(mod, capsys):
     err = capsys.readouterr().err
     assert "id 重复" in err
     assert "state-freshness-check" in err
+
+
+# ── 并集底座（DEFAULT 独有的 gate 在齐备树也要执行）──
+# 债条目 GATE-POLICY-SOURCE-COVERAGE-SKEW：这 5 条在 submodule 策略里没有等价命令，
+# 此前 CI/齐备树从不执行；现在由 gac-local-gate 从 DEFAULT 回填。
+
+
+def test_default_only_gates_are_backfilled_into_the_live_set(mod):
+    cov = mod.gate_coverage_report()
+    live_ids = {g["id"] for g in mod.GATES_LIST}
+
+    assert set(mod.DEFAULT_BACKFILL_IDS) <= live_ids
+    assert not (set(cov["only_in_default"]) & set(mod.DEFAULT_BACKFILL_IDS))
+    # 回填的是 DEFAULT 里的**同一个对象**, 不是拷贝 —— 避免两处定义漂移
+    for bid in mod.DEFAULT_BACKFILL_IDS:
+        assert next(g for g in mod.GATES_LIST if g["id"] == bid) is next(
+            g for g in mod.DEFAULT_POLICY["gates"] if g["id"] == bid
+        )
+
+
+def test_renamed_submodule_gate_is_not_backfilled(mod):
+    """`submodule-ancestry-gate` 与 sgf-policy 的 `check-submodule-rewind` 是同一脚本,
+    回填等于把同一个检查跑两遍 —— 必须留在 only_in_default 里。"""
+    cov = mod.gate_coverage_report()
+    assert "submodule-ancestry-gate" in cov["only_in_default"]
+    assert "submodule-ancestry-gate" not in mod.DEFAULT_BACKFILL_IDS
