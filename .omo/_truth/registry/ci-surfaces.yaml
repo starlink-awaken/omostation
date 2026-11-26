@@ -1727,6 +1727,7 @@ workflow_triggers:
   path_filtered: false
 - workflow: service-gateway.yml
   triggers:
+  - manual
   - per_pr
   - push
   - scheduled
