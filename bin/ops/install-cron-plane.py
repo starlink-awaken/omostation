@@ -35,6 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bin" / "lib"))
 from cron_normalize import comparison_key as _key  # noqa: E402
+from cron_normalize import script_signature as _sig  # noqa: E402
 from cron_normalize import expand_workspace as _expand_workspace  # noqa: E402
 from cron_normalize import active_crontab_jobs as _active_crontab_jobs  # noqa: E402
 from cron_normalize import resolve_python_command as _resolve_python_command  # noqa: E402
@@ -110,14 +111,23 @@ def _write_crontab(new: str) -> int:
     return 1
 
 
-def _is_managed(line: str, managed_keys: set[str]) -> bool:
+def _is_managed(
+    line: str, managed_keys: set[str], managed_sigs: set[str] | None = None
+) -> bool:
     """该行是否属于本仓登记面 (⇒ 装的时候要替换它)。
 
-    判据: 行的比较键与某条登记面条目相同 ⇒ 是登记面的行。
-    登记面**没有**的 (用户的外部工具) ⇒ 保留不动。
+    判据 (T357 扩): 行的比较键与某条登记面条目相同, **或** script_signature
+    相同 (命令链改版后的旧形态行 —— comparison_key 整行归一认不出, T356 收尾
+    装重实测) ⇒ 是登记面的行。登记面**没有**的 (用户的外部工具) ⇒ 保留不动。
     """
     key = _key(line)
-    return bool(key) and key in managed_keys
+    if key and key in managed_keys:
+        return True
+    if managed_sigs:
+        sig = _sig(line)
+        if sig and sig in managed_sigs:
+            return True
+    return False
 
 
 def main() -> int:
@@ -130,11 +140,14 @@ def main() -> int:
 
     compiled = _compiled_lines()
     managed_keys = {_key(line) for line in compiled}
+    managed_sigs = {_sig(line) for line in compiled} - {""}
     current = _current_text().splitlines()
     current_keys = {_key(line) for line in current}
 
     if args.status:
-        present = [line for line in current if _key(line) in managed_keys]
+        present = [
+            line for line in current if _is_managed(line, managed_keys, managed_sigs)
+        ]
         missing = [line for line in compiled if _key(line) not in current_keys]
         print(
             f"登记面 crontab 条目: {len(compiled)}  "
@@ -145,7 +158,10 @@ def main() -> int:
         return 0 if not missing else 1
 
     if args.remove:
-        kept = [line for line in current if not _is_managed(line, managed_keys)]
+        kept = [
+            line for line in current
+            if not _is_managed(line, managed_keys, managed_sigs)
+        ]
         new = "\n".join(kept).rstrip() + "\n"
         if args.dry_run:
             print(new)
@@ -156,7 +172,10 @@ def main() -> int:
         return 0
 
     # --install (默认): 保留非登记面的行, 去掉登记面里内容不同的旧行, 再追加登记面的行。
-    kept = [line for line in current if not _is_managed(line, managed_keys)]
+    kept = [
+        line for line in current
+        if not _is_managed(line, managed_keys, managed_sigs)
+    ]
     new_lines = kept + compiled
     new = "\n".join(new_lines).rstrip() + "\n"
     if args.dry_run:
