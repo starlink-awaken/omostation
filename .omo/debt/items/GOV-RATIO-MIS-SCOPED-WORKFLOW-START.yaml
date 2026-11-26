@@ -1,0 +1,55 @@
+id: GOV-RATIO-MIS-SCOPED-WORKFLOW-START
+title: 治理占比 46.8% 中 24% 是 workflow 选错门：工具/文档修复走 governance-state-mutation 起算，分类器只看
+  start locks 不看真实交付面
+dimension: governance
+subdimension: measurement
+domain: workspace
+scope: governance_kernel
+severity: medium
+weight: 0.05
+entropy_class: classification
+lifecycle_state: identified
+owner: governance-agent
+affected_roots:
+- .omo
+evidence_refs: []
+mitigation_refs: []
+opened_at: '2026-11-26T10:42:39.050111+00:00'
+last_reviewed_at: '2026-11-26'
+next_review_at: '2026-12-10'
+gate_level: none
+history:
+- at: '2026-11-26T10:42:39.050111+00:00'
+  action: register
+  note: Registered debt item GOV-RATIO-MIS-SCOPED-WORKFLOW-START.
+  actor: governance-agent
+- at: '2026-11-26T10:43:49.954029+00:00'
+  action: update_description
+  note: Updated description from '' to '实测 2026-11-26 本机账本面 30d 窗口 total=158 governance=74
+    ratio=46.8%（check-governance-ratio.py --json 可复算）。74 个 governance run 的判定来源 100%
+    是 agent_profile（workflow_id 全为 governance-state-mutation），_classify 从不看 verify.changed_files，而
+    governance-agent 起算时 locks 总含 .omo/_delivery/agent-workflows/locks/*，于是任何由 governance-agent
+    承载的工具修复/文档固化都被记成治理开销。按 events.jsonl 的 agent_workflow_verify.changed_files 以 run_id
+    join start 事件复算真实交付面：56 个确含 .omo/_truth|.omo/standards|.omo/state 治理写面，18 个（占
+    governance 桶 24%）只改 bin/ docs/ AGENTS.md .gitignore .omo/_knowledge/retros external/；这
+    18 个若走 project-code-change|project-doc-change 起算（两者已在 FLEX_OVERRIDE_WORKFLOWS），ratio
+    由 46.8% 降到 35.4%。已排除测量装置故障：74 个 run_id 全唯一、同 objective 10 分钟内重复起算 0 对、waiver 命中
+    0。且不会自然回落：假设此后只跑非治理 run，滚动窗口读数为 T+5d=52.9%、T+10d=64.0%、T+15~25d=73.4%，均仍 blocking；当前窗口需新增约
+    27 个 flex run 才降到 40% 线内。修法二择一：(a) 行为侧——工具/文档修复改走 product workflow 起算，免改判定面；(b)
+    判据侧——_classify 在 profile 命中后再核 verify.changed_files 是否含治理写面，不含则记 flex 并 warn-only
+    登记，属判定面变更需先铸 BET 走 spec 绑定。'.
+x1_policy_ref: ''
+x2_freshness: ''
+x3_tier: ''
+description: 实测 2026-11-26 本机账本面 30d 窗口 total=158 governance=74 ratio=46.8%（check-governance-ratio.py
+  --json 可复算）。74 个 governance run 的判定来源 100% 是 agent_profile（workflow_id 全为 governance-state-mutation），_classify
+  从不看 verify.changed_files，而 governance-agent 起算时 locks 总含 .omo/_delivery/agent-workflows/locks/*，于是任何由
+  governance-agent 承载的工具修复/文档固化都被记成治理开销。按 events.jsonl 的 agent_workflow_verify.changed_files
+  以 run_id join start 事件复算真实交付面：56 个确含 .omo/_truth|.omo/standards|.omo/state 治理写面，18
+  个（占 governance 桶 24%）只改 bin/ docs/ AGENTS.md .gitignore .omo/_knowledge/retros external/；这
+  18 个若走 project-code-change|project-doc-change 起算（两者已在 FLEX_OVERRIDE_WORKFLOWS），ratio
+  由 46.8% 降到 35.4%。已排除测量装置故障：74 个 run_id 全唯一、同 objective 10 分钟内重复起算 0 对、waiver 命中
+  0。且不会自然回落：假设此后只跑非治理 run，滚动窗口读数为 T+5d=52.9%、T+10d=64.0%、T+15~25d=73.4%，均仍 blocking；当前窗口需新增约
+  27 个 flex run 才降到 40% 线内。修法二择一：(a) 行为侧——工具/文档修复改走 product workflow 起算，免改判定面；(b)
+  判据侧——_classify 在 profile 命中后再核 verify.changed_files 是否含治理写面，不含则记 flex 并 warn-only
+  登记，属判定面变更需先铸 BET 走 spec 绑定。
