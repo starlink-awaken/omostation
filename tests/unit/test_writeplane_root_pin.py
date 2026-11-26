@@ -119,13 +119,9 @@ SPEC_MARKER_READINGS = {
     #   .omo/_knowledge -2);
     #   agent-cell-semantic-smoke.py 与 scene-signal-poller.py 改为调用时刻 state_root()
     #   (⇒ .omo/state -1, .omo/_delivery -2)。门禁三读数 167/158/107 → 160/152/106。
-    # 2026-11-26 PR #5621 治理占比投影读侧: check-governance-ratio.py 新增
-    #   PROJECTION_DIR = WORKSPACE / ".omo/_delivery/events/delivery-runs"
-    #   是**新的一处**钉检出根站点 ⇒ `.omo/_delivery` 71 → 72（排除面,
-    #   门禁三读数 160/152/106 未动）。同一次扫描实测即上方五桶。
     ".omo/_truth": 162,
     ".omo/state": 97,
-    ".omo/_delivery": 72,
+    ".omo/_delivery": 71,
     "runtime": 45,
     ".omo/_knowledge": 60,
 }
