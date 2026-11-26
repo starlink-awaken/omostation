@@ -1389,6 +1389,10 @@ KNOWN_NOT_MEASURED_REASONS = frozenset(
         # 本机 ~/Library/LaunchAgents 缺席 ⇒ 没有可比对的已装 plist（见
         # OMO-DEBT-GATE-SERVICE-CONFIG-DRIFT-HOST-STATE-INPUT-NO-PROVENANCE）
         "launchd_observer_unavailable",
+        # check-governance-ratio：交付账本与投影镜像都缺席。账本在 gitignore 面
+        # 且 worktree 里是符号链接，CI 干净检出必然缺账本 —— 只有已提交的
+        # `.omo/_delivery/events/delivery-runs/` 投影能把它转成 measured。
+        "no_ledger",
     }
 )
 
