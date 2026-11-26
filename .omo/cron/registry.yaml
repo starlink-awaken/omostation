@@ -1025,7 +1025,7 @@ jobs:
 
   - name: mcptool-drift-report-daily
     schedule: '45 5 * * *'
-    command: 'cd "$HOME/Workspace" ; if [ "$(git symbolic-ref -q --short HEAD)" = main ] ; then PATH=/opt/homebrew/bin:/usr/bin:/bin python3 bin/ssot/check-mcptool-impl-drift.py --report >> runtime/cron/mcptool-drift-report.log 2>&1 ; git add .omo/_truth/registry/mcptool-drift-report.yaml 2>/dev/null ; git diff --cached --quiet || git commit -m "chore(auto): mcptool drift report sync [skip ci]" >> runtime/cron/mcptool-drift-report.log 2>&1 ; else echo "skip: HEAD != main" >> runtime/cron/mcptool-drift-report.log ; fi'
+    command: 'cd "$HOME/Workspace" && /opt/homebrew/bin/python3.13 bin/ssot/check-mcptool-impl-drift.py --publish >> runtime/cron/mcptool-drift-report.log 2>&1'
     planes: [crontab]
     reality: installed
     status: active
