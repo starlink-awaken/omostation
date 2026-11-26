@@ -1552,6 +1552,7 @@ workflow_triggers:
   - docs/journey-specs/**
 - workflow: governance-check.yml
   triggers:
+  - manual
   - per_pr
   - push
   - scheduled
@@ -1574,6 +1575,8 @@ workflow_triggers:
   - projects/omo
   - projects/ecos/scripts/contract_gatekeeper.py
   - projects/omo/tests/**
+  - tests/unit/test_resident_write_plane_split.py
+  - tests/unit/test_writeplane_root_pin.py
 - workflow: integration.yml
   triggers:
   - per_pr
