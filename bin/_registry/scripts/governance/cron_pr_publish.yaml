@@ -1,0 +1,18 @@
+schema: script-registry/v1
+id: bin/lib/cron_pr_publish.py
+name: Cron PR Publish
+category: governance
+owner: governance-team
+description: "cron 作业「worktree + 自动 PR」发布模式的唯一共享实现（库模块, 无 CLI）：publish_via_pr 在临时 worktree 里跑生成命令并把产物经 PR 发布 —— fetch origin main → worktree add（origin/main 基 + submodule init）→ 跑命令（cmd_nonzero_ok 语义：drift 检测类 rc=1 是业务信号非执行失败）→ 无漂移即弃 → commit/push → gh pr create + merge --squash --auto → finally 强删 worktree。PATH 显式前置 /opt/homebrew/bin 与 ~/.local/bin（cron 精简 PATH 缺 gh/git/uv）。存在的理由是终结直提家族：主仓工作区 git commit 的 cron 设计 push 失败必分叉（11-26 capability-sync 实测滞留 1 提交 + 分叉 31 提交），T356 在 gen-capability-registry.py 内联落地 --publish，T357 提炼为库供同族零成本接入（第二个消费者 check-mcptool-impl-drift）。行为契约：全程不碰主仓工作区，任一步失败只清理退出非零，绝不回退直提。护栏：端到端无漂移路径两消费者各真跑一次（retro BET-Y2Q4-T10-356/357）。"
+inputs: []
+outputs:
+  - type: library_api
+dependencies: []
+triggers:
+  - type: import
+related:
+  - bin/ssot/gen-capability-registry.py
+  - bin/ssot/check-mcptool-impl-drift.py
+  - bin/lib/cron_normalize.py
+maturity: draft
+last_reviewed: "2026-11-26"
