@@ -45,12 +45,17 @@ decision_needed: >-
   建议分两步，都不在本轮 CI 修复里做：
 
   1. **预防**：加一道"新增/变更的项目入口文档必须带 required frontmatter"的增量校验
-     （只看增量，不看存量，避免一上线就红）。落点经 2026-11-26 复核后**修订**：
-     缺口的主要入口是**各子模块仓内的日常开发**（新文档随普通 commit 进仓，之后才被
-     pin 同步带上父仓），而 `bin/ssot/submodule-pointer-transaction.sh` 只覆盖
-     **受治理的 re-point/bump** 那条路径（`--require-main`），拦不住主入流。
-     故正确的落点是**子模块侧的 pre-commit / CI**（把 surface 定义分发到各仓），
-     父仓侧可选加一道 pin 增量校验作第二道；这是跨仓标准分发问题，需独立设计。
+     （只看增量，不看存量，避免一上线就红）。落点经 2026-11-26 两次复核后**再修订**：
+     缺口的主要入口是**各子模块仓内的日常开发**（新文档随普通 commit 进仓），
+     `bin/ssot/sync-submodule-pointers.sh` 只修**不可达**指针、不主动前进 pin，
+     `submodule-pointer-transaction.sh` 只覆盖**受治理的 re-point/bump** ——
+     两者都拦不住主入流。但**任何子模块内容要进父仓，都必须经过一次父仓的 gitlink
+     前进**，所以单点其实在**父仓 PR 侧**：对 diff 里 `A..B` 的 gitlink，用
+     `git -C <sub> diff --name-only A B` 取变更文件，命中 project-entry surface 且
+     缺 required frontmatter 就报警。这比"把 surface 定义分发到 16 个仓"便宜得多，
+     且覆盖面完整（含直写 bump 与自动同步两条路）。
+     **建议先 observe-only 落地**（本仓既有惯例：新判据默认不阻塞，由 registry 条目
+     声明升级），观察一个窗口再决定是否转 blocking。
      不这样做，计数会持续增长，只能每 2~3 周抬一次预算。
   2. **清偿**：批量补子模块文档的 `status: active` + `lifecycle: entry`（值由 surface 固定，
      机械可脚本化），逐批 commit + push + 父仓 gitlink bump，每批计数下降，全部清完后
@@ -95,4 +100,13 @@ history:
     即 #5623 的预算调整在 CI 侧确认生效，而非仅本地复算。
     **后续判据**：项目入口文档的 frontmatter 缺口此后可用
     `gh workflow run governance-check.yml --ref main` 当场复算，不必等 6h schedule。
+  actor: "governance-agent"
+
+- at: "2026-11-26T09:30:00+00:00"
+  action: update_description
+  note: >-
+    **预防落点再修订**：原写"子模块侧 pre-commit/CI 分发 surface 定义"，复核后改为
+    **父仓 PR 侧的 gitlink diff 增量校验** —— 任何子模块内容要进父仓都必须经过一次
+    父仓 gitlink 前进，故单点覆盖完整（含直写 bump 与自动同步），且不必跨 16 个仓分发。
+    建议先 observe-only 落地再决定是否转 blocking。详见 decision_needed 第 1 条。
   actor: "governance-agent"
