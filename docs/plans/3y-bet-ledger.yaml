@@ -48629,6 +48629,58 @@ bets:
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
+- id: BET-Y2Q4-T10-355
+  title: BET-Y2Q4-T10-355 refresh 服务声明镜像回填 —— 日志/程序路径三处过期修正 + capability-sync 主仓直提债立案
+  goal: >-
+    2026-11-26 对账「zhixing refresh 日志断流 8 周」: 服务从未死 (StartInterval 300s
+    正常, 新日志 ~/.local/log/...refresh.{out,err}.log 持续写入, observed_at 分钟级,
+    failed=0), 是 services.yaml 声明三处过期 —— outputs 指向 10 月初废弃的旧
+    launchd-refresh.log (out/err 实际已分离搬家), program.args 指向宿主根孤儿
+    orchestrator.py (19294B, 10-08 后未更新) 而实际跑 current/orchestrator.py
+    (42340B release 真身)。本 BET 按 T353 镜像回填先例修正声明。顺带: 当日 04:05
+    capability-registry-sync-daily cron (registry.yaml 518 行, 命令链自证主仓直提)
+    push 失败滞留造成主仓 main 分叉 31 提交 —— 已现场处置 (tag 存档 + soft reset
+    对齐)。结构病立债 (CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT): 主仓直提设计
+    不修则每天复发; 附带定性: 生成器 1970 sentinel 是 ADR-0373 有意设计 (非 bug),
+    11-03 的「epoch-0 bug 手工修正」注释系误解。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - .omo/_truth/registry/services.yaml
+  - .omo/debt/items/CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-26-refresh-decl-mirror-bet-t10-355.md
+    spec_version: 1.0.0
+    content_digest: sha256:9586d359d5f7afd5b798ee6c4aee900ba3c9fc3d7e7f1da8b69c15ce78b7460b
+    decision_ref: decision://accepted/BET-Y2Q4-T10-355
+  non_goals:
+  - 不动本机 plist (generate: false 手写安装面, 由宿主维护)。
+  - 不清理宿主根孤儿 orchestrator.py 残骸 (部署根文件, 属 dashboard 运维面)。
+  - 不改 ADR-0373 sentinel 设计 (1970 非 bug, 生成器 600-603 行注释自证)。
+  - 不在本 BET 重构 cron 直提为 worktree PR 模式 (立债留后续)。
+  - 不处理 reality-check 全景预存债 (E4/E5/E2, 与本 BET 正交)。
+  done_when:
+  - services.yaml 该服务块与 plutil -p 实测 plist 的 program.args/outputs 逐字段一致。
+  - gen-service-configs.py --validate 仍 0 violations; --check 仍 0 drift (78 services)。
+  - 债条目落盘且 check-debt-closure-discipline 无新红。
+  verify:
+  - cmd: uv run --with pyyaml python bin/mof/gen-service-configs.py --validate
+    expect: violation_count 0。
+  - cmd: uv run --with pyyaml python bin/mof/gen-service-configs.py --check
+    expect: 0 drift (78 launchd services)。
+  circuit_breaker: >-
+    若回填后发现声明与 plist 的不一致另有第四处 (如 interval/env), 停止并全量
+    对账后一并修, 不留半吊子镜像。
 - id: BET-Y2Q4-T10-350
   title: BET-Y2Q4-T10-350 omo-debt 单个畸形 ref 冻结投影平面 29.8h —— 非 str 条目 ref 判 stale 而非崩平面（代码腿）
   goal: '`.omo/debt/items/*` 的 refs 写散文注解是既有用法（全库 352 个 ref 元素中 142 个带注解），散文里出现 ASCII
@@ -48870,7 +48922,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 602
+  total_bets: 603
   windows:
   - Y1Q1
   - Y1Q2

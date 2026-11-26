@@ -1,0 +1,55 @@
+id: "CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT"
+title: "capability-registry-sync-daily 主仓直提设计 —— push 失败必分叉 (11-26 实测 31 提交), 不修则每天 04:05 复发"
+dimension: "governance"
+subdimension: "worktree-policy"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/cron/registry.yaml::jobs::capability-registry-sync-daily::command  # 命令链自证: cd "$HOME/Workspace" && git add && git commit (主仓直提)
+- 'git://cleanup-archive/bad-epoch-sync-488d737ca'  # 11-26 04:05 滞留提交 (tag 存档)
+- docs/INDEX-MCP.md  # frontmatter: 11-03 人工标记被 11-26 cron 重置
+mitigation_refs:
+- bin/ssot/gen-capability-registry.py::ADR-0373-sentinel  # generated_at: 1970 为有意设计 (600-603 行注释自证), 非 bug
+opened_at: "2026-11-26"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-11"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Tool"
+description: >-
+  三层事实 (2026-11-26 立案, 全部实测):
+  (1) 结构病 (主): capability-registry-sync-daily cron (.omo/cron/registry.yaml:518)
+  的命令链是 `cd "$HOME/Workspace" && 生成器 && git add && git commit` —— 设计即
+  主仓 main 直提, 违反 AGENTS.md §0 worktree 政策。push 与远端并发推进冲突时
+  non-ff 失败, 提交滞留本地 → main 分叉。2026-11-26 04:05 实测: 滞留 1 提交 +
+  分叉 31 提交, 靠人工 (tag 存档 + soft reset) 恢复。不修则每个 cron 周期
+  (每日 04:05) 都可能复发。
+  (2) 次生病: cron 产物重置人工维护的 frontmatter 标记 (last-reviewed
+  2026-11-03 → 2026-09-24), 人工审阅信息在「生成物 + sentinel」设计下不可持久。
+  (3) 定性订正 (防误导): docs/INDEX-MCP.md 11-03 人工注释自称「生成器时间戳
+  epoch-0 bug 手工修正」—— 实为对 ADR-0373 的误解。生成器
+  bin/ssot/gen-capability-registry.py:600-603 注释自证 `generated_at: 1970`
+  是有意的 sentinel 设计 (防 CI drift check 对生成时间戳恒红), 非 bug。
+  本立案时差点被该注释带偏定性, 源码上下文核对后订正。
+decision_needed: >-
+  结构病修法需 owner 裁定: (a) cron 命令链改为「生成后走 worktree + 自动 PR」
+  (先例 83c23e1aa / #4858); (b) 最小治标 —— 命令链加 push, 失败则自动 reset
+  放弃本轮 (保平但不合 worktree 政策); (c) 生成器产物改为「不 commit 留工作区
+  由会话顺车」。次生病的 last-reviewed 持久化方案随修法定。误导注释在下次
+  cron 生成时自然消失, 无需单独处理。
+history:
+- at: "2026-11-26T06:30:00+00:00"
+  action: identify
+  note: >-
+    2026-11-26 04:05 cron 运行 → push 失败滞留 → 主仓 main 分叉 31 提交
+    (当日 laowang 会话对账 refresh 声明时发现)。现场处置: tag
+    cleanup-archive/bad-epoch-sync-488d737ca 存档 + soft reset 对齐
+    origin/main (INDEX-MCP.md 恢复 11-03 版本)。立案时先误定性为「epoch-0
+    bug 倒退」, 读生成器 600-603 行 ADR-0373 注释后订正为「sentinel 有意
+    设计 + 主仓直提结构病」。BET-Y2Q4-T10-355 (PR 待建) 立案。
