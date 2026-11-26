@@ -242,10 +242,21 @@ surfaces:
   status: active
 - id: bin-gac-check-governance-ratio-py
   tool: bin/gac/check-governance-ratio.py
-  workflow: (none)
+  workflow: gac-gate.yml
   gate: true
-  triggers: []
+  triggers:
+  - gac_local_gate
+  - per_pr
   status: active
+  note: >-
+    执行入口是 gac-gate.yml 的 `gac-local-gate.py --strict`（不是 workflow 直接点名），
+    与同表 67 条 `workflow: (none)` 一样属聚合器中介接线 —— 原先登记 (none) 把这条
+    说成了没接，掩盖了真实故障：它的唯一输入 `.omo/_delivery/agent-workflows/events.jsonl`
+    在 gitignore 面且 worktree 里是指向 state root 的符号链接，CI 干净检出结构性缺输入，
+    于是 40% 上限只在持有账本的机器上执法（实测本机 157 run/45.9%，CI 恒 `measured:false`）。
+    修复分两批：本批改 `check-governance-ratio.py` 支持读已提交的
+    `.omo/_delivery/events/delivery-runs/` 投影（start 事件的去机器化镜像）；回填窗口并
+    据此阻断合并，等收口腿误判 flex 的入口修法落地后再做（此时 CI 会按真实值变红）。
 - id: bin-gac-check-heuristic-default-py
   tool: bin/gac/check-heuristic-default.py
   workflow: gac-gate.yml
