@@ -1,0 +1,63 @@
+id: "TESTS-CRON-SHIM-HANG-ORDER-DEPENDENT"
+title: "tests/unit/gac 全量跑会在 cron 用例上无限挂起（PATH 伪 crontab 的 cat 等 stdin），单跑却通过"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- tests/unit/gac/test_install_maturity_cron.py
+- tests/unit/gac/test_install_cron_plane.py
+evidence_refs:
+- tests/unit/gac/test_install_maturity_cron.py
+- tests/unit/gac/test_install_cron_plane.py
+mitigation_refs: []
+opened_at: "2026-11-26T05:00:00+00:00"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-26"
+gate_level: none
+description: >-
+  全量 `pytest tests/unit/gac` 跑到约 48% 时**无限挂起**（实测 8 分 45 秒无进展，
+  `ps` 显示阻塞进程 `/bin/sh .../pytest-of-xiamingxing/pytest-695/test_remove_keeps_foreign_line0/bin/crontab -`，
+  etime 04:55、CPU 0.0%）—— 伪 `crontab`  shim 走的是 `cat > "$tmp"`，在**继承到终端 stdin**
+  时会一直等输入。
+
+  **单跑两个文件都通过**：`test_install_cron_plane.py` 23 passed / 1.00s；
+  `test_install_maturity_cron.py` 7 passed / 2.81s ⇒ 这是**顺序依赖**的污染，
+  不是单条用例写错。
+
+  **为什么值得登记**：这类挂起让「全量回归」这个最常用的验收动作失去界 ——
+  本轮就因此无法用全量跑给一个改动作证，只能 `--ignore` 掉两个文件（816 条）绕行。
+  同一族风险：任何用 PATH shim + 继承 stdin 的测试装置。
+decision_needed: >-
+  建议（未代决）：给测试装置里的 `subprocess.run` 统一补 `stdin=subprocess.DEVNULL`
+  —— 子进程若真需要 stdin，安装器会用 `input=` 自己接管（pipe 不受父进程 DEVNULL 影响）；
+  而「意外继承终端 stdin」正是本条挂起的成因。另需查清是哪一条前置用例把全局
+  `subprocess.run`/PATH 状态泄漏到下一段（`test_install_cron_plane.py` 用
+  `monkeypatch.setattr(module.subprocess, "run", ...)` 打的是**标准库模块对象**，
+  作用域可能超出该用例的预期）。
+history:
+- at: "2026-11-26T05:00:00+00:00"
+  action: register
+  note: Registered debt item TESTS-CRON-SHIM-HANG-ORDER-DEPENDENT.
+  actor: "governance-agent"
+
+- at: "2026-11-26T05:20:00+00:00"
+  action: mitigate
+  note: >-
+    **已做（建议：切断继承 stdin）**：给三处用 PATH 伪 `crontab` shim 的测试装置
+    （`test_install_maturity_cron.py::_run`、`test_install_resident_cron_ledger.py` 的 4 处
+    `subprocess.run`、`test_immutable_writer_git_policy.py::_run`）统一补
+    `stdin=subprocess.DEVNULL` —— 子进程若真需要 stdin，安装器会用 `input=` 自己接管
+    （pipe 不受父进程 DEVNULL 影响）；而「意外继承终端 stdin」正是挂起成因。
+    **判据**：`test_install_maturity_cron.py::test_run_helper_detaches_inherited_stdin`
+    用 spy 钉住 `_run` 的 kwargs 里 `stdin is subprocess.DEVNULL`；四个文件合计 47 passed。
+    **验证全量**：`pytest tests/unit/gac` 从「48% 处无限挂起」变为正常跑完
+    （排除两个 cron 文件的对照跑 801 passed / 0 failed；cron 文件单跑 30 passed）。
+    **未做**：仍未定位是**哪一条**前置用例把污染带进来 —— 硬化后挂起消失，但该污染本身
+    （全局 `subprocess.run` 被 monkeypatch 的作用域）仍在，留作后续。
+  actor: "governance-agent"

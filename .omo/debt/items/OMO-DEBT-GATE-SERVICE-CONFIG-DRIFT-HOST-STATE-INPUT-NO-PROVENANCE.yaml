@@ -122,6 +122,18 @@ history:
     advisory、以及「缺席即绿」（无 LaunchAgents 时整块跳过且 ok=True）都保持原状 ——
     本条只让读数可行动，没有让它变诚实。
   actor: 'governance-agent'
+- at: '2026-11-26T04:05:00+00:00'
+  action: mitigate
+  note: >-
+    **第 3 项裁定落地：保留 blocking，但「缺席即绿」改为诚实降级。**
+    ① `gen-service-configs.py --check` 在本机 `~/Library/LaunchAgents` 缺席时, JSON 报告新增
+    `measured: false`（仍 `ok:true/skipped:true`），不再让「没测成」冒充「通过」；
+    ② fallback 策略里该 check 命令补 `--json`, 门禁据此归入 `not_measured`；
+    ③ 新原因 `launchd_observer_unavailable` 登记进 `KNOWN_NOT_MEASURED_REASONS`,
+    出处同步写进 `tests/unit/gac/test_not_measured_reason_vocabulary.py`。
+    **未做**：把本机 plist 一致性降为 advisory（保留 blocking —— 实测 drift 是真问题）;
+    「比较 registry→临时目录生成物」的仓库侧判据与消除 drift 的两条路仍待 owner。
+  actor: 'governance-agent'
 x1_policy_ref: ''
 x2_freshness: ''
 x3_tier: ''

@@ -1,0 +1,57 @@
+id: "TESTS-NETWORK-BOUND-DETECTOR-SLOWS-SUITE"
+title: "test_check_submodule_pointer_drift 每条用例都真跑检测器（逐子模块 git fetch，15s 超时），慢网络下整套 tests/unit/gac 近乎挂起"
+dimension: "governance"
+subdimension: "consistency"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.1
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- bin/gac/check-submodule-pointer-drift.py
+- tests/unit/gac/test_check_submodule_pointer_drift.py
+evidence_refs:
+- bin/gac/check-submodule-pointer-drift.py
+- tests/unit/gac/test_check_submodule_pointer_drift.py
+mitigation_refs: []
+opened_at: "2026-11-26T05:40:00+00:00"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-26"
+gate_level: none
+description: >-
+  `tests/unit/gac/test_check_submodule_pointer_drift.py` 的多条用例（`test_detect_runs_cleanly`
+  / `test_json_output` / `test_fix_dry_run` / `test_each_result_has_required_fields`）都通过
+  `_run()` **真实执行** `bin/gac/check-submodule-pointer-drift.py`；而该检测器的
+  `get_submodule_origin_main()` 默认对**每个子模块**执行 `git fetch origin`（15s 超时）。
+
+  网络正常时每轮几秒；**网络慢/对端拥塞时每次 fetch 都吃满 15s**，5 个子模块 × 多条用例
+  ⇒ 整套 `tests/unit/gac` 从 2 分钟级膨胀到 **>10 分钟且看不到进展**，形态与「挂起」同形
+  （2026-11-26 本会话实测：全量跑到 13% 的 `test_json_output` 就停住，`ps` 显示 pytest
+  无子进程、纯等待）。
+
+  **同族风险**：任何「用例直接跑会联网/长耗时的检测器」都会把宿主网络状态变成套件耗时的一部分
+  —— 与 AGENTS.md 「hermetic 测试不得依赖 host 状态」同族。
+decision_needed: >-
+  建议（已实施）：给检测器加 `--no-fetch`（跳过 fetch，只用最近一次 fetch 到的 refs），
+  测试装置统一传它；默认行为（pre-push 等真实调用方）不变。另给该类「真跑外部脚本」的
+  装置补 `stdin=subprocess.DEVNULL` 与超时，避免把「慢」升级成「无限等」。
+history:
+- at: "2026-11-26T05:40:00+00:00"
+  action: register
+  note: Registered debt item TESTS-NETWORK-BOUND-DETECTOR-SLOWS-SUITE.
+  actor: "governance-agent"
+
+- at: "2026-11-26T06:05:00+00:00"
+  action: mitigate
+  note: >-
+    **已做**：检测器新增 `--no-fetch`（跳过逐子模块 `git fetch`，只用最近一次 fetch 到的
+    refs），测试装置 `_run()` 统一传它并补 `stdin=subprocess.DEVNULL`；默认调用方（pre-push 等）
+    行为不变。**效果实测**：`test_check_submodule_pointer_drift.py` 9 passed / **2.61s**
+    （此前单文件即把全量拖到 >10 分钟无进展）；全量 `pytest tests/unit/gac`
+    **833 passed / 63 skipped / 93.41s**（此前 206s 且多次卡死）。
+    **判据**：`test_no_fetch_skips_the_network_probe`（spy 断言 `fetch=False` 时不发起任何含
+    `fetch` 的子进程调用）。**同族已一并硬化**：三处 PATH 伪 `crontab` shim 装置补
+    `stdin=DEVNULL`（债条目 TESTS-CRON-SHIM-HANG-ORDER-DEPENDENT）。
+  actor: "governance-agent"
