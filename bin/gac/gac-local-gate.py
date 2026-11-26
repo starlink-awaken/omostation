@@ -172,11 +172,6 @@ DEFAULT_POLICY = {
         },
         {"id": "doc-ssot-snapshots", "command": ["bin/ssot/doc-governance-check.py"]},
         {
-            "id": "state-freshness-check",
-            "command": ["bin/gac/state-freshness-check.py"],
-            "ci_only": True,
-        },
-        {
             # --json: 断链目标全在未检出子模块 / gitignore 生成态时自报 measured:false,
             # 而不是把「输入没备齐」计成文档有错。
             "id": "doc-link-check",
@@ -208,8 +203,12 @@ DEFAULT_POLICY = {
         # ADR-0373 (C5): sweep history drift gate (CR-SWEEP-INDEX-AUTO)
         {"id": "sweep-index-check", "command": ["bin/sweep/sweep_index.py", "--check"]},
         {
+            # 合并了原先重复声明的两条（一条无 --json 一条有）——见债条目
+            # GATE-DEFAULT-DUPLICATE-STATE-FRESHNESS：保留机器可读形式，同时
+            # 继承 ci_only，使执行面与合并前一致。
             "id": "state-freshness-check",
             "command": ["bin/gac/state-freshness-check.py", "--json"],
+            "ci_only": True,
         },
         {
             "id": "current-state-coherence",

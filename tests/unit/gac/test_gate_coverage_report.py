@@ -86,9 +86,17 @@ def test_coverage_exposes_entry_counts_and_duplicate_ids(mod):
     assert set(cov["duplicate_ids"]["default"]) == set(dups(default_entries))
 
 
-def test_current_default_duplicate_is_the_known_state_freshness_pair(mod):
-    """钉住当前实例；若 owner 把重复修掉, 这条会红并提示更新本断言。"""
-    assert mod.gate_coverage_report()["duplicate_ids"]["default"] == ["state-freshness-check"]
+def test_default_duplicate_was_merged_into_one_entry(mod):
+    """原先 DEFAULT 里 state-freshness-check 有两条（命令不同）。合并后：无重复、
+    保留机器可读的 --json 形式、并继承 ci_only 以保住原执行面。"""
+    cov = mod.gate_coverage_report()
+    assert cov["duplicate_ids"]["default"] == []
+    assert cov["entries"]["default"] == cov["default_total"]
+
+    entries = [g for g in mod.DEFAULT_POLICY["gates"] if g.get("id") == "state-freshness-check"]
+    assert len(entries) == 1
+    assert entries[0]["command"] == ["bin/gac/state-freshness-check.py", "--json"]
+    assert entries[0].get("ci_only") is True
 
 
 def test_duplicate_detector_fires_on_injected_duplicate(mod, monkeypatch):
