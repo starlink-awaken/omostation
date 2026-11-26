@@ -32,11 +32,20 @@ description: >-
   - 唯一读数点是 schedule 触发的 `doc-freshness` job（`--scope workspace`），
     而它带 `if: github.event_name == 'schedule'` —— push run 根本不跑。
 
-  于是计数**随 pin 前进单调增长**：2026-11-09 实测 71（max 80）→ 2026-11-26 实测 **113**，
-  17 天 +42（≈2.5/天），越过预算致 `Governance Check` 红。缺口形状集中在两个 enum 字段：
-  109 份文档 / 113 findings 里，86 份只缺 `status`+`lifecycle`、11 份缺
+  2026-11-26 CI 口径实测 **113**（max 80）致 `Governance Check` 红。缺口形状集中在两个
+  enum 字段：109 份文档 / 113 findings 里，86 份只缺 `status`+`lifecycle`、11 份缺
   `last-reviewed`+`status`+`lifecycle`、8 份缺 `lifecycle`+`owner`、4 份完全无 frontmatter。
   即多数文档已被治理过（有 owner/last-reviewed），缺的是后加的 enum 契约。
+
+  **⚠️ 2026-11-26 订正（原写「随 pin 前进单调增长，17 天 +42 ≈2.5/天」是错的）**：
+  用 2026-11-09 那次的同一种口径（非递归 `ls-tree <ref> projects/` + 每 repo 五个文件名）
+  分别量 2026-11-09 的 pin 与今天的 pin —— 两边都是 **68 份文档 / 71 findings**；
+  宽口径（递归 gitlink + 全命中路径）两边同为 **97 份 / 101 findings**。
+  ⇒ **17 天零增长**。71→113 全部来自**测量口径变宽**：CI 的 `--scope workspace` 走文件系统，
+  覆盖 (a) **嵌套 gitlink**（`projects/agora/projects/{aetherforge,l4-kernel}` 共 13 份，
+  父树 `ls-tree -r` 不会进入子模块内部所以看不见）与 (b) `projects/*/docs/ARCHITECTURE.md`
+  这类非顶层路径。本条因此从"增长抑制"改判为**存量债**：不修不会自己变大，只会随真的
+  新增不合规项目入口文档而上升。
 
   同轮暴露的第二处机制缺口：`bin/ssot/auto-bump-doc-governance-budget.py` 只跑默认
   `--scope tracked`，而子模块文档不在父仓跟踪面上 ⇒ **这个自动兜底工具结构上看不见本桶**，
@@ -44,27 +53,25 @@ description: >-
 decision_needed: >-
   建议分两步，都不在本轮 CI 修复里做：
 
-  1. **预防**：加一道"新增/变更的项目入口文档必须带 required frontmatter"的增量校验
-     （只看增量，不看存量，避免一上线就红）。落点经 2026-11-26 两次复核后**再修订**：
-     缺口的主要入口是**各子模块仓内的日常开发**（新文档随普通 commit 进仓），
-     `bin/ssot/sync-submodule-pointers.sh` 只修**不可达**指针、不主动前进 pin，
-     `submodule-pointer-transaction.sh` 只覆盖**受治理的 re-point/bump** ——
-     两者都拦不住主入流。但**任何子模块内容要进父仓，都必须经过一次父仓的 gitlink
-     前进**，所以单点其实在**父仓 PR 侧**：对 diff 里 `A..B` 的 gitlink，用
-     `git -C <sub> diff --name-only A B` 取变更文件，命中 project-entry surface 且
-     缺 required frontmatter 就报警。这比"把 surface 定义分发到 16 个仓"便宜得多，
-     且覆盖面完整（含直写 bump 与自动同步两条路）。
-     **建议先 observe-only 落地**（本仓既有惯例：新判据默认不阻塞，由 registry 条目
-     声明升级），观察一个窗口再决定是否转 blocking。
-     不这样做，计数会持续增长，只能每 2~3 周抬一次预算。
+  1. **预防：实测后判定「暂不建」（2026-11-26 第三次复核）**。候选落点是父仓 PR 侧
+     的 gitlink 增量校验（对 `A..B` 取 `git -C <sub> diff --name-only`，命中 surface 且
+     缺 required frontmatter 就报警）—— 设计上成立：任何子模块内容要进父仓都必须经过
+     一次父仓 gitlink 前进，故单点覆盖完整。**但先量后建的结果是没必要**：
+     [a] 两个 pin、同口径读数完全相同（见描述里的订正段），即**没有观察到任何入流**；
+     [b] 回扫最近 600 个提交里的 32 个真实 bump，逐跑该增量校验 ⇒ **0 命中**；
+     [c] 真要建还比预想复杂：嵌套 gitlink（`projects/agora/projects/*`）要再递归一层，
+     否则漏掉 13/113。
+     结论：**为一个观测不到的入流建机制属于过度设计**，本条不为它背书。若将来真的出现
+     "新增不合规项目入口文档"的实例（例如新仓落地），再按那次的实例重建判据，届时
+     observe-only 起步的提议依然有效。
   2. **清偿**：批量补子模块文档的 `status: active` + `lifecycle: entry`（值由 surface 固定，
      机械可脚本化），逐批 commit + push + 父仓 gitlink bump，每批计数下降，全部清完后
      删除 `legacy-project-entry-frontmatter` 条目（shrink_only 方向）。跨 16 个 gitlink，
      需独立授权与排期。
 
-  在这两步完成前，本条是 `legacy-project-entry-frontmatter` max_findings 存在的理由；
-  该预算 2026-11-26 已由 80 抬到 130（113 + 17 余量，按当前增速约 7 天），
-  属**过渡期的界**而非豁免。
+  本条是 `legacy-project-entry-frontmatter` max_findings 存在的理由；该预算 2026-11-26
+  已由 80 抬到 130（CI 口径 113 + 17 余量）。既然已证实是**存量而非增长**，余量不按
+  增速折算，只有真的新增不合规项目入口文档才会顶穿 —— 属**存量的界**，不是增长抑制器。
 history:
 - at: "2026-11-26T07:35:00+00:00"
   action: register
@@ -109,4 +116,17 @@ history:
     **父仓 PR 侧的 gitlink diff 增量校验** —— 任何子模块内容要进父仓都必须经过一次
     父仓 gitlink 前进，故单点覆盖完整（含直写 bump 与自动同步），且不必跨 16 个仓分发。
     建议先 observe-only 落地再决定是否转 blocking。详见 decision_needed 第 1 条。
+  actor: "governance-agent"
+
+- at: "2026-11-26T10:10:00+00:00"
+  action: update_description
+  note: >-
+    **订正 + 预防机制判定（先量后建）**。原写"计数随 pin 前进单调增长, ≈2.5/天"**不成立**：
+    同一口径量 2026-11-09 的 pin 与今天的 pin，非递归口径两边都是 68 文档/71 findings，
+    宽口径两边都是 97 文档/101 findings ⇒ **17 天零增长**；71→113 是测量口径变宽
+    （CI `--scope workspace` 走文件系统，覆盖嵌套 gitlink 与非顶层路径）。
+    据此把 decision_needed 第 1 条从"建议建预防闸"改为**暂不建**：回扫最近 600 个提交
+    里的 32 个真实 bump、逐跑候选增量校验 ⇒ 0 命中；且真建还需再递归一层才覆盖
+    `projects/agora/projects/*`（13/113）。为一个观测不到的入流建机制属过度设计。
+    预算 80→130 仍必要（CI 口径就是 113），但性质是**存量的界**。
   actor: "governance-agent"

@@ -241,10 +241,16 @@ warning_exceptions:
   # 其余条目 max_findings 与 expires 一字未动（窗口 2027-01-31 由 #4995 定下）。
   # 2026-11-26 复测（全量递归检出后 `--scope workspace`，本地读数与 schedule CI 逐字一致：
   # files_scanned=5981 / summary errors=1,warnings=129）：missing_frontmatter:project-entry
-  # 71 → **113**（17 天 +42，≈2.5/天）越过 max 80 ⇒ doc-freshness 报 warning_budget_exceeded。
+  # **113** 越过 max 80 ⇒ doc-freshness 报 warning_budget_exceeded。
   # 缺口形状：109 份文档 / 113 findings —— 86 份只缺 status+lifecycle、11 份缺
   # last-reviewed+status+lifecycle、8 份缺 lifecycle+owner、4 份完全无 frontmatter。
-  # 成因结构性：项目入口文档落地不校验 frontmatter，子模块 pin bump 也不校验（已登记债务）。
+  # ⚠️ **2026-11-26 订正**：此前这里写「71 → 113，17 天 +42, ≈2.5/天」并归因"结构性增长"。
+  # 复核后不成立 —— 用 2026-11-09 那次的同一种口径（非递归 `ls-tree <ref> projects/` +
+  # 每 repo 五个文件名）分别量 2026-11-09 的 pin 与今天的 pin, 两边都是 **68 份文档 / 71 findings**;
+  # 宽口径（递归 gitlink + 全命中路径）两边同为 **97 份 / 101 findings**。即 **17 天零增长**,
+  # 71→113 是**测量口径变宽**（CI 的 `--scope workspace` 走文件系统, 覆盖嵌套 gitlink 与
+  # `projects/*/docs/ARCHITECTURE.md` 这类路径, 而非递归 ls-tree 看不到子模块内部的 gitlink）。
+  # 本轮 max 80 → 130 仍必要（CI 口径就是 113）, 但它是**存量债的界**, 不是增长抑制器。
   # 本轮经 bin/ssot/auto-bump-doc-governance-budget.py --scope workspace 把 max 80 → 130
   # （circuit_breaker 上限 +50；该工具此前只读 tracked 口径、看不见这个桶，同轮补 --scope 透传）。
   # ⚠️ bin/gac/check-expiry-radar.py 只看 surfaces[].review_days 与 X2 规则，**不看 warning_exceptions
@@ -317,19 +323,31 @@ warning_exceptions:
         expires 取 2027-03-31 而非其他 legacy 条的 2027-01-31, 因为清偿要跨 18 个
         独立子模块仓、每仓一次三步提交, 比仓内文档改动的窗口天然更长。
 
-        2026-11-26 复测: pin 精确读数 **113** (本地全量递归检出 + `--scope workspace`,
+        2026-11-26 复测: CI 口径读数 **113** (本地全量递归检出 + `--scope workspace`,
         与 schedule CI 的 113 逐字一致; files_scanned=5981, errors=1/warnings=129),
-        在 2026-11-09 的 71 之上 **17 天 +42 (≈2.5/天)**, 越过 max 80。
+        越过 max 80。
+
+        **订正 (同日, 复核后)**: 先前此处写"在 2026-11-09 的 71 之上 17 天 +42 (≈2.5/天)",
+        该结论**不成立**。用 2026-11-09 那次的同一种口径 (非递归 `ls-tree <ref> projects/`
+        + 每 repo 五个文件名) 分别量 2026-11-09 的 pin 与今天的 pin: 两边都是
+        **68 份文档 / 71 findings**; 宽口径 (递归 gitlink + 全命中路径) 两边同为
+        **97 份 / 101 findings**。⇒ **17 天零增长**, 71→113 来自**测量口径变宽**
+        (CI 的 `--scope workspace` 走文件系统, 覆盖嵌套 gitlink —— 如
+        `projects/agora/projects/{aetherforge,l4-kernel}` 的 13 份 —— 以及
+        `projects/*/docs/ARCHITECTURE.md` 这类路径; 而非递归 `ls-tree` 不会进入
+        子模块内部, 看不见那里的 gitlink)。
 
         缺口形状 (109 份文档 / 113 findings): 86 份只缺 status+lifecycle、11 份缺
         last-reviewed+status+lifecycle、8 份缺 lifecycle+owner、4 份完全无 frontmatter。
         缺的是**两个 enum 字段**而不是没被治理过 —— lifecycle 对 project-entry 由 surface
         固定为 `entry`, status 的既有约定是 `active` (根 AGENTS/CLAUDE/ARCHITECTURE 均如此)。
 
-        本轮 max 80 → 130 (auto-bump, circuit_breaker +50 上限; 113 + 17 余量, 按当前增速
-        ≈7 天)。**这不是转向宽松**: 清偿路径仍是逐批补子模块文档 (机械部分 = 插两行 enum),
-        但那是跨 16 个 gitlink 的三步提交, 不应塞进一个 CI 修复轮; 系统性成因与预防机制
-        已另登记债务条目。
+        本轮 max 80 → 130 (auto-bump, circuit_breaker +50 上限; 113 + 17 余量)。
+        既然不是增长而是存量, 这个余量不需要按增速折算 —— 它是**存量债的界**, 只有真的
+        新增不合规项目入口文档才会顶穿。**这不是转向宽松**: 清偿路径仍是逐批补子模块文档
+        (机械部分 = 插两行 enum), 但那是跨 16 个 gitlink 的三步提交, 不应塞进一个 CI 修复轮;
+        已另登记债务条目 (含"是否需要预防机制"的实证结论: 600 个历史提交里 0 次由
+        bump 引入新缺口)。
 
         另记一条可见性不对称: doc-freshness job 带 `if: github.event_name == 'schedule'`,
         所以同一 head 上 push run 全绿、只有 schedule run 红 —— 这是本条长期未被发现的原因。
