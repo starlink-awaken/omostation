@@ -1,8 +1,13 @@
 ---
+schema: md/v1
 schema_version: specification/v1
 bet_id: BET-Y2Q4-T10-356
 spec_version: 1.0.0
 status: accepted
+lifecycle: spec
+owner: governance-team
+last-reviewed: 2026-11-26
+accepted: "2026-11-26 Principal 会话拍板「a」— 债 CRON-CAPABILITY-SYNC-MAIN-DIRECT-COMMIT 三选一修法裁定 (worktree + 自动 PR 化, 先例 #4858)"
 title: capability-registry-sync-daily 断根 —— 主仓直提改 worktree+自动PR
 created: 2026-11-26
 owner_decision: >-

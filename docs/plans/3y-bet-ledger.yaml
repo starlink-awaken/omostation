@@ -48658,7 +48658,7 @@ bets:
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-26-cron-pr-mode-bet-t10-356.md
     spec_version: 1.0.0
-    content_digest: sha256:ca254f15ae9678f717c18ee7478702d12daeda541c6844b2c870bcb051d9f24f
+    content_digest: sha256:b639b62fb82312d66cb3d15969f08bb3ad5b890cdca0e89ca362afd70aefc4ae
     decision_ref: decision://accepted/BET-Y2Q4-T10-356
   non_goals:
   - 不动 ADR-0373 sentinel (generated_at 1970 有意设计)。
