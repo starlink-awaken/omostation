@@ -1,0 +1,44 @@
+id: "SERVICES-REALITY-PANORAMIC-RECON-E2E4E5"
+title: "services↔launchd 全景对账预存三类残债 —— E2 undeclared 4 / E4 未分区 31 / E5 enabled 错位余 5 (fullrefresh 已同日复活修复)"
+dimension: "governance"
+subdimension: "declaration-reality-mirror"
+domain: "infrastructure"
+scope: "workspace"
+severity: "medium"
+weight: 0.15
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots: []
+evidence_refs:
+- .omo/_truth/registry/services.yaml  # 全景声明面 (78 launchd services, generate:false observe-only 族为主)
+- docs/reports/2026-10-29-t16-launchd-unmanaged-inventory-classification.md  # T16-01 分类盘点先例 (W31/E36/R15/D0)
+- .omo/_truth/registry/services.yaml::omostation.zhixing-projection-fullrefresh  # E5 六分之一, 2026-11-26 已复活修复 (host 侧, 声明本就正确)
+opened_at: "2026-11-26"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Infrastructure"
+description: >-
+  2026-11-26 全景 sweep 记录的三类预存债 (与本轮 T353/T355 镜像回填同源但
+  量级更大, 当日裁定「留全景对账」): E2 undeclared 4 条 (launchd 在装但
+  services.yaml 未登记) / E4 未分区 31 条 (登记缺 hosts 分区维度) /
+  E5 enabled 错位 6 条 (声明 enabled 与装载现实不符)。同日 fullrefresh
+  (E5 之一) 已按 owner 拍板复活修复 (plist 去 .disabled-wave5 后缀 +
+  launchctl 加载, 声明未动 —— 声明本就是 10-29 署名裁定的正确形态),
+  E5 余 5 条待办。计数系 sweep 时点读数, 立案后 reality 已移动
+  (cron 面另有 sync-reality 工具通道), 全景 BET 执行时必须先用
+  scheduler-compile.py --probe-reality + services↔launchd 双向差集
+  重新物化清单, 不得沿用本条计数直改。修复模式沿用 T353/T355 镜像
+  回填先例 (逐条实测定性 → mechanical 者镜像修 → 需裁定者上问)。
+decision_needed: >-
+  E4「未分区」的分区维度语义 (hosts? domain?) 需全景 BET 先从
+  services.yaml schema 与 sweep 原始输出核实定义, 再定逐条归属。
+history:
+- at: "2026-11-26T11:15:00+00:00"
+  action: identify
+  note: >-
+    T359「全部推进」轮立案 (BET-Y2Q4-T10-359)。同日连带: cron registry
+    三条 resident drift 经 --sync-reality 原子回写修复 (该面独立于本债
+    的 services 面); fullrefresh 复活 (host 侧)。

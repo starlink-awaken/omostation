@@ -210,8 +210,8 @@ jobs:
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh" sediment'
     planes: [launchd]
-    reality: pending
-    status: proposed
+    reality: installed
+    status: active
     ssot_conflict: >-
       2026-09-30 launchd 覆写事故后复核: 本条在 registry.yaml 标 status=active + planes 含 launchd, 隐含「应已安装」; 但 services.yaml(launchd 服务 SSOT) 中 services.yaml 声明 enabled=false (com.l4.resident.sediment), 且 runtime/cron 下无受控产物。受控产物与已安装 agent 均不存在, 故降级为 proposed。
     owner: governance-team
@@ -228,8 +228,8 @@ jobs:
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh" monitor'
     planes: [launchd]
-    reality: pending
-    status: proposed
+    reality: installed
+    status: active
     ssot_conflict: >-
       2026-09-30 launchd 覆写事故后复核: 本条在 registry.yaml 标 status=active + planes 含 launchd, 隐含「应已安装」; 但 services.yaml(launchd 服务 SSOT) 中 services.yaml 声明 enabled=false (com.l4.resident.monitor), 且 runtime/cron 下无受控产物。受控产物与已安装 agent 均不存在, 故降级为 proposed。
     owner: governance-team
@@ -246,8 +246,8 @@ jobs:
     schedule: "every 120s"
     command: '/bin/bash "$HOME/Workspace/lib/resident-role-tick.sh" heartbeat'
     planes: [launchd]
-    reality: pending
-    status: proposed
+    reality: installed
+    status: active
     ssot_conflict: >-
       2026-09-30 launchd 覆写事故后复核: 本条在 registry.yaml 标 status=active + planes 含 launchd, 隐含「应已安装」; 但 services.yaml(launchd 服务 SSOT) 中 services.yaml 声明 enabled=false (com.l4.resident.heartbeat), 且 runtime/cron 下无受控产物。受控产物与已安装 agent 均不存在, 故降级为 proposed。
     owner: governance-team

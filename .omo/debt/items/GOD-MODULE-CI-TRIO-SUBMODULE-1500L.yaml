@@ -1,0 +1,42 @@
+id: "GOD-MODULE-CI-TRIO-SUBMODULE-1500L"
+title: "god-module lint 三红文件全在子模块 (>1500L 硬阈值) —— ollama/interact/lmstudio 缝簇拆解 + 子模块PR双跳"
+dimension: "code-quality"
+subdimension: "srp-refactor"
+domain: "submodule-code"
+scope: "submodule"
+severity: "medium"
+weight: 0.15
+entropy_class: "low"
+lifecycle_state: "identified"
+owner: "omlxc-team"
+affected_roots: []
+evidence_refs:
+- projects/omlxc/src/omlxc/adapters/ollama.py  # 1522L; 单类 OllamaAdapter ~1400 行, 缝簇候选 = payload 构建/解析簇
+- projects/omo/src/omo/resident/interact.py  # 1636L
+- projects/omlxc/src/omlxc/adapters/lmstudio.py  # 1713L
+- .github/workflows/governance-check.yml  # god-module lint "GATE FAIL: 3 个文件 >1500L" (advisory, 脚本 || echo 降级不阻断)
+opened_at: "2026-11-26"
+last_reviewed_at: "2026-11-26"
+next_review_at: "2026-12-10"
+gate_level: none
+x1_policy_ref: ""
+x3_tier: "Code"
+description: >-
+  CI interface-check 的 god-module lint (warn>600L, error>1500L) 多轮报
+  "3 个文件 >1500L, GATE FAIL", 全部在子模块: ollama.py 1522L / interact.py
+  1636L / lmstudio.py 1713L (主仓 bin/ 尺寸王 panorama-collect.py 6357L
+  不在此 lint 扫描面, 扫描面仅 projects/)。拆解是设计活不是机械活: ollama.py
+  实勘为单类 OllamaAdapter ~1400 行, 缝簇候选 = payload 构建/解析簇
+  (_message_payload/_chat_payload/_strip_reasoning/_reject_observable_thinking/
+  _terminal_usage/_done_reason/_usage + _ImageBudget/_StreamTerminal 数据类
+  → 独立 adapters/ollama_payload.py, 可压 ~300L 至阈下)。交付须走子模块
+  PR + 父仓 gitlink bump 双跳 (先例 #4949/#4959), 测试门 = omlxc 套件。
+  owner 2026-11-26 拍板: 先登记 backlog, 新会话满上下文执行第一刀 ——
+  拆解质量优先, 不在长会话尾部赶工; 执行时须先读三文件找缝, 不预设簇边界。
+decision_needed: ""
+history:
+- at: "2026-11-26T11:15:00+00:00"
+  action: identify
+  note: >-
+    T359「全部推进」轮全景清点时立案 (BET-Y2Q4-T10-359)。owner 同日拍板
+    backlog-first; 第一刀定 ollama.py (三件中最小且缝簇最清晰)。
