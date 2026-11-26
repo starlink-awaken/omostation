@@ -48629,6 +48629,75 @@ bets:
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
+- id: BET-Y2Q4-T10-359
+  title: BET-Y2Q4-T10-359 现实对账第一批 —— resident 三条 sync-reality + fullrefresh 复活 + god-module/全景残债双立案
+  goal: >-
+    「全部推进」四线收口第一批。(1) cron registry 三条 resident drift
+    (sediment/monitor/heartbeat 声明停在 pending/proposed 而 launchd 已装)
+    经 scheduler-compile --sync-reality 原子回写对齐实测; (2) fullrefresh
+    复活 (owner 拍板「恢复启用」, 以 10-29 署名裁定为权威): plist 去
+    .disabled-wave5 复名 (内容哈希与 services.yaml content_digest 逐字节
+    一致) + launchctl bootstrap + 验 180s 周期日志复流, 声明零改动;
+    (3) god-module 三红文件立债 (owner 拍板 backlog-first, ollama.py
+    缝簇候选 + 子模块PR双跳先例); (4) services 全景三类残债立债
+    (E2 4 / E4 31 / E5 余 5, 重物化纪律)。附带: T279 四腿核实维持
+    blocked (node 离线 15 天); 归档区孤本撤离 136K 保留区。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating  # 派生态: eng IN_PROGRESS + oper NOT_PROVEN + value NOT_PROVEN
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+
+  done_when:
+  - sync-reality 后 probe-reality mismatch_count=0
+  - fullrefresh launchctl running 且 180s 周期日志复流
+  - 双债登记 + seed_items 无孤儿
+  - PR merge 入 main
+
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1 hour
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - .omo/cron/registry.yaml
+  - .omo/debt/items/GOD-MODULE-CI-TRIO-SUBMODULE-1500L.yaml
+  - .omo/debt/items/SERVICES-REALITY-PANORAMIC-RECON-E2E4E5.yaml
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-26-reality-recon-bet-t10-359.md
+    spec_version: 1.0.0
+    content_digest: sha256:731cbe13d862ddc18c1b7defa9d31d726fd42b2e61ee51490b7efde4ec8f3b4c
+    decision_ref: decision://accepted/BET-Y2Q4-T10-359
+  non_goals:
+  - E2/E4/E5 逐条修复 (全景 BET, 清单须重物化)。
+  - god-module 实际拆解 (backlog 已立, 新会话执行第一刀)。
+  - 归档区大件删除 (递归强删命令被权限门禁拦, 转用户手工执行)。
+  - T279 四腿 (节点物理开机)。
+  verify:
+  - cmd: python3 bin/scheduler-compile.py --probe-reality
+    expect: mismatch_count 0。
+  - cmd: launchctl print gui/501/com.omostation.zhixing-projection-fullrefresh
+    expect: state=running (RunAtLoad 即跑 + 日志当日复流)。
+  - cmd: python3 bin/gac/debt-integrity-check.py
+    expect: 双债无孤儿红。
+  circuit_breaker: >-
+    若 fullrefresh 复活后 180s 周期与驾驶舱作业互相干扰 (锁竞争/revision
+    抖动), 立即 launchctl bootout 停回停放态, 升级 owner 复议。
 - id: BET-Y2Q4-T10-358
   title: BET-Y2Q4-T10-358 管道吞 rc pitfall 立条 + mcptool reconciliation_note 订正 (T357 遗留收尾)
   goal: >-
@@ -48639,6 +48708,11 @@ bets:
     脱节订正 (note 仍描述已消亡的 git add+commit 直提行为)。附带: 直提家族
     全量清点确认零残留 (rg git commit 活命令链 0 命中, 家族仅 T356/T357 两
     例且均已断根)。
+  done_when:
+  - pitfalls「管道末段」条目在 main 可检索
+  - check-pitfalls-index 无新红
+  - mcptool note 与 --publish 命令链一致
+
   status: in_progress
   window: Y2Q4
   track: T10-TOOLING
@@ -48671,6 +48745,28 @@ bets:
   circuit_breaker: >-
     纯文档/声明面订正无执行面风险; 若 pitfalls-index 门禁报格式红, 修格式
     而非删条目。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@efee2ced361feb7678d2e12e8609476a83a4a89a
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-358.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-358.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-358.md
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+
 - id: BET-Y2Q4-T10-357
   title: BET-Y2Q4-T10-357 mcptool-impl-drift 直提断根 (共享库提炼) + install-cron-plane 装重缺陷修复
   goal: >-
@@ -48682,6 +48778,11 @@ bets:
     副腿顺手修 T356 收尾实测的装重缺陷: comparison_key 整行归一认不出命令链
     改版后的旧行 → cron_normalize 加 script_signature (schedule 五域 + 本仓
     脚本路径), _is_managed 判据扩「键相等或签名相等」, 旧行从此可被认领替换。
+  done_when:
+  - PR merge 且 gitlink 双跳完成
+  - crontab mcptool 新链装载且旧直提行被替换
+  - mcptool 05:45 首跑 canary 通过
+
   status: in_progress
   window: Y2Q4
   track: T10-TOOLING
@@ -48722,6 +48823,28 @@ bets:
   circuit_breaker: >-
     若签名匹配在真实 crontab 上误删外部行, 立即恢复 T356 备份
     (crontab-bak-20261126.txt) 并回退本 PR。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@f5b753bd90ad5debdd14e11d499d4091298598a5
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-357.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-357.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-357.md
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+
 - id: BET-Y2Q4-T10-356
   title: BET-Y2Q4-T10-356 capability-registry-sync-daily 断根 —— 主仓直提改 worktree+自动PR
   goal: >-
@@ -48732,6 +48855,11 @@ bets:
     merge --squash --auto → 清理, 全程不碰主仓工作区, 失败绝不回退直提;
     .omo/cron/registry.yaml 命令链换 --publish 并经 install-cron-plane 重装
     装载面; 债条目 resolve (次生病 frontmatter 重置定性设计内收尾)。
+  done_when:
+  - PR merge 且生成器 --publish 可用
+  - crontab capability 新链装载且旧直提行消亡
+  - capability 04:05 首跑 canary 通过
+
   status: in_progress
   window: Y2Q4
   track: T10-TOOLING
@@ -48767,6 +48895,28 @@ bets:
   circuit_breaker: >-
     若 --publish 端到端在 gh 认证/keychain 上卡死, 不硬绕 (不落 GH_TOKEN 明文),
     停止并回报 owner 处理 cron 环境; 主仓工作区出现任何污染立即回退。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8477e74d3bbceae8aa2e6b95fa23753d37c0fe38
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-356.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-356.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-356.md
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+
 - id: BET-Y2Q4-T10-355
   title: BET-Y2Q4-T10-355 refresh 服务声明镜像回填 —— 日志/程序路径三处过期修正 + capability-sync 主仓直提债立案
   goal: >-
@@ -49060,7 +49210,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 606
+  total_bets: 607
   windows:
   - Y1Q1
   - Y1Q2
