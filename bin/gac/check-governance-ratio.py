@@ -49,12 +49,6 @@ from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parents[2]
 LEDGER = WORKSPACE / ".omo/_delivery/agent-workflows/events.jsonl"
-# Tracked mirror of start events (one file per run). The ledger above lives in
-# `.omo/_delivery/**` — gitignored and anchored to the state root — so a CI
-# checkout has never contained it; without this plane the ceiling is only
-# enforceable on a developer machine. Written by
-# omo.workflow.governance_projection.
-PROJECTION_DIR = WORKSPACE / ".omo/_delivery/events/delivery-runs"
 WAIVERS_DIR = WORKSPACE / ".omo" / "_truth" / "governance-evidence"
 
 WINDOW_DAYS = 30
@@ -148,54 +142,9 @@ def _classify(evt: dict) -> str:
         for pat in GOVERNANCE_PATHS:
             if pat in lock_str:
                 return "governance"
-    # `is_collaboration` 是投影侧预先算好的同口径布尔（投影不带 objective）；
-    # 账本路径仍走文本判定 —— 两者 OR 不改变任何一条既有分类结果。
-    if evt.get("is_collaboration") or "collaboration" in (evt.get("objective") or "").lower():
+    if "collaboration" in (evt.get("objective") or "").lower():
         return "collaboration"
     return "flex"
-
-
-def _parse_jsonl(path: Path) -> list[dict]:
-    events: list[dict] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            parsed = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(parsed, dict):
-            events.append(parsed)
-    return events
-
-
-def _load_projection() -> list[dict]:
-    events: list[dict] = []
-    for f in sorted(PROJECTION_DIR.glob("*.json")):
-        try:
-            parsed = json.loads(f.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        if isinstance(parsed, dict):
-            events.append(parsed)
-    return events
-
-
-def _load_delivery_events() -> tuple[list[dict], str]:
-    """(events, input_source), input_source in {ledger, projection, none}.
-
-    The ledger wins when present: it is the complete local record. On a clean
-    checkout only committed projections exist, which is the tracked subset —
-    reported as such instead of silently unmeasured.
-    """
-    if LEDGER.is_file():
-        return _parse_jsonl(LEDGER), "ledger"
-    if PROJECTION_DIR.is_dir():
-        events = _load_projection()
-        if events:
-            return events, "projection"
-    return [], "none"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -209,14 +158,9 @@ def main(argv: list[str] | None = None) -> int:
     # Waiver 检查: env GITHUB_PR_NUMBER 命中 waiver 列表 → 单 PR 豁免
     waiver_hits = _active_waivers()
 
-    events, input_source = _load_delivery_events()
-    projection_files = len(list(PROJECTION_DIR.glob("*.json"))) if PROJECTION_DIR.is_dir() else 0
-
-    if input_source == "none":
-        # 账本与投影**都**缺席 —— CI 的干净检出在没有已提交投影时停在这里。
-        # `.omo/_delivery/**` 是 gitignore 面（账本还额外被锚定到 state root，
-        # worktree 里是符号链接，git 根本跟踪不到），旧实现这里返回
-        # `ok: true, ratio: 0.0`, 于是一个**阻断级**门禁在 CI 里
+    if not LEDGER.is_file():
+        # `.omo/_delivery/**` 是 gitignore 面 —— CI 的干净检出里**没有**这份账本。
+        # 旧实现这里返回 `ok: true, ratio: 0.0`, 于是一个**阻断级**门禁在 CI 里
         # 恒 PASS (空绿): 实测本机 42.3% > 40% 上限, CI 却永远看不到。
         # 改为自报「没测成」, 让 gac-local-gate 归到 not_measured (见
         # `_declared_not_measured`); 退出码仍为 0 —— 缺输入不是仓库缺陷。
@@ -224,8 +168,6 @@ def main(argv: list[str] | None = None) -> int:
             "ok": True,
             "measured": False,
             "reason": "no_ledger",
-            "input_source": "none",
-            "projection_files": 0,
             "window_days": args.window_days,
             "ratio": 0.0,
             "message": "no ledger",
@@ -243,6 +185,16 @@ def main(argv: list[str] | None = None) -> int:
     cutoff = now - timedelta(days=args.window_days)
     # P85: 8/1 起生效, 不溯及历史 85 run (cutoff 不早于 ENFORCED_FROM)
     cutoff = max(cutoff, ENFORCED_FROM)
+
+    events: list[dict] = []
+    for line in LEDGER.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
 
     starts: list[dict] = []
     for evt in events:
@@ -276,10 +228,7 @@ def main(argv: list[str] | None = None) -> int:
     # sample (>= MIN_RUNS); otherwise surface as warn-only.
     MIN_RUNS = 10
 
-    has_human_approval = any(
-        evt.get("human_approval") or (evt.get("objective") or "").startswith("[human]")
-        for evt in starts
-    )
+    has_human_approval = any((evt.get("objective") or "").startswith("[human]") for evt in starts)
     if total < MIN_RUNS:
         ok = True
         level = "warn"
@@ -304,8 +253,6 @@ def main(argv: list[str] | None = None) -> int:
     report = {
         "ok": ok,
         "measured": True,
-        "input_source": input_source,
-        "projection_files": projection_files,
         "level": level,
         "reason": reason,
         "window_days": args.window_days,
