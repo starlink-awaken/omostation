@@ -79,3 +79,16 @@ history:
     `tests/unit/gac/test_gate_coverage_report.py`）。**注意这仍只是显形**：
     fallback 下两条照跑的问题本身待 owner 选 (a)/(b)/(c)。
   actor: "governance-agent"
+
+- at: "2026-11-26T03:20:00+00:00"
+  action: mitigate
+  note: >-
+    **已修（建议 2：合并成一条）**：删掉无 `--json` 的那条，保留带 `--json` 的形式并补
+    `ci_only: True` —— 机器可读与原有执行面同时保住。实测：
+    `entries.default=74 == default_total=74`、`duplicate_ids.default=[]`、
+    `CI_ONLY_CHECKS` 仍含 `state-freshness-check`；`gate_coverage_report()` 的重复告警随之消失。
+    判据：`test_gate_coverage_report.py::test_default_duplicate_was_merged_into_one_entry`
+    （无重复 + 单条命令为 --json + ci_only）；原「钉住当前重复实例」的用例改为钉合并后状态。
+    **边界**：fallback 下不再有「同一 check 跑两遍」的浪费；这与 (a)/(b)/(c) 中「是否保留两种行为」
+    的争议无关 —— 两条命令只有旗标差异, 合并无行为损失。
+  actor: "governance-agent"
