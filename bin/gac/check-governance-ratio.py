@@ -18,6 +18,7 @@ explicitly in events.jsonl (G1.2 wiring) — the implementation
 respects that override when present.
 
 Output:
+  - coverage: tracked / untracked 投影计数与账本缺口（warn-only，不影响退出码）
   - 30-day ratio (0.0 .. 1.0)
   - share of governance / flex / collaboration
   - 列出被分类为治理的 run ids
@@ -30,6 +31,7 @@ Exit:
 from __future__ import annotations
 
 import os  # GITHUB_PR_NUMBER env (CI waiver 检查)
+import subprocess  # tracked 投影覆盖面读数（git ls-files）
 try:
     import yaml as _yaml_for_waiver
 except ImportError:
@@ -198,6 +200,65 @@ def _load_delivery_events() -> tuple[list[dict], str]:
     return [], "none"
 
 
+def _tracked_projection_run_ids(
+    projection_dir: Path | None = None,
+    root: Path | None = None,
+) -> tuple[set[str] | None, str]:
+    """(已提交的投影 run_id 集合, 读数来源), 集合为 None 时不判定.
+
+    只有 `git ls-files` 分得出「已提交」与「仅在盘上」：未提交的投影随它所在的
+    worktree 一起被 release 删掉（2026-11-26 实测 —— 批 1 合并后本机有 15 份投影，
+    CI 一份都读不到），所以数目录条目会报出 CI 平面并不存在的覆盖面。
+    非零退出 = 仪器没跑成，如实返 None，不写成「零个已提交投影」。
+    根与目录在调用时刻取模块全局（默认参数会在 import 时冻结，测试替换不了）。
+    """
+    projection_dir = PROJECTION_DIR if projection_dir is None else projection_dir
+    root = WORKSPACE if root is None else root
+    try:
+        rel = projection_dir.relative_to(root).as_posix()
+    except ValueError:
+        return None, "projection_outside_checkout"
+    try:
+        proc = subprocess.run(
+            ["git", "ls-files", "--", rel],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None, "git_ls_files_unavailable"
+    if proc.returncode != 0:
+        return None, "git_ls_files_failed"
+    return {Path(line).stem for line in proc.stdout.splitlines() if line.strip()}, "git_ls_files"
+
+
+def _coverage(
+    starts: list[dict],
+    projection_files: int,
+    input_source: str,
+    *,
+    projection_dir: Path | None = None,
+    root: Path | None = None,
+) -> dict:
+    """投影是否进了 tracked 平面 —— 只观测，不参与 ok/level/reason 判定。"""
+    tracked, basis = _tracked_projection_run_ids(projection_dir, root)
+    tracked_files = None if tracked is None else len(tracked)
+    # 只有账本当输入时才量得出缺口：投影面自己当输入时每个 run 都必然命中自己的
+    # 文件，unprojected 恒 0 —— 那是「看不见」不是「覆盖齐」，按 §7「记录恒缺 ≠
+    # 事件为零」返 None。
+    gap = None
+    if tracked is not None and input_source == "ledger":
+        gap = sum(1 for e in starts if str(e.get("run_id") or "") not in tracked)
+    return {
+        "tracked_projection_files": tracked_files,
+        "untracked_projection_files": None if tracked is None else max(projection_files - tracked_files, 0),
+        "window_runs": len(starts),
+        "unprojected_runs": gap,
+        "basis": basis,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -226,6 +287,7 @@ def main(argv: list[str] | None = None) -> int:
             "reason": "no_ledger",
             "input_source": "none",
             "projection_files": 0,
+            "coverage": _coverage([], 0, "none"),
             "window_days": args.window_days,
             "ratio": 0.0,
             "message": "no ledger",
@@ -306,6 +368,7 @@ def main(argv: list[str] | None = None) -> int:
         "measured": True,
         "input_source": input_source,
         "projection_files": projection_files,
+        "coverage": _coverage(starts, projection_files, input_source),
         "level": level,
         "reason": reason,
         "window_days": args.window_days,
