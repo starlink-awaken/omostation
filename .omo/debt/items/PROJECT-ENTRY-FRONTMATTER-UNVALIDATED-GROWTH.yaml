@@ -44,10 +44,14 @@ description: >-
 decision_needed: >-
   建议分两步，都不在本轮 CI 修复里做：
 
-  1. **预防**：在 pin bump 链路上加一道内容校验 —— `submodule-pointer-transaction.sh`
-     对 bump 涉及的子模块，用 `git show <new-pin>:<doc>` 读项目入口文档，若**新增/变更**的
-     文档缺 required frontmatter 就报警（只看增量，不看存量，避免一上线就红）。
-     这样计数才会停止增长，而不是每 2~3 周抬一次预算。
+  1. **预防**：加一道"新增/变更的项目入口文档必须带 required frontmatter"的增量校验
+     （只看增量，不看存量，避免一上线就红）。落点经 2026-11-26 复核后**修订**：
+     缺口的主要入口是**各子模块仓内的日常开发**（新文档随普通 commit 进仓，之后才被
+     pin 同步带上父仓），而 `bin/ssot/submodule-pointer-transaction.sh` 只覆盖
+     **受治理的 re-point/bump** 那条路径（`--require-main`），拦不住主入流。
+     故正确的落点是**子模块侧的 pre-commit / CI**（把 surface 定义分发到各仓），
+     父仓侧可选加一道 pin 增量校验作第二道；这是跨仓标准分发问题，需独立设计。
+     不这样做，计数会持续增长，只能每 2~3 周抬一次预算。
   2. **清偿**：批量补子模块文档的 `status: active` + `lifecycle: entry`（值由 surface 固定，
      机械可脚本化），逐批 commit + push + 父仓 gitlink bump，每批计数下降，全部清完后
      删除 `legacy-project-entry-frontmatter` 条目（shrink_only 方向）。跨 16 个 gitlink，
@@ -79,4 +83,16 @@ history:
     `min(max(amount, count+amount-current), ABSOLUTE_MAX_BUMP)` 计算 effective 幅度，
     打印与写盘同源，并在被 circuit_breaker 截断时显式 `[warn]`。
     **未做**：预防机制与批量清偿（见 decision_needed，需独立排期）。
+  actor: "governance-agent"
+
+- at: "2026-11-26T08:05:00+00:00"
+  action: verify
+  note: >-
+    **真实 CI 已复核**：#5624 给 `governance-check.yml` 加了 `workflow_dispatch`
+    并把 doc-freshness 的 `if` 放开到 `schedule || workflow_dispatch`（正是本条
+    「可见性不对称」那条），合并后手动触发 run **45781819672**（head `6e5a6488b`）：
+    meta-doctor / interface-check / governance-verify / **doc-freshness 四腿全 success**。
+    即 #5623 的预算调整在 CI 侧确认生效，而非仅本地复算。
+    **后续判据**：项目入口文档的 frontmatter 缺口此后可用
+    `gh workflow run governance-check.yml --ref main` 当场复算，不必等 6h schedule。
   actor: "governance-agent"
