@@ -7,12 +7,14 @@ from __future__ import annotations
 
 import importlib.util
 import plistlib
+import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
 _ZHS_FILE = Path(__file__).resolve().parents[1] / "bin" / "gac" / "zhixing-host-sync.py"
+_IDENTITY_ASSET = _ZHS_FILE.parents[1] / "panorama/assets/host/release_identity.py.asset"
 _SPEC = importlib.util.spec_from_file_location("zhs", str(_ZHS_FILE))
 zhs = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(zhs)
@@ -25,12 +27,33 @@ def zhs_env(tmp_path, monkeypatch):
     deploy = tmp_path / "deploy"
     deploy.mkdir()
     plist = tmp_path / "com.omostation.zhixing-dashboard.plist"
+    shutil.copyfile(_IDENTITY_ASSET, host / "release_identity.py.asset")
     monkeypatch.setattr(zhs, "HOST_DIR", host)
     monkeypatch.setattr(zhs, "DASHBOARD_DIR", deploy)
     monkeypatch.setattr(zhs, "LAUNCH_AGENT_PLIST", plist)
     monkeypatch.setattr(zhs, "CURRENT_LINK", deploy / "current")
     monkeypatch.setattr(zhs, "RELEASES_DIR", deploy / "releases")
     monkeypatch.setattr(zhs, "CURRENT_ENTRYPOINT", deploy / "current" / "live_server.py")
+    # Machine-level actions are replaced by inert stand-ins: these cases must
+    # never kick a real launchd job nor read the live dashboard's /health.
+    monkeypatch.setattr(zhs, "RUNTIME_CONVERGENCE_TIMEOUT_SECONDS", 0)
+    monkeypatch.setattr(zhs, "RUNTIME_CONVERGENCE_POLL_SECONDS", 0)
+    monkeypatch.setattr(zhs, "_launchd_job_loaded", lambda label: True)
+    monkeypatch.setattr(zhs, "_kickstart",
+                        lambda label, *, kill=False: {"ok": True, "label": label,
+                                                      "returncode": 0, "detail": None})
+
+    def health_probe(port=43191):
+        # kickstart -k replaces the process: the pid changes once `current`
+        # points at the new release.
+        restarted = (deploy / "current").is_symlink()
+        return (200, {"pid": 4243 if restarted else 4242})
+
+    monkeypatch.setattr(zhs, "_runtime_health_probe", health_probe)
+    monkeypatch.setattr(
+        zhs, "_running_registered_runtime",
+        lambda: {"ok": True, "pid": 4242,
+                 "entrypoint": str(zhs.CURRENT_ENTRYPOINT)})
     return {"host": host, "deploy": deploy, "plist": plist}
 
 
@@ -221,6 +244,9 @@ def test_migrate_backs_up_plist(zhs_env):
     host = zhs_env["host"]
     deploy = zhs_env["deploy"]
     (deploy / "live_server.py").write_text("old\n")
+    # 运行期身份契约要求基线 release 至少含这三个代码文件。
+    (deploy / "observatory_query.py").write_text("old observatory\n")
+    (deploy / "runtime_paths.py").write_text("# runtime paths\n")
     for name in ("live_server.py.asset", "observatory_query.py.asset", "template.html",
                  "refresh.py.asset", "panorama-collect-main.py.asset", "copilot_service.py.asset",
                  "rag_engine.py.asset", "strategy_sources.py.asset", "strategy_collector.py.asset",
@@ -262,6 +288,8 @@ def test_migration_baseline_then_explicit_publication(zhs_env, monkeypatch, corr
     manifest = json.loads((baseline / zhs.RELEASE_MANIFEST).read_text())
     assert manifest["identity_kind"] == "deployment_baseline"
     assert manifest["commit_oid"] is None
+    assert manifest["content_oid"] == manifest["version_id"]
+    assert baseline.name == manifest["content_oid"]
     before = zhs._switch_state_snapshot()
     monkeypatch.setattr(zhs, "_running_registered_runtime", lambda: _fake_runtime(deploy))
     if corrupt:
