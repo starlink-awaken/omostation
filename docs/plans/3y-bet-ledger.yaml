@@ -49242,7 +49242,8 @@ bets:
   title: 驾驶舱契约守卫覆盖面收口 —— 从 template.html 扩到全部被服务的 JS 资产
   window: Y2Q4
   track: T10-TOOLING
-  status: pending
+  status: done
+  done_at: 2026-11-27
   appetite: 1.5 hours
   priority: P2
   objective_ref: OBJ-TRUST
@@ -49293,15 +49294,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8b2a7351f660455bd669a8dd8f6d23cb2591a680
+          tests:
+            ref: receipt://docs/reports/2026-11-27-t10-364-asset-contract-guard-closeout.md#2-线上实测
+            sha256: sha256:18494a11e90c3b90b4cb217616c242f33a16fe3013198bac91a8aeb91529f5e5
+          diff:
+            ref: receipt://docs/reports/2026-11-27-t10-364-asset-contract-guard-closeout.md#1-变更面
+            sha256: sha256:18494a11e90c3b90b4cb217616c242f33a16fe3013198bac91a8aeb91529f5e5
+          rollback:
+            ref: receipt://docs/reports/2026-11-27-t10-364-asset-contract-guard-closeout.md#5-宿主部署尝试与回滚
+            sha256: sha256:18494a11e90c3b90b4cb217616c242f33a16fe3013198bac91a8aeb91529f5e5
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-t10-364-asset-contract-guard-closeout.md#5-宿主部署尝试与回滚
+            sha256: sha256:18494a11e90c3b90b4cb217616c242f33a16fe3013198bac91a8aeb91529f5e5
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-t10-364-asset-contract-guard-closeout.md
+            sha256: sha256:18494a11e90c3b90b4cb217616c242f33a16fe3013198bac91a8aeb91529f5e5
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-364.md
+            sha256: sha256:1a99040c304edd0b852cbd8e07adf1af3e550f87644b95de770f3bdd05eee622
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-t10-364-asset-contract-guard-closeout.md#55-本次尝试留下的足迹已清除
+            sha256: sha256:18494a11e90c3b90b4cb217616c242f33a16fe3013198bac91a8aeb91529f5e5
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
   circuit_breaker: 守卫扩展若在发布路径上误报/误阻断 (干跑报出本仓已发布的合法字段), 立即回退 panorama-collect.py 的改动并把误报样例写进回执,
     升级 principal 复议。
 campaigns:
