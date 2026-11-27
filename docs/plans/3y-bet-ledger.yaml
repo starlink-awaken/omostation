@@ -49413,6 +49413,40 @@ bets:
         status: NOT_PROVEN
         evidence: {}
     overall_state: delivery_accepted
+- id: BET-Y2Q4-T10-361
+  title: BET-Y2Q4-T10-361 大 YAML 手术纪律 + 已修复三连闸 pitfall 立条
+  goal: >-
+    2026-11-27 T360 收官日两起实战教训当日立条: ① python 写回事故把 T360 digest
+    前缀拼进全台账 466 处 binding (CI 三红, 精确正则一次归零); 修矩阵时
+    safe_dump 全文件重排 5042+/7451- 被 diff --stat 识破秒回滚; ② waiver
+    frontmatter 修复版改完没提交, CI 依旧红, 白挖一轮根因 (两连击)。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P3
+  appetite: 30 minutes
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/pitfalls.md
+  - AGENTS.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-361.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-27-yaml-surgery-pitfall-bet-t10-361.md
+    spec_version: 1.0.0
+    content_digest: sha256:3c63bf551df714fa357b1efe70b323ad1b713eea9083ccd9bd8bbda510c6a31a
+    decision_ref: decision://accepted/BET-Y2Q4-T10-361
+  non_goals:
+  - 不动 T360 及此前任何已 merge 条目内容 (只追加新条目)。
+  verify:
+  - cmd: python3 -c "import yaml; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'))"
+    expect: YAML 解析通过。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
