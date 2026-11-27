@@ -2447,20 +2447,6 @@
         next_action: '打开 #gov 取 live 证据，勿用 runtime 历史声明冒充 PASS'
       });
     });
-    ((D.pending_publications && D.pending_publications.items) || []).forEach(p => {
-      if (p.verification !== 'READY_FOR_OPERATION_SPECIFIC_HUMAN_AUTHORIZATION') return;
-      const id = 'publication:' + p.id;
-      if (seen.has(id)) return;
-      seen.add(id);
-      items.push({
-        id,
-        title: '等待精确授权：' + (p.id || 'publication'),
-        type: 'authorization',
-        description: 'commit ' + (p.commit || 'UNKNOWN') + ' · patch ' + (p.patch_digest || 'UNKNOWN') +
-          ' · dirty=' + (p.dirty_count == null ? 'UNKNOWN' : p.dirty_count),
-        next_action: '仅在绑定 exact commit 的一次性授权后 tag/push/PR；required contexts 全绿才可 squash merge'
-      });
-    });
     ((D.portfolio && D.portfolio.nonterminal) || []).filter(b => String(b.status || '').toLowerCase() === 'blocked').forEach(b => {
       const id = 'bet:' + b.id;
       if (seen.has(id)) return;

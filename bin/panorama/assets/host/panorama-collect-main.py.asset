@@ -5700,30 +5700,59 @@ def build_payload() -> dict:
     return payload
 
 
+def _dashboard_missing_fields(source: str, payload: dict) -> list[str]:
+    """Return the top-level ``D.<field>`` names the source reads but the
+    payload does not provide (absent or null)."""
+    import re as _re
+    refs = set(_re.findall(r"D\.([a-z_][a-z0-9_]*)", source))
+    return sorted(r for r in refs if r not in payload or payload[r] is None)
+
+
+def _scan_dashboard_asset_contract(payload: dict, root: Path) -> dict[str, list[str]]:
+    """Map each served JS asset to the payload fields it reads but cannot get.
+
+    The template is one consumer of the payload; the served JS assets are the
+    others, and every ``D.<field>`` they read is a top-level payload key.
+    """
+    missing_by_asset: dict[str, list[str]] = {}
+    for asset in sorted(root.glob("*.js")):
+        if not asset.is_file():
+            continue
+        try:
+            source = asset.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        missing = _dashboard_missing_fields(source, payload)
+        if missing:
+            missing_by_asset[asset.name] = missing
+    return missing_by_asset
+
+
 def _check_template_data_consistency(payload: dict) -> None:
-    """Scan the dashboard template for D.* references and warn about
-    top-level fields the payload doesn't provide.
+    """Scan the served dashboard surface (template + served JS assets) for
+    D.* references and warn about top-level fields the payload doesn't provide.
 
     This is a build-time guard against undefined-field crashes in the
     browser. It does NOT block publication — it only warns.
     """
-    import re as _re
-    template_path = Path(os.environ.get(
+    root = Path(os.environ.get(
         "ZHIXING_DASHBOARD_CODE_ROOT",
         str(Path.home() / ".local/share/zhixing-dashboard"),
-    )) / "template.html"
-    if not template_path.is_file():
-        return
-    try:
-        template = template_path.read_text(encoding="utf-8")
-    except Exception:
-        return
-    # Extract D.<field> references (top-level only)
-    refs = set(_re.findall(r"D\.([a-z_][a-z0-9_]*)", template))
-    missing = sorted(r for r in refs if r not in payload or payload[r] is None)
-    if missing:
-        print(f"  ⚠️  template-data consistency: {len(missing)} fields "
-              f"referenced in template but missing from payload: "
+    ))
+    template_path = root / "template.html"
+    if template_path.is_file():
+        try:
+            template = template_path.read_text(encoding="utf-8")
+        except Exception:
+            template = ""
+        missing = _dashboard_missing_fields(template, payload)
+        if missing:
+            print(f"  ⚠️  template-data consistency: {len(missing)} fields "
+                  f"referenced in template but missing from payload: "
+                  f"{', '.join(missing[:10])}")
+    for asset_name, missing in _scan_dashboard_asset_contract(payload, root).items():
+        print(f"  ⚠️  asset-data consistency: {asset_name}: {len(missing)} fields "
+              f"referenced in asset but missing from payload: "
               f"{', '.join(missing[:10])}")
 
 
