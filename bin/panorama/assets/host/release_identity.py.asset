@@ -10,6 +10,8 @@ import re
 
 MANIFEST = ".zhixing-host-release.json"
 CODE_FILES = ("live_server.py", "observatory_query.py", "runtime_paths.py")
+MANAGED_IDENTITY_KIND = "git_commit"
+BASELINE_IDENTITY_KIND = "deployment_baseline"
 MAX_FILES = 2048
 MAX_FILE_BYTES = 8 * 1024 * 1024
 MAX_TOTAL_BYTES = 64 * 1024 * 1024
@@ -22,6 +24,22 @@ RUNTIME_BYTECODE_SUFFIX = ".pyc"
 
 class ReleaseIdentityError(ValueError):
     pass
+
+
+def baseline_content_digest(code_root, selected_assets):
+    """Recompute a deployment baseline's content identity from its own bytes.
+
+    The framing (name + NUL + bytes + NUL, per asset, in manifest order) is the
+    publisher's baseline digest framing and must stay byte-identical to it.
+    """
+    root = Path(code_root)
+    digest = hashlib.sha256()
+    for name in selected_assets:
+        digest.update(name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update((root / name).read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()[:40]
 
 
 def managed_release_identity(code_root):
@@ -42,19 +60,34 @@ def managed_release_identity(code_root):
                 "zhixing-host-release-manifest/v1", "zhixing-host-release-manifest/v2"):
             raise ReleaseIdentityError("release_manifest_schema_invalid")
         version = data.get("version_id")
-        oid = data.get("commit_oid")
-        if (not isinstance(version, str) or root.name != version or root.parent.name != "releases"
-                or data.get("identity_kind") != "git_commit"
-                or not isinstance(oid, str) or re.fullmatch(r"[0-9a-f]{40}", oid) is None):
+        kind = data.get("identity_kind")
+        if (not isinstance(version, str) or root.name != version
+                or root.parent.name != "releases"):
             raise ReleaseIdentityError("release_manifest_source_invalid")
-        if data["schema"] == "zhixing-host-release-manifest/v1":
-            if version != oid:
+        if kind == MANAGED_IDENTITY_KIND:
+            oid = data.get("commit_oid")
+            if not isinstance(oid, str) or re.fullmatch(r"[0-9a-f]{40}", oid) is None:
+                raise ReleaseIdentityError("release_manifest_source_invalid")
+            if data["schema"] == "zhixing-host-release-manifest/v1":
+                if version != oid:
+                    raise ReleaseIdentityError("release_manifest_source_invalid")
+            else:
+                publication = data.get("publication_id")
+                if (not isinstance(publication, str) or re.fullmatch(r"[0-9a-f]{32}", publication) is None
+                        or version != f"{oid}--pub-{publication}"):
+                    raise ReleaseIdentityError("release_manifest_source_invalid")
+        elif kind == BASELINE_IDENTITY_KIND:
+            # A deployment baseline is content-addressed, not a Git commit: it
+            # carries no commit oid and is identified by a digest over the very
+            # bytes it ships, which this module recomputes independently.
+            oid = data.get("content_oid")
+            if (data.get("commit_oid") is not None
+                    or data["schema"] != "zhixing-host-release-manifest/v1"
+                    or not isinstance(oid, str) or re.fullmatch(r"[0-9a-f]{40}", oid) is None
+                    or oid != version):
                 raise ReleaseIdentityError("release_manifest_source_invalid")
         else:
-            publication = data.get("publication_id")
-            if (not isinstance(publication, str) or re.fullmatch(r"[0-9a-f]{32}", publication) is None
-                    or version != f"{oid}--pub-{publication}"):
-                raise ReleaseIdentityError("release_manifest_source_invalid")
+            raise ReleaseIdentityError("release_manifest_source_invalid")
         expected = data.get("files")
         if not isinstance(expected, dict) or not expected or len(expected) > MAX_FILES:
             raise ReleaseIdentityError("release_manifest_files_invalid")
@@ -86,6 +119,21 @@ def managed_release_identity(code_root):
                 actual[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
         if actual != expected:
             raise ReleaseIdentityError("release_tree_hash_mismatch")
+        if kind == BASELINE_IDENTITY_KIND:
+            selected = data.get("selected_assets")
+            if (not isinstance(selected, list) or not selected
+                    or not all(isinstance(name, str) and name for name in selected)):
+                raise ReleaseIdentityError("release_manifest_assets_invalid")
+            for name in selected:
+                relative = Path(name)
+                if (relative.is_absolute() or relative.as_posix() != name
+                        or any(part in (".", "..", ".git") for part in relative.parts)
+                        or name == MANIFEST):
+                    raise ReleaseIdentityError("release_manifest_path_invalid")
+            if set(selected) != set(actual):
+                raise ReleaseIdentityError("release_manifest_assets_mismatch")
+            if baseline_content_digest(root, selected) != oid:
+                raise ReleaseIdentityError("release_manifest_content_mismatch")
         if any(name not in actual for name in CODE_FILES):
             raise ReleaseIdentityError("release_code_bundle_missing")
         bundle = "".join(f"{name}:{actual[name]}\n" for name in CODE_FILES)

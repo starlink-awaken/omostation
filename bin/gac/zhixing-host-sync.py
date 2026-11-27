@@ -113,6 +113,11 @@ RELEASE_ID_RE = re.compile(r"[0-9a-f]{40}\Z")
 PUBLICATION_ID_RE = re.compile(r"[0-9a-f]{32}\Z")
 VERSION_ID_RE = re.compile(r"[0-9a-f]{40}(?:--pub-[0-9a-f]{32})?\Z")
 RELEASE_MANIFEST = ".zhixing-host-release.json"
+# Identity kind of a migration baseline: content-addressed, never a Git commit.
+# The runtime identity helper (bin/panorama/assets/host/release_identity.py.asset)
+# accepts the same kind and recomputes the digest from the release bytes.
+BASELINE_IDENTITY_KIND = "deployment_baseline"
+BASELINE_IDENTITY_ASSET = "release_identity.py"
 # Runtime bytecode is regenerated in place by the refresh/orchestrator jobs that
 # run with cwd=<release>. Hashing it would make every release self-invalidate
 # minutes after publish, so both the publisher and the verifier skip it.
@@ -208,6 +213,12 @@ def _source_commit_oid(source_dir: Path | None = None) -> str:
     return identity if kind == "git_commit" else ""
 
 
+def _asset_source(src: Path, source_name: str) -> Path:
+    """Resolve an asset source: an absolute path overrides the source root."""
+    candidate = Path(source_name)
+    return candidate if candidate.is_absolute() else src / source_name
+
+
 def _release_tree_files(root: Path) -> dict[str, str] | None:
     """Hash a release tree while refusing symlinks and non-regular entries."""
     if root.is_symlink() or not root.is_dir():
@@ -250,6 +261,11 @@ def _write_release_manifest(root: Path, *, oid: str, selected: tuple[str, ...],
         "base_version": base_version,
         "files": dict(sorted(files.items())),
     }
+    if identity_kind == BASELINE_IDENTITY_KIND:
+        # A deployment baseline is content-addressed: it carries no commit oid,
+        # only a digest over the bytes it ships (recomputable from the release
+        # tree alone, so the runtime can verify it without Git).
+        payload["content_oid"] = oid
     if publication_id is not None:
         payload["publication_id"] = publication_id
     return (json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
@@ -270,8 +286,22 @@ def _base_manifest_valid(root: Path) -> bool:
         if schema == "zhixing-host-release-manifest/v1":
             if not RELEASE_ID_RE.fullmatch(root.name):
                 return False
-            if not ((kind == "deployment_baseline" and oid is None)
-                    or (kind == "git_commit" and oid == root.name)):
+            if kind == "git_commit":
+                if oid != root.name:
+                    return False
+            elif kind == BASELINE_IDENTITY_KIND:
+                # Same rule the runtime identity helper applies: a baseline is
+                # content-addressed, carries no commit oid, and its content oid
+                # must equal the version directory name. The old bare-baseline
+                # shape (no content_oid) is rejected here exactly as the runtime
+                # rejects it — the publisher must not bless a release that the
+                # runtime can never bind.
+                content_oid = data.get("content_oid")
+                if (oid is not None or not isinstance(content_oid, str)
+                        or not RELEASE_ID_RE.fullmatch(content_oid)
+                        or content_oid != root.name):
+                    return False
+            else:
                 return False
         elif schema == "zhixing-host-release-manifest/v2":
             token = data.get("publication_id")
@@ -376,7 +406,7 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
             relative = Path(deploy_name)
             if relative.is_absolute() or ".." in relative.parts:
                 raise ValueError("asset_destination_invalid")
-            source = src / repo_name
+            source = _asset_source(src, repo_name)
             if source.is_symlink() or not source.is_file():
                 return {"ok": False, "reason": "source_asset_missing", "asset": str(source)}
             destination = staging / relative
@@ -394,7 +424,7 @@ def _prepare_version(assets: tuple[tuple[str, str], ...], oid: str,
         manifest_bytes = _write_release_manifest(
             staging, oid=oid, selected=tuple(name for name, _ in assets),
             base_version=base_version,
-            identity_kind=("deployment_baseline" if src != HOST_DIR else _source_identity(src)[1]),
+            identity_kind=(BASELINE_IDENTITY_KIND if src != HOST_DIR else _source_identity(src)[1]),
             files=files, version_id=version_id, publication_id=publication_id,
         )
         (staging / RELEASE_MANIFEST).write_bytes(manifest_bytes)
@@ -590,10 +620,15 @@ def _previous_version() -> str | None:
 
 
 def _baseline_version_id(assets: tuple[tuple[str, str], ...], source_dir: Path) -> str | None:
-    """Name a deployment-state baseline by the exact bytes copied into it."""
+    """Name a deployment-state baseline by the exact bytes copied into it.
+
+    The framing (deploy name + NUL + bytes + NUL, per asset, in order) is the
+    runtime identity helper's baseline framing — both sides must agree byte for
+    byte, so the helper can recompute this digest from the release tree alone.
+    """
     digest = hashlib.sha256()
     for deploy_name, source_name in assets:
-        source = source_dir / source_name
+        source = _asset_source(source_dir, source_name)
         try:
             digest.update(deploy_name.encode("utf-8"))
             digest.update(b"\0")
@@ -896,12 +931,20 @@ def _kickstart(label: str, *, kill: bool = False) -> dict:
 
 def coordinate_runtime(*, expected_oid: str | None = None,
                        timeout: int = RUNTIME_CONVERGENCE_TIMEOUT_SECONDS,
-                       poll: int = RUNTIME_CONVERGENCE_POLL_SECONDS) -> dict:
+                       poll: int = RUNTIME_CONVERGENCE_POLL_SECONDS,
+                       accept_unidentified_runtime: bool = False,
+                       previous_pid: int | None = None) -> dict:
     """让运行中的 live server 重新绑定到新 release, 并验收收敛。
 
     1. kick 采集器刷新作业 —— 让投影 revision 重新发布成绑定新 release 的身份;
     2. kick -k live server —— 让它重新 resolve() 到新 release;
     3. 轮询 /health 直到 code_drift == false 且绑定 oid == 期望 oid。
+
+    `accept_unidentified_runtime` 是旧代运行期的降级判据: 运行期不报告身份时,
+    收敛只验到「服务可用且进程确实重启过」这一层
+    (criterion=service_available_only), 降级必须显式标注, 不得伪装成身份收敛。
+    `previous_pid` 是切换前的进程号 —— 降级判据用它证明「进程随迁移重启过」,
+    否则「重启没生效、旧进程仍在服务」会被当成收敛。
     """
     steps: list[dict] = []
     if _launchd_job_loaded(REFRESH_LAUNCH_AGENT_LABEL):
@@ -918,14 +961,27 @@ def coordinate_runtime(*, expected_oid: str | None = None,
                     "pid": payload.get("pid")}
         samples.append(observed)
         last = observed
-        if (status == 200 and observed["code_drift"] is False
-                and (expected_oid is None or observed["dashboard_code_oid"] == expected_oid)):
-            return {"ok": True, "converged": True, "steps": steps, "last": observed,
-                    "samples": samples}
+        identified = isinstance(observed["dashboard_code_oid"], str)
+        if accept_unidentified_runtime and not identified:
+            criterion = "service_available_only"
+            healthy = observed["code_drift"] is not True
+            restarted = (previous_pid is None
+                         or (observed["pid"] is not None
+                             and observed["pid"] != previous_pid))
+            satisfied = restarted
+        else:
+            criterion = "identity_bound"
+            healthy = observed["code_drift"] is False
+            satisfied = (expected_oid is None
+                         or observed["dashboard_code_oid"] == expected_oid)
+        if status == 200 and healthy and satisfied:
+            return {"ok": True, "converged": True, "criterion": criterion, "steps": steps,
+                    "last": observed, "samples": samples}
         if time.monotonic() >= deadline:
             break
         time.sleep(max(poll, 0))
-    return {"ok": False, "converged": False, "steps": steps, "last": last, "samples": samples}
+    return {"ok": False, "converged": False, "criterion": "identity_bound", "steps": steps,
+            "last": last, "samples": samples}
 
 
 def publish(files: list[str] | tuple[str, ...] | None, *, publication_id: str | None = None) -> dict:
@@ -1113,7 +1169,10 @@ def migrate() -> dict:
     current_entry = registration["entrypoint"]
     if (CURRENT_LINK.is_symlink()
             and _resolved(Path(current_entry)) == _resolved(CURRENT_ENTRYPOINT)):
-        return {"ok": True, "already_migrated": True, "entrypoint": current_entry}
+        if release_identity_of(CURRENT_LINK.resolve()).get("ok"):
+            return {"ok": True, "already_migrated": True, "entrypoint": current_entry}
+        # current 指向的 release 运行期绑不了 (旧形态基线: 无身份 helper / 无内容
+        # 寻址身份) ⇒ 不能就此收工: 继续重建一个可绑定的基线。
     plist_path = _resolved(LAUNCH_AGENT_PLIST)
     backup = plist_path.with_suffix(".plist.bak")
     try:
@@ -1170,6 +1229,12 @@ def migrate() -> dict:
         return rollback("baseline_runtime_tree_unsafe")
     if not assets:
         return rollback("baseline_no_deployed_files")
+    # 基线必须自带身份 helper —— 否则采集器与 live server 连「这个 release 是谁」
+    # 都读不出来 (部署根里本来就没有这个文件)。
+    identity_asset = HOST_DIR / f"{BASELINE_IDENTITY_ASSET}.asset"
+    if identity_asset.is_symlink() or not identity_asset.is_file():
+        return rollback("baseline_identity_helper_missing", detail=str(identity_asset))
+    assets = tuple(sorted(assets + ((BASELINE_IDENTITY_ASSET, str(identity_asset)),)))
     baseline = _baseline_version_id(assets, DASHBOARD_DIR)
     if baseline is None:
         return rollback("baseline_source_unreadable")
@@ -1179,7 +1244,21 @@ def migrate() -> dict:
     if not prepared.get("ok"):
         return rollback(prepared["reason"], detail=prepared.get("detail"),
                         version_dir=version_dir, version_existed=version_existed)
-    switched = _switch_current(Path(prepared["version_dir"]))
+    candidate = Path(prepared["version_dir"])
+    # 切换前证明基线可被运行期绑定 —— 绑不了的 release 一旦被 current 指到,
+    # 采集器与 live server 都会拒绝它 ⇒ 迁移不得激活它。
+    candidate_identity = release_identity_of(candidate)
+    if not candidate_identity.get("ok"):
+        return rollback("baseline_release_unbindable", detail=candidate_identity.get("reason"),
+                        version_dir=version_dir, version_existed=version_existed)
+    runtime_state = _running_registered_runtime()
+    snapshot = runtime_binding_snapshot(expected_pid=runtime_state.get("pid"))
+    binding = check_runtime_binding(candidate, snapshot)
+    if (binding.get("checked") and not binding.get("ok")
+            and not _runtime_coordination_available()):
+        return rollback("runtime_coordination_unavailable", runtime=binding,
+                        version_dir=version_dir, version_existed=version_existed)
+    switched = _switch_current(candidate)
     if not switched.get("ok"):
         return rollback(switched["reason"], detail=switched.get("detail"),
                         version_dir=version_dir, version_existed=version_existed)
@@ -1214,9 +1293,24 @@ def migrate() -> dict:
     if not migrated.get("ok") or RELEASES_DIR not in Path(migrated["entrypoint"]).parents:
         return rollback("migrate_verify_failed", runtime=migrated, version_dir=version_dir,
                         version_existed=version_existed)
+    # 切换之后收敛运行期 —— 与 publish() / restore() 同一契约: 迁移不得把宿主
+    # 留在「指针已换、运行期未跟上」的状态。
+    convergence = coordinate_runtime(expected_oid=candidate_identity.get("code_oid"),
+                                     timeout=RUNTIME_CONVERGENCE_TIMEOUT_SECONDS,
+                                     poll=RUNTIME_CONVERGENCE_POLL_SECONDS,
+                                     accept_unidentified_runtime=True,
+                                     previous_pid=snapshot.get("pid"))
+    runtime = {"checked": binding.get("checked"), "reason": binding.get("reason"),
+               "coordinated": True, "converged": convergence.get("converged"),
+               "criterion": convergence.get("criterion"),
+               "steps": convergence.get("steps"), "last": convergence.get("last"),
+               "identity": candidate_identity}
+    if not convergence.get("converged"):
+        return rollback("runtime_convergence_failed", runtime=runtime, version_dir=version_dir,
+                        version_existed=version_existed)
     return {
         "ok": True, "baseline_version": baseline, "entrypoint": str(CURRENT_ENTRYPOINT),
-        "backup": str(backup), "write_performed": True,
+        "backup": str(backup), "write_performed": True, "runtime": runtime,
     }
 
 
