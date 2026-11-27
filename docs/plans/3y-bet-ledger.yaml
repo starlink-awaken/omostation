@@ -48733,6 +48733,10 @@ bets:
   non_goals:
   - 不动 T356/357 已 merge 的代码面 (只翻台账状态)。
   - 不重跑 cron (首跑是自动调度, 本 BET 只收证据)。
+  done_when:
+  - T356/T357 status 为 done 且 done_at 为 2026-11-27
+  - 台账 YAML 解析通过; bet-ledger lint 对 T356/357/360 零 error
+  - pitfall 条目在档 (rg 「无进程 ≠ 无会话」 命中)
   verify:
   - cmd: python3 -c "import yaml; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'))"
     expect: YAML 解析通过。
@@ -49444,6 +49448,10 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-361
   non_goals:
   - 不动 T360 及此前任何已 merge 条目内容 (只追加新条目)。
+  done_when:
+  - 两条 pitfall 在档 (rg 「大 YAML 局部手术」 与 「已修复三连闸」 均命中)
+  - 台账 YAML 解析通过; T361 条目 digest 格式合法 (sha256:64hex)
+  - 全台账 digest 全表扫描零非法 (手术纪律自我践行)
   verify:
   - cmd: python3 -c "import yaml; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'))"
     expect: YAML 解析通过。
@@ -49585,7 +49593,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 610
+  total_bets: 611
   windows:
   - Y1Q1
   - Y1Q2
