@@ -49334,7 +49334,8 @@ bets:
     投影停更, live server CODE_DRIFT, 静态资源 503。 根因是半边契约 —— 采集器自校验要求「正在执行的字节 == 生产者代码根 HEAD
     的采集器字节」, 而发布器只校验「发布字节 == 仓库资产字节」。本轮把这条前置条件机器化 —— publish 在切换 current 之前校验待发布采集器字节与生产者代码根
     HEAD 绑定, 不满足则拒绝发布并给出「先重锚 code-main, 再发布资产」的处置顺序; 绑定不可验证时跳过而不阻断。
-  status: in_progress
+  status: done
+  done_at: '2026-11-27'
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -49380,15 +49381,38 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@e85525788d4f0480b923ce26a68f1d6ea22eea09
+          tests:
+            ref: repo://docs/reports/2026-11-27-t10-365-publish-producer-binding-closeout.md
+            sha256: sha256:f1472777b6e5f6402f2e39a2a2c7f01a7c36797aa45ebfdff9682c3a23e49921
+          diff:
+            ref: repo://docs/reports/2026-11-27-t10-365-publish-producer-binding-closeout.md
+            sha256: sha256:f1472777b6e5f6402f2e39a2a2c7f01a7c36797aa45ebfdff9682c3a23e49921
+          rollback:
+            ref: repo://docs/reports/2026-11-27-t10-365-publish-producer-binding-closeout.md
+            sha256: sha256:f1472777b6e5f6402f2e39a2a2c7f01a7c36797aa45ebfdff9682c3a23e49921
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: repo://docs/reports/2026-11-27-t10-365-publish-producer-binding-closeout.md
+            sha256: sha256:f1472777b6e5f6402f2e39a2a2c7f01a7c36797aa45ebfdff9682c3a23e49921
+          fresh_receipt:
+            ref: repo://docs/reports/2026-11-27-t10-365-publish-producer-binding-closeout.md
+            sha256: sha256:f1472777b6e5f6402f2e39a2a2c7f01a7c36797aa45ebfdff9682c3a23e49921
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-365.md
+            sha256: sha256:9e31c70d1de5db3f00b838c44ad9d7cfd6c72ebbb56a7507a6db07a69833e83e
+          cleanup:
+            ref: repo://docs/reports/2026-11-27-t10-365-publish-producer-binding-closeout.md
+            sha256: sha256:f1472777b6e5f6402f2e39a2a2c7f01a7c36797aa45ebfdff9682c3a23e49921
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
