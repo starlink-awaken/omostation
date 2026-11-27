@@ -46165,7 +46165,7 @@ bets:
       value:
         status: NOT_PROVEN
         evidence:
-          note: 当前只完成 Phase 0 发现与 Phase 1 阻断/提案登记，未宣称节点已接入。
+          note: "价值轴 NOT_PROVEN：Phase 0 事实矩阵已入库，Phase 1 五条变更申请已于 2026-11-25 获 principal 逐条授权（CR-1 纳管 / CR-2 绑 tailscale0 / CR-3 rootless 迁移 / CR-5 受限作业面授权执行；CR-4 节点入登记面按约定由 Agent 自主执行并已落盘）。value_indicator_policy 显式 false，与同族治理类 BET 同判——节点尚未接入，无可度量业务收益。Phase 2 四条远端腿（CR-1/2/3/5）自 2026-11-25 起即以节点恢复可达为执行前提；2026-11-28 可达性回读（reports/COMPUTE-I9-01-PHASE0-PHASE1-20261029.md §6）证实节点物理关机：tailnet 控制面 Online=false 且 LastSeen 2026-11-11T08:00:22Z、fleet-ops 告警 firing、lab 网段内 ARP 状态 FAILED 且 22/8080 端口无应答。bot-01 中继 SSH 超时、unit-ops-01 中继因 fleet-ops wol.py:54-63 多行片段换行被远端 shell 拆分而未真正发包、手工单行中继确证已发包仍 FAILED、本机定向广播绑 192.168.77.2 亦未唤醒，8 轮 15 秒 ARP 轮询均未恢复，故判该机型 WoL 无效（其 BIOS/NIC WoL 状态从未被验证，fleet-ops 只验证过 8 台 bot 主机）。因此 Phase 2 未开始、Phase 3 八项回执中七项被物理前置阻断、闸 2（Golden Slice 人工验收）未打开；本 BET 保持 in_progress / evaluating，解锁需一次人工物理开机（或 IPMI / 智能插座）并确认 BIOS Wake-on-LAN 已启用。本轮未执行任何真实部署或迁移。"
     overall_state: evaluating
 - id: BET-Y2Q4-T10-280
   done_at: 2026-11-02T07:51:00Z
