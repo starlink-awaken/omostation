@@ -1,0 +1,65 @@
+id: COCKPIT-TOPOLOGY-OVERVIEW-MCP-TOOLS-BASELINE-RED
+title: cockpit test_overview 断言 total_mcp_tools>=400 而实测 208 —— 潜伏基线红, 任何触碰 projects/cockpit
+  的 PR 都被 cascading-test 挡
+dimension: governance
+subdimension: gate
+domain: workspace
+scope: workspace
+severity: high
+weight: 0.1
+entropy_class: medium
+lifecycle_state: closed
+owner: governance-team
+affected_roots:
+- projects/cockpit/src/cockpit/observatory/topology_engine.py
+- projects/cockpit/tests/test_topology_engine.py
+- .github/workflows/cascading-test.yml
+evidence_refs:
+- projects/cockpit/tests/test_topology_engine.py
+- projects/cockpit/src/cockpit/observatory/topology_engine.py
+- .github/workflows/cascading-test.yml
+mitigation_refs: []
+opened_at: '2026-11-27T00:40:00+00:00'
+last_reviewed_at: '2026-11-27'
+next_review_at: '2026-12-27'
+gate_level: none
+description: "`projects/cockpit` 的 `tests/test_topology_engine.py::TestTopologyEngine::test_overview`\
+  \ 断言 `ov[\"total_mcp_tools\"] >= 400`, 但**当前实测 208**, 且这与调用方的改动无关 —— 这是一条**潜伏基线红**:\
+  \ 只要某个 PR 直接改了 `projects/cockpit`(哪怕只是 gitlink bump), `cascading-test.yml` 的「只直接改动的项目拥有阻断性测试」规则就会跑到它并当场失败。\n\
+  一手读数 (2026-11-26, ws-docfresh, 全量子模块检出, 复刻 CI 环境变量 `HOME/XDG_*`): `cd projects/cockpit\
+  \ && uv sync --quiet && uv run pytest tests/test_topology_engine.py -q` ⇒ `AssertionError:\
+  \ 208 not greater than or equal to 400` (1 failed, 7 passed)。 逐项目贡献 (`get_projects()`):\
+  \ kairon 110(走 project-registry 特殊路径)、agora 42、 cockpit 23、omo 12、metaos 11、runtime\
+  \ 10, 其余为 0, 合计 **208**。\n**与调用方改动无关的判据 (输入同一性)**: `TopologyEngine` 只读五类输入 —— `docs/project-registry.yaml`、`projects/*/INTERFACE.yaml`(+`projects/knowledge/*`)、\
+  \ `projects/*/CALLCHAIN.md`、`projects/agora/etc/bos-services.yaml`、 `protocols/port-registry.yaml`。逐一比对\
+  \ `origin/main...分支`: - 父仓侧四份**逐字节未变**; - 16 个被 bump 的子模块里, `INTERFACE.yaml` / `CALLCHAIN.md`\
+  \ **无一变化**\n  (`git -C <sub> diff --name-only <old> <new>` 过滤后为空)。\n⇒ 同一份输入在主树上必然算出同一个\
+  \ 208。**不是本 PR 引入, 也不能靠改调用方消除。**\n同批观察: `cascading-test.yml` 自己的注释已承认「transitive\
+  \ 项目可能有无关的基线/环境失败」, 但**直接改动**的项目没有豁免通道 —— 于是这条基线红成了 cockpit 类改动的常驻路障 (2026-11-26\
+  \ 之前, 只有真的动到 projects/cockpit 的分支才会踩到, 所以长期潜伏)。"
+decision_needed: "两条路都需 owner 裁决, 不要擅自选:\n1. **改数据/修引擎**（若是漏统）：把 `total_mcp_tools`\
+  \ 补到真实应有的规模。需要回答\n   「400 这个数当初是按什么口径定的」—— 各 `INTERFACE.yaml` 的 `mcp.tools` 直接相加只有\n\
+  \   98, kairon 的 110 来自 `project-registry.yaml` 的特殊路径; 其余项目 (ecos/l4-kernel/\n \
+  \  gbrain/omlxc/model-driven/domain-cartridges) 一律 0。若它们确实有 MCP 服务而未登记,\n   应补登记而不是抬断言。\n\
+  2. **改断言/给豁免**（若阈值已陈旧）：把 400 调到与现状相符的数, 或给 cascading-test\n   加一条「已知基线红」豁免名单。**直接把断言改小属掩蔽**,\
+  \ 必须先有口径结论。\n\n在裁决前, 任何需要动 `projects/cockpit` 的交付都会被这条红挡住（本轮 project-entry frontmatter\
+  \ 清偿就卡在这里: 15/16 仓可走, cockpit 的 6 份待裁决）。"
+history:
+- at: '2026-11-27T00:40:00+00:00'
+  action: register
+  note: 'Registered debt item COCKPIT-TOPOLOGY-OVERVIEW-MCP-TOOLS-BASELINE-RED. 触发:
+    PR #5638 (project-entry frontmatter 清偿) 的 cascading_test 红在 `test_topology_engine.py::test_overview`;
+    复核确认与调用方改动无关 (五类输入逐字节相同)。'
+  actor: governance-agent
+- at: '2026-11-27T03:00:31.548265+00:00'
+  action: close
+  note: 引擎读数改取权威源 capability-registry 后 total_mcp_tools 208 -> 643, test_overview
+    转绿; 根因是手工聚合面陈旧不全。
+  actor: governance-agent
+closed_at: '2026-11-27T03:00:31.548116+00:00'
+close_reason: 引擎读数改取权威源 capability-registry 后 total_mcp_tools 208 -> 643, test_overview
+  转绿; 根因是手工聚合面陈旧不全。
+resolution_evidence: '2026-11-27 修复: projects/cockpit src/cockpit/observatory/topology_engine.py
+  的 overview 总数优先取 docs/generated/capability-registry.yaml 的 totals.mcp_tools (权威生成物,
+  27 服务/643 工具), 缺席或非 int 时退回原手工聚合。同批补 TestTotalMcpToolsSource 三条判据 (有权威源采用/无源退回/非
+  int 不采信), 变异对照已验。改动经 omostation-cockpit main e18de5c 推送, 父仓 pin 99aa4e5db 跟上。'

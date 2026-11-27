@@ -239,6 +239,11 @@ warning_exceptions:
   # 更新 last-reviewed（2026-07-31 → 2026-11-09），命中 2 → 0，该预算不再压制任何现存告警；
   # 留着它反而制造 2026-11-30 的集体过期炸点（expires 一到即 expired_warning_exception error）。
   # 其余条目 max_findings 与 expires 一字未动（窗口 2027-01-31 由 #4995 定下）。
+  # 2026-11-27 收尾：projects/cockpit 的 pin 跟到 e18de5c（其 main 含 6 份入口文档的
+  # frontmatter 补齐 + total_mcp_tools 取权威源的修复）后，`--scope workspace` 实测
+  # missing_frontmatter:project-entry **= 0**。该桶自此无任何现存告警 ⇒ 按 shrink_only
+  # 惯例删除 legacy-project-entry-frontmatter 条目（留着只会压制未来新增的不合规入口
+  # 文档）。剩余项目入口读数只有 stale_review:project-entry = 5（预算 60，属真复审范畴）。
   # 2026-11-27：stale_review 判定改为**豁免 `lifecycle: history`**（bin/ssot/doc-governance-check.py）。
   # 触发：18 份 .omo/_truth/governance-evidence/waiver-*.md（last-reviewed 2026-08-28，schema
   # workflow-waiver/v1）**同日**越过 90 天 SLA，把 main 的 gac-gate（必需检查）打红。给冻结的
@@ -298,76 +303,6 @@ warning_exceptions:
       expires: 2027-01-31
       owner: governance-team
       reason: Newly created specs may have last-reviewed set to creation date which CI flags as future-dated.
-    - id: legacy-project-entry-frontmatter
-      rule: missing_frontmatter
-      surface: project-entry
-      max_findings: 10  # 2026-11-27 130→10: 15/16 仓清偿后实测仅剩 6 (全在 projects/cockpit), 余量 4
-      # auto-bumped to 130 on 2026-11-26; tightened to 10 on 2026-11-27
-      expires: 2027-03-31
-      owner: governance-team
-      reason: |
-        2026-11-09 激活 project-entry 的 90 天 SLA 时实测的存量债务 (本 surface 此前是
-        metadata: external, 全部 metadata 校验被静默跳过, 故这批缺口不可见)。
-
-        实测读数 (2026-11-09, 主检出 + 其 pin 的子模块): 本 surface 覆盖 70 份文档,
-        分布在 18 个子模块仓; 完全合规仅 2 份。缺口分布:
-          - 68 份缺 status + lifecycle (1 finding/份)
-          - 其中 3 份 (cockpit-ui 的 AGENTS/ARCHITECTURE/BOUNDARY) 完全没有 frontmatter
-            (2 findings/份)
-        ⇒ missing_frontmatter:project-entry 实测 71 条; 本预算 max_findings 取 80 (含 9 条余量,
-        与 legacy-omo-knowledge-frontmatter 的 actual=117/max=120 同口径)。
-
-        stale_review:project-entry 实测 **0** 命中 (2026-11-09 当天) —— 但那是**当天**的读数,
-        不是"不会到期": 56 份带 last-reviewed 的文档里, 2 份 (2026-08-26) 将在 **2026-11-25**
-        越界、1 份 (2026-09-04) 在 12-04、53 份 (2026-09-18) 在 **12-18 集体越界**。
-        故本条只覆盖 missing_frontmatter 一个桶, 陈旧的 freshness 桶由
-        legacy-project-entry-stale-review 单独覆盖。
-
-        max_findings 是**界**不是豁免: 新增不合规的项目入口文档会当场把它顶穿。
-
-        2026-11-27 部分清偿: aetherforge / agora(含内部嵌套两处) / bus-foundation /
-        cockpit-ui / ecos / family-hub / gbrain / kairon / l4-kernel / metaos /
-        model-driven / observability / omlxc / omo / runtime 共 15 条 pin 已跟到各自主干
-        新 tip (91 份文件补齐 status/lifecycle), 实测本桶 **113 → 6**, 故 max 130 → 10。
-        **剩余 6 份全在 `projects/cockpit`**: 该仓的 pin 暂未 bump, 因为它会触发
-        `cascading-test` 的一条**与本次改动无关的潜伏基线红**
-        (`test_topology_engine.py::test_overview`: total_mcp_tools 实测 208, 断言 >=400;
-        引擎五类输入在本分支与 main 间逐字节相同), 已立案
-        COCKPIT-TOPOLOGY-OVERVIEW-MCP-TOOLS-BASELINE-RED 待裁决。cockpit 落地后
-        本条即可删除 (shrink_only)。
-        清偿路径 = 逐批修子模块文档 (每个仓 commit + push + 父仓 gitlink bump),
-        修一批计数就降一批; 修完即可删本条 (shrink_only 方向)。
-        expires 取 2027-03-31 而非其他 legacy 条的 2027-01-31, 因为清偿要跨 18 个
-        独立子模块仓、每仓一次三步提交, 比仓内文档改动的窗口天然更长。
-
-        2026-11-26 复测: CI 口径读数 **113** (本地全量递归检出 + `--scope workspace`,
-        与 schedule CI 的 113 逐字一致; files_scanned=5981, errors=1/warnings=129),
-        越过 max 80。
-
-        **订正 (同日, 复核后)**: 先前此处写"在 2026-11-09 的 71 之上 17 天 +42 (≈2.5/天)",
-        该结论**不成立**。用 2026-11-09 那次的同一种口径 (非递归 `ls-tree <ref> projects/`
-        + 每 repo 五个文件名) 分别量 2026-11-09 的 pin 与今天的 pin: 两边都是
-        **68 份文档 / 71 findings**; 宽口径 (递归 gitlink + 全命中路径) 两边同为
-        **97 份 / 101 findings**。⇒ **17 天零增长**, 71→113 来自**测量口径变宽**
-        (CI 的 `--scope workspace` 走文件系统, 覆盖嵌套 gitlink —— 如
-        `projects/agora/projects/{aetherforge,l4-kernel}` 的 13 份 —— 以及
-        `projects/*/docs/ARCHITECTURE.md` 这类路径; 而非递归 `ls-tree` 不会进入
-        子模块内部, 看不见那里的 gitlink)。
-
-        缺口形状 (109 份文档 / 113 findings): 86 份只缺 status+lifecycle、11 份缺
-        last-reviewed+status+lifecycle、8 份缺 lifecycle+owner、4 份完全无 frontmatter。
-        缺的是**两个 enum 字段**而不是没被治理过 —— lifecycle 对 project-entry 由 surface
-        固定为 `entry`, status 的既有约定是 `active` (根 AGENTS/CLAUDE/ARCHITECTURE 均如此)。
-
-        本轮 max 80 → 130 (auto-bump, circuit_breaker +50 上限; 113 + 17 余量)。
-        既然不是增长而是存量, 这个余量不需要按增速折算 —— 它是**存量债的界**, 只有真的
-        新增不合规项目入口文档才会顶穿。**这不是转向宽松**: 清偿路径仍是逐批补子模块文档
-        (机械部分 = 插两行 enum), 但那是跨 16 个 gitlink 的三步提交, 不应塞进一个 CI 修复轮;
-        已另登记债务条目 (含"是否需要预防机制"的实证结论: 600 个历史提交里 0 次由
-        bump 引入新缺口)。
-
-        另记一条可见性不对称: doc-freshness job 带 `if: github.event_name == 'schedule'`,
-        所以同一 head 上 push run 全绿、只有 schedule run 红 —— 这是本条长期未被发现的原因。
     - id: legacy-project-entry-stale-review
       rule: stale_review
       surface: project-entry
