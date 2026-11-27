@@ -48666,6 +48666,50 @@ bets:
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
+- id: BET-Y2Q4-T10-360
+  title: BET-Y2Q4-T10-360 cron 首跑 canary 收口 —— T356/357 done-transition 入账 + 「无进程 ≠ 无会话」pitfall 立条
+  goal: >-
+    断根战役收官章: T356/T357 交付时 operational 轴诚实停在 NOT_PROVEN
+    (done 门要求 canary), 2026-11-27 首夜双绿 (capability 04:06 / mcptool
+    05:46 首跑「产物无漂移, 跳过发布」, 主仓工作区零污染 —— 断根核心承诺
+    兑现) 后翻 PROVEN 入账。canary 证据回执落
+    docs/reports/2026-11-27-cron-canary-first-run-receipt.md。顺带: 立条
+    昨晚让行教训「无进程 ≠ 无会话」(T355 done-transition 撞车复盘:
+    以「全机无进程 + 事件面冻结 2.5h」判孤儿工单误杀并发会话, agent 会话
+    无常驻进程可观察, 冻结时长须按会话量级放宽)。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P3
+  appetite: 30 minutes
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+  - docs/pitfalls.md
+  - AGENTS.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-27-cron-canary-closeout-bet-t10-360.md
+    spec_version: 1.0.0
+    content_digest: sha256:c7fc192d599cd9e882f6e1531aa927e98373f8acf155dc03b855dc22e0415a1d
+    decision_ref: decision://accepted/BET-Y2Q4-T10-360
+  non_goals:
+  - 不动 T356/357 已 merge 的代码面 (只翻台账状态)。
+  - 不重跑 cron (首跑是自动调度, 本 BET 只收证据)。
+  verify:
+  - cmd: python3 -c "import yaml; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'))"
+    expect: YAML 解析通过。
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: T356/357/360 无红。
+  circuit_breaker: >-
+    若 lint 对 canary 回执 ref 或矩阵形态报错, 修格式不动结论。
 - id: BET-Y2Q4-T10-359
   title: BET-Y2Q4-T10-359 现实对账第一批 —— resident 三条 sync-reality + fullrefresh 复活 + god-module/全景残债双立案
   goal: >-
@@ -48820,7 +48864,8 @@ bets:
   - crontab mcptool 新链装载且旧直提行被替换
   - mcptool 05:45 首跑 canary 通过
 
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48862,7 +48907,7 @@ bets:
     (crontab-bak-20261126.txt) 并回退本 PR。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
+    overall_state: delivery_accepted  # 派生态: eng VERIFIED + oper PROVEN (canary 回执 2026-11-27) + value NOT_PROVEN  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
     axes:
       engineering:
         status: VERIFIED
@@ -48876,8 +48921,16 @@ bets:
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-357.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          replay:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -48897,7 +48950,8 @@ bets:
   - crontab capability 新链装载且旧直提行消亡
   - capability 04:05 首跑 canary 通过
 
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48934,7 +48988,7 @@ bets:
     停止并回报 owner 处理 cron 环境; 主仓工作区出现任何污染立即回退。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
+    overall_state: delivery_accepted  # 派生态: eng VERIFIED + oper PROVEN (canary 回执 2026-11-27) + value NOT_PROVEN  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
     axes:
       engineering:
         status: VERIFIED
@@ -48948,8 +49002,16 @@ bets:
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-356.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          replay:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -49284,7 +49346,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 607
+  total_bets: 608
   windows:
   - Y1Q1
   - Y1Q2
