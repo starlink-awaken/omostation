@@ -294,6 +294,9 @@ goal-mode-test:  ## Goal 模式全流程测试
 
 # ── 🧪 测试与代码质量 (Test Suites & QA) ───────────────────────────────────────
 
+test-full-chain:  ## 运行 omostation 六大核心链路端到端自动化测试
+	bash tests/integration/test-full-chain-suite.sh
+
 test-all:  ## 触发全仓拓扑级联测试
 	@echo "── 全仓受影响项目级联测试 ────────────────────────────"
 	@$(PYTHON) bin/gac/affected-graph.py --changed-projects omlxc,aetherforge,cockpit --json
