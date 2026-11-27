@@ -557,18 +557,29 @@ def gen_cli_reference(reg: dict, frontmatter: str = "") -> tuple[str, dict[str, 
 # ── INDEX-MCP.md ───────────────────────────────────────────────
 
 
-def gen_mcp_index(reg: dict) -> str:
+def gen_mcp_index(reg: dict, existing_frontmatter: str = "") -> str:
+    """生成 docs/INDEX-MCP.md。
+
+    frontmatter 沿用文件里已有的那份（与 gen_cli_reference 同口径）：生成器不得
+    改写人工维护的 `last-reviewed` —— 旧实现硬编码 `2026-09-24`, 每次再生成都会
+    把它回退, 而 pre-commit 的 sync-check 正好会在每次 gitlink bump 后触发再生成
+    (2026-11-27 实测: 提交前 Diff 里出现 last-reviewed 2026-11-03 → 2026-09-24)。
+    """
+    if not existing_frontmatter:
+        existing_frontmatter = (
+            "---\n"
+            "status: active\n"
+            "lifecycle: generated\n"
+            "owner: governance-team\n"
+            "last-reviewed: 2026-09-24\n"
+            "---\n\n"
+        )
     lines = [
-        "---",
-        "status: active",
-        "lifecycle: generated",
-        "owner: governance-team",
-        "last-reviewed: 2026-09-24",
-        "---",
+        existing_frontmatter.rstrip("\n"),
         "",
         "# MCP 服务器索引",
         "",
-        f"> 自动生成于 {reg['generated_at']}",
+        f"> 生成时间戳: {reg['generated_at']}（哨兵值, ADR-0373: 不写 now() 以保持 git diff 漂移检查有效）",
         "> 源: `docs/generated/capability-registry.yaml`",
         "",
         f"全生态共 **{reg['totals']['mcp_servers']}** 个 MCP 服务器, **{reg['totals']['mcp_tools']}** 个工具。",
@@ -593,7 +604,9 @@ def gen_mcp_index(reg: dict) -> str:
         tool_list = ", ".join(f"`{t}`" for t in srv["tools"])
         lines.append(tool_list)
         lines.append("")
-    lines.append(f"*由 `bin/ssot/gen-help-docs.py` 于 {reg['generated_at']} 生成*")
+    lines.append(
+        f"*由 `bin/ssot/gen-help-docs.py` 生成; 时间戳字段为 {reg['generated_at']}（哨兵, 见 ADR-0373）*"
+    )
     return "\n".join(lines)
 
 
@@ -602,10 +615,11 @@ def main() -> int:
 
     cli_ref_path = WORKSPACE / "docs" / "CLI-REFERENCE.md"
     index_content, cli_details = gen_cli_reference(reg, _extract_frontmatter(cli_ref_path))
+    mcp_index_path = WORKSPACE / "docs" / "INDEX-MCP.md"
     outputs = {
         WORKSPACE / "projects" / "cockpit" / "CAPABILITY-MAP.md": gen_capability_map(reg),
         cli_ref_path: index_content,
-        WORKSPACE / "docs" / "INDEX-MCP.md": gen_mcp_index(reg),
+        mcp_index_path: gen_mcp_index(reg, _extract_frontmatter(mcp_index_path)),
     }
     cli_dir = WORKSPACE / "docs" / "cli"
     for slug, content in cli_details.items():
