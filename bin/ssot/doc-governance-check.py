@@ -885,18 +885,23 @@ def check_file(
                     )
                 )
             elif reviewed_date and (today - reviewed_date).days > int(surface.get("review_days", 0)):
-                findings.append(
-                    _finding(
-                        path=rel,
-                        rule="stale_review",
-                        surface=surface,
-                        severity=_severity(registry, "stale_review", surface),
-                        workflow=workflow,
-                        evidence=f"age={(today - reviewed_date).days}d threshold={surface.get('review_days')}d",
-                        message="document review date is outside the registered SLA",
-                        line=1,
+                # `lifecycle: history` 是冻结的历史记录 (如 workflow-waiver 证据):
+                # 给它们套 90 天**复审** SLA 是自相矛盾的 —— 内容不再变更, 周期戳只会
+                # 像日期农场一样集体越界。2026-11-27 实证: 18 份 governance-evidence
+                # waiver 同日越过 90 天, 把 main 的 gac-gate (必需检查) 打红。
+                if str((metadata or {}).get("lifecycle", "")) != "history":
+                    findings.append(
+                        _finding(
+                            path=rel,
+                            rule="stale_review",
+                            surface=surface,
+                            severity=_severity(registry, "stale_review", surface),
+                            workflow=workflow,
+                            evidence=f"age={(today - reviewed_date).days}d threshold={surface.get('review_days')}d",
+                            message="document review date is outside the registered SLA",
+                            line=1,
+                        )
                     )
-                )
 
     discoverability = surface.get("discoverability")
     if discoverability:
