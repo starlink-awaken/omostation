@@ -415,6 +415,26 @@ jobs:
           # ci-check-runner 经 ci-surfaces 登记项 bin-ssot-check-interfaces-py 承接。
           python3 bin/ssot/doc-governance-check.py --scope workspace --no-new-warnings --json
 
+  # 入口文档的事实性断言核对 (死链 / 失效相对路径 / 未登记 BOS URI)。
+  # advisory: continue-on-error, 只报告不阻断; 与 doc-freshness 同口径只在
+  # schedule/manual 跑 —— 每个 PR 都跑全量子模块扫描属净增成本。
+  doc-claims:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.CROSS_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pyyaml
+        run: pip install pyyaml
+      - name: Audit project-entry doc claims
+        run: python3 bin/ssot/check-entry-doc-claims.py --json
+
   # 2026-08-26: bet-done-transition 拆至独立 workflow bet-done-gate.yml —
   # 本 workflow 的 path 过滤使 required check 在非匹配路径 PR 上永久悬空
   # (#2197), 独立必跑 workflow 根治。job 名不变, branch protection 无需改动。
