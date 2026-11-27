@@ -4,7 +4,7 @@ status: active
 lifecycle: history
 type: change-request
 owner: governance-team
-last-reviewed: 2026-11-06
+last-reviewed: 2026-11-27
 bet_id: BET-Y2Q4-T10-279
 created: 2026-11-06
 ---
@@ -137,4 +137,65 @@ created: 2026-11-06
   恢复路径），进 Phase 3 八项验证面。
 - **闸 2（Golden Slice 人工验收）未因此次授权打开**：`BET-Y2Q4-T10-279` 保持
   `in_progress`，Phase 3 收口仍需 principal 人工验收。
+
+## 6. 节点可达性回读与唤醒尝试（2026-11-28）
+
+> 目的：把 §5「节点恢复可达」这个前置条件的**当前真实状态**写进仓内可复核的证据面，
+> 并明确「哪些腿 Agent 已经做完、哪一条腿物理上做不了」。
+> 本节只做只读探测 + 唤醒尝试，**不部署任何远端服务、不改任何远端配置**。
+
+### 6.1 读数
+
+| 面 | 观测点 | 读数 | 含义 |
+|----|--------|------|------|
+| tailnet 控制面 | 本机 `tailscale status --json` | peer `compute-i9-01` / `unit-node-04` / `100.99.19.109`，`Online: false`，`LastSeen: 2026-11-11T08:00:22.1Z` | 控制面认为已离线 16 天 |
+| fleet-ops 运行态 | `~/.local/state/fleet-ops/state.json` | `compute-i9-01` = `down`，reason `ssh: connect to host 100.99.19.109 port 22: Operation timed out`，`fails: 4267`，`observed_at: 2026-11-27T23:36:01Z` | 连续失败 4267 次 |
+| fleet-ops 告警 | `~/.local/state/fleet-ops/alerts.json` → `compute-i9-01/reach` | `status: firing`，`first_ts: 2026-11-11T10:44:50Z`，`count: 4266`，severity `warn` | 告警自 11-11 起持续 firing |
+| lab 网段 L2 | lab 段内主机 `unit-ops-01`（192.168.77.31） | `ip neigh show 192.168.77.109` → `FAILED`；`ip route get` → `dev enp170s0` | **二层邻居解析失败** ⇒ 机器不响应 ARP |
+| lab 网段 L3 | 本机 `nc -z 192.168.77.109 22 / 8080` | 均 closed/timeout；本机 `arp -an` 无该 IP 表项 | 无 TCP 端口、无 ARP 表项 |
+| tailnet L3 | 本机 `ping 100.99.19.109` | 2 发 0 收，100% 丢包 | 不可达 |
+
+判读：`FAILED` 的 ARP 邻居项 + 两条通道同时无响应，指向**机器处于下电或网卡链路未起**，
+而不是防火墙/服务未监听/权限问题——服务未监听时 ARP 仍会解析成功。
+
+### 6.2 唤醒尝试（三条路径，均未唤醒）
+
+`fleet-ops/tools/wol.py` 的三条路径逐条试过：
+
+| 路径 | 命令 | 结果 | 备注 |
+|------|------|------|------|
+| 工具经中继（bot-01） | `wol.py --relay bot-01 --host compute-i9-01` | ❌ | 中继机 `bot-01`（100.99.63.14）SSH 超时，包未发出 |
+| 工具经中继（unit-ops-01） | `wol.py --relay unit-ops-01 --host compute-i9-01` | ❌ | 该机在 lab 段内，但工具的多行 snippet 经 `ssh` 传参后被远端 shell 拆行 ⇒ 远端 `python3 -c` 语法错误（实测报 `SyntaxError`），包同样未发出 |
+| 手工单行 snippet 经 unit-ops-01 | 单行 `python3 -c` 在 `unit-ops-01` 上 `sendto(255.255.255.255:9)` ×3 | 远端回 `relayed`（rc=0） | **包确实发出**，但 2 分钟内 L2 邻居仍 `FAILED` |
+| 本机定向广播 | `bind(192.168.77.2)` 后 `sendto(192.168.77.255:9)` ×3 + `255.255.255.255` ×3 | 发出 | 本机在 lab 段内（en7 = 192.168.77.2/24）；同样 2 分钟无 `FAILED` 解除 |
+
+- 唤醒后连续 8 轮 × 15 s 轮询 `ip neigh show 192.168.77.109`（自 `unit-ops-01` 读），
+  全部返回 `FAILED`；`ping 100.99.19.109` 全程 100% 丢包。
+- 结论：**Wake-on-LAN 在该机型/该网卡上无效**。`fleet-ops` 清单里 11 台机器登记了
+  `wol_mac`，但工具 docstring 自己记着「8 台 bot 群实测 Wake-on: g」——**i9 这台从未被验证
+  过可唤醒**（BIOS/UEFI 的 Wake-on-LAN 选项与网卡 WoL 开关状态均未知）。
+- 顺带发现（不在本 BET 范围，只点名）：`fleet-ops/tools/wol.py:54-63` 的 `wake_via_relay`
+  用多行 `python3 -c` snippet 经 `ssh` 传参，远端 shell 会按行拆分导致语法错误 ⇒ **中继路径
+  在任何机器上都不可能成功**，工具却把它报成 ❌ 而不是「包未发出」。这是被本次尝试
+  顺带证伪的既有缺陷，修复归 `fleet-ops` 仓。
+
+### 6.3 对 Phase 2 / Phase 3 的影响
+
+- Phase 2 的四个远端腿（CR-1 纳管 `lb-worker` / CR-2 绑 tailscale0 / CR-3 rootless 迁移 /
+  CR-5 受限作业面）全部要求在节点上执行——节点不在线，一条都做不了。
+- Phase 3 的八项验证里有七项需要「在节点上真实启停作业与断网」，同样做不了。
+- 因此本 BET 的正确状态仍是 `in_progress` / `overall_state: evaluating`：
+  **Gate 1（人类部署授权）已开但被物理前置阻塞；Gate 2（Golden Slice 人工验收）仍未开。**
+
+### 6.4 解锁需要的一次性人工动作
+
+节点必须由人在现场或通过带外管理（IPMI / 智能插座 / 物理电源键）**上电**，
+且需确认 BIOS/UEFI 里 Wake-on-LAN 处于启用状态（WOL 无效即意味着这两处之一未开）。
+上电后按以下顺序恢复：
+
+1. `ping 100.99.19.109` 通 → `ssh unit-node-04` 登录（别名见
+   `fleet-ops/generated/ssh_config.fleet:313`）。
+2. 复核 §2 CR-1…CR-5 的「生效前提」列：节点可达即解除 CR-1/CR-2/CR-3/CR-5 的等待态。
+3. Agent 按 §5 授权记录逐条执行远端腿，每条留独立回执。
+4. 进 Phase 3 八项验证，最后由 principal 做 Golden Slice 人工验收（Gate 2）。
 
