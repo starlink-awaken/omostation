@@ -1,0 +1,32 @@
+schema: script-registry/v1
+id: bin/ssot/check-entry-doc-claims.py
+name: Check Entry Doc Claims
+category: governance
+owner: governance-team
+description: >-
+  项目入口文档的事实性断言核对（2026-11-27 一次性全量复审的产品化）。与同名的
+  bin/mof/check-doc-claims.py 不是一回事：那条 lint 的是**测试宣称裸数字**
+  （"100% 通过"/"NNN tests", 规则 CR-X4-DOC-CLAIMS, scope 限 metaos）, 本条查的是
+  文档指向的**客观实体是否存在** —— dead_link（markdown 相对链接目标不存在）、
+  missing_path（反引号路径在**子模块根**与**工作区根**两个基准下都不存在; 仓内
+  文档两种写法都存在, 单用其一大量误报, 首轮审计即踩此坑）、unregistered_uri
+  （bos:// URI 未进登记面, 支持 `bos://domain/*` 通配）。刻意不算失真的:
+  `.omo/state/**` / `.omo/_delivery/**`（运行态面本就不入库, AGENTS.md §7）。
+  默认 advisory —— 有 finding 也 exit 0, 是否阻断由 ci-surfaces 的 gate 标注表达,
+  不靠退出码隐式承载; 已知非失真走显式抑制清单, 每条须写理由并在 JSON 里单列。
+  首次全量运行为 109 份入口文档 86 条命中（校准判据后 67 条真失真）, 修完归零,
+  本条让同类漂移下次被报出来而非靠人工复审偶然撞上。
+inputs:
+- .omo/_truth/registry/document-governance.yaml
+- docs/generated/capability-registry.yaml
+outputs:
+- type: exit_code
+- type: json
+dependencies: []
+triggers:
+- ci_gate
+related:
+- .omo/_truth/registry/ci-surfaces.yaml
+- .github/workflows/governance-check.yml
+maturity: draft
+last_reviewed: '2026-11-27'

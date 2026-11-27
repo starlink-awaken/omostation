@@ -433,7 +433,7 @@ jobs:
       - name: Install pyyaml
         run: pip install pyyaml
       - name: Audit project-entry doc claims
-        run: python3 bin/ssot/check-doc-claims.py --json
+        run: python3 bin/ssot/check-entry-doc-claims.py --json
 
   # 2026-08-26: bet-done-transition 拆至独立 workflow bet-done-gate.yml —
   # 本 workflow 的 path 过滤使 required check 在非匹配路径 PR 上永久悬空
