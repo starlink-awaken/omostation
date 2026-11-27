@@ -48759,17 +48759,40 @@ bets:
     blocked (node 离线 15 天); 归档区孤本撤离 136K 保留区。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating  # 派生态: eng IN_PROGRESS + oper NOT_PROVEN + value NOT_PROVEN
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@8007e954fd5f7eed89ffb79ec12fb34361cd8323
+          tests:
+            ref: receipt://docs/reports/2026-11-27-t10-359-closeout.md
+            sha256: sha256:6031c1eff34f07c0211547dcf474df32d514d333bae4d91d6e6d541e94fddd45
+          diff:
+            ref: receipt://docs/reports/2026-11-27-t10-359-closeout.md
+            sha256: sha256:6031c1eff34f07c0211547dcf474df32d514d333bae4d91d6e6d541e94fddd45
+          rollback:
+            ref: receipt://docs/reports/2026-11-27-t10-359-closeout.md
+            sha256: sha256:6031c1eff34f07c0211547dcf474df32d514d333bae4d91d6e6d541e94fddd45
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-t10-359-closeout.md
+            sha256: sha256:6031c1eff34f07c0211547dcf474df32d514d333bae4d91d6e6d541e94fddd45
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-t10-359-closeout.md
+            sha256: sha256:6031c1eff34f07c0211547dcf474df32d514d333bae4d91d6e6d541e94fddd45
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-359.md
+            sha256: sha256:77b4c02d3f56f0267fa8303cb83fdffc77e80a3909b10d8850e77fd661a0c1ff
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-t10-359-closeout.md
+            sha256: sha256:6031c1eff34f07c0211547dcf474df32d514d333bae4d91d6e6d541e94fddd45
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
 
   done_when:
   - sync-reality 后 probe-reality mismatch_count=0
@@ -48777,7 +48800,8 @@ bets:
   - 双债登记 + seed_items 无孤儿
   - PR merge 入 main
 
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48793,6 +48817,8 @@ bets:
   - .omo/cron/registry.yaml
   - .omo/debt/items/GOD-MODULE-CI-TRIO-SUBMODULE-1500L.yaml
   - .omo/debt/items/SERVICES-REALITY-PANORAMIC-RECON-E2E4E5.yaml
+  - docs/plans/3y-bet-ledger.yaml            # 新增: 收口台账写入 (workflow surfaces.write 已声明)
+  - docs/reports/2026-11-27-t10-359-closeout.md  # 新增: 本轮回执
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-26-reality-recon-bet-t10-359.md
     spec_version: 1.0.0
