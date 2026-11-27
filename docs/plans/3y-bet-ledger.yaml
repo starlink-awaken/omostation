@@ -48828,7 +48828,8 @@ bets:
   - check-pitfalls-index 无新红
   - mcptool note 与 --publish 命令链一致
 
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P3
@@ -48844,6 +48845,8 @@ bets:
   - docs/pitfalls.md
   - AGENTS.md
   - .omo/cron/registry.yaml
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-11-27-t10-358-closeout.md
   accepted_specifications:
   - spec_ref: repo://docs/superpowers/specs/2026-11-26-pitfall-note-bet-t10-358.md
     spec_version: 1.0.0
@@ -48862,7 +48865,6 @@ bets:
     而非删条目。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
     axes:
       engineering:
         status: VERIFIED
@@ -48870,17 +48872,33 @@ bets:
           merged_reachable_commit:
             ref: git://origin/main@efee2ced361feb7678d2e12e8609476a83a4a89a
           tests:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-358.md
+            ref: receipt://docs/reports/2026-11-27-t10-358-closeout.md
+            sha256: sha256:850ab53b99698a158d9cd105e288dc51aa56c28908c4cabdb41951f6fb192c50
           diff:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-358.md
+            ref: receipt://docs/reports/2026-11-27-t10-358-closeout.md
+            sha256: sha256:850ab53b99698a158d9cd105e288dc51aa56c28908c4cabdb41951f6fb192c50
           rollback:
-            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-358.md
+            ref: receipt://docs/reports/2026-11-27-t10-358-closeout.md
+            sha256: sha256:850ab53b99698a158d9cd105e288dc51aa56c28908c4cabdb41951f6fb192c50
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-t10-358-closeout.md
+            sha256: sha256:850ab53b99698a158d9cd105e288dc51aa56c28908c4cabdb41951f6fb192c50
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-t10-358-closeout.md
+            sha256: sha256:850ab53b99698a158d9cd105e288dc51aa56c28908c4cabdb41951f6fb192c50
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-358.md
+            sha256: sha256:d875fd70418958e0c80875da37e3a6cb6331cb154e68a03c5eeb8d60a65cc3eb
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-t10-358-closeout.md
+            sha256: sha256:850ab53b99698a158d9cd105e288dc51aa56c28908c4cabdb41951f6fb192c50
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
 
 - id: BET-Y2Q4-T10-357
   title: BET-Y2Q4-T10-357 mcptool-impl-drift 直提断根 (共享库提炼) + install-cron-plane 装重缺陷修复
