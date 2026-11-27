@@ -808,6 +808,21 @@ surfaces:
   - scheduled
   status: active
   note: launchd 守护日志轮转 (P1.2)
+- id: bin-ssot-check-doc-claims-py
+  tool: bin/ssot/check-doc-claims.py
+  workflow: governance-check.yml
+  gate: false
+  triggers:
+  - manual
+  - scheduled
+  status: active
+  note: >-
+    入口文档的事实性断言核对（死链 / 失效相对路径 / 未登记 BOS URI）。2026-11-27
+    一次性全量复审的产物：那次在 109 份入口文档里扫出 86 条命中、校准判据后修掉
+    67 条真失真，本条把同一判据变成每 6h 的观测项，让同类漂移被报出来而不是靠
+    人工复审偶然撞上。advisory（job continue-on-error + gate: false）；升为阻断
+    属 registry 裁决，不改脚本退出码隐式表达。判据自带正反用例与显式抑制清单
+    （每条抑制须写理由）。
 - id: bin-ssot-doc-link-check-py
   tool: bin/ssot/doc-link-check.py
   workflow: (none)
