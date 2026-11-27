@@ -49493,7 +49493,8 @@ bets:
     两者必然不等 ⇒ CODE_DRIFT ⇒ 静态资源 503。 而 publish() 只做「切指针 + SHA 校验」, 从不读运行态 ⇒ 返回 ok:true
     而驾驶舱整站只读, 恢复只靠人工重启 (T10-364 回执 §5 实测)。 本轮把「切换后宿主收敛」纳入发布事务 —— 切换前比两侧身份, 绑定将被破坏时由发布器重绑定运行期并验收收敛,
     不收敛即回滚; 协调不可用则拒绝发布。
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -49548,15 +49549,39 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: IN_PROGRESS
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@91344029db133d496c21118eaf6204b629a713b2
+          tests:
+            ref: receipt://docs/reports/2026-11-27-t10-366-publish-runtime-convergence-closeout.md
+            sha256: sha256:63795400ac403ae6efc96fcc3b6593e240ea8bd5f3469875672f2d87325d646c
+          diff:
+            ref: receipt://docs/reports/2026-11-27-t10-366-publish-runtime-convergence-closeout.md
+            sha256: sha256:63795400ac403ae6efc96fcc3b6593e240ea8bd5f3469875672f2d87325d646c
+          rollback:
+            ref: receipt://docs/reports/2026-11-27-t10-366-publish-runtime-convergence-closeout.md
+            sha256: sha256:63795400ac403ae6efc96fcc3b6593e240ea8bd5f3469875672f2d87325d646c
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-t10-366-publish-runtime-convergence-closeout.md
+            sha256: sha256:63795400ac403ae6efc96fcc3b6593e240ea8bd5f3469875672f2d87325d646c
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-t10-366-publish-runtime-convergence-closeout.md
+            sha256: sha256:63795400ac403ae6efc96fcc3b6593e240ea8bd5f3469875672f2d87325d646c
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-366.md
+            sha256: sha256:ac23b87a2dd53ac8170ffdde88b39f64a02dd4ecfcec1e6faf374ccb659936fe
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-t10-366-publish-runtime-convergence-closeout.md
+            sha256: sha256:63795400ac403ae6efc96fcc3b6593e240ea8bd5f3469875672f2d87325d646c
       value:
         status: NOT_PROVEN
         evidence: {}
-    overall_state: evaluating
+    overall_state: delivery_accepted
+
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
