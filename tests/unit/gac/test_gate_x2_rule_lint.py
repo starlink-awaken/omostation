@@ -50,3 +50,58 @@ def test_tool_is_read_only_and_currently_clean():
 
 if __name__ == "__main__":
     sys.exit(subprocess.call([sys.executable, "-m", "pytest", __file__, "-q"]))
+
+
+def _load_tool():
+    spec = importlib.util.spec_from_file_location("x2_rule_lint", TOOL)
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["x2_rule_lint"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_ignored_runtime_targets_are_not_warned(tmp_path: Path) -> None:
+    """被 gitignore 的运行态目标在干净检出里本就不存在, 不算失真。
+
+    2026-11-28 实证: 四条 X2 规则的目标全部「0 匹配」, 但其中三条
+    (`.omo/evidence/`、`.omo/_delivery/**`、`.omo/debt/*`) 是运行态产物,
+    旧判据把它们一并报成 warn, 制造噪声。
+    """
+    mod = _load_tool()
+    (tmp_path / ".gitignore").write_text(
+        ".omo/evidence\n.omo/_delivery/*\n.omo/debt/*\n.omo/state/runtime/*\n", encoding="utf-8"
+    )
+    patterns = mod._ignore_patterns(tmp_path)
+    assert mod.is_ignored(".omo/evidence/", patterns)
+    assert mod.is_ignored(".omo/_delivery/adr-drift-apply-history.jsonl", patterns)
+    assert mod.is_ignored(".omo/debt/dashboard/current.yaml", patterns)
+    assert mod.is_ignored(".omo/state/runtime/governance-dashboard.json", patterns)
+    assert not mod.is_ignored("src/omo/real.py", patterns)
+
+
+def test_missing_target_warns_only_when_not_ignored(tmp_path: Path) -> None:
+    """正反一对: 缺席且未被忽略 -> warn; 缺席但被忽略 -> 不 warn。"""
+    mod = _load_tool()
+    (tmp_path / ".gitignore").write_text(".omo/state/runtime/*\n", encoding="utf-8")
+    rule_warn = {
+        "rule_id": "X2-FRESH-DEMO",
+        "target": "projects/gone/crontab",
+        "freshness": {"threshold_days": 7, "action": "warn"},
+    }
+    rule_ok = {
+        "rule_id": "X2-FRESH-RUNTIME",
+        "target": ".omo/state/runtime/dashboard.json",
+        "freshness": {"threshold_days": 7, "action": "warn"},
+    }
+    issues = mod.lint_rules([rule_warn], tmp_path)
+    assert [i["severity"] for i in issues if "0 匹配" in i["msg"]] == ["warn"]
+    assert not [i for i in mod.lint_rules([rule_ok], tmp_path) if "0 匹配" in i["msg"]]
+
+
+def test_repo_rules_have_no_target_warnings() -> None:
+    """对本仓实际规则集跑一遍: target glob 的 warn 必须为 0（2026-11-28 起）。"""
+    mod = _load_tool()
+    rules = mod.load_rules(ROOT / ".omo" / "_truth" / "x2-freshness-rules.yaml")
+    issues = mod.lint_rules(rules, ROOT)
+    assert not [i for i in issues if "0 匹配" in i["msg"]], issues
