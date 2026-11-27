@@ -49328,6 +49328,67 @@ bets:
     overall_state: delivery_accepted
   circuit_breaker: 守卫扩展若在发布路径上误报/误阻断 (干跑报出本仓已发布的合法字段), 立即回退 panorama-collect.py 的改动并把误报样例写进回执,
     升级 principal 复议。
+- id: BET-Y2Q4-T10-365
+  title: 宿主发布前置条件机器化 —— 发布采集器前先验生产者字节绑定
+  goal: BET-Y2Q4-T10-364 的收口回执记录了一次发布自伤 —— publish 返回 ok 后, 刷新作业抛 projection_collector_not_at_bound_commit,
+    投影停更, live server CODE_DRIFT, 静态资源 503。 根因是半边契约 —— 采集器自校验要求「正在执行的字节 == 生产者代码根 HEAD
+    的采集器字节」, 而发布器只校验「发布字节 == 仓库资产字节」。本轮把这条前置条件机器化 —— publish 在切换 current 之前校验待发布采集器字节与生产者代码根
+    HEAD 绑定, 不满足则拒绝发布并给出「先重锚 code-main, 再发布资产」的处置顺序; 绑定不可验证时跳过而不阻断。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 1.5 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  objective_ref: OBJ-TRUST
+  workflow: bet-execution
+  write_surfaces:
+  - bin/gac/zhixing-host-sync.py
+  - tests/unit/test_zhixing_publish_producer_binding.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-27-host-publish-producer-binding-preflight.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-365.md
+  - docs/reports/2026-11-27-t10-365-publish-producer-binding-closeout.md
+  non_goals:
+  - 不改采集器的身份自校验语义 (它是对的, 缺的是发布器那另一半)。
+  - 不动 code-main 重锚 (bin/ssot/anchor-install-root.sh 属机器级运行时变更, 属 principal 窗口)。
+  - 不改宿主发布面其他既有语义, 不改驾驶舱契约守卫的告警语义。
+  - 不改治理占比判据面 (GOVERNANCE_CEILING / _classify)。
+  done_when:
+  - publish 在切换 current 之前校验「待发布采集器字节 == 生产者代码根 HEAD 的采集器字节」, 不满足则拒绝发布 (ok=false, reason=producer_binding_unsatisfied)
+    且 current 未被切换
+  - 绑定不可验证 (生产者根缺失 / 非 git 仓 / HEAD 无该路径) 时跳过检查, 不阻断发布
+  - 判据有正反用例 (单测: 绑定成立放行 / 绑定不成立拒绝 / 不可验证跳过)
+  - 既有发布面测试不回归 (tests/unit/test_zhixing_release_identity.py)
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_zhixing_publish_producer_binding.py -q
+    expect: 全部通过 (exit 0)。
+  - cmd: python3 -m pytest tests/unit/test_zhixing_release_identity.py -q
+    expect: 全部通过 (exit 0), 发布面既有行为不回归。
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 本条目无新增红 (预存错误另记)。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-27-host-publish-producer-binding-preflight.md
+    spec_version: 1.0.0
+    content_digest: sha256:81e4bee11ccd8dadd0d53a18a966c72f5b7a8d9d345d0fa9471fa6567ff1c10e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-365
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: NOT_PROVEN
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -49466,7 +49527,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 609
+  total_bets: 610
   windows:
   - Y1Q1
   - Y1Q2
