@@ -49485,6 +49485,78 @@ bets:
   verify:
   - cmd: python3 -c "import yaml; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'))"
     expect: YAML 解析通过。
+- id: BET-Y2Q4-T10-366
+  title: 宿主发布运行期一致性 —— 切换 current 后必须让运行中的 live server 重新绑定并验收收敛
+  goal: BET-Y2Q4-T10-365 复盘 §4 留了一条尾巴 —— 同一半边契约可能在别处重演。 本轮把它落到运行期的另一半 —— live server
+    自己的身份自校验。 事实链 —— live server 的 CODE_ROOT 在 import 时解析 (runtime_paths.py.asset:17)
+    ⇒ 进程钉死在启动那一刻的 release; 投影 revision 的绑定来自采集器当时看到的 current 软链 ⇒ 每次发布换一个 commit_oid,
+    两者必然不等 ⇒ CODE_DRIFT ⇒ 静态资源 503。 而 publish() 只做「切指针 + SHA 校验」, 从不读运行态 ⇒ 返回 ok:true
+    而驾驶舱整站只读, 恢复只靠人工重启 (T10-364 回执 §5 实测)。 本轮把「切换后宿主收敛」纳入发布事务 —— 切换前比两侧身份, 绑定将被破坏时由发布器重绑定运行期并验收收敛,
+    不收敛即回滚; 协调不可用则拒绝发布。
+  status: in_progress
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  objective_ref: OBJ-TRUST
+  workflow: bet-execution
+  write_surfaces:
+  - bin/gac/zhixing-host-sync.py
+  - tests/unit/test_zhixing_publish_runtime_convergence.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-27-host-publish-runtime-convergence.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-366.md
+  - docs/reports/2026-11-27-t10-366-publish-runtime-convergence-closeout.md
+  non_goals:
+  - 不改 live server 的身份自校验语义 (它是对的, 缺的是发布侧那一半)。
+  - 不改宿主仓 zhixing-dashboard 的任何文件 (含看门狗探针缺 --fail) —— 跨仓写面, 留宿主仓裁决。
+  - 不动 code-main 重锚 (bin/ssot/anchor-install-root.sh 属机器级运行时变更, 属 principal 窗口)。
+  - 不改 migrate() (一次性迁移路径, 同族残留已登记)。
+  - 不改治理占比判据面 (GOVERNANCE_CEILING / _classify)。
+  - 本轮不在本机执行任何一次真实发布 (机器级变更, 属 principal 窗口)。
+  done_when:
+  - publish 在切换 current 之前比两侧身份 (运行中 server 的 pid 绑定身份 vs 候选 release 的 manifest 身份);
+    绑定将被破坏时必须协调 (kick 采集器刷新 + 重启 live server) 并验收收敛 (code_drift=false 且绑定 oid == 候选
+    oid)
+  - 不收敛即回滚 (ok=false, reason=runtime_convergence_failed, current 切回上一版)
+  - 协调不可用 (采集器刷新作业未加载) 时拒绝发布 (ok=false, reason=runtime_coordination_unavailable) 且 current
+    未被切换
+  - 不可观测 (探针不可达 / pid 不可验证 / 身份三元组不完整) 时跳过判定, 不阻断发布
+  - restore() 同样走收敛 (回滚本身不得把宿主留在只读态)
+  - 判据有正反用例 (单测 —— 绑定保持不协调 / 绑定将破坏协调并收敛 / 不收敛回滚 / 不可观测跳过 / 协调不可用拒绝)
+  - 接线钉在真实 publish() 入口 (沿用「测试绕过接线就钉不住接线」纪律)
+  - 既有发布面测试不回归 (tests/unit/test_zhixing_release_identity.py + tests/unit/test_zhixing_publish_producer_binding.py)
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_zhixing_publish_runtime_convergence.py -q
+    expect: 全部通过 (exit 0)。
+  - cmd: python3 -m pytest tests/unit/test_zhixing_release_identity.py tests/unit/test_zhixing_publish_producer_binding.py
+      tests/test_zhixing_host_sync.py -q
+    expect: 全部通过 (exit 0), 发布面既有行为不回归。
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 本条目无新增红 (预存错误另记)。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-27-host-publish-runtime-convergence.md
+    spec_version: 1.0.0
+    content_digest: sha256:bac7dc3e1981c1849cff18af7149e86a35d085cab0384a963ae34b3a636865eb
+    decision_ref: decision://accepted/BET-Y2Q4-T10-366
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -49623,7 +49695,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 611
+  total_bets: 612
   windows:
   - Y1Q1
   - Y1Q2
