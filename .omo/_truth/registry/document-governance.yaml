@@ -295,8 +295,8 @@ warning_exceptions:
     - id: legacy-project-entry-frontmatter
       rule: missing_frontmatter
       surface: project-entry
-      max_findings: 130  # 2026-11-26 80→130: auto-bump (governance 增量)
-      # auto-bumped to 130 on 2026-11-26
+      max_findings: 10  # 2026-11-27 130→10: 15/16 仓清偿后实测仅剩 6 (全在 projects/cockpit), 余量 4
+      # auto-bumped to 130 on 2026-11-26; tightened to 10 on 2026-11-27
       expires: 2027-03-31
       owner: governance-team
       reason: |
@@ -318,6 +318,17 @@ warning_exceptions:
         legacy-project-entry-stale-review 单独覆盖。
 
         max_findings 是**界**不是豁免: 新增不合规的项目入口文档会当场把它顶穿。
+
+        2026-11-27 部分清偿: aetherforge / agora(含内部嵌套两处) / bus-foundation /
+        cockpit-ui / ecos / family-hub / gbrain / kairon / l4-kernel / metaos /
+        model-driven / observability / omlxc / omo / runtime 共 15 条 pin 已跟到各自主干
+        新 tip (91 份文件补齐 status/lifecycle), 实测本桶 **113 → 6**, 故 max 130 → 10。
+        **剩余 6 份全在 `projects/cockpit`**: 该仓的 pin 暂未 bump, 因为它会触发
+        `cascading-test` 的一条**与本次改动无关的潜伏基线红**
+        (`test_topology_engine.py::test_overview`: total_mcp_tools 实测 208, 断言 >=400;
+        引擎五类输入在本分支与 main 间逐字节相同), 已立案
+        COCKPIT-TOPOLOGY-OVERVIEW-MCP-TOOLS-BASELINE-RED 待裁决。cockpit 落地后
+        本条即可删除 (shrink_only)。
         清偿路径 = 逐批修子模块文档 (每个仓 commit + push + 父仓 gitlink bump),
         修一批计数就降一批; 修完即可删本条 (shrink_only 方向)。
         expires 取 2027-03-31 而非其他 legacy 条的 2027-01-31, 因为清偿要跨 18 个
