@@ -49362,7 +49362,7 @@ bets:
   - publish 在切换 current 之前校验「待发布采集器字节 == 生产者代码根 HEAD 的采集器字节」, 不满足则拒绝发布 (ok=false, reason=producer_binding_unsatisfied)
     且 current 未被切换
   - 绑定不可验证 (生产者根缺失 / 非 git 仓 / HEAD 无该路径) 时跳过检查, 不阻断发布
-  - 判据有正反用例 (单测: 绑定成立放行 / 绑定不成立拒绝 / 不可验证跳过)
+  - '判据有正反用例 (单测: 绑定成立放行 / 绑定不成立拒绝 / 不可验证跳过)'
   - 既有发布面测试不回归 (tests/unit/test_zhixing_release_identity.py)
   verify:
   - cmd: python3 -m pytest tests/unit/test_zhixing_publish_producer_binding.py -q
@@ -49380,7 +49380,7 @@ bets:
     schema_version: completion-evidence-matrix/v1
     axes:
       engineering:
-        status: NOT_PROVEN
+        status: IN_PROGRESS
         evidence: {}
       operational:
         status: NOT_PROVEN
