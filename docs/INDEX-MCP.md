@@ -7,7 +7,7 @@ last-reviewed: 2026-11-03
 
 # MCP 服务器索引
 
-> 自动生成于 2026-11-03T08:51:03Z (生成器时间戳 epoch-0 bug 手工修正, 见 last-reviewed)
+> 生成时间戳: 1970-01-01T00:00:00Z（哨兵值, ADR-0373: 不写 now() 以保持 git diff 漂移检查有效）
 > 源: `docs/generated/capability-registry.yaml`
 
 全生态共 **27** 个 MCP 服务器, **643** 个工具。
@@ -152,4 +152,4 @@ last-reviewed: 2026-11-03
 
 `model_tool_execute`, `model_tools_list`
 
-*由 `bin/ssot/gen-help-docs.py` 于 1970-01-01T00:00:00Z 生成*
+*由 `bin/ssot/gen-help-docs.py` 生成; 时间戳字段为 1970-01-01T00:00:00Z（哨兵, 见 ADR-0373）*
