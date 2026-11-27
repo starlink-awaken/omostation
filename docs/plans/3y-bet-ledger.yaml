@@ -48800,7 +48800,8 @@ bets:
   - 双债登记 + seed_items 无孤儿
   - PR merge 入 main
 
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
