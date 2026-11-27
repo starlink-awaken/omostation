@@ -48666,6 +48666,80 @@ bets:
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
+- id: BET-Y2Q4-T10-360
+  title: BET-Y2Q4-T10-360 cron 首跑 canary 收口 —— T356/357 done-transition 入账 + 「无进程 ≠ 无会话」pitfall 立条
+  goal: >-
+    断根战役收官章: T356/T357 交付时 operational 轴诚实停在 NOT_PROVEN
+    (done 门要求 canary), 2026-11-27 首夜双绿 (capability 04:06 / mcptool
+    05:46 首跑「产物无漂移, 跳过发布」, 主仓工作区零污染 —— 断根核心承诺
+    兑现) 后翻 PROVEN 入账。canary 证据回执落
+    docs/reports/2026-11-27-cron-canary-first-run-receipt.md。顺带: 立条
+    昨晚让行教训「无进程 ≠ 无会话」(T355 done-transition 撞车复盘:
+    以「全机无进程 + 事件面冻结 2.5h」判孤儿工单误杀并发会话, agent 会话
+    无常驻进程可观察, 冻结时长须按会话量级放宽)。
+  status: done
+  done_at: 2026-11-27
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P3
+  appetite: 30 minutes
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  workflow: bet-execution
+  objective_ref: OBJ-TRUST
+  value_indicator_policy: false
+  write_surfaces:
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+  - docs/pitfalls.md
+  - AGENTS.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-27-cron-canary-closeout-bet-t10-360.md
+    spec_version: 1.0.0
+    content_digest: sha256:c7fc192d599cd9e882f6e1531aa927e98373f8acf155dc03b855dc22e0415a1d
+    decision_ref: decision://accepted/BET-Y2Q4-T10-360
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted  # 派生态: eng VERIFIED + oper PROVEN (canary 回执 2026-11-27) + value NOT_PROVEN
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@850695b5714e1694d080dbe8cb12d64c9ac2417c
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          replay:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+  non_goals:
+  - 不动 T356/357 已 merge 的代码面 (只翻台账状态)。
+  - 不重跑 cron (首跑是自动调度, 本 BET 只收证据)。
+  verify:
+  - cmd: python3 -c "import yaml; yaml.safe_load(open('docs/plans/3y-bet-ledger.yaml'))"
+    expect: YAML 解析通过。
+  - cmd: uv run --with pyyaml python bin/plan/bet-ledger.py lint
+    expect: T356/357/360 无红。
+  circuit_breaker: >-
+    若 lint 对 canary 回执 ref 或矩阵形态报错, 修格式不动结论。
 - id: BET-Y2Q4-T10-359
   title: BET-Y2Q4-T10-359 现实对账第一批 —— resident 三条 sync-reality + fullrefresh 复活 + god-module/全景残债双立案
   goal: >-
@@ -48820,7 +48894,8 @@ bets:
   - crontab mcptool 新链装载且旧直提行被替换
   - mcptool 05:45 首跑 canary 通过
 
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48862,7 +48937,7 @@ bets:
     (crontab-bak-20261126.txt) 并回退本 PR。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
+    overall_state: delivery_accepted  # 派生态: eng VERIFIED + oper PROVEN (canary 回执 2026-11-27) + value NOT_PROVEN  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
     axes:
       engineering:
         status: VERIFIED
@@ -48876,8 +48951,16 @@ bets:
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-357.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          replay:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -48897,7 +48980,8 @@ bets:
   - crontab capability 新链装载且旧直提行消亡
   - capability 04:05 首跑 canary 通过
 
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48934,7 +49018,7 @@ bets:
     停止并回报 owner 处理 cron 环境; 主仓工作区出现任何污染立即回退。
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: blocked  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
+    overall_state: delivery_accepted  # 派生态: eng VERIFIED + oper PROVEN (canary 回执 2026-11-27) + value NOT_PROVEN  # 派生态: eng VERIFIED + oper NOT_PROVEN → blocked (等 canary 首跑)
     axes:
       engineering:
         status: VERIFIED
@@ -48948,8 +49032,16 @@ bets:
           rollback:
             ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-356.md
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          replay:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
       value:
         status: NOT_PROVEN
         evidence: {}
@@ -49146,6 +49238,72 @@ bets:
             principal 动作，见收据「读数前置条件」与「未执行动作」。
     overall_state: delivery_accepted
 
+- id: BET-Y2Q4-T10-364
+  title: 驾驶舱契约守卫覆盖面收口 —— 从 template.html 扩到全部被服务的 JS 资产
+  window: Y2Q4
+  track: T10-TOOLING
+  status: pending
+  appetite: 1.5 hours
+  priority: P2
+  objective_ref: OBJ-TRUST
+  workflow: bet-execution
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  goal: T10-354 把驾驶舱模板声明的 7 个退役字段收口, 但发布器自带的契约守卫 (_check_template_data_consistency)
+    只扫 template.html 一个文件 —— 被服务的 前端资产实为 11 个 JS, 资产层读 D.<field> 的缺席字段无任何判据覆盖, 正是 T10-354
+    那类缺陷 (页面渲染为空 / NaN) 的复发入口。本轮把守卫覆盖面扩到 全部被服务的 JS 资产, 清掉 omostation 侧 workbench_ui
+    的 D.pending_publications 死引用, 并登记跨仓 (zhixing-dashboard) 的 ui_extensions.js 残留。
+  done_when:
+  - 守卫覆盖面扩到全部被服务 JS 资产 (干跑逐资产报缺席字段)
+  - omostation 侧 D.pending_publications 死引用清零 (rg 计数 = 0)
+  - 跨仓残留 (ui_extensions.js D.live_sources ×3) 在回执中登记
+  - '判据有正反用例 (单测: 缺席被报出 / 全在场不报)'
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_panorama_asset_contract_guard.py -q
+    expect: 全部通过 (exit 0)。
+  - cmd: python3 -c "import pathlib,sys; t=pathlib.Path('bin/panorama/assets/host/workbench_ui.js.asset').read_text();
+      c=t.count('D.pending_publications'); print('pending_publications_refs=',c); sys.exit(0
+      if c==0 else 1)"
+    expect: 计数为 0 且退出码 0。
+  - cmd: python3 bin/gac/debt-integrity-check.py
+    expect: 无新增红。
+  write_surfaces:
+  - bin/panorama/panorama-collect.py
+  - bin/panorama/assets/host/panorama-collect-main.py.asset
+  - bin/panorama/assets/host/workbench_ui.js.asset
+  - tests/unit/test_panorama_asset_contract_guard.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-27-dashboard-asset-contract-guard.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-364.md
+  - docs/reports/2026-11-27-t10-364-asset-contract-guard-closeout.md
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-27-dashboard-asset-contract-guard.md
+    spec_version: 1.0.0
+    content_digest: sha256:dee2dea613c98016737e02899fcba8b1a7ae2788452368249011e7ecf8afb11e
+    decision_ref: decision://accepted/BET-Y2Q4-T10-364
+  non_goals:
+  - 不改发布语义 (告警不升级为阻断) —— 阻断口径属判据接线变更, 留 principal。
+  - 不改 zhixing-dashboard 仓任何文件 (跨仓写面)。
+  - 不动宿主根 zhixing-dashboard/template.html 的陈旧副本 (refs 62 / missing 7)。
+  - 不改治理占比判据面 (GOVERNANCE_CEILING / _classify)。
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    axes:
+      engineering:
+        status: IN_PROGRESS
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
+    overall_state: evaluating
+  circuit_breaker: 守卫扩展若在发布路径上误报/误阻断 (干跑报出本仓已发布的合法字段), 立即回退 panorama-collect.py 的改动并把误报样例写进回执,
+    升级 principal 复议。
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -49284,7 +49442,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 607
+  total_bets: 609
   windows:
   - Y1Q1
   - Y1Q2
