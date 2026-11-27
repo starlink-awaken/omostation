@@ -239,6 +239,12 @@ warning_exceptions:
   # 更新 last-reviewed（2026-07-31 → 2026-11-09），命中 2 → 0，该预算不再压制任何现存告警；
   # 留着它反而制造 2026-11-30 的集体过期炸点（expires 一到即 expired_warning_exception error）。
   # 其余条目 max_findings 与 expires 一字未动（窗口 2027-01-31 由 #4995 定下）。
+  # 2026-11-27：stale_review 判定改为**豁免 `lifecycle: history`**（bin/ssot/doc-governance-check.py）。
+  # 触发：18 份 .omo/_truth/governance-evidence/waiver-*.md（last-reviewed 2026-08-28，schema
+  # workflow-waiver/v1）**同日**越过 90 天 SLA，把 main 的 gac-gate（必需检查）打红。给冻结的
+  # 历史记录套周期复审 SLA 是自相矛盾的；改后 tracked 口径 stale_review:omo-truth-docs
+  # 18 → 5（其余为 contract/entry，仍在 SLA 内）。判据：tests/test_doc_governance_check.py
+  # 正反一对（history 不报 / contract 仍报，后者断言 age=91d）。
   # 2026-11-26 复测（全量递归检出后 `--scope workspace`，本地读数与 schedule CI 逐字一致：
   # files_scanned=5981 / summary errors=1,warnings=129）：missing_frontmatter:project-entry
   # **113** 越过 max 80 ⇒ doc-freshness 报 warning_budget_exceeded。
