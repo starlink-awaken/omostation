@@ -4,7 +4,7 @@ status: active
 lifecycle: history
 type: progress
 owner: governance-team
-last-reviewed: 2026-11-06
+last-reviewed: 2026-11-27
 bet_id: BET-Y2Q4-T10-279
 title: compute-i9-01 接入进度指针
 ---
@@ -19,7 +19,7 @@ title: compute-i9-01 接入进度指针
 | Phase 0 Discovery（只读取证） | 完成 | `reports/COMPUTE-I9-01-INTEGRATION-DISCOVERY-20261029.md` |
 | Phase 1 变更申请与人类授权 | **已授权（2026-11-25 逐条）** | `reports/COMPUTE-I9-01-PHASE0-PHASE1-20261029.md` §5 授权记录（CR-1 纳管 / CR-2 绑 ts / CR-3 / CR-5 授权执行） |
 | CR-4 节点入登记面 | **已执行（2026-11-25）** | nodes.yaml + project-registry compute_nodes + workers.yaml declared 条目 |
-| Phase 2 受限 Worker 接入 | 待节点可达 | 2026-11-25 实测节点双通道不可达（tailnet offline 14d）；节点恢复后按 §5 前置顺序执行 CR-1/2/3/5 远端腿 |
+| Phase 2 受限 Worker 接入 | **待物理开机**（2026-11-28 三路 WoL 均未唤醒，lab 网段 ARP `FAILED`） | `reports/COMPUTE-I9-01-PHASE0-PHASE1-20261029.md` §6（可达性回读 + 唤醒尝试 + 解锁动作）；节点恢复后按 §5 前置顺序执行 CR-1/2/3/5 远端腿 |
 | Phase 3 八项回执 + Golden Slice 人工验收 | 未开始 | 前置：Phase 2 完成 + 闸 2 人工验收 |
 
 ## 两个 Agent 不可自证的门槛
