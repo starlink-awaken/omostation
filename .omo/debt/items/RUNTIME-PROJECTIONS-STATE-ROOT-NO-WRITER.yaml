@@ -1,0 +1,77 @@
+id: "RUNTIME-PROJECTIONS-STATE-ROOT-NO-WRITER"
+title: "runtime-projections 声明的 canonical 全在 .omo/state/runtime/**，但 state 根一份都没有 —— 副本散在检出（部分陈旧 68 天）或安装根，规则化的「7 天新鲜度」因此空转"
+dimension: "governance"
+subdimension: "gate"
+domain: "infrastructure"
+scope: "workspace"
+severity: "high"
+weight: 0.2
+entropy_class: "medium"
+lifecycle_state: "identified"
+owner: "governance-team"
+affected_roots:
+- .omo/_truth/registry/runtime-projections.yaml
+- .omo/_truth/x2-freshness-rules.yaml
+evidence_refs:
+- .omo/_truth/registry/runtime-projections.yaml
+mitigation_refs: []
+opened_at: "2026-11-28T00:30:00+00:00"
+last_reviewed_at: "2026-11-28"
+next_review_at: "2026-12-28"
+gate_level: none
+description: >-
+  `runtime-projections.yaml` 给 10 条投影声明的 `canonical` 全部形如
+  `.omo/state/runtime/**`（ADR-0456 的**状态根写面**）。逐条在本机三根上实测存在性与
+  新鲜度（`os.path.exists` + mtime, 2026-11-28）：
+
+  | 投影 | canonical | 检出 | 状态根 | 安装根 |
+  |---|---|---|---|---|
+  | anomaly_events | .omo/state/runtime/anomaly-events.jsonl | 68d | — | — |
+  | cross_domain_trend | .omo/state/runtime/cross-domain-trend.json | 14d | — | — |
+  | governance_dashboard | .omo/state/runtime/governance-dashboard.json | **68d** | — | — |
+  | metrics_store | .omo/state/runtime/metrics-store.jsonl | 68d | — | — |
+  | predictive_governance | .omo/state/runtime/predictive-governance.json | 18d | — | — |
+  | brief | .omo/state/runtime/brief.md | 0d | — | 22d |
+  | governance_data | .omo/state/runtime/governance-data.json | 0d | — | 29d |
+  | health | .omo/state/runtime/health.yaml | 0d | — | 22d |
+  | system_health | .omo/state/runtime/system_health.yaml | 0d | — | 21d |
+  | memory_os | runtime/omo/_truth/registry/memory-os.yaml | 1d | 0d | 2d |
+
+  ⇒ **状态根一份都没有**。副本只在两处: 检出（其中 4 条停在 2026-09-21 / 14~68 天前）
+  与安装根（21~29 天前）。
+
+  **三条派生事实**:
+  1. `X2-FRESH-GOV-DASHBOARD` 声称「确保 7 天内 dashboard 跑过」—— 该产物唯一副本是
+     检出一份 2026-09-21 的文件, 且 `governance-dashboard.py --metrics-dashboard`
+     **没有任何调用方**（全仓 grep 仅命中脚本自身定义 + 登记/注释文本）。规则空转,
+     已由 #5665 把 target 重指到真实落点并写明此风险。
+  2. `metrics_store` 的陈旧（68d）与既有债 `METRICS-STORE-PIPELINE-UNWIRED` 是同一
+     现象的两面（那条讲的是「唯一写者不执行」, 本条讲的是**落点不在声明的根**）。
+  3. 检索路径若按 ADR-0456 的 `state_root()` 解析, 读到的是**空**; 而按 checkout
+     解析则读到陈旧副本 —— 与 AGENTS.md §7「两个根的写面收敛靠沉默契约」同族。
+
+  **与既有债的边界**: `RUNTIME-PROJECTIONS-GENERATOR-SHAPE-MIXED` 讲 generator 字段
+  形状不可解析; `METRICS-STORE-PIPELINE-UNWIRED` 讲 metrics-store 单一写者;
+  `DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN` 讲发布链代码副本落后。本条讲**落点与
+  声明根不一致**这一横切面, 不重复那三条。
+decision_needed: >-
+  三条路, 都要先定「这些投影的权威落点到底是哪一根」再动手:
+
+  1. **接线到状态根**（符合 ADR-0456 声明）: 给仍应存活的投影装/改排班写方, 落
+     `state_root()/.omo/state/runtime/**`。属机器级变更（launchd/services.yaml）,
+     需逐条确认谁产、周期多少。
+  2. **改声明**: 若某些投影实际就住在检出或安装根, 把 `canonical` 改成真实路径 ——
+     但那就等于承认声明面与 ADR-0456 分叉, 需 ADR 层面背书。
+  3. **退役**: 对已无人消费的投影直接删条目（例: governance_dashboard 若无消费者,
+     连同 X2 规则一起退）。
+
+  在裁决前, 本条只做了一件事: 让 X2 规则指向**真实存在的落点**（#5665）, 使
+  「新鲜度无人守护」至少是可见的事实, 而不是藏在一条指向空路径的规则后面。
+history:
+- at: "2026-11-28T00:30:00+00:00"
+  action: register
+  note: >-
+    Registered debt item RUNTIME-PROJECTIONS-STATE-ROOT-NO-WRITER.
+    触发: #5665 修 x2-rule-lint 时发现 X2-FRESH-GOV-DASHBOARD 的目标不存在, 顺查
+    全部 10 条投影的三根落点, 得到上表（状态根全空）。
+  actor: "governance-agent"
