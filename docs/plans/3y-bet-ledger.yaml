@@ -49595,7 +49595,8 @@ bets:
     运行期 helper 可从 release 字节独立重算核对 (不比 git 提交身份弱), 发布器与运行期 采用同一判定; ② 迁移基线自带身份 helper;
     ③ migrate() 接入 T10-366 的运行期契约 (切换前比身份 / 协调不可用则拒绝 / 切换后收敛验收 / 不收敛即回滚), 旧代运行期不报告身份时判据降级为「服务可用」
     且必须显式标注。
-  status: pending
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -49653,17 +49654,40 @@ bets:
     decision_ref: decision://accepted/BET-Y2Q4-T10-367
   completion_evidence:
     schema_version: completion-evidence-matrix/v1
-    overall_state: evaluating
     axes:
       engineering:
-        status: NOT_STARTED
-        evidence: {}
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@ebee26beb52fdf507f04d197c8b4a4e82d97ae70
+          tests:
+            ref: receipt://docs/reports/2026-11-27-t10-367-migrate-runtime-convergence-closeout.md
+            sha256: sha256:bf1bb87793a67b967c98017e519b14de3d43c1299b9c37d25ab4a9a28069cbc7
+          diff:
+            ref: receipt://docs/reports/2026-11-27-t10-367-migrate-runtime-convergence-closeout.md
+            sha256: sha256:bf1bb87793a67b967c98017e519b14de3d43c1299b9c37d25ab4a9a28069cbc7
+          rollback:
+            ref: receipt://docs/reports/2026-11-27-t10-367-migrate-runtime-convergence-closeout.md
+            sha256: sha256:bf1bb87793a67b967c98017e519b14de3d43c1299b9c37d25ab4a9a28069cbc7
       operational:
-        status: NOT_PROVEN
-        evidence: {}
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-t10-367-migrate-runtime-convergence-closeout.md
+            sha256: sha256:bf1bb87793a67b967c98017e519b14de3d43c1299b9c37d25ab4a9a28069cbc7
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-t10-367-migrate-runtime-convergence-closeout.md
+            sha256: sha256:bf1bb87793a67b967c98017e519b14de3d43c1299b9c37d25ab4a9a28069cbc7
+          replay:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-367.md
+            sha256: sha256:233cfdecf41afb9fd027bf9544a15a98e499e9eae91854ceae0617bcf831dc44
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-t10-367-migrate-runtime-convergence-closeout.md
+            sha256: sha256:bf1bb87793a67b967c98017e519b14de3d43c1299b9c37d25ab4a9a28069cbc7
       value:
         status: NOT_PROVEN
         evidence: {}
+    overall_state: delivery_accepted
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
