@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import plistlib
@@ -48,6 +49,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
+import urllib.request
 import uuid
 from pathlib import Path
 
@@ -130,6 +134,25 @@ REFRESH_LAUNCH_AGENT_LABEL = "com.omostation.panorama-dashboard-refresh"
 PRODUCER_REMEDIATION = (
     "先重锚 code-main 再发布资产: bash bin/ssot/anchor-install-root.sh origin/main"
 )
+
+# 运行期一致性 (BET-Y2Q4-T10-366)。
+#
+# live server 的身份自校验把「正在执行的 release」钉死在 import 时解析出的
+# CODE_ROOT (runtime_paths.py.asset: `Path(__file__).resolve().parent`); 投影
+# revision 的绑定则来自采集器当时看到的 `current` 软链 ⇒ 每次发布换 release
+# oid, 运行中的 server 必然与新 revision 不等 ⇒ CODE_DRIFT ⇒ 静态资源 503
+# (T10-364 回执 §5 实测: publish 返回 ok:true, 宿主进入只读态直到人工重启)。
+# 发布器此前只校验「字节拷对了没有」, 从不读运行态 ⇒ 切换后宿主不收敛而
+# publish 仍报成功。本段把「切换后宿主收敛」纳入发布事务: 切换前比两侧身份,
+# 需要时由发布器重绑定运行期并验收收敛, 不收敛即回滚。
+RUNTIME_PORT = 43191
+RUNTIME_HEALTH_TIMEOUT_SECONDS = 5
+RUNTIME_CONVERGENCE_TIMEOUT_SECONDS = 180
+RUNTIME_CONVERGENCE_POLL_SECONDS = 5
+# 采集器刷新作业 (REFRESH_LAUNCH_AGENT_LABEL): 跑 current/panorama-collect-main.py,
+# 负责把投影 revision 重新发布成「绑定当前 release」的身份 ⇒ 刷新先于服务重启。
+# 本机健康探针必须直连: 环境里的 http_proxy/https_proxy 不该被用来问 127.0.0.1。
+_RUNTIME_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 BLOCKED_REASON = "g0_m0_hold_release_bet_required"
 BLOCKED_COMMANDS = frozenset({"apply", "capture"})
@@ -721,8 +744,192 @@ def check_producer_binding(release_root: Path) -> dict:
     }
 
 
+def _runtime_health_probe(port: int = RUNTIME_PORT) -> tuple[int | None, dict]:
+    """只读探针: GET /health; 返回 (status, payload)。探不通退化为 (None, {})。"""
+    url = f"http://127.0.0.1:{port}/health"
+    try:
+        with _RUNTIME_OPENER.open(url, timeout=RUNTIME_HEALTH_TIMEOUT_SECONDS) as response:
+            status = int(response.status)
+            body = response.read()
+    except urllib.error.HTTPError as exc:
+        status = int(exc.code)
+        try:
+            body = exc.read()
+        except OSError:
+            body = b""
+    except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException):
+        return None, {}
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return status, {}
+    return status, payload if isinstance(payload, dict) else {}
+
+
+def runtime_binding_snapshot(*, expected_pid: int | None = None) -> dict:
+    """运行中 live server 的身份绑定快照 (只读)。
+
+    pid 必须与 launchd 登记的进程一致才采信 —— 否则探到的可能是别的进程,
+    拿它当「运行中的身份」会得出假结论。
+    """
+    status, payload = _runtime_health_probe()
+    if status is None:
+        return {"available": False, "reason": "runtime_unreachable"}
+    pid = payload.get("pid")
+    if expected_pid is None:
+        return {"available": False, "reason": "runtime_pid_unverified", "pid": pid}
+    if pid != expected_pid:
+        return {"available": False, "reason": "runtime_pid_mismatch", "pid": pid,
+                "expected_pid": expected_pid}
+    return {
+        "available": True,
+        "pid": pid,
+        "code_oid": payload.get("dashboard_code_oid"),
+        "tree_sha256": payload.get("dashboard_tree_sha256"),
+        "code_bundle_sha256": payload.get("dashboard_code_sha256"),
+        "code_drift": payload.get("code_drift"),
+        "projection_status": payload.get("projection_status"),
+    }
+
+
+def release_identity_of(release_root: Path) -> dict:
+    """候选 release 的身份三元组 —— 走该 release 自带的 release_identity helper。"""
+    root = Path(release_root)
+    helper = root / "release_identity.py"
+    if helper.is_symlink() or not helper.is_file():
+        return {"ok": False, "reason": "release_identity_helper_missing"}
+    try:
+        import types
+        module = types.ModuleType("zhixing_publisher_candidate_identity")
+        exec(compile(helper.read_bytes(), str(helper), "exec"), module.__dict__)
+        identity = module.managed_release_identity(root)
+    except (OSError, ValueError, ImportError, AttributeError, SyntaxError, TypeError) as exc:
+        return {"ok": False, "reason": "release_identity_invalid", "detail": str(exc)}
+    if not isinstance(identity, dict):
+        return {"ok": False, "reason": "release_identity_missing"}
+    return {"ok": True, "code_oid": identity.get("code_oid"),
+            "tree_sha256": identity.get("tree_sha256"),
+            "code_bundle_sha256": identity.get("code_bundle_sha256")}
+
+
+def _identity_complete(identity: dict) -> bool:
+    return bool(
+        re.fullmatch(r"[0-9a-f]{40}", identity.get("code_oid") or "")
+        and re.fullmatch(r"[0-9a-f]{64}", identity.get("tree_sha256") or "")
+        and re.fullmatch(r"[0-9a-f]{64}", identity.get("code_bundle_sha256") or "")
+    )
+
+
+def check_runtime_binding(candidate_root: Path, snapshot: dict) -> dict:
+    """切换前判定: 候选 release 的身份与运行中 server 的绑定是否一致。
+
+    不可观测 (探不到运行实例 / 身份不完整) ⇒ 跳过, 不阻断 —— 无法自证时
+    不得反手阻断发布。
+    绑定保持 ⇒ 放行; 绑定将被破坏 ⇒ 必须能在切换后完成重绑定, 否则不得切换。
+    """
+    if not snapshot.get("available"):
+        return {"ok": True, "checked": False,
+                "reason": snapshot.get("reason", "runtime_not_observable")}
+    candidate = release_identity_of(candidate_root)
+    if not candidate.get("ok"):
+        return {"ok": True, "checked": False,
+                "reason": candidate.get("reason", "candidate_identity_unreadable"),
+                "detail": candidate.get("detail")}
+    server = {"code_oid": snapshot.get("code_oid"),
+              "tree_sha256": snapshot.get("tree_sha256"),
+              "code_bundle_sha256": snapshot.get("code_bundle_sha256")}
+    identity = {"code_oid": candidate.get("code_oid"),
+                "tree_sha256": candidate.get("tree_sha256"),
+                "code_bundle_sha256": candidate.get("code_bundle_sha256")}
+    if not _identity_complete(server):
+        return {"ok": True, "checked": False, "reason": "runtime_identity_incomplete",
+                "server": server}
+    if not _identity_complete(identity):
+        return {"ok": True, "checked": False, "reason": "candidate_identity_incomplete",
+                "candidate": identity}
+    if server == identity:
+        return {"ok": True, "checked": True, "reason": "runtime_identity_preserved",
+                "code_oid": identity["code_oid"]}
+    return {
+        "ok": False, "checked": True, "reason": "runtime_identity_will_break",
+        "server": server, "candidate": identity,
+        "detail": (
+            "切换 current 会让运行中的 live server 仍钉在旧 release ⇒ 投影刷新后 "
+            "/health 报 code_drift 且静态资源 503; 发布器必须完成重绑定与收敛验收。"
+        ),
+    }
+
+
+def _launchd_job_loaded(label: str) -> bool:
+    """该 launchd 作业是否已加载 (可 kickstart)。"""
+    domain = f"gui/{os.getuid()}/{label}"
+    try:
+        completed = subprocess.run(["launchctl", "print", domain], check=False,
+                                   capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return completed.returncode == 0
+
+
+def _runtime_coordination_available() -> bool:
+    """重绑定通道是否可用: 采集器刷新作业已加载。
+
+    刷新作业缺席 ⇒ 投影 revision 永不重新发布成绑定新 release 的身份 ⇒
+    切换后必然长期漂移 ⇒ 此时不得切换。
+    """
+    return _launchd_job_loaded(REFRESH_LAUNCH_AGENT_LABEL)
+
+
+def _kickstart(label: str, *, kill: bool = False) -> dict:
+    """对 launchd 作业发一次 kickstart (机器级动作)。"""
+    command = (["launchctl", "kickstart"] + (["-k"] if kill else [])
+               + [f"gui/{os.getuid()}/{label}"])
+    try:
+        completed = subprocess.run(command, check=False, capture_output=True,
+                                   text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return {"ok": False, "label": label, "reason": "kickstart_failed", "detail": str(exc)}
+    detail = (completed.stderr or completed.stdout or "").strip()
+    return {"ok": completed.returncode == 0, "label": label,
+            "returncode": completed.returncode, "detail": detail[:400] or None}
+
+
+def coordinate_runtime(*, expected_oid: str | None = None,
+                       timeout: int = RUNTIME_CONVERGENCE_TIMEOUT_SECONDS,
+                       poll: int = RUNTIME_CONVERGENCE_POLL_SECONDS) -> dict:
+    """让运行中的 live server 重新绑定到新 release, 并验收收敛。
+
+    1. kick 采集器刷新作业 —— 让投影 revision 重新发布成绑定新 release 的身份;
+    2. kick -k live server —— 让它重新 resolve() 到新 release;
+    3. 轮询 /health 直到 code_drift == false 且绑定 oid == 期望 oid。
+    """
+    steps: list[dict] = []
+    if _launchd_job_loaded(REFRESH_LAUNCH_AGENT_LABEL):
+        steps.append({"step": "refresh_kickstart", **_kickstart(REFRESH_LAUNCH_AGENT_LABEL)})
+    steps.append({"step": "dashboard_restart", **_kickstart(LAUNCH_AGENT_LABEL, kill=True)})
+    deadline = time.monotonic() + max(timeout, 0)
+    samples: list[dict] = []
+    last: dict = {}
+    while True:
+        status, payload = _runtime_health_probe()
+        observed = {"status": status, "code_drift": payload.get("code_drift"),
+                    "dashboard_code_oid": payload.get("dashboard_code_oid"),
+                    "projection_status": payload.get("projection_status"),
+                    "pid": payload.get("pid")}
+        samples.append(observed)
+        last = observed
+        if (status == 200 and observed["code_drift"] is False
+                and (expected_oid is None or observed["dashboard_code_oid"] == expected_oid)):
+            return {"ok": True, "converged": True, "steps": steps, "last": observed,
+                    "samples": samples}
+        if time.monotonic() >= deadline:
+            break
+        time.sleep(max(poll, 0))
+    return {"ok": False, "converged": False, "steps": steps, "last": last, "samples": samples}
+
+
 def publish(files: list[str] | tuple[str, ...] | None, *, publication_id: str | None = None) -> dict:
-    """受管发布: 版本目录准备 → 原子切换 current → SHA 校验 → 失败回滚。
+    """受管发布: 版本目录准备 → 原子切换 current → SHA 校验 → 运行期收敛 → 失败回滚。
 
     前置: plist entrypoint 必须已迁移到 current/live_server.py (先跑 migrate)。
     """
@@ -791,6 +998,22 @@ def publish(files: list[str] | tuple[str, ...] | None, *, publication_id: str | 
             "producer_binding": binding,
             "write_performed": False,
         }
+    # 运行期绑定前置判定 (BET-Y2Q4-T10-366): 切换 current 之前必须先知道
+    # 「这次切换会不会把运行中的 live server 打成 code_drift」。
+    runtime_snapshot = runtime_binding_snapshot(expected_pid=runtime.get("pid"))
+    runtime_binding = check_runtime_binding(release_root, runtime_snapshot)
+    if not runtime_binding.get("ok") and not _runtime_coordination_available():
+        _discard_new_version(release_root, not prepared.get("created", False))
+        return {
+            "ok": False,
+            "reason": "runtime_coordination_unavailable",
+            "detail": (
+                "本次发布会使运行中的 live server 身份绑定失效, 但宿主没有可用的重绑定"
+                "通道 (采集器刷新作业未加载) ⇒ 不得切换 current。"
+            ),
+            "runtime_binding": runtime_binding,
+            "write_performed": False,
+        }
     switched = _switch_current(release_root)
     if not switched.get("ok"):
         return switched
@@ -807,11 +1030,41 @@ def publish(files: list[str] | tuple[str, ...] | None, *, publication_id: str | 
             "deploy": deployed,
             "recovery": recovery,
         }
+    # 运行期收敛验收 (BET-Y2Q4-T10-366): 切换只是指针, 宿主真正可用要等
+    # 「投影 revision 绑定新 release 且 live server 重绑定新 release」。
+    runtime_result = {"checked": runtime_binding.get("checked", False),
+                      "reason": runtime_binding.get("reason"), "coordinated": False}
+    if not runtime_binding.get("ok"):
+        expected_oid = runtime_binding.get("candidate", {}).get("code_oid")
+        convergence = coordinate_runtime(expected_oid=expected_oid,
+                                         timeout=RUNTIME_CONVERGENCE_TIMEOUT_SECONDS,
+                                         poll=RUNTIME_CONVERGENCE_POLL_SECONDS)
+        runtime_result.update({"coordinated": True,
+                               "converged": convergence.get("converged"),
+                               "steps": convergence.get("steps"),
+                               "last": convergence.get("last")})
+        if not convergence.get("converged"):
+            recovery = _restore_switch_state(snapshot)
+            rollback = coordinate_runtime(expected_oid=runtime_snapshot.get("code_oid"),
+                                          timeout=RUNTIME_CONVERGENCE_TIMEOUT_SECONDS,
+                                          poll=RUNTIME_CONVERGENCE_POLL_SECONDS)
+            if recovery.get("ok"):
+                _discard_new_version(release_root, not prepared.get("created", False))
+            return {
+                "ok": False,
+                "reason": "runtime_convergence_failed",
+                "detail": "发布后运行期未收敛到新 release, 已回滚 current",
+                "runtime": runtime_result,
+                "recovery": recovery,
+                "rollback_runtime": {"converged": rollback.get("converged"),
+                                     "last": rollback.get("last")},
+                "write_performed": True,
+            }
     return {
         "ok": True, "oid": oid, "version_id": release_root.name, "commit_oid": oid,
         "identity_kind": identity_kind, "version_dir": prepared["version_dir"],
         "previous_version": previous, "write_performed": True,
-        "manifest": prepared["manifest"], "deploy": deployed,
+        "manifest": prepared["manifest"], "deploy": deployed, "runtime": runtime_result,
     }
 
 
@@ -823,7 +1076,30 @@ def restore() -> dict:
     target = RELEASES_DIR / previous
     if not target.is_dir():
         return {"ok": False, "reason": "previous_version_missing", "version": previous}
-    return _switch_current(target)
+    runtime = _running_registered_runtime()
+    snapshot = runtime_binding_snapshot(
+        expected_pid=runtime.get("pid") if runtime.get("ok") else None)
+    binding = check_runtime_binding(target, snapshot)
+    switched = _switch_current(target)
+    if not switched.get("ok"):
+        return switched
+    result = dict(switched)
+    result["restored_version"] = previous
+    if binding.get("ok"):
+        result["runtime"] = {"checked": binding.get("checked", False),
+                              "reason": binding.get("reason"), "coordinated": False}
+        return result
+    convergence = coordinate_runtime(
+        expected_oid=binding.get("candidate", {}).get("code_oid"),
+        timeout=RUNTIME_CONVERGENCE_TIMEOUT_SECONDS,
+        poll=RUNTIME_CONVERGENCE_POLL_SECONDS)
+    result["runtime"] = {"checked": True, "reason": binding.get("reason"),
+                          "coordinated": True, "converged": convergence.get("converged"),
+                          "steps": convergence.get("steps"), "last": convergence.get("last")}
+    if not convergence.get("converged"):
+        result["ok"] = False
+        result["reason"] = "runtime_convergence_failed"
+    return result
 
 
 def migrate() -> dict:
