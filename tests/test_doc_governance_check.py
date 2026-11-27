@@ -311,3 +311,42 @@ def test_warning_burndown_uses_latest_due_checkpoint() -> None:
     )
     assert not behind["on_track"]
     assert behind["expected_max_findings"] == 109
+
+
+def _write_review_doc(tmp_path: Path, lifecycle: str) -> Path:
+    index = tmp_path / "docs" / "SYSTEM-INDEX.md"
+    doc = tmp_path / "docs" / "guide.md"
+    index.parent.mkdir(parents=True, exist_ok=True)
+    index.write_text("docs/guide.md\n", encoding="utf-8")
+    doc.write_text(
+        "---\n"
+        f"lifecycle: {lifecycle}\n"
+        "last-reviewed: 2026-08-28\n"
+        "owner: team\n"
+        "status: active\n"
+        "---\n"
+        "# guide\n",
+        encoding="utf-8",
+    )
+    return doc
+
+
+def test_stale_review_skips_history_lifecycle(tmp_path: Path) -> None:
+    """lifecycle: history 是冻结记录, 不按周期复审 SLA 判定 (2026-11-27)。
+
+    背景: 18 份 governance-evidence/waiver-*.md (last-reviewed 2026-08-28) 同日越过
+    90 天 SLA, 把 main 的 gac-gate 打红 —— 而豁免记录的内容根本不再变更。
+    """
+    registry = _registry()
+    registry["metadata"]["valid_lifecycles"] = ["contract", "entry", "history"]
+    doc = _write_review_doc(tmp_path, "history")
+    result = CHECKER.check_file(doc, tmp_path, registry, date(2026, 11, 27))
+    assert not [finding for finding in result if finding["rule"] == "stale_review"]
+
+
+def test_stale_review_still_flags_non_history_lifecycle(tmp_path: Path) -> None:
+    """反面对照: 若把豁免写成「一律不报」, 这条会红 —— 判据没有被打瘸。"""
+    doc = _write_review_doc(tmp_path, "contract")
+    result = CHECKER.check_file(doc, tmp_path, _registry(), date(2026, 11, 27))
+    stale = [finding for finding in result if finding["rule"] == "stale_review"]
+    assert stale and "age=91d" in stale[0]["evidence"]
