@@ -48592,7 +48592,8 @@ bets:
     source_states (21 键) 现成可喂。本 BET 按裁定表逐项处理: 6 字段退役 (模板侧
     死引用清除, 行为等价), live_sources 修兜底 (swarm 面板从恒 NO_DATA 变真实
     21 源数据)。
-  status: pending
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P2
@@ -48626,6 +48627,42 @@ bets:
     expect: 零命中 (退出码 1)。
   - cmd: python3 bin/gac/zhixing-host-sync.py check
     expect: template.html state=in_sync。
+  completion_evidence:
+    axes:
+      engineering:
+        evidence:
+          diff:
+            ref: receipt://docs/reports/2026-11-27-t10-354-publish-closeout.md#done_when-逐条复测
+            sha256: sha256:76dbe130a33b3fa30ceeb9e432a3e39f8cda16a39422b74f3d07dc2cbdd0ad6f
+          merged_reachable_commit:
+            ref: git://origin/main@cd4ae2ec31bc39ce0dbf4281b39c26e57ed3ace7
+          rollback:
+            ref: receipt://docs/reports/2026-11-27-t10-354-publish-closeout.md#一次自伤与自愈
+            sha256: sha256:76dbe130a33b3fa30ceeb9e432a3e39f8cda16a39422b74f3d07dc2cbdd0ad6f
+          tests:
+            ref: receipt://docs/reports/2026-11-27-t10-354-publish-closeout.md#线上实测
+            sha256: sha256:76dbe130a33b3fa30ceeb9e432a3e39f8cda16a39422b74f3d07dc2cbdd0ad6f
+        status: VERIFIED
+      operational:
+        evidence:
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-t10-354-publish-closeout.md#残留引用归因
+            sha256: sha256:76dbe130a33b3fa30ceeb9e432a3e39f8cda16a39422b74f3d07dc2cbdd0ad6f
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-t10-354-publish-closeout.md
+            sha256: sha256:76dbe130a33b3fa30ceeb9e432a3e39f8cda16a39422b74f3d07dc2cbdd0ad6f
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-t10-354-publish-closeout.md#线上实测
+            sha256: sha256:76dbe130a33b3fa30ceeb9e432a3e39f8cda16a39422b74f3d07dc2cbdd0ad6f
+          replay:
+            ref: repo://.omo/_knowledge/retros/BET-Y2Q4-T10-354.md
+            sha256: sha256:e783969224fb06919bcb11da797f199e4615af9cd261f827f223e3664a2705cd
+        status: PROVEN
+      value:
+        evidence: {}
+        status: NOT_PROVEN
+    overall_state: delivery_accepted
+    schema_version: completion-evidence-matrix/v1
   circuit_breaker: >-
     若退役某字段导致页面 JS 报错 (渲染断链), 停止并回退该处改动, 交 owner 裁决
     保面板还是保契约。
@@ -48953,7 +48990,7 @@ bets:
     content_digest: sha256:9586d359d5f7afd5b798ee6c4aee900ba3c9fc3d7e7f1da8b69c15ce78b7460b
     decision_ref: decision://accepted/BET-Y2Q4-T10-355
   non_goals:
-  - 不动本机 plist (generate: false 手写安装面, 由宿主维护)。
+  - '不动本机 plist (generate: false 手写安装面, 由宿主维护)。'
   - 不清理宿主根孤儿 orchestrator.py 残骸 (部署根文件, 属 dashboard 运维面)。
   - 不改 ADR-0373 sentinel 设计 (1970 非 bug, 生成器 600-603 行注释自证)。
   - 不在本 BET 重构 cron 直提为 worktree PR 模式 (立债留后续)。
