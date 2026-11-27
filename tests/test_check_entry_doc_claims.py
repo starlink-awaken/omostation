@@ -10,7 +10,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-MODULE_PATH = Path(__file__).parents[1] / "bin/ssot/check-doc-claims.py"
+MODULE_PATH = Path(__file__).parents[1] / "bin/ssot/check-entry-doc-claims.py"
 SPEC = importlib.util.spec_from_file_location("check_doc_claims", MODULE_PATH)
 assert SPEC and SPEC.loader
 MOD = importlib.util.module_from_spec(SPEC)

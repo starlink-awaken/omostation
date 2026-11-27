@@ -25,7 +25,7 @@
 与调用方决定, 不靠本脚本的退出码隐式表达（`--block` 仅供本地显式使用）。
 
 用法:
-  python3 bin/ssot/check-doc-claims.py [--json] [--surface project-entry]
+  python3 bin/ssot/check-entry-doc-claims.py [--json] [--surface project-entry]
                                         [--workspace PATH] [--block]
 """
 
