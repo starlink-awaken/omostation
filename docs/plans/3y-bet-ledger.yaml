@@ -48677,7 +48677,8 @@ bets:
     昨晚让行教训「无进程 ≠ 无会话」(T355 done-transition 撞车复盘:
     以「全机无进程 + 事件面冻结 2.5h」判孤儿工单误杀并发会话, agent 会话
     无常驻进程可观察, 冻结时长须按会话量级放宽)。
-  status: in_progress
+  status: done
+  done_at: 2026-11-27
   window: Y2Q4
   track: T10-TOOLING
   priority: P3
@@ -48700,6 +48701,35 @@ bets:
     spec_version: 1.0.0
     content_digest: sha256:c7fc192d599cd9e882f6e1531aa927e98373f8acf155dc03b855dc22e0415a1d
     decision_ref: decision://accepted/BET-Y2Q4-T10-360
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: delivery_accepted  # 派生态: eng VERIFIED + oper PROVEN (canary 回执 2026-11-27) + value NOT_PROVEN
+    axes:
+      engineering:
+        status: VERIFIED
+        evidence:
+          merged_reachable_commit:
+            ref: git://origin/main@850695b5714e1694d080dbe8cb12d64c9ac2417c
+          tests:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+          diff:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+          rollback:
+            ref: receipt://.omo/_knowledge/retros/BET-Y2Q4-T10-360.md
+      operational:
+        status: PROVEN
+        evidence:
+          live_canary:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          fresh_receipt:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          replay:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+          cleanup:
+            ref: receipt://docs/reports/2026-11-27-cron-canary-first-run-receipt.md
+      value:
+        status: NOT_PROVEN
+        evidence: {}
   non_goals:
   - 不动 T356/357 已 merge 的代码面 (只翻台账状态)。
   - 不重跑 cron (首跑是自动调度, 本 BET 只收证据)。
