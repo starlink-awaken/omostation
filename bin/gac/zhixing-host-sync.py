@@ -115,6 +115,22 @@ RELEASE_MANIFEST = ".zhixing-host-release.json"
 RUNTIME_BYTECODE_DIRS = frozenset({"__pycache__"})
 RUNTIME_BYTECODE_SUFFIX = ".pyc"
 
+# 生产者字节绑定 (BET-Y2Q4-T10-365)。
+#
+# 采集器在宿主 refresh 作业里运行时自带身份自校验:
+# `collect_projection_producer_identity()` 要求「正在执行的字节 == PANORAMA_CODE_ROOT
+# (code-main) HEAD 的 bin/panorama/panorama-collect.py」, 不等即抛
+# projection_collector_not_at_bound_commit 并**主动拒绝运行**。
+# 发布器此前只校验「发布的字节 == 仓库资产字节」—— 半边契约: 会发布一份**必然让
+# 采集器拒绝运行**的字节 ⇒ 投影停更 ⇒ live server CODE_DRIFT ⇒ 静态资源 503
+# (BET-Y2Q4-T10-364 回执 §5 实测并回滚)。发布前必须先验这条绑定。
+PRODUCER_COLLECTOR_RELPATH = "bin/panorama/panorama-collect.py"
+DEPLOYED_COLLECTOR_NAME = "panorama-collect-main.py"
+REFRESH_LAUNCH_AGENT_LABEL = "com.omostation.panorama-dashboard-refresh"
+PRODUCER_REMEDIATION = (
+    "先重锚 code-main 再发布资产: bash bin/ssot/anchor-install-root.sh origin/main"
+)
+
 BLOCKED_REASON = "g0_m0_hold_release_bet_required"
 BLOCKED_COMMANDS = frozenset({"apply", "capture"})
 
@@ -626,6 +642,85 @@ def _discard_new_version(version_dir: Path, existed_before: bool) -> None:
         pass
 
 
+def _producer_code_root() -> Path | None:
+    """运行采集器的生产者代码根 —— 解析顺序即优先级。
+
+    1. refresh 作业 plist 的 PANORAMA_CODE_ROOT (运行采集器的真实上下文);
+    2. 进程环境 PANORAMA_CODE_ROOT;
+    3. 默认 ~/.local/share/zhixing-dashboard/code-main。
+    """
+    plist_path = (
+        Path.home() / "Library" / "LaunchAgents" / f"{REFRESH_LAUNCH_AGENT_LABEL}.plist"
+    )
+    try:
+        with plist_path.open("rb") as handle:
+            env = (plistlib.load(handle) or {}).get("EnvironmentVariables") or {}
+        configured = str(env.get("PANORAMA_CODE_ROOT") or "").strip()
+        if configured:
+            return Path(configured).expanduser()
+    except (OSError, ValueError, plistlib.InvalidFileException):
+        pass
+    inherited = str(os.environ.get("PANORAMA_CODE_ROOT") or "").strip()
+    if inherited:
+        return Path(inherited).expanduser()
+    default = DASHBOARD_DIR / "code-main"
+    return default if default.exists() else None
+
+
+def _bound_producer_collector(root: Path) -> bytes | None:
+    """生产者代码根 HEAD 上的采集器字节; 取不到返回 None (不可验证)。"""
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), "show", f"HEAD:{PRODUCER_COLLECTOR_RELPATH}"],
+            capture_output=True, timeout=15, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if completed.returncode != 0:
+        return None
+    return completed.stdout
+
+
+def check_producer_binding(release_root: Path) -> dict:
+    """发布前置检查: 待发布采集器字节是否仍绑定在生产者代码根 HEAD 上。
+
+    成立 ⇒ 放行; 不成立 ⇒ 拒绝发布 (reason=producer_binding_unsatisfied);
+    不可验证 (生产者根缺失 / 非 git 仓 / HEAD 无该路径) ⇒ 跳过, 不阻断 ——
+    无法自证时不得反手阻断发布。
+    """
+    deployed = Path(release_root) / DEPLOYED_COLLECTOR_NAME
+    if not deployed.is_file():
+        return {"ok": True, "checked": False, "reason": "collector_absent_in_release"}
+    root = _producer_code_root()
+    if root is None or not root.is_dir():
+        return {"ok": True, "checked": False, "reason": "producer_root_unavailable",
+                "producer_root": str(root) if root else None}
+    bound = _bound_producer_collector(root)
+    if bound is None:
+        return {"ok": True, "checked": False, "reason": "producer_binding_unverifiable",
+                "producer_root": str(root)}
+    try:
+        release_bytes = deployed.read_bytes()
+    except OSError as exc:
+        return {"ok": True, "checked": False, "reason": "release_collector_unreadable",
+                "producer_root": str(root), "detail": str(exc)}
+    release_sha = hashlib.sha256(release_bytes).hexdigest()
+    bound_sha = hashlib.sha256(bound).hexdigest()
+    if release_bytes == bound:
+        return {"ok": True, "checked": True, "reason": "producer_binding_satisfied",
+                "producer_root": str(root), "sha256": release_sha}
+    return {
+        "ok": False, "checked": True, "reason": "producer_binding_unsatisfied",
+        "producer_root": str(root),
+        "release_sha256": release_sha, "bound_sha256": bound_sha,
+        "detail": (
+            "待发布采集器字节与生产者代码根 HEAD 的采集器不一致 —— 采集器会抛 "
+            "projection_collector_not_at_bound_commit 拒绝运行, 投影停更后静态资源 503。"
+            + PRODUCER_REMEDIATION
+        ),
+    }
+
+
 def publish(files: list[str] | tuple[str, ...] | None, *, publication_id: str | None = None) -> dict:
     """受管发布: 版本目录准备 → 原子切换 current → SHA 校验 → 失败回滚。
 
@@ -684,6 +779,18 @@ def publish(files: list[str] | tuple[str, ...] | None, *, publication_id: str | 
         except (OSError, ValueError, ImportError, AttributeError) as exc:
             _discard_new_version(release_root, not prepared.get("created", False))
             return {"ok": False, "reason": "managed_release_identity_invalid", "detail": str(exc)}
+    # 生产者字节绑定前置检查: 切换 current 之前必须成立, 否则采集器会在宿主上
+    # 拒绝运行 ⇒ 投影停更 ⇒ 静态资源 503 (BET-Y2Q4-T10-365)。
+    binding = check_producer_binding(release_root)
+    if not binding.get("ok"):
+        _discard_new_version(release_root, not prepared.get("created", False))
+        return {
+            "ok": False,
+            "reason": binding.get("reason", "producer_binding_unsatisfied"),
+            "detail": binding.get("detail"),
+            "producer_binding": binding,
+            "write_performed": False,
+        }
     switched = _switch_current(release_root)
     if not switched.get("ok"):
         return switched
