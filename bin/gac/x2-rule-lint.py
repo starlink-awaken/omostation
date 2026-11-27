@@ -39,10 +39,55 @@ def load_rules(path: Path) -> list[dict]:
     return rules
 
 
+def _ignore_patterns(root: Path) -> list[str]:
+    """收集 .gitignore 模式（根 + 一层子目录, 纯 Python 解析; 本工具必须保持只读）。"""
+    patterns: list[str] = []
+    candidates = [root / ".gitignore"]
+    if root.is_dir():
+        candidates += [
+            d / ".gitignore" for d in sorted(root.glob("*")) if d.is_dir() and (d / ".gitignore").is_file()
+        ]
+    for path in candidates:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        rel_dir = path.parent.relative_to(root).as_posix()
+        prefix = "" if rel_dir == "." else rel_dir + "/"
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or line.startswith("!"):
+                continue
+            patterns.append(prefix + line)
+    return patterns
+
+
+def is_ignored(rel_path: str, patterns: list[str]) -> bool:
+    """rel_path 是否被任一 gitignore 模式覆盖（够用即可, 不追求 git 全语义）。
+
+    用途是区分两种「glob 0 匹配」: 目标已迁走（真问题） vs 目标是**运行态产物**
+    （被 gitignore, 干净检出里本就不存在 —— 不是问题）。2026-11-28 实测四条规则里
+    有三条属后者, 旧判据把它们一并报成 warn, 制造噪声。
+    """
+    import fnmatch
+
+    for pattern in patterns:
+        p = pattern.rstrip("/")
+        if not p:
+            continue
+        if fnmatch.fnmatchcase(rel_path, p) or fnmatch.fnmatchcase(rel_path, p + "/*"):
+            return True
+        # 目录型模式: `.omo/debt/*` 命中 `.omo/debt/dashboard/current.yaml`
+        if "*" not in p and (rel_path == p or rel_path.startswith(p + "/")):
+            return True
+    return False
+
+
 def lint_rules(rules: list[dict], root: Path) -> list[dict]:
     """检查每条 rule 的健康度."""
     issues: list[dict] = []
     seen_ids: Counter = Counter()
+    ignore_patterns = _ignore_patterns(root)
 
     for i, rule in enumerate(rules):
         rid = rule.get("rule_id", f"<index {i}>")
@@ -104,8 +149,8 @@ def lint_rules(rules: list[dict], root: Path) -> list[dict]:
         target = rule.get("target", "")
         if target:
             matches = list(root.glob(target))
-            if not matches:
-                # archived 项目豁免
+            if not matches and not is_ignored(re.sub(r"^\./", "", target), ignore_patterns):
+                # archived 项目豁免; 被 gitignore 的运行态目标同样豁免（干净检出里本就不存在）
                 if not rule.get("archived", False):
                     issues.append(
                         {
