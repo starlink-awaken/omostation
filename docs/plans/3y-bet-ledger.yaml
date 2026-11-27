@@ -49582,6 +49582,88 @@ bets:
         evidence: {}
     overall_state: delivery_accepted
 
+- id: BET-Y2Q4-T10-367
+  title: 宿主迁移路径一致性 —— 迁移基线必须可被运行期绑定, 且切换后必须收敛运行期
+  goal: BET-Y2Q4-T10-366 复盘 §4 登记的同族残留 —— migrate() 同样切 current 但不收敛运行期。 往下追一层还有第二处空洞
+    —— 迁移激活的基线 release 在运行期根本绑不了。 事实链 —— migrate() (:1105-1220) 只做「捕获部署态 → 建基线 → 切 current
+    → 改 plist」, 没有运行期身份快照、 没有切换前比身份、没有协调与收敛验收、没有收敛失败回滚 (对照 publish() :931-1067 与 restore()
+    :1071-1104)。 而基线清单的形态 (identity_kind=deployment_baseline, commit_oid=null, :397/:248)
+    被运行期身份 helper (release_identity.py.asset:46-49) 一律 fail-closed 拒绝 (release_manifest_source_invalid)
+    ⇒ 采集器与 live server 都绑不了它; 更靠前一步 —— 基线 release 里根本没有身份 helper —— _runtime_baseline_assets()
+    (:607-652) 只从部署根捕获, 部署根没有 release_identity.py。 同时发布器 _base_manifest_valid() (:269-275)
+    却接受这种运行期必然拒绝的 清单 ⇒ 发布器与运行期对同一份清单判定相反。 本轮把两处一起收 —— ① 迁移基线改为内容寻址身份 (content_oid),
+    运行期 helper 可从 release 字节独立重算核对 (不比 git 提交身份弱), 发布器与运行期 采用同一判定; ② 迁移基线自带身份 helper;
+    ③ migrate() 接入 T10-366 的运行期契约 (切换前比身份 / 协调不可用则拒绝 / 切换后收敛验收 / 不收敛即回滚), 旧代运行期不报告身份时判据降级为「服务可用」
+    且必须显式标注。
+  status: pending
+  window: Y2Q4
+  track: T10-TOOLING
+  priority: P2
+  appetite: 2 hours
+  risk_level: L1
+  human_gate: false
+  pasw_required: false
+  retro: required
+  value_indicator_policy: false
+  objective_ref: OBJ-TRUST
+  workflow: bet-execution
+  write_surfaces:
+  - bin/gac/zhixing-host-sync.py
+  - bin/panorama/assets/host/release_identity.py.asset
+  - tests/unit/test_zhixing_migrate_runtime_convergence.py
+  - tests/unit/test_zhixing_release_identity.py
+  - tests/test_zhixing_host_sync_publish.py
+  - docs/plans/3y-bet-ledger.yaml
+  - docs/superpowers/specs/2026-11-27-host-migrate-runtime-convergence.md
+  - .omo/_knowledge/retros/BET-Y2Q4-T10-367.md
+  - docs/reports/2026-11-27-t10-367-migrate-runtime-convergence-closeout.md
+  non_goals:
+  - 不改 live server 与采集器的身份自校验语义 (它们是对的, 缺的是基线这一种形态的表达能力)。
+  - 不改 publish() / restore() 的既有语义。
+  - 不改宿主仓 zhixing-dashboard 的任何文件 (含看门狗探针缺 --fail) —— 跨仓写面, 留宿主仓裁决。
+  - 不动 code-main 重锚 (bin/ssot/anchor-install-root.sh 属机器级运行时变更, 属 principal 窗口)。
+  - 不改治理占比判据面 (GOVERNANCE_CEILING / _classify)。
+  - 本轮不在本机执行任何一次真实迁移或真实发布 (机器级变更, 属 principal 窗口)。
+  done_when:
+  - 迁移基线清单携带 content_oid (内容寻址), 且运行期身份 helper 能从 release 字节独立重算核对; 篡改基线任一资产字节或 content_oid
+    均 fail-closed (ReleaseIdentityError)
+  - 迁移基线 release 自带身份 helper (release_identity.py), 缺该资产时迁移拒绝并给出可执行原因
+  - 发布器 _base_manifest_valid() 与运行期 helper 对同一份基线清单判定一致 (旧的裸基线形态两侧都拒)
+  - migrate() 切换 current 之前比两侧身份; 绑定将被破坏且协调通道不可用时拒绝迁移 (ok=false, reason=runtime_coordination_unavailable)
+    且 current 与 plist 均未变更
+  - migrate() 切换之后收敛运行期并验收 (协调动作 + /health 读数进入返回值 runtime 段); 不收敛即回滚 (ok=false, reason=runtime_convergence_failed,
+    plist 与 current 复原)
+  - 旧代运行期不报告身份时收敛判据降级为「服务可用」且在结果里显式标注 (不得伪装成身份收敛)
+  - 判据有正反用例 (单测 —— 基线可绑定 / 内容摘要被篡改即拒 / 协调不可用拒绝 / 收敛成功 / 不收敛回滚 / 降级判据显式标注)
+  - 接线钉在真实 migrate() 入口 (沿用「测试绕过接线就钉不住接线」纪律)
+  - 既有发布面测试不回归 (tests/unit/test_zhixing_release_identity.py + tests/unit/test_zhixing_publish_runtime_convergence.py
+    + tests/test_zhixing_host_sync_publish.py)
+  verify:
+  - cmd: python3 -m pytest tests/unit/test_zhixing_migrate_runtime_convergence.py -q
+    expect: 全部通过 (exit 0)。
+  - cmd: python3 -m pytest tests/unit/test_zhixing_release_identity.py tests/unit/test_zhixing_publish_runtime_convergence.py
+      tests/test_zhixing_host_sync_publish.py -q
+    expect: 全部通过 (exit 0), 发布面既有行为不回归。
+  - cmd: python3 bin/plan/bet-ledger.py lint
+    expect: 本条目无新增红 (预存错误另记)。
+  accepted_specifications:
+  - spec_ref: repo://docs/superpowers/specs/2026-11-27-host-migrate-runtime-convergence.md
+    spec_version: 1.0.0
+    content_digest: sha256:0ecc4ec0044dd25d86e6c5bfdf904556d7291b8496a3629e415da4f61185f127
+    decision_ref: decision://accepted/BET-Y2Q4-T10-367
+  completion_evidence:
+    schema_version: completion-evidence-matrix/v1
+    overall_state: evaluating
+    axes:
+      engineering:
+        status: NOT_STARTED
+        evidence: {}
+      operational:
+        status: NOT_PROVEN
+        evidence: {}
+      value:
+        status: NOT_PROVEN
+        evidence: {}
 campaigns:
 - id: CMP-W0-PORTFOLIO-TRUST
   max_parallel_writers: 2
@@ -49720,7 +49802,7 @@ meta:
   - done
   - blocked
   - failed
-  total_bets: 612
+  total_bets: 613
   windows:
   - Y1Q1
   - Y1Q2
