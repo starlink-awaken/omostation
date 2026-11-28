@@ -56,13 +56,6 @@ projections:
     generator: anomaly-detector.py
     lane: runtime_snapshot
 
-  governance_dashboard:
-    description: Governance metrics dashboard data (JSON) generated from metrics-store.jsonl
-    canonical: .omo/state/runtime/governance-dashboard.json
-    legacy: .omo/state/runtime/governance-dashboard.json
-    generator: governance-dashboard.py --metrics-dashboard
-    lane: runtime_snapshot
-
   cross_domain_trend:
     description: Cross-domain trend fusion analysis output (JSON)
     canonical: .omo/state/runtime/cross-domain-trend.json

@@ -207,27 +207,6 @@ rules:
     notes: >
       P90 R2 新增 rule (omo_lint.py 抗 god-module 监控).
 
-  - rule_id: X2-FRESH-GOV-DASHBOARD
-    title: "治理看板产物新鲜度 (确保 7 天内跑过 metrics-dashboard)"
-    type: governance_loop_freshness
-    status: active
-    target: .omo/state/runtime/governance-dashboard.json
-    freshness:
-      mechanism: generated_at-staleness
-      threshold_days: 7
-      action: warn
-    owner: governance-team
-    notes: >
-      2026-11-28 重指: 原 target `.omo/cron/governance-dashboard-crontab` 已不存在 ——
-      cron 平面早已迁至 launchd（runtime/cron/*.plist）, 该 crontab 文件从未随迁;
-      产物也换了面, 现行落点是 **state 运行面** `.omo/state/runtime/governance-dashboard.json`
-      （`.gitignore:295`, 声明于 `.omo/_truth/registry/runtime-projections.yaml:59-63`,
-      生成器 `governance-dashboard.py --metrics-dashboard`）。mechanism 同步改为
-      `generated_at-staleness`（旧值 manual-review 与该产物形态不匹配）。
-      ⚠️ 截至本次修改, 未发现任何**排班写方**产出该产物 —— 即「7 天内跑过」这条
-      新鲜度当前可能无人守护, 已在债务 PANORAMA-GATE-DETAIL-UNRELIABLE /
-      DEBT-DASHBOARD-STALE-CHECKOUT-FALSE-GREEN 的范畴内, 本条只保证目标指向真实落点。
-
   - rule_id: X2-FRESH-ADR-DRIFT
     title: "P96 ADR drift 持续监督 (15 P50+ issues 待清, threshold 30 天)"
     type: governance_loop_freshness
