@@ -2,13 +2,14 @@
 status: active
 lifecycle: ssot
 owner: governance-team
-last-reviewed: 2026-11-24
+last-reviewed: 2026-11-28
 ---
 
-# 2026-11-24 复审 (governance-team):
-#   `doc-governance-check.py --json --no-new-warnings --scope tracked`: files_scanned=4824, ok=true;
-#   observed 仅 2 桶: missing_frontmatter:omo-knowledge 4/120, stale_review:omo-truth-docs 2/10 (总 6 warnings);
-#   valid_statuses (8) / valid_lifecycles (8) / 10 条 warning_exceptions (最早到期 2027-01-31) 均未漂移或越界。
+# 2026-11-28 复审 (governance-team):
+#   `doc-governance-check.py --json --no-new-warnings --scope tracked`: files_scanned=4866, ok=true;
+#   修复 omo-truth-docs 通配符: 增加 excludes 排除 .omo/_truth/*/** 嵌套子目录,
+#   使 100+ 篇历史治理 waiver 证据不与 5 份根级真值文档混淆;
+#   修复两篇 retro 元数据语法; 验证 10 条 warning_exceptions 均在预算与有效期内。
 
 version: 1
 description: Document ownership, lifecycle, freshness, and discoverability policy.
@@ -100,6 +101,8 @@ surfaces:
   - id: omo-truth-docs
     patterns:
       - .omo/_truth/*.md
+    excludes:
+      - .omo/_truth/*/**
     owner: governance-team
     lifecycle: ssot
     ssot: .omo/_truth/INDEX.md
