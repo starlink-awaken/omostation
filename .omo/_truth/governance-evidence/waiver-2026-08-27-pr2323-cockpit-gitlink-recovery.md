@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: contract
+lifecycle: history
 owner: xiamingxing
 last-reviewed: 2026-08-27
 review-state: user-authorized
