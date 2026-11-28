@@ -1,7 +1,7 @@
 ---
 last-reviewed: 2026-10-14
 owner: governance-team
-lifecycle: entry
+lifecycle: history
 status: archived
 waiver_id: waiver-2026-09-24-gac-submodule-url-sync-bootstrap
 bet_id: BET-Y2Q2-T11-02

@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: contract
+lifecycle: history
 owner: xiamingxing
 last-reviewed: 2026-08-29
 title: T10-59 root one-off registry retirement self-bootstrap waiver

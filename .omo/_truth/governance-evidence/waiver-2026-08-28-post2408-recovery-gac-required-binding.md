@@ -2,15 +2,13 @@
 schema_version: governance-waiver-evidence/v1
 status: active
 owner: human-principal
-lifecycle: contract
+lifecycle: history
 last-reviewed: 2026-08-28
 created: 2026-08-28
 expires_when: accepted binding PR merges or closes
 value_indicator_policy: false
 title: Post-2408 Recovery Accepted Binding Bootstrap Waiver
 type: doc
-lifecycle: history
-last-reviewed: 2026-08-28
 ---
 
 # Post-2408 Recovery Accepted Binding Bootstrap Waiver

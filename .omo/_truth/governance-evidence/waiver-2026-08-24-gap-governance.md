@@ -1,6 +1,6 @@
 ---
 status: active
-lifecycle: entry
+lifecycle: history
 owner: auto-fix-loop
 last-reviewed: 2026-08-24
 title: Workflow waiver 证据 — 差距治理实施 (S1-S4)

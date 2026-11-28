@@ -3,7 +3,7 @@ schema_version: governance-bootstrap-waiver/v1
 type: governance-evidence
 title: North-star Claims stdio loader recovery bootstrap waiver
 status: active
-lifecycle: contract
+lifecycle: history
 owner: governance-team
 created: '2026-09-23'
 last-reviewed: '2026-09-23'

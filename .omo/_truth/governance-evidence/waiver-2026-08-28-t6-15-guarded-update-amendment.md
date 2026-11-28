@@ -2,7 +2,7 @@
 schema_version: governance-waiver-evidence/v1
 status: active
 owner: human-principal
-lifecycle: contract
+lifecycle: history
 last-reviewed: 2026-08-29
 created: 2026-08-29
 expires_when: amendment PR merges or closes
