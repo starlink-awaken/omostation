@@ -74,4 +74,17 @@ history:
     Registered debt item RUNTIME-PROJECTIONS-STATE-ROOT-NO-WRITER.
     触发: #5665 修 x2-rule-lint 时发现 X2-FRESH-GOV-DASHBOARD 的目标不存在, 顺查
     全部 10 条投影的三根落点, 得到上表（状态根全空）。
+
+- at: "2026-11-28T01:10:00+00:00"
+  action: mitigate
+  note: >-
+    **逐条消费者分析后先退一条**: `governance_dashboard` 全仓零消费者（除声明/测试/
+    债条目外无任何命中）, 且 `governance-dashboard.py --metrics-dashboard` 无调用方。
+    故删除该投影条目与 `X2-FRESH-GOV-DASHBOARD` 规则（shrink_only：守卫一个没人读、
+    也没人产的产物只是噪声）。`omo-state-projection-guard` 的 halt 读数因此 10 → 9。
+    **其余 9 条不动**: 它们都有真实读者, 落点问题待 owner 在「接线状态根 / 改声明 /
+    退役」间裁决（见 decision_needed）。另记: `bin/gac/omo-state-projection-guard.py`
+    本身**未接线**（只有登记条目, 无 workflow/gate 调用）, 它的 halt 目前无人可见 ——
+    这与「判据不被任何 CI 路径跑 = 不存在」同族, 建议后续把它接成 advisory。
+  actor: "governance-agent"
   actor: "governance-agent"
