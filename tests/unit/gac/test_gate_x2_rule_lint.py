@@ -76,7 +76,7 @@ def test_ignored_runtime_targets_are_not_warned(tmp_path: Path) -> None:
     assert mod.is_ignored(".omo/evidence/", patterns)
     assert mod.is_ignored(".omo/_delivery/adr-drift-apply-history.jsonl", patterns)
     assert mod.is_ignored(".omo/debt/dashboard/current.yaml", patterns)
-    assert mod.is_ignored(".omo/state/runtime/governance-dashboard.json", patterns)
+    assert mod.is_ignored(".omo/state/runtime/some-runtime-artifact.json", patterns)
     assert not mod.is_ignored("src/omo/real.py", patterns)
 
 
