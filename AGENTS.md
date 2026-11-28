@@ -34,15 +34,17 @@ status: active
 6. For multi-file or high-risk changes, explain the edit surface before applying patches.
 7. All local/edge LLM inference MUST route through **AetherForge (`bos://compute/aetherforge/infer`)**.
 8. Check the Panorama Agent Brief before choosing work —— 读 **state 根**那份:
-   `<state_root()>/runtime/dashboard/agent-brief.json`，默认
-   `~/.local/state/omostation/prod/runtime/dashboard/agent-brief.json`
-   (物化作业 `com.omostation.agent-brief-materialize`, 30 min 一次; 路径用
-   `bin/lib/repo_root.py` 的 `state_root()` 解析, 不用 `__file__` 反推)。
-   **仓根 `runtime/dashboard/agent-brief.json` 没有排班写方, 会冻结** —— 实测 2026-11-17:
-   仓根停在 11-09 19:36, state 根当天 20:52 仍在更新 (债条目
-   AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER)。human page: Panorama → Agent Brief。
-   It is a read-only aggregation of authority, gates, unfinished work, alerts, next actions,
-   read interfaces, and safety boundaries.
+   `~/.local/state/omostation/prod/runtime/dashboard/agent-brief.json` (prod profile;
+   若 `OMOSTATION_STATE_ROOT` 已声明则以它拼出的同形路径为准)。写方是物化作业
+   `com.omostation.agent-brief-materialize`, 30 min 一次。
+   **读之前先看 `generated_at`**: 正常应不早于 2 小时; 超出就说明写方停摆, 报告它,
+   不要静默采用一份陈旧快照当权威。**仓根 `runtime/dashboard/agent-brief.json` 没有
+   排班写方、会冻结**, 不要图省事直接读它 —— 实测 2026-11-17 仓根停在 11-09 19:36 而
+   state 根当天 20:52 仍在更新; 2026-11-24 又实测: 交互 shell 未声明 profile 时
+   `repo_root.state_root()` 会**回落 code_root**, 于是「按 state_root 解析」这句措辞
+   本身会把你导回那份冻结件 (债条目 AGENT-BRIEF-CANONICAL-ROOT-NO-SCHEDULED-WRITER)。
+   human page: Panorama → Agent Brief。It is a read-only aggregation of authority, gates,
+   unfinished work, alerts, next actions, read interfaces, and safety boundaries.
 9. **Never hard-code the workspace root.** Resolve it: `bin/lib/repo_root.py` gives `code_root()`
    (the checkout — read planes, governance truth), `state_root()` (write targets — ledgers,
    `.omo/state/**` runtime, projections) and `install_root()` (where the runtime code lives,
